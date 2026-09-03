@@ -23,4 +23,21 @@ class StationCredentialFactory extends Factory
             'label' => 'Primary',
         ];
     }
+
+    /**
+     * tenant_id derives from the resolved station (whether the default
+     * Station::factory() or an explicit override), mirroring
+     * TapEventFactory's same derive-from-station pattern.
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (StationCredential $credential) {
+            if ($credential->tenant_id !== null) {
+                return;
+            }
+
+            $station = Station::withoutGlobalScopes()->find($credential->station_id);
+            $credential->tenant_id ??= $station?->tenant_id;
+        });
+    }
 }

@@ -17,6 +17,9 @@ class DeviceSyncCursor extends Model implements TenantScoped
 {
     use HasTenantScope;
 
+    /** Lives in the per-tenant physical database, not the central one. */
+    protected $connection = 'tenant';
+
     protected $primaryKey = 'station_id';
 
     public $incrementing = false;

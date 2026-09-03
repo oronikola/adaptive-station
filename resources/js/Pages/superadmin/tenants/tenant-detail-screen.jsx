@@ -28,6 +28,18 @@ export default function TenantDetailScreen({ tenant, admins, stations }) {
         });
     }
 
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const deleteForm = useForm({ confirm_code: '' });
+    const deleteConfirmed = deleteForm.data.confirm_code === tenant.code;
+
+    function submitDelete(e) {
+        e.preventDefault();
+        if (!deleteConfirmed) {
+            return;
+        }
+        deleteForm.delete(route('platform.tenants.destroy', tenant.id));
+    }
+
     function toggleStatus() {
         const nextStatus = tenant.status === 'active' ? 'suspended' : 'active';
 
@@ -156,7 +168,67 @@ export default function TenantDetailScreen({ tenant, admins, stations }) {
                         Manage stations →
                     </Link>
                 </div>
+
+                <div className="rounded-lg border border-red-200 bg-white p-6 shadow-sm dark:border-red-900 dark:bg-gray-800">
+                    <h3 className="mb-1 text-lg font-medium text-red-700 dark:text-red-400">
+                        Danger Zone
+                    </h3>
+                    <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                        Permanently deletes this tenant and every row it owns — people,
+                        cards, stations, attendance history, users, and integrations.
+                        There is no per-tenant database to drop (this platform uses one
+                        shared database), so this action deletes the rows directly and
+                        cannot be undone.
+                    </p>
+                    <DangerButton type="button" onClick={() => setDeleteOpen(true)}>
+                        Delete Tenant
+                    </DangerButton>
+                </div>
             </div>
+
+            <Modal show={deleteOpen} onClose={() => setDeleteOpen(false)}>
+                <form onSubmit={submitDelete} className="p-6">
+                    <h3 className="text-lg font-medium text-red-700 dark:text-red-400">
+                        Delete "{tenant.name}"?
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        This permanently deletes all of this tenant's people, cards,
+                        stations, attendance history, users, and integrations. This
+                        cannot be undone.
+                    </p>
+
+                    <div className="mt-4">
+                        <InputLabel
+                            htmlFor="confirm_code"
+                            value={`Type "${tenant.code}" to confirm`}
+                        />
+                        <TextInput
+                            id="confirm_code"
+                            value={deleteForm.data.confirm_code}
+                            onChange={(e) => deleteForm.setData('confirm_code', e.target.value)}
+                            className="mt-1 block w-full font-mono"
+                            isFocused
+                            autoComplete="off"
+                        />
+                        <InputError message={deleteForm.errors.confirm_code} className="mt-2" />
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <SecondaryButton
+                            type="button"
+                            onClick={() => {
+                                setDeleteOpen(false);
+                                deleteForm.reset();
+                            }}
+                        >
+                            Cancel
+                        </SecondaryButton>
+                        <DangerButton disabled={!deleteConfirmed || deleteForm.processing}>
+                            Permanently Delete
+                        </DangerButton>
+                    </div>
+                </form>
+            </Modal>
 
             <Modal show={createAdminOpen} onClose={() => setCreateAdminOpen(false)}>
                 <form onSubmit={submitAdmin} className="p-6">

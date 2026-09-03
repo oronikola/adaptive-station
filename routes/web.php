@@ -14,8 +14,18 @@ Route::get('/', function () {
     ]);
 });
 
+// A gateway, not a page: every login/verification/password-confirmation flow
+// redirects here (route('dashboard')), so this is the single place that
+// routes a freshly authenticated user to their actual portal by role,
+// rather than rendering the stock Breeze scaffold page.
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $user = request()->user();
+
+    if ($user->isPlatformSuperAdmin()) {
+        return redirect()->route('platform.tenants.index');
+    }
+
+    return redirect()->route('portal.people.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

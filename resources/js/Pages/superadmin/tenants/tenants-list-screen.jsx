@@ -24,19 +24,46 @@ function StatTile({ label, value }) {
     );
 }
 
+// Mirrors the server-side Str::slug() normalization in
+// StoreTenantRequest::prepareForValidation() — this is only a preview so the
+// operator sees the code they'll actually get; the backend re-normalizes
+// regardless of what reaches it.
+function slugify(value) {
+    return value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
 export default function TenantsListScreen({ tenants, stats }) {
     const [createOpen, setCreateOpen] = useState(false);
+    const [codeTouched, setCodeTouched] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         code: '',
         timezone: 'Asia/Manila',
     });
 
+    function handleNameChange(value) {
+        setData((current) => ({
+            ...current,
+            name: value,
+            code: codeTouched ? current.code : slugify(value),
+        }));
+    }
+
+    function handleCodeChange(value) {
+        setCodeTouched(true);
+        setData('code', value);
+    }
+
     function submit(e) {
         e.preventDefault();
         post(route('platform.tenants.store'), {
             onSuccess: () => {
                 setCreateOpen(false);
+                setCodeTouched(false);
                 reset();
             },
         });
@@ -121,7 +148,7 @@ export default function TenantsListScreen({ tenants, stats }) {
                         <TextInput
                             id="name"
                             value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
+                            onChange={(e) => handleNameChange(e.target.value)}
                             className="mt-1 block w-full"
                             isFocused
                             required
@@ -134,10 +161,13 @@ export default function TenantsListScreen({ tenants, stats }) {
                         <TextInput
                             id="code"
                             value={data.code}
-                            onChange={(e) => setData('code', e.target.value)}
-                            className="mt-1 block w-full"
+                            onChange={(e) => handleCodeChange(e.target.value)}
+                            className="mt-1 block w-full font-mono"
                             required
                         />
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Auto-filled from the school name — edit if you want something different.
+                        </p>
                         <InputError message={errors.code} className="mt-2" />
                     </div>
 

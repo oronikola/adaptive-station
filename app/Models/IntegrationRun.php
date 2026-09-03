@@ -21,6 +21,9 @@ class IntegrationRun extends Model implements TenantScoped
 {
     use HasFactory, HasTenantScope, HasUuidV4;
 
+    /** Lives in the per-tenant physical database, not the central one. */
+    protected $connection = 'tenant';
+
     const UPDATED_AT = null;
 
     protected function casts(): array

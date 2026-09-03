@@ -29,6 +29,9 @@ class IntegrationProfile extends Model implements TenantScoped
 {
     use HasFactory, HasTenantScope, HasUuidV4;
 
+    /** Lives in the per-tenant physical database, not the central one. */
+    protected $connection = 'tenant';
+
     protected $hidden = ['config_encrypted'];
 
     protected function casts(): array

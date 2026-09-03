@@ -25,6 +25,9 @@ class RfidCard extends Model implements TenantScoped
 {
     use HasFactory, HasTenantScope, HasUuidV4;
 
+    /** Lives in the per-tenant physical database, not the central one. */
+    protected $connection = 'tenant';
+
     protected function casts(): array
     {
         return [

@@ -1,20 +1,48 @@
-import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useState } from 'react';
+import '../../../css/login.css';
+
+function StationLogo() {
+    return (
+        <span className="station-logo" aria-hidden="true">
+            <svg viewBox="0 0 28 28" fill="none">
+                <rect x="7" y="5" width="14" height="17" rx="3" stroke="currentColor" strokeWidth="1.7" />
+                <path d="M10 18h8M11 9h6M11 12.5h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                <path d="M5 22.5h18" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+            </svg>
+        </span>
+    );
+}
+
+function EyeIcon({ isVisible }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+            <circle cx="12" cy="12" r="2.5" />
+            {isVisible && <path d="m4 4 16 16" />}
+        </svg>
+    );
+}
+
+function TapIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M8.5 8.5a5 5 0 0 1 0 7M12 5a10 10 0 0 1 0 14M5 11a1.5 1.5 0 0 1 0 2" />
+        </svg>
+    );
+}
 
 export default function Login({ status, canResetPassword }) {
+    const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
         remember: false,
     });
 
-    const submit = (e) => {
-        e.preventDefault();
+    const submit = (event) => {
+        event.preventDefault();
 
         post(route('login'), {
             onFinish: () => reset('password'),
@@ -22,79 +50,196 @@ export default function Login({ status, canResetPassword }) {
     };
 
     return (
-        <GuestLayout>
-            <Head title="Log in" />
+        <>
+            <Head title="Sign in" />
 
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
-
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
-                    />
-
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4 block">
-                    <label className="flex items-center">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) =>
-                                setData('remember', e.target.checked)
-                            }
-                        />
-                        <span className="ms-2 text-sm text-gray-600 dark:text-gray-400">
-                            Remember me
-                        </span>
-                    </label>
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
-                        >
-                            Forgot your password?
+            <main className="auth-login-page">
+                <section className="auth-login-card">
+                    <aside className="auth-login-showcase">
+                        <Link href="/" className="auth-login-brand">
+                            <StationLogo />
+                            <span>Adaptive Station</span>
                         </Link>
-                    )}
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
-                    </PrimaryButton>
-                </div>
-            </form>
-        </GuestLayout>
+                        <div className="auth-showcase-content">
+                            <p className="auth-eyebrow">SMARTER TIME, ONE TAP AWAY</p>
+                            <h2>Make every tap count.</h2>
+
+                            <div className="auth-tap-visual" aria-hidden="true">
+                                <div className="auth-tap-reader">
+                                    <div className="auth-reader-topline">
+                                        <span className="auth-reader-status">
+                                            <i /> Ready to tap
+                                        </span>
+                                        <span>08:01</span>
+                                    </div>
+
+                                    <div className="auth-reader-prompt">
+                                        <span className="auth-reader-rings">
+                                            <TapIcon />
+                                        </span>
+                                        <span>
+                                            <strong>Hold your card</strong>
+                                            <small>near the reader</small>
+                                        </span>
+                                    </div>
+
+                                    <div className="auth-reader-footer">
+                                        <span>ADAPTIVE STATION</span>
+                                        <span>STATION 01</span>
+                                    </div>
+                                </div>
+
+                                <div className="auth-employee-card">
+                                    <div className="auth-card-header">
+                                        <span className="auth-card-chip">
+                                            <span />
+                                        </span>
+                                        <span>STUDENT PASS</span>
+                                    </div>
+
+                                    <div className="auth-card-person">
+                                        <span className="auth-card-avatar">JD</span>
+                                        <span className="auth-card-details">
+                                            <strong>Jordan D.</strong>
+                                            <small>ID · 0428</small>
+                                        </span>
+                                        <TapIcon />
+                                    </div>
+                                </div>
+
+                                <div className="auth-tap-confirmation">
+                                    <span className="auth-confirmation-icon">
+                                        <svg viewBox="0 0 20 20" fill="none">
+                                            <path d="m5 10 3.2 3.2L15 6.8" />
+                                        </svg>
+                                    </span>
+                                    <span>
+                                        <strong>Tap recorded</strong>
+                                        <small>Clock-in · 08:01 AM</small>
+                                    </span>
+                                    <b>ON TIME</b>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p className="auth-showcase-caption">
+                            Fast, accurate attendance records — from a single tap.
+                        </p>
+                    </aside>
+
+                    <div className="auth-login-main">
+                        <div className="auth-login-topbar">
+                            <Link href="/" className="auth-mobile-brand" aria-label="Adaptive Station home">
+                                <StationLogo />
+                            </Link>
+
+                            <p>
+                                New here?{' '}
+                                <Link href={route('register')}>Request access</Link>
+                            </p>
+                        </div>
+
+                        <div className="auth-form-wrap">
+                            <div className="auth-form-heading">
+                                <p className="auth-mobile-kicker">ADAPTIVE STATION · TAPPING SYSTEM</p>
+                                <h1>Welcome back</h1>
+                                <p>Enter your details to return to your workspace.</p>
+                            </div>
+
+                            {status && (
+                                <div className="auth-status" role="status">
+                                    {status}
+                                </div>
+                            )}
+
+                            <form onSubmit={submit} className="auth-login-form" noValidate>
+                                <div className="auth-field">
+                                    <label htmlFor="email">Email</label>
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        name="email"
+                                        value={data.email}
+                                        autoComplete="username"
+                                        autoFocus
+                                        onChange={(event) => setData('email', event.target.value)}
+                                        aria-invalid={Boolean(errors.email)}
+                                        aria-describedby={errors.email ? 'email-error' : undefined}
+                                        placeholder="you@company.com"
+                                    />
+                                    <InputError id="email-error" message={errors.email} className="auth-field-error" />
+                                </div>
+
+                                <div className="auth-field">
+                                    <div className="auth-label-row">
+                                        <label htmlFor="password">Password</label>
+                                        {canResetPassword && (
+                                            <Link href={route('password.request')}>Forgot password?</Link>
+                                        )}
+                                    </div>
+
+                                    <div className="auth-password-field">
+                                        <input
+                                            id="password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            name="password"
+                                            value={data.password}
+                                            autoComplete="current-password"
+                                            onChange={(event) => setData('password', event.target.value)}
+                                            aria-invalid={Boolean(errors.password)}
+                                            aria-describedby={errors.password ? 'password-error' : undefined}
+                                            placeholder="Enter your password"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword((isVisible) => !isVisible)}
+                                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                        >
+                                            <EyeIcon isVisible={showPassword} />
+                                        </button>
+                                    </div>
+                                    <InputError id="password-error" message={errors.password} className="auth-field-error" />
+                                </div>
+
+                                <label className="auth-remember">
+                                    <input
+                                        name="remember"
+                                        type="checkbox"
+                                        checked={data.remember}
+                                        onChange={(event) => setData('remember', event.target.checked)}
+                                    />
+                                    <span>Keep me signed in</span>
+                                </label>
+
+                                <button type="submit" className="auth-submit" disabled={processing}>
+                                    {processing ? 'Signing in…' : 'Sign in'}
+                                </button>
+                            </form>
+
+                            <div className="auth-divider">
+                                <span>or</span>
+                            </div>
+
+                            <div className="auth-secondary-actions">
+                                <Link href="/" className="auth-secondary-button">
+                                    <TapIcon />
+                                    Open tapping station
+                                </Link>
+                                <Link href={route('register')} className="auth-secondary-button">
+                                    Request a new account
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="auth-login-footer">
+                            <Link href="/">View system</Link>
+                            <span aria-hidden="true">•</span>
+                            <span>Protected workspace access</span>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </>
     );
 }

@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
 
-#[Fillable(['station_id', 'token_hash', 'label', 'expires_at'])]
+#[Fillable(['tenant_id', 'station_id', 'token_hash', 'label', 'expires_at'])]
 #[Hidden(['token_hash'])]
 #[ScopedBy(TenantScope::class)]
 class StationCredential extends Model implements TenantScoped
@@ -35,14 +35,12 @@ class StationCredential extends Model implements TenantScoped
     }
 
     /**
-     * station_credentials has no tenant_id column of its own — constrain
-     * through the owning station instead of the default column-based filter.
+     * station_credentials lives in the central database (needed to resolve
+     * a device's tenant before its per-tenant database connection is even
+     * chosen — see App\Support\TenantDatabase), so its own tenant_id column
+     * is the real scoping mechanism; HasTenantScope's default column filter
+     * applies without an override.
      */
-    public function applyTenantScope(Builder $builder, string $tenantId): void
-    {
-        $builder->whereHas('station', fn (Builder $query) => $query->where('tenant_id', $tenantId));
-    }
-
     public function station(): BelongsTo
     {
         return $this->belongsTo(Station::class);
@@ -50,14 +48,16 @@ class StationCredential extends Model implements TenantScoped
 
     /**
      * Resolving a credential is how a device establishes its tenant context
-     * in the first place, so the eager-loaded station must bypass Station's
-     * own TenantScope explicitly — no tenant context exists yet at this point
-     * for that scope to filter by.
+     * in the first place — deliberately does NOT eager-load `station`, since
+     * that model lives on the per-tenant connection and the caller hasn't
+     * pointed it at the right tenant's database yet. Callers must read
+     * `tenant_id`/`station_id` off the returned row, call
+     * App\Support\TenantDatabase::use() for that tenant, and only then query
+     * Station separately.
      */
     public static function findActiveByPlaintextToken(string $token): ?self
     {
         return static::allTenants()
-            ->with(['station' => fn ($query) => $query->withoutGlobalScope(TenantScope::class)])
             ->where('token_hash', hash('sha256', $token))
             ->whereNull('revoked_at')
             ->where(fn (Builder $query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', Date::now()))
@@ -79,6 +79,7 @@ class StationCredential extends Model implements TenantScoped
         $token = Str::random(64);
 
         $credential = static::allTenants()->create([
+            'tenant_id' => $station->tenant_id,
             'station_id' => $station->id,
             'token_hash' => hash('sha256', $token),
             'label' => $label,
@@ -97,7 +98,7 @@ class StationCredential extends Model implements TenantScoped
     {
         $credential->forceFill(['revoked_at' => Date::now()])->save();
 
-        AuditLog::record('station_credential.revoked', $actor, $credential->station->tenant_id, 'station_credential', $credential->id);
+        AuditLog::record('station_credential.revoked', $actor, $credential->tenant_id, 'station_credential', $credential->id);
 
         return $credential;
     }

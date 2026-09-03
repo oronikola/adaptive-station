@@ -31,6 +31,19 @@ class TenantProvisioningTest extends TestCase
         ]);
     }
 
+    public function test_tenant_code_is_normalized_to_a_clean_slug(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+
+        $this->actingAs($platformAdmin)->post(route('platform.tenants.store'), [
+            'name' => 'City National High School',
+            'code' => 'CNHS',
+            'timezone' => 'Asia/Manila',
+        ])->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('tenants', ['code' => 'cnhs']);
+    }
+
     public function test_tenant_code_must_be_unique(): void
     {
         $platformAdmin = User::factory()->platformSuperAdmin()->create();

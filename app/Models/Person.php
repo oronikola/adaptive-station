@@ -29,6 +29,9 @@ class Person extends Model implements TenantScoped
 {
     use HasFactory, HasTenantScope, HasUuidV4, SoftDeletes;
 
+    /** Lives in the per-tenant physical database, not the central one. */
+    protected $connection = 'tenant';
+
     protected function casts(): array
     {
         return [

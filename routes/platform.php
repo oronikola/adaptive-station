@@ -15,6 +15,7 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
         Route::get('tenants/{tenant}', [TenantController::class, 'show'])->name('tenants.show');
         Route::patch('tenants/{tenant}/status', [TenantController::class, 'updateStatus'])->name('tenants.status');
         Route::post('tenants/{tenant}/admins', [TenantController::class, 'storeAdmin'])->name('tenants.admins.store');
+        Route::delete('tenants/{tenant}', [TenantController::class, 'destroy'])->name('tenants.destroy');
 
         Route::get('stations', [StationController::class, 'index'])->name('stations.index');
         Route::post('stations', [StationController::class, 'store'])->name('stations.store');

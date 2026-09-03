@@ -20,6 +20,9 @@ class MasterDataChange extends Model implements TenantScoped
 {
     use HasTenantScope;
 
+    /** Lives in the per-tenant physical database, not the central one. */
+    protected $connection = 'tenant';
+
     public $timestamps = false;
 
     protected function casts(): array

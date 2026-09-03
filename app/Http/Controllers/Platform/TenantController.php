@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Platform;
 use App\Enums\TenantStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Platform\DestroyTenantRequest;
 use App\Http\Requests\Platform\StoreTenantAdminRequest;
 use App\Http\Requests\Platform\StoreTenantRequest;
 use App\Models\Station;
@@ -81,5 +82,12 @@ class TenantController extends Controller
         Tenant::updateStatus($tenant, TenantStatus::from($data['status']), $request->user());
 
         return redirect()->route('platform.tenants.show', $tenant)->with('success', 'Tenant status updated.');
+    }
+
+    public function destroy(DestroyTenantRequest $request, Tenant $tenant): RedirectResponse
+    {
+        Tenant::purge($tenant, $request->user());
+
+        return redirect()->route('platform.tenants.index')->with('success', 'Tenant permanently deleted.');
     }
 }

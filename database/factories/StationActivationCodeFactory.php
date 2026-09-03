@@ -25,4 +25,20 @@ class StationActivationCodeFactory extends Factory
             'created_by_user_id' => User::factory()->platformSuperAdmin(),
         ];
     }
+
+    /**
+     * tenant_id derives from the resolved station, mirroring
+     * StationCredentialFactory's same pattern.
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (StationActivationCode $activationCode) {
+            if ($activationCode->tenant_id !== null) {
+                return;
+            }
+
+            $station = Station::withoutGlobalScopes()->find($activationCode->station_id);
+            $activationCode->tenant_id ??= $station?->tenant_id;
+        });
+    }
 }

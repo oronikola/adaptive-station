@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-#[Fillable(['station_id', 'code_hash', 'expires_at', 'created_by_user_id'])]
+#[Fillable(['tenant_id', 'station_id', 'code_hash', 'expires_at', 'created_by_user_id'])]
 #[Hidden(['code_hash'])]
 #[ScopedBy(TenantScope::class)]
 class StationActivationCode extends Model implements TenantScoped
@@ -35,14 +35,10 @@ class StationActivationCode extends Model implements TenantScoped
     }
 
     /**
-     * station_activation_codes has no tenant_id column of its own — constrain
-     * through the owning station instead of the default column-based filter.
+     * station_activation_codes lives in the central database, same reasoning
+     * as StationCredential — its own tenant_id column drives the default
+     * HasTenantScope column filter, no override needed.
      */
-    public function applyTenantScope(Builder $builder, string $tenantId): void
-    {
-        $builder->whereHas('station', fn (Builder $query) => $query->where('tenant_id', $tenantId));
-    }
-
     public function station(): BelongsTo
     {
         return $this->belongsTo(Station::class);
@@ -55,13 +51,16 @@ class StationActivationCode extends Model implements TenantScoped
 
     /**
      * Resolving a code is how a device establishes its tenant context in the
-     * first place, so the eager-loaded station must bypass Station's own
-     * TenantScope explicitly — no tenant context exists yet at this point.
+     * first place — deliberately does NOT eager-load `station`, since that
+     * model lives on the per-tenant connection and the caller hasn't pointed
+     * it at the right tenant's database yet. Callers must read
+     * `tenant_id`/`station_id` off the returned row, call
+     * App\Support\TenantDatabase::use() for that tenant, and only then query
+     * Station separately.
      */
     public static function findValidByPlaintextCode(string $code): ?self
     {
         return static::allTenants()
-            ->with(['station' => fn ($query) => $query->withoutGlobalScope(TenantScope::class)])
             ->where('code_hash', hash('sha256', $code))
             ->whereNull('consumed_at')
             ->where('expires_at', '>', Date::now())
@@ -76,7 +75,6 @@ class StationActivationCode extends Model implements TenantScoped
     {
         return DB::transaction(function () use ($plaintextCode) {
             $activationCode = static::allTenants()
-                ->with(['station' => fn ($query) => $query->withoutGlobalScope(TenantScope::class)])
                 ->where('code_hash', hash('sha256', $plaintextCode))
                 ->whereNull('consumed_at')
                 ->where('expires_at', '>', Date::now())
@@ -105,6 +103,7 @@ class StationActivationCode extends Model implements TenantScoped
         $code = Str::random(64);
 
         $activationCode = static::allTenants()->create([
+            'tenant_id' => $station->tenant_id,
             'station_id' => $station->id,
             'code_hash' => hash('sha256', $code),
             'expires_at' => $expiresAt ?? Date::now()->addHours(24),
