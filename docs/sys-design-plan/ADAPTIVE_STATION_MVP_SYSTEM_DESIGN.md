@@ -5,7 +5,7 @@
 **Adaptive Station** is a standalone, multi-tenant RFID attendance platform for schools. It retains the existing live Windows kiosk's reliable local-first tapping behaviour while separating the product from the School Management System (SMS) in which it was originally embedded.
 
 Adaptive Station is a product in its own right. A school may connect its existing SMS for roster import and optional attendance export, but the kiosk must continue operating when that system, the internet, or the cloud service is unavailable.
-
+ 
 ### Product components
 
 | Component | Purpose |

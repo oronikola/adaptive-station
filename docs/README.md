@@ -22,7 +22,17 @@ docs/
 │   ├── IP-004_2026-09-02.md
 │   ├── IP-005_2026-09-02.md
 │   └── IP-006_2026-09-02.md
+├── milestone-0-foundation/
+│   ├── DATA_OWNERSHIP_AND_TENANT_MODEL.md
+│   ├── LEGACY_FIELD_MAPPING.md
+│   ├── PILOT_ONBOARDING_AND_MIGRATION_CHECKLIST.md
+│   ├── ACCEPTANCE_SCENARIOS_AND_RECONCILIATION.md
+│   └── ENVIRONMENT_BASELINE.md
 ├── adr/
+│   ├── ADR-001_shared-database-tenant-model.md
+│   ├── ADR-002_retain-wpf-kiosk-for-mvp.md
+│   ├── ADR-003_api-only-kiosk-cloud-communication.md
+│   └── ADR-004_cursor-based-master-data-feed.md
 └── change-logs/
 ```
 
@@ -59,17 +69,30 @@ IP-00x_YYYY-MM-DD.md
 | [IP-005](implementation-plans/IP-005_2026-09-02.md) | 4 | Existing School Management System integration and migration. |
 | [IP-006](implementation-plans/IP-006_2026-09-02.md) | 5 | Pilot hardening and production release. |
 
+### `milestone-0-foundation/`
+
+The concrete Milestone 0 (IP-001) output documents — the artifacts IP-001's work plan exists to produce.
+
+- [DATA_OWNERSHIP_AND_TENANT_MODEL.md](milestone-0-foundation/DATA_OWNERSHIP_AND_TENANT_MODEL.md) — Approved data-ownership matrix and tenant model, including the settled MVP decisions on RFID-card ownership, notification ownership, and legacy attendance export.
+- [LEGACY_FIELD_MAPPING.md](milestone-0-foundation/LEGACY_FIELD_MAPPING.md) — Full field-level mapping from every legacy table/column named in `master/TECHNICAL_DOCUMENTATION.md` to Adaptive Station's schema, including fields explicitly not migrated.
+- [PILOT_ONBOARDING_AND_MIGRATION_CHECKLIST.md](milestone-0-foundation/PILOT_ONBOARDING_AND_MIGRATION_CHECKLIST.md) — Actionable pilot onboarding/migration/cutover/rollback checklist template.
+- [ACCEPTANCE_SCENARIOS_AND_RECONCILIATION.md](milestone-0-foundation/ACCEPTANCE_SCENARIOS_AND_RECONCILIATION.md) — Approved MVP acceptance scenarios and the required import-reconciliation counts/invariants.
+- [ENVIRONMENT_BASELINE.md](milestone-0-foundation/ENVIRONMENT_BASELINE.md) — Dev/staging/production environment variable conventions, secret-handling rules, and logging/backup expectations.
+
 ### `adr/`
 
-Reserved for Architecture Decision Records. Add an ADR when a significant technical or product decision is made, especially one with alternatives or long-term consequences.
+Architecture Decision Records. Add an ADR when a significant technical or product decision is made, especially one with alternatives or long-term consequences.
 
-Suggested naming convention:
+Naming convention:
 
 ```text
 ADR-00x_short-decision-title.md
 ```
 
-Examples include the shared-database tenant model, keeping the WPF kiosk for the MVP, API-only kiosk-to-cloud communication, and a cursor-based master-data feed.
+- [ADR-001](adr/ADR-001_shared-database-tenant-model.md) — Shared-database tenant model.
+- [ADR-002](adr/ADR-002_retain-wpf-kiosk-for-mvp.md) — Retain the existing WPF kiosk for the MVP.
+- [ADR-003](adr/ADR-003_api-only-kiosk-cloud-communication.md) — API-only kiosk-to-cloud communication.
+- [ADR-004](adr/ADR-004_cursor-based-master-data-feed.md) — Cursor-based master-data change feed.
 
 ### `change-logs/`
 
@@ -86,8 +109,9 @@ CL-00x_YYYY-MM-DD_short-change-title.md
 1. Read `master/` to understand the existing live system and its constraints.
 2. Read the MVP system design to understand the intended standalone Adaptive Station product.
 3. Read the database design before implementing migrations, APIs, or kiosk synchronization.
-4. Execute the implementation plans in numerical order.
-5. Record major deviations or decisions in `adr/` and `change-logs/`.
+4. Read `milestone-0-foundation/` and `adr/` for the approved decisions, mappings, and baselines the implementation plans assume.
+5. Execute the implementation plans in numerical order.
+6. Record major deviations or decisions in `adr/` and `change-logs/`.
 
 ## Core Product Principles
 
