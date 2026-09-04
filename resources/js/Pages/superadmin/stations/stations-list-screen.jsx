@@ -1,16 +1,48 @@
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import SecretOnceCallout from '@/Components/SecretOnceCallout';
-import Pagination from '@/Components/admin/Pagination';
-import StatusBadge from '@/Components/admin/StatusBadge';
-import Table from '@/Components/admin/Table';
 import PlatformLayout from '@/Layouts/PlatformLayout';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import '../../../../css/platform-dashboard.css';
+
+function PaginationBar({ links }) {
+    if (!links || links.length <= 3) {
+        return null;
+    }
+
+    return (
+        <nav className="pf-pagination">
+            {links.map((link, index) => {
+                const label = link.label
+                    .replace('&laquo; Previous', '‹ Previous')
+                    .replace('Next &raquo;', 'Next ›');
+
+                if (link.url === null) {
+                    return (
+                        <span key={index} className="pf-page-link pf-page-link--disabled">
+                            {label}
+                        </span>
+                    );
+                }
+
+                return (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        preserveScroll
+                        className={
+                            'pf-page-link' +
+                            (link.active ? ' pf-page-link--active' : '')
+                        }
+                    >
+                        {label}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}
 
 export default function StationsListScreen({ stations, tenants }) {
     const { flash } = usePage().props;
@@ -39,84 +71,128 @@ export default function StationsListScreen({ stations, tenants }) {
     }
 
     return (
-        <PlatformLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        Stations
-                    </h2>
-                    <PrimaryButton type="button" onClick={() => setCreateOpen(true)}>
-                        Add Station
-                    </PrimaryButton>
-                </div>
-            }
-        >
+        <PlatformLayout>
             <Head title="Stations" />
 
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <div className="pf-dashboard">
+                <div className="pf-dashboard-header">
+                    <div>
+                        <p className="pf-dashboard-kicker">Platform overview</p>
+                        <h1 className="pf-dashboard-title">Stations</h1>
+                        <p className="pf-dashboard-subtitle">
+                            Every tap-in device registered across all schools on
+                            Adaptive Station.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        className="pf-btn pf-btn-primary"
+                        onClick={() => setCreateOpen(true)}
+                    >
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        Add Station
+                    </button>
+                </div>
+
                 <SecretOnceCallout label="Activation code" value={flash?.activationCode} />
 
-                <Table>
-                    <Table.Head>
-                        <Table.Th>Name</Table.Th>
-                        <Table.Th>Code</Table.Th>
-                        <Table.Th>Tenant</Table.Th>
-                        <Table.Th>Status</Table.Th>
-                        <Table.Th>
-                            <span className="sr-only">Actions</span>
-                        </Table.Th>
-                    </Table.Head>
-                    <Table.Body>
-                        {stations.data.length === 0 && (
-                            <Table.Empty colSpan={5}>No stations registered yet.</Table.Empty>
-                        )}
+                <div className="pf-panel">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 className="pf-panel-title">All Stations</h2>
+                            <p className="pf-panel-count">
+                                {stations.data.length} shown
+                            </p>
+                        </div>
+                    </div>
 
-                        {stations.data.map((station) => (
-                            <tr key={station.id}>
-                                <Table.Td className="font-medium text-gray-900 dark:text-gray-100">
-                                    {station.name}
-                                </Table.Td>
-                                <Table.Td className="font-mono">{station.station_code}</Table.Td>
-                                <Table.Td>{station.tenant?.name ?? '—'}</Table.Td>
-                                <Table.Td>
-                                    <StatusBadge
-                                        color={station.status === 'active' ? 'green' : 'yellow'}
-                                    >
-                                        {station.status}
-                                    </StatusBadge>
-                                </Table.Td>
-                                <Table.Td className="text-right">
-                                    {station.status === 'pending_activation' && (
-                                        <button
-                                            type="button"
-                                            onClick={() => issueCode(station)}
-                                            className="font-medium text-[#174a96] hover:text-[#2863bd] dark:text-indigo-400"
-                                        >
-                                            Issue Activation Code
-                                        </button>
-                                    )}
-                                </Table.Td>
-                            </tr>
-                        ))}
-                    </Table.Body>
-                </Table>
+                    <div className="pf-table-wrap">
+                        <table className="pf-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Code</th>
+                                    <th scope="col">Tenant</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">
+                                        <span className="sr-only">Actions</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {stations.data.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="pf-empty">
+                                            No stations registered yet.
+                                        </td>
+                                    </tr>
+                                )}
 
-                <Pagination links={stations.links} />
+                                {stations.data.map((station) => (
+                                    <tr key={station.id}>
+                                        <td className="pf-tenant-name">{station.name}</td>
+                                        <td className="font-mono">{station.station_code}</td>
+                                        <td>{station.tenant?.name ?? '—'}</td>
+                                        <td>
+                                            <span
+                                                className={
+                                                    'pf-pill ' +
+                                                    (station.status === 'active'
+                                                        ? 'pf-pill--active'
+                                                        : 'pf-pill--inactive')
+                                                }
+                                            >
+                                                {station.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {station.status === 'pending_activation' && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => issueCode(station)}
+                                                    className="pf-row-action"
+                                                >
+                                                    Issue Activation Code
+                                                    <svg viewBox="0 0 24 24">
+                                                        <path d="M9 6l6 6-6 6" />
+                                                    </svg>
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <PaginationBar links={stations.links} />
+                </div>
             </div>
 
             <Modal show={createOpen} onClose={() => setCreateOpen(false)}>
-                <form onSubmit={submit} className="p-6">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        Add Station
-                    </h3>
+                <form onSubmit={submit} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <h3 className="pf-modal-title">Add Station</h3>
+                        <button
+                            type="button"
+                            className="pf-modal-close"
+                            onClick={() => setCreateOpen(false)}
+                            aria-label="Close"
+                        >
+                            <svg viewBox="0 0 24 24">
+                                <path d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
 
-                    <div className="mt-4">
-                        <InputLabel htmlFor="tenant_id" value="Tenant" />
+                    <div className="pf-field">
+                        <label htmlFor="tenant_id">Tenant</label>
                         <select
                             id="tenant_id"
                             value={data.tenant_id}
                             onChange={(e) => setData('tenant_id', e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
                         >
                             {tenants.map((tenant) => (
                                 <option key={tenant.id} value={tenant.id}>
@@ -127,35 +203,47 @@ export default function StationsListScreen({ stations, tenants }) {
                         <InputError message={errors.tenant_id} className="mt-2" />
                     </div>
 
-                    <div className="mt-4">
-                        <InputLabel htmlFor="name" value="Station name" />
-                        <TextInput
+                    <div className="pf-field">
+                        <label htmlFor="name">Station name</label>
+                        <input
                             id="name"
+                            type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
-                            className="mt-1 block w-full"
+                            autoFocus
                             required
                         />
                         <InputError message={errors.name} className="mt-2" />
                     </div>
 
-                    <div className="mt-4">
-                        <InputLabel htmlFor="station_code" value="Station code" />
-                        <TextInput
+                    <div className="pf-field">
+                        <label htmlFor="station_code">Station code</label>
+                        <input
                             id="station_code"
+                            type="text"
                             value={data.station_code}
                             onChange={(e) => setData('station_code', e.target.value)}
-                            className="mt-1 block w-full"
+                            className="font-mono"
                             required
                         />
                         <InputError message={errors.station_code} className="mt-2" />
                     </div>
 
-                    <div className="mt-6 flex justify-end gap-3">
-                        <SecondaryButton type="button" onClick={() => setCreateOpen(false)}>
+                    <div className="pf-modal-footer">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={() => setCreateOpen(false)}
+                        >
                             Cancel
-                        </SecondaryButton>
-                        <PrimaryButton disabled={processing}>Create</PrimaryButton>
+                        </button>
+                        <button
+                            type="submit"
+                            className="pf-btn pf-btn-primary"
+                            disabled={processing}
+                        >
+                            Create
+                        </button>
                     </div>
                 </form>
             </Modal>

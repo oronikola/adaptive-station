@@ -6,7 +6,11 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { ToastProvider } from '@/Components/toast/ToastProvider';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const configuredAppName = import.meta.env.VITE_APP_NAME;
+const appName =
+    configuredAppName && configuredAppName !== 'Laravel'
+        ? configuredAppName
+        : 'Adaptive Station';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

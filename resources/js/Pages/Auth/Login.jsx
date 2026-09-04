@@ -1,19 +1,8 @@
 import InputError from '@/Components/InputError';
+import StationLogo from '@/Components/StationLogo';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import '../../../css/login.css';
-
-function StationLogo() {
-    return (
-        <span className="station-logo" aria-hidden="true">
-            <svg viewBox="0 0 28 28" fill="none">
-                <rect x="7" y="5" width="14" height="17" rx="3" stroke="currentColor" strokeWidth="1.7" />
-                <path d="M10 18h8M11 9h6M11 12.5h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-                <path d="M5 22.5h18" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-            </svg>
-        </span>
-    );
-}
 
 function EyeIcon({ isVisible }) {
     return (
@@ -57,7 +46,9 @@ export default function Login({ status, canResetPassword }) {
                 <section className="auth-login-card">
                     <aside className="auth-login-showcase">
                         <Link href="/" className="auth-login-brand">
-                            <StationLogo />
+                            <span className="station-logo">
+                                <StationLogo />
+                            </span>
                             <span>Adaptive Station</span>
                         </Link>
 
@@ -140,7 +131,9 @@ export default function Login({ status, canResetPassword }) {
                     <div className="auth-login-main">
                         <div className="auth-login-topbar">
                             <Link href="/" className="auth-mobile-brand" aria-label="Adaptive Station home">
-                                <StationLogo />
+                                <span className="station-logo">
+                                    <StationLogo />
+                                </span>
                             </Link>
 
                             <p>

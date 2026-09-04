@@ -1,51 +1,112 @@
-import Pagination from '@/Components/admin/Pagination';
-import Table from '@/Components/admin/Table';
 import PlatformLayout from '@/Layouts/PlatformLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
+import '../../../../css/platform-dashboard.css';
+
+function PaginationBar({ links }) {
+    if (!links || links.length <= 3) {
+        return null;
+    }
+
+    return (
+        <nav className="pf-pagination">
+            {links.map((link, index) => {
+                const label = link.label
+                    .replace('&laquo; Previous', '‹ Previous')
+                    .replace('Next &raquo;', 'Next ›');
+
+                if (link.url === null) {
+                    return (
+                        <span key={index} className="pf-page-link pf-page-link--disabled">
+                            {label}
+                        </span>
+                    );
+                }
+
+                return (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        preserveScroll
+                        className={
+                            'pf-page-link' +
+                            (link.active ? ' pf-page-link--active' : '')
+                        }
+                    >
+                        {label}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}
 
 export default function AuditLogListScreen({ logs }) {
     return (
-        <PlatformLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Audit Log
-                </h2>
-            }
-        >
+        <PlatformLayout>
             <Head title="Audit Log" />
 
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                <Table>
-                    <Table.Head>
-                        <Table.Th>When</Table.Th>
-                        <Table.Th>Tenant</Table.Th>
-                        <Table.Th>Actor</Table.Th>
-                        <Table.Th>Action</Table.Th>
-                        <Table.Th>Entity</Table.Th>
-                    </Table.Head>
-                    <Table.Body>
-                        {logs.data.length === 0 && (
-                            <Table.Empty colSpan={5}>No audit log entries yet.</Table.Empty>
-                        )}
+            <div className="pf-dashboard">
+                <div className="pf-dashboard-header">
+                    <div>
+                        <p className="pf-dashboard-kicker">Platform overview</p>
+                        <h1 className="pf-dashboard-title">Audit Log</h1>
+                        <p className="pf-dashboard-subtitle">
+                            Every sensitive action taken across the platform, most
+                            recent first.
+                        </p>
+                    </div>
+                </div>
 
-                        {logs.data.map((log) => (
-                            <tr key={log.id}>
-                                <Table.Td>
-                                    {new Date(log.created_at).toLocaleString()}
-                                </Table.Td>
-                                <Table.Td>{log.tenant?.name ?? '—'}</Table.Td>
-                                <Table.Td className="capitalize">{log.actor_type}</Table.Td>
-                                <Table.Td className="font-mono">{log.action}</Table.Td>
-                                <Table.Td>
-                                    {log.entity_type ?? '—'}
-                                    {log.entity_id ? ` #${log.entity_id.slice(0, 8)}` : ''}
-                                </Table.Td>
-                            </tr>
-                        ))}
-                    </Table.Body>
-                </Table>
+                <div className="pf-panel">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 className="pf-panel-title">Recent Activity</h2>
+                            <p className="pf-panel-count">
+                                {logs.data.length} shown
+                            </p>
+                        </div>
+                    </div>
 
-                <Pagination links={logs.links} />
+                    <div className="pf-table-wrap">
+                        <table className="pf-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">When</th>
+                                    <th scope="col">Tenant</th>
+                                    <th scope="col">Actor</th>
+                                    <th scope="col">Action</th>
+                                    <th scope="col">Entity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {logs.data.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="pf-empty">
+                                            No audit log entries yet.
+                                        </td>
+                                    </tr>
+                                )}
+
+                                {logs.data.map((log) => (
+                                    <tr key={log.id}>
+                                        <td>
+                                            {new Date(log.created_at).toLocaleString()}
+                                        </td>
+                                        <td>{log.tenant?.name ?? '—'}</td>
+                                        <td className="capitalize">{log.actor_type}</td>
+                                        <td className="font-mono">{log.action}</td>
+                                        <td>
+                                            {log.entity_type ?? '—'}
+                                            {log.entity_id ? ` #${log.entity_id.slice(0, 8)}` : ''}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <PaginationBar links={logs.links} />
+                </div>
             </div>
         </PlatformLayout>
     );
