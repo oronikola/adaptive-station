@@ -90,20 +90,29 @@ export default function Login({ status, canResetPassword }) {
                                     </div>
                                 </div>
 
-                                <div className="auth-employee-card">
-                                    <div className="auth-card-header">
-                                        <span className="auth-card-chip">
-                                            <span />
+                                <div className="auth-student-card">
+                                    <span className="auth-card-slot" />
+
+                                    <div className="auth-student-brand">
+                                        <span className="auth-school-mark">A</span>
+                                        <span>
+                                            <strong>ADAPTIVE STATION</strong>
+                                            <small>STUDENT ID</small>
                                         </span>
-                                        <span>STUDENT PASS</span>
                                     </div>
 
-                                    <div className="auth-card-person">
-                                        <span className="auth-card-avatar">JD</span>
-                                        <span className="auth-card-details">
-                                            <strong>Jordan D.</strong>
-                                            <small>ID · 0428</small>
-                                        </span>
+                                    <div className="auth-student-photo">
+                                        <svg viewBox="0 0 48 48" fill="none">
+                                            <circle cx="24" cy="18" r="8" />
+                                            <path d="M10 42c1.6-9.2 6.3-14 14-14s12.4 4.8 14 14" />
+                                        </svg>
+                                    </div>
+
+                                    <strong className="auth-student-name">Jordan Diaz</strong>
+                                    <span className="auth-student-number">2026-0428</span>
+
+                                    <div className="auth-student-footer">
+                                        <span>BSIT · 1A</span>
                                         <TapIcon />
                                     </div>
                                 </div>

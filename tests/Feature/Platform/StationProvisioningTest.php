@@ -31,10 +31,10 @@ class StationProvisioningTest extends TestCase
             'entity_id' => $station->id,
             'entity_type' => 'station_config',
             'operation' => 'upsert',
-        ]);
+        ], 'tenant');
 
         $issueResponse = $this->actingAs($platformAdmin)
-            ->post(route('platform.stations.activation-code', $station->id));
+            ->post(route('platform.stations.activation-code', $station->id), ['tenant_id' => $tenant->id]);
         $issueResponse->assertRedirect(route('platform.stations.index'));
         $issueResponse->assertSessionHas('activationCode');
 

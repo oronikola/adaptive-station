@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\DeviceHeartbeat;
 use App\Models\IntegrationProfile;
 use App\Models\IntegrationRun;
+use App\Models\Station;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,7 +24,7 @@ class RetentionPruneCommandTest extends TestCase
     {
         $tenant = Tenant::factory()->create();
         $admin = User::factory()->tenantAdmin($tenant)->create();
-        $station = \App\Models\Station::factory()->for($tenant)->create();
+        $station = Station::factory()->for($tenant)->create();
 
         // Old heartbeat (beyond default 90-day window) vs recent one.
         $oldHeartbeat = DeviceHeartbeat::create([
@@ -51,20 +52,20 @@ class RetentionPruneCommandTest extends TestCase
 
         $oldSucceededRun = IntegrationRun::start($profile, IntegrationRunDirection::Import);
         $oldSucceededRun->finish(IntegrationRunStatus::Succeeded, ['exported' => 1]);
-        DB::table('integration_runs')->where('id', $oldSucceededRun->id)->update(['created_at' => Date::now()->subDays(200)]);
+        DB::connection('tenant')->table('integration_runs')->where('id', $oldSucceededRun->id)->update(['created_at' => Date::now()->subDays(200)]);
 
         $oldRunningRun = IntegrationRun::start($profile, IntegrationRunDirection::Import);
-        DB::table('integration_runs')->where('id', $oldRunningRun->id)->update(['created_at' => Date::now()->subDays(200)]);
+        DB::connection('tenant')->table('integration_runs')->where('id', $oldRunningRun->id)->update(['created_at' => Date::now()->subDays(200)]);
 
         $this->artisan('retention:prune')->assertSuccessful();
 
-        $this->assertDatabaseMissing('device_heartbeats', ['id' => $oldHeartbeat->id]);
-        $this->assertDatabaseHas('device_heartbeats', ['id' => $recentHeartbeat->id]);
+        $this->assertDatabaseMissing('device_heartbeats', ['id' => $oldHeartbeat->id], 'tenant');
+        $this->assertDatabaseHas('device_heartbeats', ['id' => $recentHeartbeat->id], 'tenant');
 
         $this->assertDatabaseMissing('audit_logs', ['id' => $oldAuditLog->id]);
         $this->assertDatabaseHas('audit_logs', ['id' => $recentAuditLog->id]);
 
-        $this->assertDatabaseMissing('integration_runs', ['id' => $oldSucceededRun->id]);
-        $this->assertDatabaseHas('integration_runs', ['id' => $oldRunningRun->id]);
+        $this->assertDatabaseMissing('integration_runs', ['id' => $oldSucceededRun->id], 'tenant');
+        $this->assertDatabaseHas('integration_runs', ['id' => $oldRunningRun->id], 'tenant');
     }
 }

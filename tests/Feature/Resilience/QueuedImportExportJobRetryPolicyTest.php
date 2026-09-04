@@ -18,7 +18,7 @@ class QueuedImportExportJobRetryPolicyTest extends TestCase
 {
     public function test_import_job_is_queueable_with_a_bounded_retry_policy(): void
     {
-        $job = new RunLegacyImportJob('batch-id', true, '2026-01-01', '2026-01-31', 'user-id');
+        $job = new RunLegacyImportJob('tenant-id', 'batch-id', true, '2026-01-01', '2026-01-31', 'user-id');
 
         $this->assertInstanceOf(ShouldQueue::class, $job);
         $this->assertSame(3, $job->tries);

@@ -21,7 +21,8 @@ return new class extends Migration
             $table->timestamp('revoked_at', 3)->nullable();
             $table->timestamp('created_at', 3)->useCurrent();
 
-            $table->foreign('station_id')->references('id')->on('stations');
+            // No FK to stations — stations lives in the per-tenant database,
+            // this table is central; validated at the app layer only.
             $table->unique('token_hash', 'uq_station_credentials_token_hash');
             $table->index(['station_id', 'revoked_at', 'expires_at'], 'ix_station_credentials_active');
         });

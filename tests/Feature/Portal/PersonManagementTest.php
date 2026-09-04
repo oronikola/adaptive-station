@@ -34,7 +34,7 @@ class PersonManagementTest extends TestCase
             'entity_id' => $person->id,
             'entity_type' => 'person',
             'operation' => 'upsert',
-        ]);
+        ], 'tenant');
         $this->assertDatabaseHas('audit_logs', [
             'tenant_id' => $tenant->id,
             'actor_id' => $admin->id,
@@ -62,7 +62,7 @@ class PersonManagementTest extends TestCase
         $this->assertDatabaseHas('master_data_changes', [
             'entity_id' => $person->id,
             'operation' => 'upsert',
-        ]);
+        ], 'tenant');
     }
 
     public function test_tenant_admin_can_deactivate_and_reactivate_a_person(): void
@@ -78,7 +78,7 @@ class PersonManagementTest extends TestCase
         $this->assertDatabaseHas('master_data_changes', [
             'entity_id' => $person->id,
             'operation' => 'deactivate',
-        ]);
+        ], 'tenant');
 
         $this->actingAs($admin)->patch(route('portal.people.reactivate', $person))
             ->assertRedirect(route('portal.people.edit', $person));

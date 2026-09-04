@@ -1,26 +1,83 @@
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
-import Pagination from '@/Components/admin/Pagination';
-import StatusBadge from '@/Components/admin/StatusBadge';
-import Table from '@/Components/admin/Table';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import '../../../../css/platform-dashboard.css';
 
-function StatTile({ label, value }) {
+const STAT_ICONS = {
+    tenants: (
+        <svg viewBox="0 0 24 24">
+            <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
+        </svg>
+    ),
+    activeTenants: (
+        <svg viewBox="0 0 24 24">
+            <path d="m5 12 4.5 4.5L19 7" />
+        </svg>
+    ),
+    stations: (
+        <svg viewBox="0 0 24 24">
+            <rect x="4" y="5" width="16" height="13" rx="2" />
+            <path d="M8 21h8M9 9h6M9 13h4" />
+        </svg>
+    ),
+    activeStations: (
+        <svg viewBox="0 0 24 24">
+            <path d="M12 3v6M8.5 6.5a6.5 6.5 0 1 0 7 0" />
+        </svg>
+    ),
+};
+
+function StatCard({ label, value, icon, tone }) {
     return (
-        <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-                {label}
-            </div>
-            <div className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                {value}
+        <div className="pf-stat-card">
+            <span className={`pf-stat-icon pf-stat-icon--${tone}`}>
+                {STAT_ICONS[icon]}
+            </span>
+            <div>
+                <p className="pf-stat-label">{label}</p>
+                <p className="pf-stat-value">{value}</p>
             </div>
         </div>
+    );
+}
+
+function PaginationBar({ links }) {
+    if (!links || links.length <= 3) {
+        return null;
+    }
+
+    return (
+        <nav className="pf-pagination">
+            {links.map((link, index) => {
+                const label = link.label
+                    .replace('&laquo; Previous', '‹ Previous')
+                    .replace('Next &raquo;', 'Next ›');
+
+                if (link.url === null) {
+                    return (
+                        <span key={index} className="pf-page-link pf-page-link--disabled">
+                            {label}
+                        </span>
+                    );
+                }
+
+                return (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        preserveScroll
+                        className={
+                            'pf-page-link' +
+                            (link.active ? ' pf-page-link--active' : '')
+                        }
+                    >
+                        {label}
+                    </Link>
+                );
+            })}
+        </nav>
     );
 }
 
@@ -70,124 +127,215 @@ export default function TenantsListScreen({ tenants, stats }) {
     }
 
     return (
-        <PlatformLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        Tenants
-                    </h2>
-                    <PrimaryButton type="button" onClick={() => setCreateOpen(true)}>
-                        Add Tenant
-                    </PrimaryButton>
-                </div>
-            }
-        >
+        <PlatformLayout>
             <Head title="Tenants" />
 
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <StatTile label="Tenants" value={stats.tenant_count} />
-                    <StatTile label="Active Tenants" value={stats.active_tenant_count} />
-                    <StatTile label="Stations" value={stats.station_count} />
-                    <StatTile label="Active Stations" value={stats.active_station_count} />
+            <div className="pf-dashboard">
+                <div className="pf-dashboard-header">
+                    <div>
+                        <p className="pf-dashboard-kicker">Platform overview</p>
+                        <h1 className="pf-dashboard-title">Tenants</h1>
+                        <p className="pf-dashboard-subtitle">
+                            Manage every school on Adaptive Station and keep tabs on
+                            their stations at a glance.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        className="pf-btn pf-btn-primary"
+                        onClick={() => setCreateOpen(true)}
+                    >
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        Add Tenant
+                    </button>
                 </div>
 
-                <Table>
-                    <Table.Head>
-                        <Table.Th>Name</Table.Th>
-                        <Table.Th>Code</Table.Th>
-                        <Table.Th>Timezone</Table.Th>
-                        <Table.Th>Status</Table.Th>
-                        <Table.Th>
-                            <span className="sr-only">Actions</span>
-                        </Table.Th>
-                    </Table.Head>
-                    <Table.Body>
-                        {tenants.data.length === 0 && (
-                            <Table.Empty colSpan={5}>No tenants yet.</Table.Empty>
-                        )}
+                <div className="pf-stat-grid">
+                    <StatCard
+                        label="Tenants"
+                        value={stats.tenant_count}
+                        icon="tenants"
+                        tone="blue"
+                    />
+                    <StatCard
+                        label="Active Tenants"
+                        value={stats.active_tenant_count}
+                        icon="activeTenants"
+                        tone="green"
+                    />
+                    <StatCard
+                        label="Stations"
+                        value={stats.station_count}
+                        icon="stations"
+                        tone="violet"
+                    />
+                    <StatCard
+                        label="Active Stations"
+                        value={stats.active_station_count}
+                        icon="activeStations"
+                        tone="amber"
+                    />
+                </div>
 
-                        {tenants.data.map((tenant) => (
-                            <tr key={tenant.id}>
-                                <Table.Td className="font-medium text-gray-900 dark:text-gray-100">
-                                    {tenant.name}
-                                </Table.Td>
-                                <Table.Td className="font-mono">{tenant.code}</Table.Td>
-                                <Table.Td>{tenant.timezone}</Table.Td>
-                                <Table.Td>
-                                    <StatusBadge
-                                        color={tenant.status === 'active' ? 'green' : 'gray'}
-                                    >
-                                        {tenant.status}
-                                    </StatusBadge>
-                                </Table.Td>
-                                <Table.Td className="text-right">
-                                    <Link
-                                        href={route('platform.tenants.show', tenant.id)}
-                                        className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                                    >
-                                        Manage
-                                    </Link>
-                                </Table.Td>
-                            </tr>
-                        ))}
-                    </Table.Body>
-                </Table>
+                <div className="pf-panel">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 className="pf-panel-title">All Tenants</h2>
+                            <p className="pf-panel-count">
+                                {tenants.data.length} shown
+                            </p>
+                        </div>
+                    </div>
 
-                <Pagination links={tenants.links} />
+                    <div className="pf-table-wrap">
+                        <table className="pf-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Timezone</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">
+                                        <span className="sr-only">Actions</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tenants.data.length === 0 && (
+                                    <tr>
+                                        <td colSpan={4} className="pf-empty">
+                                            No tenants yet.
+                                        </td>
+                                    </tr>
+                                )}
+
+                                {tenants.data.map((tenant) => (
+                                    <tr key={tenant.id}>
+                                        <td>
+                                            <div className="pf-tenant-cell">
+                                                <span className="pf-tenant-avatar">
+                                                    {tenant.name.charAt(0).toUpperCase()}
+                                                </span>
+                                                <span>
+                                                    <span className="pf-tenant-name">
+                                                        {tenant.name}
+                                                    </span>
+                                                    <span className="pf-tenant-code">
+                                                        {tenant.code}
+                                                    </span>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>{tenant.timezone}</td>
+                                        <td>
+                                            <span
+                                                className={
+                                                    'pf-pill ' +
+                                                    (tenant.status === 'active'
+                                                        ? 'pf-pill--active'
+                                                        : 'pf-pill--inactive')
+                                                }
+                                            >
+                                                {tenant.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <Link
+                                                href={route(
+                                                    'platform.tenants.show',
+                                                    tenant.id,
+                                                )}
+                                                className="pf-row-action"
+                                            >
+                                                Manage
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M9 6l6 6-6 6" />
+                                                </svg>
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <PaginationBar links={tenants.links} />
+                </div>
             </div>
 
             <Modal show={createOpen} onClose={() => setCreateOpen(false)}>
-                <form onSubmit={submit} className="p-6">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        Add Tenant
-                    </h3>
+                <form onSubmit={submit} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <h3 className="pf-modal-title">Add Tenant</h3>
+                        <button
+                            type="button"
+                            className="pf-modal-close"
+                            onClick={() => setCreateOpen(false)}
+                            aria-label="Close"
+                        >
+                            <svg viewBox="0 0 24 24">
+                                <path d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
 
-                    <div className="mt-4">
-                        <InputLabel htmlFor="name" value="School name" />
-                        <TextInput
+                    <div className="pf-field">
+                        <label htmlFor="name">School name</label>
+                        <input
                             id="name"
+                            type="text"
                             value={data.name}
                             onChange={(e) => handleNameChange(e.target.value)}
-                            className="mt-1 block w-full"
-                            isFocused
+                            autoFocus
                             required
                         />
                         <InputError message={errors.name} className="mt-2" />
                     </div>
 
-                    <div className="mt-4">
-                        <InputLabel htmlFor="code" value="Code (short, unique)" />
-                        <TextInput
+                    <div className="pf-field">
+                        <label htmlFor="code">Code (short, unique)</label>
+                        <input
                             id="code"
+                            type="text"
                             value={data.code}
                             onChange={(e) => handleCodeChange(e.target.value)}
-                            className="mt-1 block w-full font-mono"
+                            className="font-mono"
                             required
                         />
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        <p className="pf-field-hint">
                             Auto-filled from the school name — edit if you want something different.
                         </p>
                         <InputError message={errors.code} className="mt-2" />
                     </div>
 
-                    <div className="mt-4">
-                        <InputLabel htmlFor="timezone" value="Timezone (e.g. Asia/Manila)" />
-                        <TextInput
+                    <div className="pf-field">
+                        <label htmlFor="timezone">Timezone (e.g. Asia/Manila)</label>
+                        <input
                             id="timezone"
+                            type="text"
                             value={data.timezone}
                             onChange={(e) => setData('timezone', e.target.value)}
-                            className="mt-1 block w-full"
                             required
                         />
                         <InputError message={errors.timezone} className="mt-2" />
                     </div>
 
-                    <div className="mt-6 flex justify-end gap-3">
-                        <SecondaryButton type="button" onClick={() => setCreateOpen(false)}>
+                    <div className="pf-modal-footer">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={() => setCreateOpen(false)}
+                        >
                             Cancel
-                        </SecondaryButton>
-                        <PrimaryButton disabled={processing}>Create</PrimaryButton>
+                        </button>
+                        <button
+                            type="submit"
+                            className="pf-btn pf-btn-primary"
+                            disabled={processing}
+                        >
+                            Create
+                        </button>
                     </div>
                 </form>
             </Modal>

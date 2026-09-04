@@ -1,218 +1,113 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import AppShell from '@/Components/AppShell';
+import { usePage } from '@inertiajs/react';
 
 const navItems = [
-    { name: 'people', label: 'People', route: 'portal.people.index' },
-    { name: 'rfid-cards', label: 'RFID Cards', route: 'portal.rfid-cards.index' },
-    { name: 'stations', label: 'Stations', route: 'portal.stations.index' },
-    { name: 'attendance', label: 'Attendance', route: 'portal.attendance.index' },
-    { name: 'users', label: 'Users', route: 'portal.users.index' },
-    { name: 'integrations', label: 'Integrations', route: 'portal.integrations.index', adminOnly: true },
-    { name: 'imports', label: 'Imports', route: 'portal.imports.index', adminOnly: true },
+    {
+        name: 'people',
+        label: 'People',
+        route: 'portal.people.index',
+        activePattern: 'portal.people.*',
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="3.2" />
+                <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
+            </svg>
+        ),
+    },
+    {
+        name: 'rfid-cards',
+        label: 'RFID Cards',
+        route: 'portal.rfid-cards.index',
+        activePattern: 'portal.rfid-cards.*',
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <rect x="3" y="6" width="18" height="12" rx="2" />
+                <path d="M3 10h18" />
+                <rect x="6" y="13" width="4" height="2.4" rx="0.5" />
+            </svg>
+        ),
+    },
+    {
+        name: 'stations',
+        label: 'Stations',
+        route: 'portal.stations.index',
+        activePattern: 'portal.stations.*',
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <rect x="4" y="5" width="16" height="13" rx="2" />
+                <path d="M8 21h8M9 9h6M9 13h4" />
+            </svg>
+        ),
+    },
+    {
+        name: 'attendance',
+        label: 'Attendance',
+        route: 'portal.attendance.index',
+        activePattern: 'portal.attendance.*',
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 7.5V12l3 2" />
+            </svg>
+        ),
+    },
+    {
+        name: 'users',
+        label: 'Users',
+        route: 'portal.users.index',
+        activePattern: 'portal.users.*',
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <circle cx="9" cy="8" r="3" />
+                <path d="M3.5 19.5c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5" />
+                <path d="M16 8.3a2.6 2.6 0 1 0 0-5.2" />
+                <path d="M15 14.3c2.4.5 4.2 2.4 4.6 5.2" />
+            </svg>
+        ),
+    },
+    {
+        name: 'integrations',
+        label: 'Integrations',
+        route: 'portal.integrations.index',
+        activePattern: 'portal.integrations.*',
+        adminOnly: true,
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <path d="M8 16a4 4 0 0 1 0-5.7l2-2a4 4 0 0 1 5.7 5.7l-1 1" />
+                <path d="M16 8a4 4 0 0 1 0 5.7l-2 2a4 4 0 0 1-5.7-5.7l1-1" />
+            </svg>
+        ),
+    },
+    {
+        name: 'imports',
+        label: 'Imports',
+        route: 'portal.imports.index',
+        activePattern: 'portal.imports.*',
+        adminOnly: true,
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <path d="M12 4v10m0 0-3.5-3.5M12 14l3.5-3.5" />
+                <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+            </svg>
+        ),
+    },
 ];
 
 export default function AdminLayout({ header, children }) {
-    const { auth, tenant, flash } = usePage().props;
+    const { auth } = usePage().props;
     const user = auth.user;
-
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
 
     const visibleNavItems = navItems.filter(
         (item) => !item.adminOnly || user.role !== 'tenant_operator',
     );
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <nav className="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
-                                <Link href={route('portal.people.index')}>
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
-                                </Link>
-                            </div>
-
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                {visibleNavItems.map((item) => (
-                                    <NavLink
-                                        key={item.name}
-                                        href={route(item.route)}
-                                        active={route().current(
-                                            `portal.${item.name}.*`,
-                                        )}
-                                    >
-                                        {item.label}
-                                    </NavLink>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center sm:space-x-4">
-                            {tenant && (
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    {tenant.name}
-                                </span>
-                            )}
-
-                            <Dropdown>
-                                <Dropdown.Trigger>
-                                    <span className="inline-flex rounded-md">
-                                        <button
-                                            type="button"
-                                            className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
-                                        >
-                                            {user.name}
-
-                                            <svg
-                                                className="-me-0.5 ms-2 h-4 w-4"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 20 20"
-                                                fill="currentColor"
-                                            >
-                                                <path
-                                                    fillRule="evenodd"
-                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                    clipRule="evenodd"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </span>
-                                </Dropdown.Trigger>
-
-                                <Dropdown.Content>
-                                    <Dropdown.Link href={route('profile.edit')}>
-                                        Profile
-                                    </Dropdown.Link>
-                                    <Dropdown.Link
-                                        href={route('logout')}
-                                        method="post"
-                                        as="button"
-                                    >
-                                        Log Out
-                                    </Dropdown.Link>
-                                </Dropdown.Content>
-                            </Dropdown>
-                        </div>
-
-                        <div className="-me-2 flex items-center sm:hidden">
-                            <button
-                                onClick={() =>
-                                    setShowingNavigationDropdown(
-                                        (previousState) => !previousState,
-                                    )
-                                }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none dark:text-gray-500 dark:hover:bg-gray-900 dark:hover:text-gray-400 dark:focus:bg-gray-900 dark:focus:text-gray-400"
-                            >
-                                <svg
-                                    className="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        className={
-                                            !showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        className={
-                                            showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div
-                    className={
-                        (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
-                    }
-                >
-                    <div className="space-y-1 pb-3 pt-2">
-                        {visibleNavItems.map((item) => (
-                            <ResponsiveNavLink
-                                key={item.name}
-                                href={route(item.route)}
-                                active={route().current(
-                                    `portal.${item.name}.*`,
-                                )}
-                            >
-                                {item.label}
-                            </ResponsiveNavLink>
-                        ))}
-                    </div>
-
-                    <div className="border-t border-gray-200 pb-1 pt-4 dark:border-gray-600">
-                        <div className="px-4">
-                            {tenant && (
-                                <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                    {tenant.name}
-                                </div>
-                            )}
-                            <div className="text-base font-medium text-gray-800 dark:text-gray-200">
-                                {user.name}
-                            </div>
-                            <div className="text-sm font-medium text-gray-500">
-                                {user.email}
-                            </div>
-                        </div>
-
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route('logout')}
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            {header && (
-                <header className="bg-white shadow dark:bg-gray-800">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
-                    </div>
-                </header>
-            )}
-
-            <main>
-                {flash?.success && (
-                    <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-                        <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-900 dark:bg-green-900/30 dark:text-green-300">
-                            {flash.success}
-                        </div>
-                    </div>
-                )}
-
-                {children}
-            </main>
-        </div>
+        <AppShell
+            brandHref={route('portal.people.index')}
+            items={visibleNavItems}
+            header={header}
+        >
+            {children}
+        </AppShell>
     );
 }

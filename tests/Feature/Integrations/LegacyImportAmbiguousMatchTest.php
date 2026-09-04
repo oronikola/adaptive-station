@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Integrations;
 
+use App\Enums\ImportExceptionResolution;
 use App\Jobs\RunLegacyImportJob;
 use App\Models\ImportBatch;
 use App\Models\ImportException;
@@ -39,7 +40,7 @@ class LegacyImportAmbiguousMatchTest extends TestCase
         ], $admin);
         $batch = ImportBatch::start($tenant->id, $profile->id, 'legacy_mysql', 'Test import', $admin);
 
-        (new RunLegacyImportJob($batch->id, true, '2026-09-01', '2026-09-30', $admin->id))->handle();
+        (new RunLegacyImportJob($tenant->id, $batch->id, true, '2026-09-01', '2026-09-30', $admin->id))->handle();
 
         $this->assertSame(0, Person::allTenants()->where('tenant_id', $tenant->id)->count());
 
@@ -69,10 +70,10 @@ class LegacyImportAmbiguousMatchTest extends TestCase
         ], $admin);
         $batch = ImportBatch::start($tenant->id, $profile->id, 'legacy_mysql', 'Test import', $admin);
 
-        (new RunLegacyImportJob($batch->id, true, '2026-09-01', '2026-09-30', $admin->id))->handle();
+        (new RunLegacyImportJob($tenant->id, $batch->id, true, '2026-09-01', '2026-09-30', $admin->id))->handle();
 
         $exception = ImportException::allTenants()->where('tenant_id', $tenant->id)->firstOrFail();
-        $exception->resolve($admin, \App\Enums\ImportExceptionResolution::Ignored, 'Legacy studid predates roster import.');
+        $exception->resolve($admin, ImportExceptionResolution::Ignored, 'Legacy studid predates roster import.');
 
         $this->assertSame('ignored', $exception->fresh()->resolution->value);
         $this->assertNotNull($exception->fresh()->resolved_at);

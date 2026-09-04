@@ -42,7 +42,7 @@ class MasterDataCursorFeedTest extends TestCase
         $this->assertDatabaseHas('device_sync_cursors', [
             'station_id' => $station->id,
             'master_data_version' => 1,
-        ]);
+        ], 'tenant');
     }
 
     public function test_an_empty_feed_reports_the_input_cursor_back_unchanged(): void
@@ -81,6 +81,6 @@ class MasterDataCursorFeedTest extends TestCase
         $this->assertDatabaseHas('device_sync_cursors', [
             'station_id' => $station->id,
             'master_data_version' => 0,
-        ]);
+        ], 'tenant');
     }
 }

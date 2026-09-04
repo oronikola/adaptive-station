@@ -117,7 +117,7 @@
 
 .auth-tap-visual {
     position: relative;
-    height: 202px;
+    height: 218px;
     margin-top: 30px;
     overflow: hidden;
     border: 1px solid #dbe3ef;
@@ -226,13 +226,17 @@
     letter-spacing: 0.12em;
 }
 
-.auth-employee-card {
+.auth-student-card {
     position: absolute;
-    top: 42px;
+    z-index: 2;
+    top: 18px;
     right: 17px;
-    width: 142px;
-    height: 96px;
-    padding: 12px;
+    display: flex;
+    width: 128px;
+    height: 152px;
+    flex-direction: column;
+    align-items: center;
+    padding: 9px 10px 10px;
     transform: rotate(3deg);
     border: 1px solid #cbdaf0;
     border-radius: 12px;
@@ -240,80 +244,120 @@
     box-shadow: 0 16px 30px -18px rgba(15, 35, 70, 0.55);
 }
 
-.auth-card-header,
-.auth-card-person {
+.auth-card-slot {
+    display: block;
+    width: 25px;
+    height: 4px;
+    flex: 0 0 4px;
+    border-radius: 999px;
+    background: #d9e2ef;
+}
+
+.auth-student-brand {
     display: flex;
+    width: 100%;
     align-items: center;
+    gap: 6px;
+    margin-top: 7px;
+    color: #0b2a5b;
 }
 
-.auth-card-header {
-    justify-content: space-between;
-    gap: 8px;
-    color: #71839c;
-    font-size: 7px;
+.auth-school-mark {
+    display: grid;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    place-items: center;
+    border-radius: 5px;
+    background: #0b2a5b;
+    color: #ffffff;
+    font-size: 8px;
     font-weight: 700;
-    letter-spacing: 0.1em;
 }
 
-.auth-card-chip {
+.auth-student-brand strong,
+.auth-student-brand small {
+    display: block;
+    line-height: 1.15;
+}
+
+.auth-student-brand strong {
+    font-size: 6px;
+    letter-spacing: 0.06em;
+}
+
+.auth-student-brand small {
+    margin-top: 2px;
+    color: #7487a1;
+    font-size: 5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.auth-student-photo {
     display: grid;
-    width: 21px;
-    height: 16px;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
     place-items: center;
-    border: 1px solid #d2ae60;
-    border-radius: 4px;
-    background: #f2cf7f;
-}
-
-.auth-card-chip span {
-    width: 8px;
-    height: 16px;
-    border-right: 1px solid rgba(128, 90, 22, 0.28);
-    border-left: 1px solid rgba(128, 90, 22, 0.28);
-}
-
-.auth-card-person {
-    gap: 8px;
-    margin-top: 18px;
-}
-
-.auth-card-avatar {
-    display: grid;
-    width: 30px;
-    height: 30px;
-    flex: 0 0 30px;
-    place-items: center;
-    border-radius: 9px;
-    background: #e5eefb;
+    margin-top: 8px;
+    overflow: hidden;
+    border: 2px solid #ffffff;
+    border-radius: 10px;
+    background: linear-gradient(145deg, #eaf2fd, #d6e5f9);
     color: #174a96;
-    font-size: 10px;
-    font-weight: 700;
+    box-shadow: 0 0 0 1px #cfddf0;
 }
 
-.auth-card-details {
-    min-width: 0;
-    flex: 1;
+.auth-student-photo svg {
+    width: 34px;
+    height: 34px;
+    fill: rgba(23, 74, 150, 0.13);
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
 }
 
-.auth-card-details strong {
+.auth-student-name {
+    display: block;
+    max-width: 100%;
+    margin-top: 6px;
     overflow: hidden;
     color: #0b2a5b;
     font-size: 9px;
-    line-height: 1.2;
+    line-height: 1.15;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.auth-card-details small {
-    margin-top: 3px;
+.auth-student-number {
+    display: block;
+    margin-top: 2px;
     color: #8190a7;
-    font-size: 7px;
+    font-size: 6px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
 }
 
-.auth-card-person > svg {
-    width: 17px;
-    height: 17px;
-    flex: 0 0 17px;
+.auth-student-footer {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 6px;
+    border-top: 1px solid #e5ebf3;
+    color: #174a96;
+    font-size: 6px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.auth-student-footer svg {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
     fill: none;
     stroke: #174a96;
     stroke-width: 1.8;
@@ -322,6 +366,7 @@
 
 .auth-tap-confirmation {
     position: absolute;
+    z-index: 3;
     right: 17px;
     bottom: 13px;
     display: flex;

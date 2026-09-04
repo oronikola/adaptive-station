@@ -76,7 +76,11 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
+            // TENANT_DB_DATABASE exists only so the testing environment can
+            // pin this connection to one fixed database for the whole suite
+            // (see tests/bootstrap.php + TenantDatabase::use()) — outside of
+            // tests, this value is always overwritten at runtime per-request.
+            'database' => env('TENANT_DB_DATABASE', env('DB_DATABASE', 'laravel')),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),

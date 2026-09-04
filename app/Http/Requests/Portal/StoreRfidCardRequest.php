@@ -30,7 +30,7 @@ class StoreRfidCardRequest extends FormRequest
         return [
             'person_id' => [
                 'required', 'uuid',
-                Rule::exists('people', 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
+                Rule::exists('tenant.people', 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
             ],
             // No is_active filter here — uq_rfid_cards_tenant_uid covers every
             // row for the tenant regardless of status, so a deactivated card's
@@ -38,7 +38,7 @@ class StoreRfidCardRequest extends FormRequest
             // pass validation then fail on the DB constraint.
             'card_uid' => [
                 'required', 'string', 'max:100',
-                Rule::unique('rfid_cards')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
+                Rule::unique('tenant.rfid_cards')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
             ],
         ];
     }

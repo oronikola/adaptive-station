@@ -1,7 +1,7 @@
 # Production Deployment Runbook
 
 **Milestone:** 5 (IP-006 work items 1)
-**Status:** Ready to execute
+**Status:** Ready to execute — updated 2026-09-04 for per-tenant physical databases ([ADR-005](../adr/ADR-005_per-tenant-physical-databases.md))
 **Sources:** `docs/milestone-0-foundation/ENVIRONMENT_BASELINE.md`, `docs/sys-design-plan/ADAPTIVE_STATION_DATABASE_DESIGN.md` §9, `config/queue.php`, `config/logging.php`, `routes/console.php`
 
 This runbook covers what's needed to run Adaptive Station in production, beyond the local/dev scaffold already in the repo.
@@ -20,7 +20,8 @@ Extends the table in `ENVIRONMENT_BASELINE.md`. Set these explicitly — do not 
 | `APP_DEBUG` | `false` | Never leak stack traces to clients |
 | `APP_KEY` | unique per environment | Never reuse a local/staging key — also encrypts `integration_profiles.config_encrypted` |
 | `DB_CONNECTION` | `mysql` | SQLite is dev-only |
-| `DB_HOST`/`DB_PORT`/`DB_DATABASE`/`DB_USERNAME`/`DB_PASSWORD` | real MySQL 8, `utf8mb4` | From a secret manager, never committed |
+| `DB_HOST`/`DB_PORT`/`DB_DATABASE`/`DB_USERNAME`/`DB_PASSWORD` | real MySQL 8, `utf8mb4` | `DB_DATABASE` is the **central** database only (`tenants`, `users`, `station_credentials`, `station_activation_codes`, `audit_logs`) — every tenant's own database is created and addressed automatically by `App\Support\TenantDatabase`, never set via env. Credentials from a secret manager, never committed. |
+| *(no env var — set at DB-user-grant level)* | `DB_USERNAME` needs `CREATE`/`DROP` privilege on the MySQL server, not just on one database | `Tenant::provision()`/`purge()` issue real `CREATE DATABASE`/`DROP DATABASE` statements — see §8 |
 | `QUEUE_CONNECTION` | `database` (MVP) or `redis` (preferred at scale) | `database` is already proven end-to-end by every feature test in this repo; move to `redis` when queue volume justifies it |
 | `SESSION_DRIVER` / `CACHE_STORE` | `database` (MVP) or `redis` | Same reasoning as queue |
 | `LOG_CHANNEL` | `stack` | Existing default |
@@ -82,3 +83,13 @@ See `BACKUP_AND_RESTORE_RUNBOOK.md` — MySQL backup/restore and kiosk SQLite ex
 - [ ] `/api/health` returns `200` from the production URL
 - [ ] MySQL backup job scheduled and one restore test completed (`BACKUP_AND_RESTORE_RUNBOOK.md`)
 - [ ] `SECURITY_AND_RESILIENCE_TEST_EVIDENCE.md` reviewed — no unresolved critical finding
+- [ ] `DB_USERNAME` confirmed to have server-level `CREATE`/`DROP DATABASE` privilege (§8) — creating the very first tenant is the simplest way to verify this
+
+## 8. Per-Tenant Databases (ADR-005)
+
+Every school gets its own physical database, created automatically the moment a tenant is provisioned in the portal — there is no separate manual "provision infrastructure" step. This has real operational consequences beyond what §2's env table covers:
+
+- **Database-server-level privileges**: the MySQL user in `DB_USERNAME` needs `CREATE`, `DROP`, and full DML/DDL privileges across the whole server (or at minimum on any database matching `adaptive_station_*`), not just on the central `adaptive_station` database. A narrowly-scoped single-database grant will make every new tenant creation fail.
+- **Schema changes roll out per-database**: adding a migration under `database/migrations/tenant/` does not automatically apply to every existing tenant. After deploying such a migration, run `php artisan tenants:migrate` (no argument) to apply it to every tenant's database. The default migration path (central tables) still works exactly as `php artisan migrate` always has.
+- **Monitoring**: a connection-pool or slow-query dashboard scoped to one database name will miss issues in other tenants' databases — point monitoring at the MySQL server as a whole, or iterate the `tenants` table's `code` column to enumerate current database names.
+- **Backups are per-tenant now** — see `BACKUP_AND_RESTORE_RUNBOOK.md` §1, which loops every tenant automatically; there is no single `mysqldump` that captures everything.

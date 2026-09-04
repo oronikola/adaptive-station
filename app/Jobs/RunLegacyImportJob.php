@@ -5,10 +5,12 @@ namespace App\Jobs;
 use App\Enums\ImportBatchStatus;
 use App\Models\ImportBatch;
 use App\Models\IntegrationProfile;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Integrations\LegacyMysqlConnector;
 use App\Services\Integrations\RosterImporter;
 use App\Services\Integrations\TapHistoryImporter;
+use App\Support\TenantDatabase;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -43,16 +45,20 @@ class RunLegacyImportJob implements ShouldQueue
     }
 
     public function __construct(
+        protected string $tenantId,
         protected string $importBatchId,
         protected bool $commit,
         protected string $dateFrom,
         protected string $dateTo,
         protected ?string $actorUserId = null,
-    ) {
-    }
+    ) {}
 
     public function handle(): void
     {
+        // ImportBatch lives on the per-tenant connection — must point it at
+        // this tenant's database before the very first query below.
+        TenantDatabase::use(Tenant::findOrFail($this->tenantId));
+
         $batch = ImportBatch::allTenants()->findOrFail($this->importBatchId);
 
         $profile = $batch->integration_profile_id !== null

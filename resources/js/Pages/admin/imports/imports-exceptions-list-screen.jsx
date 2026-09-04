@@ -62,7 +62,7 @@ export default function ImportsExceptionsListScreen({ batch, exceptions, filters
                                             <button
                                                 type="button"
                                                 onClick={() => resolve(exception, 'resolved')}
-                                                className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                                                className="font-medium text-[#174a96] hover:text-[#2863bd] dark:text-indigo-400"
                                             >
                                                 Resolve
                                             </button>

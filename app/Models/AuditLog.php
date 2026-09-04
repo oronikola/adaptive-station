@@ -18,6 +18,9 @@ class AuditLog extends Model implements TenantScoped
 {
     use HasTenantScope, HasUuidV4;
 
+    /** Explicit for the same cross-connection-relation reason as Tenant. */
+    protected $connection = 'mysql';
+
     const UPDATED_AT = null;
 
     protected function casts(): array

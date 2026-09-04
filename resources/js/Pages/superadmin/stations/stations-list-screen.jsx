@@ -32,8 +32,10 @@ export default function StationsListScreen({ stations, tenants }) {
         });
     }
 
-    function issueCode(stationId) {
-        router.post(route('platform.stations.activation-code', stationId));
+    function issueCode(station) {
+        router.post(route('platform.stations.activation-code', station.id), {
+            tenant_id: station.tenant_id,
+        });
     }
 
     return (
@@ -87,8 +89,8 @@ export default function StationsListScreen({ stations, tenants }) {
                                     {station.status === 'pending_activation' && (
                                         <button
                                             type="button"
-                                            onClick={() => issueCode(station.id)}
-                                            className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                                            onClick={() => issueCode(station)}
+                                            className="font-medium text-[#174a96] hover:text-[#2863bd] dark:text-indigo-400"
                                         >
                                             Issue Activation Code
                                         </button>

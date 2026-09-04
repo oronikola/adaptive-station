@@ -1,15 +1,11 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
-import DangerButton from '@/Components/DangerButton';
 import TextInput from '@/Components/TextInput';
-import StatusBadge from '@/Components/admin/StatusBadge';
-import Table from '@/Components/admin/Table';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import '../../../../css/platform-dashboard.css';
 
 export default function PeopleEditScreen({ person }) {
     const { auth } = usePage().props;
@@ -75,16 +71,14 @@ export default function PeopleEditScreen({ person }) {
                             )}
                             method="patch"
                             as="button"
+                            className={
+                                'pf-btn ' +
+                                (person.is_active
+                                    ? 'pf-btn-danger'
+                                    : 'pf-btn-primary')
+                            }
                         >
-                            {person.is_active ? (
-                                <DangerButton type="button">
-                                    Deactivate
-                                </DangerButton>
-                            ) : (
-                                <PrimaryButton type="button">
-                                    Reactivate
-                                </PrimaryButton>
-                            )}
+                            {person.is_active ? 'Deactivate' : 'Reactivate'}
                         </Link>
                     )}
                 </div>
@@ -94,9 +88,14 @@ export default function PeopleEditScreen({ person }) {
 
             <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 <div className="flex items-center gap-3">
-                    <StatusBadge color={person.is_active ? 'green' : 'gray'}>
-                        {person.is_active ? 'Active' : 'Inactive'}
-                    </StatusBadge>
+                    <span
+                        className={
+                            'pf-pill ' +
+                            (person.is_active ? 'pf-pill--active' : 'pf-pill--inactive')
+                        }
+                    >
+                        {person.is_active ? 'active' : 'inactive'}
+                    </span>
                     <Link
                         href={route('portal.people.index')}
                         className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
@@ -217,142 +216,199 @@ export default function PeopleEditScreen({ person }) {
                     </div>
 
                     {canManage && (
-                        <PrimaryButton disabled={detailsForm.processing}>
+                        <button type="submit" className="pf-btn pf-btn-primary" disabled={detailsForm.processing}>
                             Save Changes
-                        </PrimaryButton>
+                        </button>
                     )}
                 </form>
 
-                <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                            RFID Cards
-                        </h3>
+                <div className="pf-panel">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 className="pf-panel-title">RFID Cards</h2>
+                            <p className="pf-panel-count">
+                                {person.rfid_cards.length} shown
+                            </p>
+                        </div>
                         {canManage && (
-                            <PrimaryButton
+                            <button
                                 type="button"
+                                className="pf-btn pf-btn-primary"
                                 onClick={() => setAssignOpen(true)}
                             >
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
                                 Assign Card
-                            </PrimaryButton>
+                            </button>
                         )}
                     </div>
 
-                    <Table>
-                        <Table.Head>
-                            <Table.Th>Card UID</Table.Th>
-                            <Table.Th>Status</Table.Th>
-                            <Table.Th>Assigned</Table.Th>
-                            <Table.Th>
-                                <span className="sr-only">Actions</span>
-                            </Table.Th>
-                        </Table.Head>
-                        <Table.Body>
-                            {person.rfid_cards.length === 0 && (
-                                <Table.Empty colSpan={4}>
-                                    No cards assigned.
-                                </Table.Empty>
-                            )}
-
-                            {person.rfid_cards.map((card) => (
-                                <tr key={card.id}>
-                                    <Table.Td className="font-mono">
-                                        {card.card_uid}
-                                    </Table.Td>
-                                    <Table.Td>
-                                        <StatusBadge
-                                            color={card.is_active ? 'green' : 'gray'}
-                                        >
-                                            {card.is_active ? 'Active' : 'Inactive'}
-                                        </StatusBadge>
-                                    </Table.Td>
-                                    <Table.Td>
-                                        {new Date(card.assigned_at).toLocaleDateString()}
-                                    </Table.Td>
-                                    <Table.Td className="space-x-3 text-right">
-                                        {canManage && card.is_active && (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setReplacingCard(card.id)}
-                                                    className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                                                >
-                                                    Replace
-                                                </button>
-                                                <Link
-                                                    href={route('portal.rfid-cards.deactivate', card.id)}
-                                                    method="patch"
-                                                    as="button"
-                                                    className="font-medium text-red-600 hover:text-red-500 dark:text-red-400"
-                                                >
-                                                    Deactivate
-                                                </Link>
-                                            </>
-                                        )}
-                                    </Table.Td>
+                    <div className="pf-table-wrap">
+                        <table className="pf-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Card UID</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Assigned</th>
+                                    <th scope="col">
+                                        <span className="sr-only">Actions</span>
+                                    </th>
                                 </tr>
-                            ))}
-                        </Table.Body>
-                    </Table>
+                            </thead>
+                            <tbody>
+                                {person.rfid_cards.length === 0 && (
+                                    <tr>
+                                        <td colSpan={4} className="pf-empty">
+                                            No cards assigned.
+                                        </td>
+                                    </tr>
+                                )}
+
+                                {person.rfid_cards.map((card) => (
+                                    <tr key={card.id}>
+                                        <td className="font-mono">{card.card_uid}</td>
+                                        <td>
+                                            <span
+                                                className={
+                                                    'pf-pill ' +
+                                                    (card.is_active
+                                                        ? 'pf-pill--active'
+                                                        : 'pf-pill--inactive')
+                                                }
+                                            >
+                                                {card.is_active ? 'active' : 'inactive'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {new Date(card.assigned_at).toLocaleDateString()}
+                                        </td>
+                                        <td className="space-x-3 text-right">
+                                            {canManage && card.is_active && (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setReplacingCard(card.id)}
+                                                        className="pf-row-action"
+                                                    >
+                                                        Replace
+                                                    </button>
+                                                    <Link
+                                                        href={route('portal.rfid-cards.deactivate', card.id)}
+                                                        method="patch"
+                                                        as="button"
+                                                        className="pf-row-action pf-row-action--danger"
+                                                    >
+                                                        Deactivate
+                                                    </Link>
+                                                </>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <Modal show={assignOpen} onClose={() => setAssignOpen(false)}>
-                <form onSubmit={submitAssign} className="p-6">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        Assign a card
-                    </h3>
-                    <div className="mt-4">
-                        <InputLabel htmlFor="assign_card_uid" value="Card UID" />
-                        <TextInput
+                <form onSubmit={submitAssign} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <h3 className="pf-modal-title">Assign a card</h3>
+                        <button
+                            type="button"
+                            className="pf-modal-close"
+                            onClick={() => setAssignOpen(false)}
+                            aria-label="Close"
+                        >
+                            <svg viewBox="0 0 24 24">
+                                <path d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div className="pf-field">
+                        <label htmlFor="assign_card_uid">Card UID</label>
+                        <input
                             id="assign_card_uid"
+                            type="text"
                             value={assignForm.data.card_uid}
                             onChange={(e) => assignForm.setData('card_uid', e.target.value)}
-                            className="mt-1 block w-full"
-                            isFocused
+                            autoFocus
                             required
                         />
                         <InputError message={assignForm.errors.card_uid} className="mt-2" />
                     </div>
-                    <div className="mt-6 flex justify-end gap-3">
-                        <SecondaryButton type="button" onClick={() => setAssignOpen(false)}>
+
+                    <div className="pf-modal-footer">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={() => setAssignOpen(false)}
+                        >
                             Cancel
-                        </SecondaryButton>
-                        <PrimaryButton disabled={assignForm.processing}>
+                        </button>
+                        <button
+                            type="submit"
+                            className="pf-btn pf-btn-primary"
+                            disabled={assignForm.processing}
+                        >
                             Assign
-                        </PrimaryButton>
+                        </button>
                     </div>
                 </form>
             </Modal>
 
             <Modal show={replacingCard !== null} onClose={() => setReplacingCard(null)}>
-                <form onSubmit={submitReplace} className="p-6">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        Replace card
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <form onSubmit={submitReplace} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <h3 className="pf-modal-title">Replace card</h3>
+                        <button
+                            type="button"
+                            className="pf-modal-close"
+                            onClick={() => setReplacingCard(null)}
+                            aria-label="Close"
+                        >
+                            <svg viewBox="0 0 24 24">
+                                <path d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <p className="pf-field-hint" style={{ marginBottom: '16px' }}>
                         The current card will be deactivated and can no longer be
                         used to tap in or out.
                     </p>
-                    <div className="mt-4">
-                        <InputLabel htmlFor="replace_card_uid" value="New card UID" />
-                        <TextInput
+
+                    <div className="pf-field">
+                        <label htmlFor="replace_card_uid">New card UID</label>
+                        <input
                             id="replace_card_uid"
+                            type="text"
                             value={replaceForm.data.card_uid}
                             onChange={(e) => replaceForm.setData('card_uid', e.target.value)}
-                            className="mt-1 block w-full"
-                            isFocused
+                            autoFocus
                             required
                         />
                         <InputError message={replaceForm.errors.card_uid} className="mt-2" />
                     </div>
-                    <div className="mt-6 flex justify-end gap-3">
-                        <SecondaryButton type="button" onClick={() => setReplacingCard(null)}>
+
+                    <div className="pf-modal-footer">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={() => setReplacingCard(null)}
+                        >
                             Cancel
-                        </SecondaryButton>
-                        <PrimaryButton disabled={replaceForm.processing}>
+                        </button>
+                        <button
+                            type="submit"
+                            className="pf-btn pf-btn-primary"
+                            disabled={replaceForm.processing}
+                        >
                             Replace
-                        </PrimaryButton>
+                        </button>
                     </div>
                 </form>
             </Modal>

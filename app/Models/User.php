@@ -34,6 +34,17 @@ class User extends Authenticatable
     use HasFactory, HasUuidV4, Notifiable;
 
     /**
+     * Explicit, not just "the default connection by omission" — a tenant-
+     * connection model's belongsTo(User::class) relation would otherwise
+     * silently inherit the CALLER's connection (Eloquent's
+     * newRelatedInstance() does this whenever the related model has no
+     * $connection of its own), which is wrong for a central table like this
+     * one. Same reasoning applies to Tenant/StationCredential/
+     * StationActivationCode/AuditLog.
+     */
+    protected $connection = 'mysql';
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

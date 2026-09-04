@@ -6,7 +6,9 @@ use App\Enums\IntegrationRunStatus;
 use App\Models\IntegrationProfile;
 use App\Models\IntegrationRun;
 use App\Models\TapEvent;
+use App\Models\Tenant;
 use App\Services\Integrations\LegacyMysqlConnector;
+use App\Support\TenantDatabase;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -42,11 +44,12 @@ class RunLegacyExportJob implements ShouldQueue
         protected string $tenantId,
         protected string $dateFrom,
         protected string $dateTo,
-    ) {
-    }
+    ) {}
 
     public function handle(): void
     {
+        TenantDatabase::use(Tenant::findOrFail($this->tenantId));
+
         $run = IntegrationRun::allTenants()->findOrFail($this->integrationRunId);
         $profile = IntegrationProfile::allTenants()->findOrFail($run->integration_profile_id);
         $connector = LegacyMysqlConnector::forProfile($profile);

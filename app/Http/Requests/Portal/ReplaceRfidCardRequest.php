@@ -30,7 +30,7 @@ class ReplaceRfidCardRequest extends FormRequest
         return [
             'card_uid' => [
                 'required', 'string', 'max:100',
-                Rule::unique('rfid_cards')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
+                Rule::unique('tenant.rfid_cards')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
             ],
         ];
     }

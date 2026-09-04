@@ -53,7 +53,10 @@ class ImportBatchController extends Controller
         Gate::authorize('create', ImportBatch::class);
 
         $data = $request->validate([
-            'integration_profile_id' => ['required', 'uuid', 'exists:integration_profiles,id'],
+            // Connection-qualified: integration_profiles lives on the
+            // 'tenant' connection, not the default one the exists rule
+            // checks by default.
+            'integration_profile_id' => ['required', 'uuid', 'exists:tenant.integration_profiles,id'],
             'date_from' => ['required', 'date'],
             'date_to' => ['required', 'date', 'after_or_equal:date_from'],
             'commit' => ['required', 'boolean'],
@@ -69,7 +72,14 @@ class ImportBatchController extends Controller
             $request->user(),
         );
 
-        RunLegacyImportJob::dispatchSync($batch->id, $data['commit'], $data['date_from'], $data['date_to'], $request->user()->id);
+        RunLegacyImportJob::dispatchSync(
+            $request->user()->tenant_id,
+            $batch->id,
+            $data['commit'],
+            $data['date_from'],
+            $data['date_to'],
+            $request->user()->id,
+        );
 
         return redirect()->route('portal.imports.show', $batch)->with('success', $data['commit'] ? 'Import completed.' : 'Preview completed.');
     }

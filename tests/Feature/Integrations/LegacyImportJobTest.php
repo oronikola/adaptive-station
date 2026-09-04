@@ -143,6 +143,6 @@ class LegacyImportJobTest extends TestCase
 
     protected function runImport(ImportBatch $batch, bool $commit): void
     {
-        (new RunLegacyImportJob($batch->id, $commit, '2026-09-01', '2026-09-30', $batch->created_by_user_id))->handle();
+        (new RunLegacyImportJob($batch->tenant_id, $batch->id, $commit, '2026-09-01', '2026-09-30', $batch->created_by_user_id))->handle();
     }
 }

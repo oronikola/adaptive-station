@@ -26,7 +26,11 @@ class StationCredentialCrossTenantTest extends TestCase
         $resolved = StationCredential::findActiveByPlaintextToken($token);
         $this->assertNotNull($resolved);
 
-        app(TenantContext::class)->set($resolved->station->tenant_id);
+        // tenant_id comes straight off the credential's own central column —
+        // matches AuthenticateStation's real resolution order, since
+        // resolving `station` via the relation before TenantContext is set
+        // would fail closed (Station's own TenantScope, zero rows).
+        app(TenantContext::class)->set($resolved->tenant_id);
 
         $this->assertNull(Station::find($stationB->id));
         $this->assertNotNull(Station::find($stationA->id));

@@ -38,7 +38,7 @@ class TapEventBatchPartialValidationTest extends TestCase
 
         $this->assertEqualsCanonicalizing([$validIdA, $validIdB], $response->json('accepted_event_ids'));
         $this->assertCount(1, $response->json('rejected_events'));
-        $this->assertDatabaseCount('tap_events', 2);
+        $this->assertDatabaseCount('tap_events', 2, 'tenant');
     }
 
     public function test_an_oversized_batch_envelope_is_rejected_entirely(): void
@@ -59,6 +59,6 @@ class TapEventBatchPartialValidationTest extends TestCase
             ->postJson('/api/v1/device/events/batch', ['events' => $events]);
 
         $response->assertStatus(422);
-        $this->assertDatabaseCount('tap_events', 0);
+        $this->assertDatabaseCount('tap_events', 0, 'tenant');
     }
 }

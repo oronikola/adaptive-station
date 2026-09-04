@@ -4,7 +4,9 @@ namespace App\Http\Middleware;
 
 use App\Enums\StationStatus;
 use App\Models\StationCredential;
+use App\Models\Tenant;
 use App\Support\TenantContext;
+use App\Support\TenantDatabase;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -32,10 +34,17 @@ class AuthenticateStation
         $credential = StationCredential::findActiveByPlaintextToken($token);
         abort_unless($credential !== null, 401, 'Invalid, revoked, or expired device credential.');
 
+        // tenant_id comes straight off the credential's own column (central
+        // table) — the 'tenant' connection must be pointed at the right
+        // physical database before Station (which lives there) can be
+        // queried at all, so this has to happen before the station lookup.
+        $tenant = Tenant::findOrFail($credential->tenant_id);
+        TenantDatabase::use($tenant);
+        app(TenantContext::class)->set($tenant->id);
+
         $station = $credential->station;
         abort_unless($station?->status === StationStatus::Active, 403, 'Station is not active.');
 
-        app(TenantContext::class)->set($station->tenant_id);
         $credential->forceFill(['last_used_at' => Date::now()])->save();
 
         $request->attributes->set('device_station', $station);

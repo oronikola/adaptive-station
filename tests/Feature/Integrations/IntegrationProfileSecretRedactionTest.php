@@ -30,7 +30,7 @@ class IntegrationProfileSecretRedactionTest extends TestCase
         $this->assertStringNotContainsString('db.internal', $profile->toJson());
 
         // The raw database column must still be encrypted at rest.
-        $raw = DB::table('integration_profiles')->where('id', $profile->id)->value('config_encrypted');
+        $raw = DB::connection('tenant')->table('integration_profiles')->where('id', $profile->id)->value('config_encrypted');
         $this->assertStringNotContainsString('super-secret', $raw);
     }
 

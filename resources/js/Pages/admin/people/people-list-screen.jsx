@@ -1,12 +1,44 @@
-import FilterBar from '@/Components/admin/FilterBar';
-import Pagination from '@/Components/admin/Pagination';
-import StatusBadge from '@/Components/admin/StatusBadge';
-import Table from '@/Components/admin/Table';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
+import '../../../../css/platform-dashboard.css';
+
+function PaginationBar({ links }) {
+    if (!links || links.length <= 3) {
+        return null;
+    }
+
+    return (
+        <nav className="pf-pagination">
+            {links.map((link, index) => {
+                const label = link.label
+                    .replace('&laquo; Previous', '‹ Previous')
+                    .replace('Next &raquo;', 'Next ›');
+
+                if (link.url === null) {
+                    return (
+                        <span key={index} className="pf-page-link pf-page-link--disabled">
+                            {label}
+                        </span>
+                    );
+                }
+
+                return (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        preserveScroll
+                        className={
+                            'pf-page-link' +
+                            (link.active ? ' pf-page-link--active' : '')
+                        }
+                    >
+                        {label}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}
 
 export default function PeopleListScreen({ people, filters }) {
     const { data, setData } = useForm({
@@ -20,108 +52,145 @@ export default function PeopleListScreen({ people, filters }) {
     }
 
     return (
-        <AdminLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        People
-                    </h2>
-                    <Link href={route('portal.people.create')}>
-                        <PrimaryButton>Add Person</PrimaryButton>
-                    </Link>
-                </div>
-            }
-        >
+        <AdminLayout>
             <Head title="People" />
 
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                <FilterBar onSubmit={submit} resetHref={route('portal.people.index')}>
+            <div className="pf-dashboard">
+                <div className="pf-dashboard-header">
                     <div>
-                        <InputLabel htmlFor="search" value="Search" />
-                        <TextInput
+                        <p className="pf-dashboard-kicker">Admin overview</p>
+                        <h1 className="pf-dashboard-title">People</h1>
+                        <p className="pf-dashboard-subtitle">
+                            Manage every student and staff record for your school.
+                        </p>
+                    </div>
+                    <Link href={route('portal.people.create')} className="pf-btn pf-btn-primary">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        Add Person
+                    </Link>
+                </div>
+
+                <form onSubmit={submit} className="pf-filter-bar">
+                    <div className="pf-field">
+                        <label htmlFor="search">Search</label>
+                        <input
                             id="search"
+                            type="text"
                             value={data.search}
                             onChange={(e) => setData('search', e.target.value)}
                             placeholder="Name or ID..."
-                            className="mt-1 block w-56"
                         />
                     </div>
 
-                    <div>
-                        <InputLabel htmlFor="status" value="Status" />
+                    <div className="pf-field">
+                        <label htmlFor="status">Status</label>
                         <select
                             id="status"
                             value={data.status}
                             onChange={(e) => setData('status', e.target.value)}
-                            className="mt-1 block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
                         >
                             <option value="">All</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                         </select>
                     </div>
-                </FilterBar>
 
-                <Table>
-                    <Table.Head>
-                        <Table.Th>Name</Table.Th>
-                        <Table.Th>Type</Table.Th>
-                        <Table.Th>Grade / Section</Table.Th>
-                        <Table.Th>External ID</Table.Th>
-                        <Table.Th>Status</Table.Th>
-                        <Table.Th>
-                            <span className="sr-only">Actions</span>
-                        </Table.Th>
-                    </Table.Head>
-                    <Table.Body>
-                        {people.data.length === 0 && (
-                            <Table.Empty colSpan={6}>
-                                No people found.
-                            </Table.Empty>
-                        )}
+                    <div className="pf-filter-bar-actions">
+                        <button type="submit" className="pf-btn pf-btn-primary">
+                            Filter
+                        </button>
+                        <Link
+                            href={route('portal.people.index')}
+                            className="pf-btn pf-btn-secondary"
+                        >
+                            Reset
+                        </Link>
+                    </div>
+                </form>
 
-                        {people.data.map((person) => (
-                            <tr key={person.id}>
-                                <Table.Td className="font-medium text-gray-900 dark:text-gray-100">
-                                    {person.display_name}
-                                </Table.Td>
-                                <Table.Td className="capitalize">
-                                    {person.person_type}
-                                </Table.Td>
-                                <Table.Td>
-                                    {[person.grade_level, person.section]
-                                        .filter(Boolean)
-                                        .join(' / ') || '—'}
-                                </Table.Td>
-                                <Table.Td>{person.external_id ?? '—'}</Table.Td>
-                                <Table.Td>
-                                    <StatusBadge
-                                        color={
-                                            person.is_active ? 'green' : 'gray'
-                                        }
-                                    >
-                                        {person.is_active
-                                            ? 'Active'
-                                            : 'Inactive'}
-                                    </StatusBadge>
-                                </Table.Td>
-                                <Table.Td className="text-right">
-                                    <Link
-                                        href={route(
-                                            'portal.people.edit',
-                                            person.id,
-                                        )}
-                                        className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                                    >
-                                        View
-                                    </Link>
-                                </Table.Td>
-                            </tr>
-                        ))}
-                    </Table.Body>
-                </Table>
+                <div className="pf-panel">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 className="pf-panel-title">All People</h2>
+                            <p className="pf-panel-count">
+                                {people.data.length} shown
+                            </p>
+                        </div>
+                    </div>
 
-                <Pagination links={people.links} />
+                    <div className="pf-table-wrap">
+                        <table className="pf-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Grade / Section</th>
+                                    <th scope="col">External ID</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">
+                                        <span className="sr-only">Actions</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {people.data.length === 0 && (
+                                    <tr>
+                                        <td colSpan={6} className="pf-empty">
+                                            No people found.
+                                        </td>
+                                    </tr>
+                                )}
+
+                                {people.data.map((person) => (
+                                    <tr key={person.id}>
+                                        <td className="pf-tenant-name">
+                                            {person.display_name}
+                                        </td>
+                                        <td className="capitalize">
+                                            {person.person_type}
+                                        </td>
+                                        <td>
+                                            {[person.grade_level, person.section]
+                                                .filter(Boolean)
+                                                .join(' / ') || '—'}
+                                        </td>
+                                        <td>{person.external_id ?? '—'}</td>
+                                        <td>
+                                            <span
+                                                className={
+                                                    'pf-pill ' +
+                                                    (person.is_active
+                                                        ? 'pf-pill--active'
+                                                        : 'pf-pill--inactive')
+                                                }
+                                            >
+                                                {person.is_active ? 'active' : 'inactive'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <Link
+                                                href={route(
+                                                    'portal.people.edit',
+                                                    person.id,
+                                                )}
+                                                className="pf-row-action"
+                                            >
+                                                View
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M9 6l6 6-6 6" />
+                                                </svg>
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <PaginationBar links={people.links} />
+                </div>
             </div>
         </AdminLayout>
     );

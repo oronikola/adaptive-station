@@ -39,6 +39,6 @@ class TapEventBatchIdempotencyTest extends TestCase
         $first->assertOk()->assertJson(['accepted_event_ids' => [$eventId], 'rejected_events' => []]);
         $second->assertOk()->assertJson(['accepted_event_ids' => [$eventId], 'rejected_events' => []]);
 
-        $this->assertDatabaseCount('tap_events', 1);
+        $this->assertDatabaseCount('tap_events', 1, 'tenant');
     }
 }

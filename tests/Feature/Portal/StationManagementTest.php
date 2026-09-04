@@ -41,7 +41,7 @@ class StationManagementTest extends TestCase
             'entity_id' => $station->id,
             'entity_type' => 'station_config',
             'operation' => 'upsert',
-        ]);
+        ], 'tenant');
     }
 
     public function test_tenant_admin_can_issue_and_revoke_a_credential(): void

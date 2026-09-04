@@ -30,7 +30,7 @@ class RfidCardManagementTest extends TestCase
         $this->assertSame('ABC123', $card->card_uid);
         $this->assertDatabaseHas('master_data_changes', [
             'entity_id' => $card->id, 'entity_type' => 'rfid_card', 'operation' => 'upsert',
-        ]);
+        ], 'tenant');
     }
 
     public function test_duplicate_card_uid_is_rejected_even_when_the_existing_row_is_inactive(): void
@@ -79,8 +79,8 @@ class RfidCardManagementTest extends TestCase
         $this->assertTrue($newCard->is_active);
         $this->assertSame($person->id, $newCard->person_id);
 
-        $this->assertDatabaseHas('master_data_changes', ['entity_id' => $oldCard->id, 'operation' => 'deactivate']);
-        $this->assertDatabaseHas('master_data_changes', ['entity_id' => $newCard->id, 'operation' => 'upsert']);
+        $this->assertDatabaseHas('master_data_changes', ['entity_id' => $oldCard->id, 'operation' => 'deactivate'], 'tenant');
+        $this->assertDatabaseHas('master_data_changes', ['entity_id' => $newCard->id, 'operation' => 'upsert'], 'tenant');
     }
 
     public function test_person_id_from_a_different_tenant_is_rejected(): void

@@ -2,17 +2,16 @@
 
 namespace Tests\Feature\Platform;
 
+use App\Enums\ImportExceptionType;
+use App\Enums\MasterDataEntityType;
+use App\Enums\MasterDataOperation;
 use App\Enums\StationStatus;
-use App\Models\AuditLog;
 use App\Models\DeviceHeartbeat;
 use App\Models\DeviceSyncCursor;
 use App\Models\ImportBatch;
 use App\Models\ImportException;
-use App\Enums\ImportExceptionType;
 use App\Models\IntegrationProfile;
 use App\Models\MasterDataChange;
-use App\Enums\MasterDataEntityType;
-use App\Enums\MasterDataOperation;
 use App\Models\Person;
 use App\Models\RfidCard;
 use App\Models\Station;
@@ -84,18 +83,18 @@ class TenantDeletionTest extends TestCase
 
         $this->assertDatabaseMissing('tenants', ['id' => $tenantId]);
         $this->assertDatabaseMissing('users', ['tenant_id' => $tenantId]);
-        $this->assertDatabaseMissing('people', ['tenant_id' => $tenantId]);
-        $this->assertDatabaseMissing('rfid_cards', ['tenant_id' => $tenantId]);
-        $this->assertDatabaseMissing('stations', ['tenant_id' => $tenantId]);
+        $this->assertDatabaseMissing('people', ['tenant_id' => $tenantId], 'tenant');
+        $this->assertDatabaseMissing('rfid_cards', ['tenant_id' => $tenantId], 'tenant');
+        $this->assertDatabaseMissing('stations', ['tenant_id' => $tenantId], 'tenant');
         $this->assertDatabaseMissing('station_credentials', ['id' => $graph['credential']->id]);
         $this->assertDatabaseMissing('station_activation_codes', ['station_id' => $graph['station']->id]);
-        $this->assertDatabaseMissing('device_heartbeats', ['tenant_id' => $tenantId]);
-        $this->assertDatabaseMissing('device_sync_cursors', ['station_id' => $graph['station']->id]);
-        $this->assertDatabaseMissing('tap_events', ['tenant_id' => $tenantId]);
-        $this->assertDatabaseMissing('master_data_changes', ['tenant_id' => $tenantId]);
-        $this->assertDatabaseMissing('integration_profiles', ['tenant_id' => $tenantId]);
-        $this->assertDatabaseMissing('import_batches', ['tenant_id' => $tenantId]);
-        $this->assertDatabaseMissing('import_exceptions', ['tenant_id' => $tenantId]);
+        $this->assertDatabaseMissing('device_heartbeats', ['tenant_id' => $tenantId], 'tenant');
+        $this->assertDatabaseMissing('device_sync_cursors', ['station_id' => $graph['station']->id], 'tenant');
+        $this->assertDatabaseMissing('tap_events', ['tenant_id' => $tenantId], 'tenant');
+        $this->assertDatabaseMissing('master_data_changes', ['tenant_id' => $tenantId], 'tenant');
+        $this->assertDatabaseMissing('integration_profiles', ['tenant_id' => $tenantId], 'tenant');
+        $this->assertDatabaseMissing('import_batches', ['tenant_id' => $tenantId], 'tenant');
+        $this->assertDatabaseMissing('import_exceptions', ['tenant_id' => $tenantId], 'tenant');
         $this->assertDatabaseMissing('audit_logs', ['tenant_id' => $tenantId]);
 
         // The one record of the deletion itself lives at the platform level.
@@ -152,7 +151,7 @@ class TenantDeletionTest extends TestCase
         ])->assertRedirect(route('platform.tenants.index'));
 
         $this->assertDatabaseHas('tenants', ['id' => $graphToKeep['tenant']->id]);
-        $this->assertDatabaseHas('people', ['id' => $graphToKeep['person']->id]);
-        $this->assertDatabaseHas('stations', ['id' => $graphToKeep['station']->id]);
+        $this->assertDatabaseHas('people', ['id' => $graphToKeep['person']->id], 'tenant');
+        $this->assertDatabaseHas('stations', ['id' => $graphToKeep['station']->id], 'tenant');
     }
 }

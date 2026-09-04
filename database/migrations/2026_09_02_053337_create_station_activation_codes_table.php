@@ -20,7 +20,8 @@ return new class extends Migration
             $table->uuid('created_by_user_id');
             $table->timestamp('created_at', 3)->useCurrent();
 
-            $table->foreign('station_id')->references('id')->on('stations');
+            // No FK to stations — stations lives in the per-tenant database,
+            // this table is central; validated at the app layer only.
             $table->foreign('created_by_user_id')->references('id')->on('users');
             $table->unique('code_hash', 'uq_activation_codes_hash');
             $table->index(['station_id', 'consumed_at', 'expires_at'], 'ix_activation_codes_station');

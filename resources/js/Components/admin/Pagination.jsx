@@ -36,7 +36,7 @@ export default function Pagination({ links }) {
                         className={
                             'rounded-md px-3 py-1 text-sm transition duration-150 ease-in-out ' +
                             (link.active
-                                ? 'bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800'
+                                ? 'bg-[#0b2a5b] text-white dark:bg-[#1f3f77]'
                                 : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700')
                         }
                     >

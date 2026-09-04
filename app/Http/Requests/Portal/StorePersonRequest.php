@@ -32,7 +32,7 @@ class StorePersonRequest extends FormRequest
             'photo_url' => ['nullable', 'url', 'max:2048'],
             'external_id' => [
                 'nullable', 'string', 'max:100',
-                Rule::unique('people')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
+                Rule::unique('tenant.people')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
             ],
         ];
     }

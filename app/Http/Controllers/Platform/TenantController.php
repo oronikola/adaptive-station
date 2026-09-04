@@ -11,6 +11,7 @@ use App\Http\Requests\Platform\StoreTenantRequest;
 use App\Models\Station;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\TenantDatabase;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -28,13 +29,24 @@ class TenantController extends Controller
             ->paginate(25)
             ->withQueryString();
 
+        // Stations live one physical database per tenant now — there is no
+        // single query that counts across all of them, so this loops every
+        // tenant's own database and sums in PHP.
+        $stationCount = 0;
+        $activeStationCount = 0;
+        foreach (Tenant::all() as $tenant) {
+            TenantDatabase::use($tenant);
+            $stationCount += Station::allTenants()->count();
+            $activeStationCount += Station::allTenants()->where('status', 'active')->count();
+        }
+
         return Inertia::render('superadmin/tenants/tenants-list-screen', [
             'tenants' => $tenants,
             'stats' => [
                 'tenant_count' => Tenant::query()->count(),
                 'active_tenant_count' => Tenant::query()->where('status', TenantStatus::Active)->count(),
-                'station_count' => Station::allTenants()->count(),
-                'active_station_count' => Station::allTenants()->where('status', 'active')->count(),
+                'station_count' => $stationCount,
+                'active_station_count' => $activeStationCount,
             ],
         ]);
     }
@@ -50,10 +62,16 @@ class TenantController extends Controller
     {
         Gate::authorize('view', $tenant);
 
+        // Station lives on the 'tenant' connection — must point it at this
+        // specific tenant's database before querying its stations, since a
+        // platform request has no tenant of its own to have already
+        // switched it via SetTenantContext.
+        TenantDatabase::use($tenant);
+
         return Inertia::render('superadmin/tenants/tenant-detail-screen', [
             'tenant' => $tenant,
             'admins' => $tenant->users()->where('role', 'tenant_admin')->orderBy('name')->get(),
-            'stations' => $tenant->stations()->orderBy('name')->get(),
+            'stations' => Station::allTenants()->orderBy('name')->get(),
         ]);
     }
 

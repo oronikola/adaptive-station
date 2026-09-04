@@ -36,6 +36,6 @@ class DeviceHeartbeatTest extends TestCase
         $this->assertDatabaseHas('device_heartbeats', [
             'station_id' => $station->id,
             'pending_event_count' => 4,
-        ]);
+        ], 'tenant');
     }
 }

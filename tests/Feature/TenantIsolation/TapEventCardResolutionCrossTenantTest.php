@@ -49,6 +49,6 @@ class TapEventCardResolutionCrossTenantTest extends TestCase
             'id' => $eventId,
             'tenant_id' => $tenantA->id,
             'person_id' => null,
-        ]);
+        ], 'tenant');
     }
 }
