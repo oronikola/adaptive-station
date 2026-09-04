@@ -79,6 +79,9 @@ class TenantProvisioningTest extends TestCase
         $this->actingAs($admin)->get(route('portal.people.index'))
             ->assertRedirect(route('password.force-reset'));
 
+        $this->actingAs($admin)->get(route('password.force-reset'))
+            ->assertInertia(fn ($page) => $page->component('Auth/force-reset-password-screen'));
+
         $this->actingAs($admin)->put(route('password.force-reset.update'), [
             'current_password' => $temporaryPassword,
             'password' => 'a-brand-new-password',

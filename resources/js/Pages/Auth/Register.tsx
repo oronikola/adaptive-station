@@ -1,9 +1,6 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import AuthInput from '@/Components/AuthInput';
+import AuthLayout from '@/Layouts/AuthLayout';
+import { useForm } from '@inertiajs/react';
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -22,99 +19,74 @@ export default function Register() {
     };
 
     return (
-        <GuestLayout>
-            <Head title="Register" />
+        <AuthLayout
+            title="Register"
+            eyebrow="REQUEST ACCESS"
+            heading="Join the workspace."
+            caption="Create an account to start tracking attendance in seconds."
+            formHeading="Create your account"
+            formSubheading="Fill in your details to request access."
+            topbarPrompt="Already have an account?"
+            topbarLinkText="Sign in"
+            topbarLinkHref={route('login')}
+        >
+            <form onSubmit={submit} className="auth-login-form" noValidate>
+                <AuthInput
+                    id="name"
+                    label="Name"
+                    name="name"
+                    value={data.name}
+                    autoComplete="name"
+                    autoFocus
+                    onChange={(e) => setData('name', e.target.value)}
+                    error={errors.name}
+                    placeholder="Your full name"
+                    required
+                />
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
+                <AuthInput
+                    id="email"
+                    type="email"
+                    label="Email"
+                    name="email"
+                    value={data.email}
+                    autoComplete="username"
+                    onChange={(e) => setData('email', e.target.value)}
+                    error={errors.email}
+                    placeholder="you@company.com"
+                    required
+                />
 
-                    <TextInput
-                        id="name"
-                        name="name"
-                        value={data.name}
-                        className="mt-1 block w-full"
-                        autoComplete="name"
-                        isFocused={true}
-                        onChange={(e) => setData('name', e.target.value)}
-                        required
-                    />
+                <AuthInput
+                    id="password"
+                    type="password"
+                    label="Password"
+                    name="password"
+                    value={data.password}
+                    autoComplete="new-password"
+                    onChange={(e) => setData('password', e.target.value)}
+                    error={errors.password}
+                    placeholder="Create a password"
+                    required
+                />
 
-                    <InputError message={errors.name} className="mt-2" />
-                </div>
+                <AuthInput
+                    id="password_confirmation"
+                    type="password"
+                    label="Confirm password"
+                    name="password_confirmation"
+                    value={data.password_confirmation}
+                    autoComplete="new-password"
+                    onChange={(e) => setData('password_confirmation', e.target.value)}
+                    error={errors.password_confirmation}
+                    placeholder="Re-enter your password"
+                    required
+                />
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
-                        id="password_confirmation"
-                        type="password"
-                        name="password_confirmation"
-                        value={data.password_confirmation}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
-                        }
-                        required
-                    />
-
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
-                    />
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
-                    <Link
-                        href={route('login')}
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
-                    >
-                        Already registered?
-                    </Link>
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Register
-                    </PrimaryButton>
-                </div>
+                <button type="submit" className="auth-submit" disabled={processing}>
+                    {processing ? 'Creating account…' : 'Create account'}
+                </button>
             </form>
-        </GuestLayout>
+        </AuthLayout>
     );
 }

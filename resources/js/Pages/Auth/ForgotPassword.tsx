@@ -1,8 +1,6 @@
-import InputError from '@/Components/InputError';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
+import AuthInput from '@/Components/AuthInput';
+import AuthLayout from '@/Layouts/AuthLayout';
+import { useForm } from '@inertiajs/react';
 
 interface ForgotPasswordProps {
     status?: string;
@@ -20,40 +18,36 @@ export default function ForgotPassword({ status }: ForgotPasswordProps) {
     };
 
     return (
-        <GuestLayout>
-            <Head title="Forgot Password" />
-
-            <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                Forgot your password? No problem. Just let us know your email
-                address and we will email you a password reset link that will
-                allow you to choose a new one.
-            </div>
-
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600 dark:text-green-400">
-                    {status}
-                </div>
-            )}
-
-            <form onSubmit={submit}>
-                <TextInput
+        <AuthLayout
+            title="Forgot Password"
+            eyebrow="ACCOUNT RECOVERY"
+            heading="Reset access, fast."
+            caption="We'll email you a secure link to choose a new password."
+            formHeading="Forgot your password?"
+            formSubheading="No problem. Enter your email and we'll send you a password reset link."
+            status={status}
+            topbarPrompt="Remember your password?"
+            topbarLinkText="Sign in"
+            topbarLinkHref={route('login')}
+        >
+            <form onSubmit={submit} className="auth-login-form" noValidate>
+                <AuthInput
                     id="email"
                     type="email"
+                    label="Email"
                     name="email"
                     value={data.email}
-                    className="mt-1 block w-full"
-                    isFocused={true}
+                    autoComplete="username"
+                    autoFocus
                     onChange={(e) => setData('email', e.target.value)}
+                    error={errors.email}
+                    placeholder="you@company.com"
                 />
 
-                <InputError message={errors.email} className="mt-2" />
-
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Email Password Reset Link
-                    </PrimaryButton>
-                </div>
+                <button type="submit" className="auth-submit" disabled={processing}>
+                    {processing ? 'Sending link…' : 'Email password reset link'}
+                </button>
             </form>
-        </GuestLayout>
+        </AuthLayout>
     );
 }

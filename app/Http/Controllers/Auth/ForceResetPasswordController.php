@@ -19,7 +19,7 @@ class ForceResetPasswordController extends Controller
 {
     public function show(): Response
     {
-        return Inertia::render('auth/force-reset-password-screen');
+        return Inertia::render('Auth/force-reset-password-screen');
     }
 
     public function update(Request $request): RedirectResponse

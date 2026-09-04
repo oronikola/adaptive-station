@@ -725,6 +725,35 @@
     text-decoration: none;
 }
 
+.auth-helper-text {
+    margin: 22px 0 0;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.auth-text-link {
+    color: #174a96;
+    font-weight: 600;
+    font-size: 12px;
+    text-decoration: underline;
+    text-decoration-color: #c3d6f3;
+    text-underline-offset: 3px;
+}
+
+.auth-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 22px;
+}
+
+.auth-form-actions .auth-submit {
+    width: auto;
+    padding: 0 24px;
+}
+
 @media (max-width: 900px) {
     .auth-login-page {
         padding: 20px;
