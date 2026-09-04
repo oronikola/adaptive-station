@@ -1,6 +1,7 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import { classifyFlashMessage, useToast } from '@/Components/toast/ToastProvider';
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import '../../css/app-shell.css';
 
 function SidebarContent({ brand, brandHref, items, user, tenantLabel }) {
@@ -83,6 +84,27 @@ export default function AppShell({
 
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
+    // Every CRUD controller already flashes `success`/`error` on redirect
+    // (see HandleInertiaRequests) — surface those as toasts automatically
+    // so most screens get feedback for free. classifyFlashMessage() is a
+    // best-effort guess at create/update/delete from the message text;
+    // call useToast() directly from a screen when you need an exact type.
+    const { showToast } = useToast();
+
+    useEffect(() => {
+        if (flash?.success) {
+            showToast({ type: classifyFlashMessage(flash.success), message: flash.success });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flash?.success]);
+
+    useEffect(() => {
+        if (flash?.error) {
+            showToast({ type: 'error', message: flash.error });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flash?.error]);
+
     return (
         <div className="pf-shell">
             <aside className="pf-sidebar">
@@ -140,13 +162,7 @@ export default function AppShell({
 
                 {header && <div className="pf-shell-header">{header}</div>}
 
-                <main className="pf-shell-content">
-                    {flash?.success && (
-                        <div className="pf-flash-success">{flash.success}</div>
-                    )}
-
-                    {children}
-                </main>
+                <main className="pf-shell-content">{children}</main>
             </div>
         </div>
     );

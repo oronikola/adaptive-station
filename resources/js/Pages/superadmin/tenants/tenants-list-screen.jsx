@@ -1,5 +1,6 @@
 import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
+import { useToast } from '@/Components/toast/ToastProvider';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
@@ -94,6 +95,7 @@ function slugify(value) {
 }
 
 export default function TenantsListScreen({ tenants, stats }) {
+    const { showToast } = useToast();
     const [createOpen, setCreateOpen] = useState(false);
     const [codeTouched, setCodeTouched] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -118,10 +120,23 @@ export default function TenantsListScreen({ tenants, stats }) {
     function submit(e) {
         e.preventDefault();
         post(route('platform.tenants.store'), {
+            // No onSuccess toast here — the store action redirects to the
+            // tenant's detail page, and that redirect's `success` flash is
+            // already turned into a toast automatically by AppShell.
             onSuccess: () => {
                 setCreateOpen(false);
                 setCodeTouched(false);
                 reset();
+            },
+            // A validation failure re-renders this same page (no flash),
+            // so it's the one case the automatic flash toast can't cover —
+            // this is the one-line manual call for that gap.
+            onError: () => {
+                showToast({
+                    type: 'error',
+                    message: 'Could not create the tenant.',
+                    description: 'Check the highlighted fields and try again.',
+                });
             },
         });
     }

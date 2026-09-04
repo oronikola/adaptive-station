@@ -45,6 +45,10 @@ class HandleInertiaRequests extends Middleware
                 : null,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
+                // Read by the global toast system (ToastProvider) so any
+                // controller can flash a failure without wiring a toast
+                // per screen: return ...->with('error', 'message').
+                'error' => fn () => $request->session()->get('error'),
                 // One-time secrets (temp password, activation code) — shown
                 // exactly once on the next page load, never persisted beyond
                 // the flashed session value itself.

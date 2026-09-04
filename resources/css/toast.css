@@ -1,0 +1,217 @@
+/* Global toast/snackbar system (see Components/toast/ToastProvider.jsx).
+   Colors are lifted from platform-dashboard.css's stat-icon tones so toasts
+   read as part of the same design system, not a bolted-on widget.
+
+   Dark mode: this app has no manual theme toggle — the redesigned screens
+   (e.g. tenant-detail-screen.jsx) already rely on Tailwind's default
+   `dark:` strategy, which is `@media (prefers-color-scheme: dark)`. These
+   rules follow the same mechanism so the toast matches whichever mode the
+   rest of the app resolves to. */
+
+.pf-toast-viewport {
+    position: fixed;
+    z-index: 1000;
+    right: 20px;
+    bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(380px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+@media (max-width: 640px) {
+    .pf-toast-viewport {
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+        width: auto;
+    }
+}
+
+.pf-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 14px 14px 16px;
+    border: 1px solid #e7ecf4;
+    border-left: 4px solid var(--pf-toast-accent, #94a3b8);
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 20px 44px -22px rgba(15, 35, 70, 0.45);
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateX(16px) scale(0.98);
+    transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.pf-toast--visible {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+}
+
+.pf-toast--leaving {
+    opacity: 0;
+    transform: translateX(16px) scale(0.98);
+}
+
+.pf-toast-icon {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--pf-toast-icon-bg, #eef1f6);
+    color: var(--pf-toast-icon-fg, #64748b);
+}
+
+.pf-toast-icon svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pf-toast-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-top: 4px;
+}
+
+.pf-toast-message {
+    margin: 0;
+    overflow-wrap: break-word;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.pf-toast-description {
+    margin: 3px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.pf-toast-close {
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.pf-toast-close:hover {
+    background: #f1f4f9;
+    color: #223047;
+}
+
+.pf-toast-close:focus-visible {
+    outline: 2px solid #2863bd;
+    outline-offset: 2px;
+}
+
+.pf-toast-close svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Tone variants — accent color + icon chip only; surface stays neutral so
+   several toasts of different types can stack without clashing. */
+
+.pf-toast--success {
+    --pf-toast-accent: #1a8a4c;
+    --pf-toast-icon-bg: #e3f6ea;
+    --pf-toast-icon-fg: #1a8a4c;
+}
+
+.pf-toast--update {
+    --pf-toast-accent: #2863bd;
+    --pf-toast-icon-bg: #e7effc;
+    --pf-toast-icon-fg: #2863bd;
+}
+
+.pf-toast--delete {
+    --pf-toast-accent: #c1791f;
+    --pf-toast-icon-bg: #fdf1e0;
+    --pf-toast-icon-fg: #c1791f;
+}
+
+.pf-toast--error {
+    --pf-toast-accent: #dc2626;
+    --pf-toast-icon-bg: #fdecea;
+    --pf-toast-icon-fg: #dc2626;
+}
+
+.pf-toast--info {
+    --pf-toast-accent: #64748b;
+    --pf-toast-icon-bg: #eef1f6;
+    --pf-toast-icon-fg: #475569;
+}
+
+@media (prefers-color-scheme: dark) {
+    .pf-toast {
+        border-color: #263244;
+        background: #131c2e;
+        box-shadow: 0 20px 44px -20px rgba(0, 0, 0, 0.6);
+    }
+
+    .pf-toast-message {
+        color: #f1f5f9;
+    }
+
+    .pf-toast-description {
+        color: #94a3b8;
+    }
+
+    .pf-toast-close {
+        color: #64748b;
+    }
+
+    .pf-toast-close:hover {
+        background: #1c2740;
+        color: #e2e8f0;
+    }
+
+    .pf-toast--success {
+        --pf-toast-icon-bg: rgba(26, 138, 76, 0.18);
+        --pf-toast-icon-fg: #4ade80;
+    }
+
+    .pf-toast--update {
+        --pf-toast-icon-bg: rgba(40, 99, 189, 0.22);
+        --pf-toast-icon-fg: #7fb0f5;
+    }
+
+    .pf-toast--delete {
+        --pf-toast-icon-bg: rgba(193, 121, 31, 0.2);
+        --pf-toast-icon-fg: #f0b25f;
+    }
+
+    .pf-toast--error {
+        --pf-toast-icon-bg: rgba(220, 38, 38, 0.2);
+        --pf-toast-icon-fg: #f87171;
+    }
+
+    .pf-toast--info {
+        --pf-toast-icon-bg: rgba(100, 116, 139, 0.25);
+        --pf-toast-icon-fg: #cbd5e1;
+    }
+}
