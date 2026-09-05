@@ -2,6 +2,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { PaginatedData, PaginationLink, Station } from '@/types';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface SummaryRow {
     attendance_date_local: string;
@@ -92,21 +93,31 @@ export default function AttendanceSummaryScreen({
         <AdminLayout>
             <Head title="Daily Attendance Summary" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">Daily Attendance Summary</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Total taps and unique people recorded per day.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="4" y="5.4" width="16" height="14.6" rx="2" />
+                                <rect x="7.2" y="3" width="2.2" height="4" rx="1" />
+                                <rect x="14.6" y="3" width="2.2" height="4" rx="1" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">Daily Attendance Summary</h1>
+                            <p className="pft-hero-subtitle">
+                                Total taps and unique people recorded per day.
+                            </p>
+                        </div>
                     </div>
-                    <Link href={route('portal.attendance.index')} className="pf-btn pf-btn-secondary">
-                        <svg viewBox="0 0 24 24">
-                            <path d="m15 6-6 6 6 6" />
-                        </svg>
-                        Back to Search
-                    </Link>
+                    <div className="pft-hero-actions">
+                        <Link href={route('portal.attendance.index')} className="pf-btn pf-btn-secondary">
+                            <svg viewBox="0 0 24 24">
+                                <path d="m15 6-6 6 6 6" />
+                            </svg>
+                            Back to Search
+                        </Link>
+                    </div>
                 </div>
 
                 <form onSubmit={submit} className="pf-filter-bar">

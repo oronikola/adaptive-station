@@ -102,12 +102,12 @@ export default function StationDetailScreen({ station, credentials }: { station:
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24">
-                                <rect x="3" y="4" width="18" height="13" rx="2" />
-                                <path d="M8 21h8M12 17v4" />
+                                <rect x="4" y="5" width="16" height="10" rx="1.6" />
+                                <rect x="9.5" y="17" width="5" height="2" rx="1" />
+                                <rect x="7" y="19.4" width="10" height="1.6" rx="0.8" />
                             </svg>
                         </span>
                         <div>
-                            <p className="pft-hero-kicker">Station Management</p>
                             <h1 className="pft-hero-title">{station.name}</h1>
                             <p className="pft-hero-subtitle">
                                 <span className="font-mono">{station.station_code}</span>
@@ -119,7 +119,6 @@ export default function StationDetailScreen({ station, credentials }: { station:
                             className={
                                 'pf-pill ' + (STATUS_PILL_CLASS[station.status] ?? 'pf-pill--inactive')
                             }
-                            style={{ background: 'rgba(255,255,255,.16)', color: '#fff' }}
                         >
                             {STATUS_LABELS[station.status] ?? station.status}
                         </span>

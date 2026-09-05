@@ -29,14 +29,22 @@ export default function ImportsCreateScreen({ profiles }: { profiles: Integratio
         <AdminLayout>
             <Head title="New Legacy Import" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">New Legacy Import</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Preview runs the same matching logic read-only — nothing is written. Commit performs the real import; re-running Commit is always safe (already-imported rows are skipped, never duplicated).
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="4" y="15.4" width="16" height="4.6" rx="1.4" />
+                                <rect x="10.6" y="4" width="2.8" height="7.4" rx="1.2" />
+                                <polygon points="7.4,11 16.6,11 12,15.6" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">New Legacy Import</h1>
+                            <p className="pft-hero-subtitle">
+                                Preview runs the same matching logic read-only — nothing is written. Commit performs the real import; re-running Commit is always safe (already-imported rows are skipped, never duplicated).
+                            </p>
+                        </div>
                     </div>
                 </div>
 

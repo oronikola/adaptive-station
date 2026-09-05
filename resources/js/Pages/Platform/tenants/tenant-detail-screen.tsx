@@ -136,7 +136,6 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                             {tenant.name.charAt(0).toUpperCase()}
                         </span>
                         <div>
-                            <p className="pft-hero-kicker">Client Management</p>
                             <h1 className="pft-hero-title">{tenant.name}</h1>
                             <p className="pft-hero-subtitle">
                                 <span className="font-mono">{tenant.code}</span> · {tenant.timezone}
@@ -148,7 +147,6 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                             className={
                                 'pf-pill ' + STATUS_PILL_CLASS[tenant.status]
                             }
-                            style={{ background: 'rgba(255,255,255,.16)', color: '#fff' }}
                         >
                             {tenant.status}
                         </span>

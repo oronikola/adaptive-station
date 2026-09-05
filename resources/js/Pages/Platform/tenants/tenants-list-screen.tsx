@@ -152,11 +152,11 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24">
-                                <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
+                                <polygon points="12,3 19,9 5,9" />
+                                <rect x="4" y="9" width="16" height="12" rx="1.6" />
                             </svg>
                         </span>
                         <div>
-                            <p className="pft-hero-kicker">Platform overview</p>
                             <h1 className="pft-hero-title">Client Management</h1>
                             <p className="pft-hero-subtitle">
                                 View every client school on Adaptive Station, or

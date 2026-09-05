@@ -2,6 +2,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { PaginatedData, Person, PaginationLink } from '@/types';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 function PaginationBar({ links }: { links: PaginationLink[] }) {
     if (!links || links.length <= 3) {
@@ -56,21 +57,32 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
         <AdminLayout>
             <Head title="People" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">People</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Manage every student and staff record for your school.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="8.5" cy="8.5" r="3" />
+                                <circle cx="16" cy="9.5" r="2.6" />
+                                <path d="M3.2 19.5a5.5 4.6 0 0 1 11 0z" />
+                                <path d="M12.8 19.5a5.2 4.2 0 0 1 10.4 0z" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">People</h1>
+                            <p className="pft-hero-subtitle">
+                                Manage every student and staff record for your school.
+                            </p>
+                        </div>
                     </div>
-                    <Link href={route('portal.people.create')} className="pf-btn pf-btn-primary">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14" />
-                        </svg>
-                        Add Person
-                    </Link>
+                    <div className="pft-hero-actions">
+                        <Link href={route('portal.people.create')} className="pf-btn pf-btn-primary">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            Add Person
+                        </Link>
+                    </div>
                 </div>
 
                 <form onSubmit={submit} className="pf-filter-bar">

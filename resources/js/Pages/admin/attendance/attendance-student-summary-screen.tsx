@@ -2,6 +2,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import type { Person } from '@/types';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface MonthRow {
     month: number;
@@ -36,23 +37,33 @@ export default function AttendanceStudentSummaryScreen({
         <AdminLayout>
             <Head title={`Attendance Summary — ${person.display_name}`} />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">Attendance Summary — {person.display_name}</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Days present per month, counted from tap-in events. This does not show
-                            an "absent" count — there is no school-calendar data to tell holidays
-                            and non-school days apart from genuine absences.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="4" y="5.4" width="16" height="14.6" rx="2" />
+                                <rect x="7.2" y="3" width="2.2" height="4" rx="1" />
+                                <rect x="14.6" y="3" width="2.2" height="4" rx="1" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">Attendance Summary — {person.display_name}</h1>
+                            <p className="pft-hero-subtitle">
+                                Days present per month, counted from tap-in events. This does not show
+                                an "absent" count — there is no school-calendar data to tell holidays
+                                and non-school days apart from genuine absences.
+                            </p>
+                        </div>
                     </div>
-                    <Link
-                        href={route('portal.attendance.index', { person_id: person.id })}
-                        className="pf-btn pf-btn-secondary"
-                    >
-                        View Raw Taps
-                    </Link>
+                    <div className="pft-hero-actions">
+                        <Link
+                            href={route('portal.attendance.index', { person_id: person.id })}
+                            className="pf-btn pf-btn-secondary"
+                        >
+                            View Raw Taps
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="pf-panel">

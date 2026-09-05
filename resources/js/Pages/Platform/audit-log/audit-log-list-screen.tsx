@@ -2,6 +2,7 @@ import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link } from '@inertiajs/react';
 import { PaginatedData, PaginationLink } from '@/types';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface AuditLog {
     id: string;
@@ -64,15 +65,23 @@ export default function AuditLogListScreen({ logs }: AuditLogListScreenProps) {
         <PlatformLayout>
             <Head title="Audit Log" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Platform overview</p>
-                        <h1 className="pf-dashboard-title">Audit Log</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Every sensitive action taken across the platform, most
-                            recent first.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="4" y="5.6" width="16" height="2.8" rx="1.4" />
+                                <rect x="4" y="10.6" width="16" height="2.8" rx="1.4" />
+                                <rect x="4" y="15.6" width="10" height="2.8" rx="1.4" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">Audit Log</h1>
+                            <p className="pft-hero-subtitle">
+                                Every sensitive action taken across the platform, most
+                                recent first.
+                            </p>
+                        </div>
                     </div>
                 </div>
 

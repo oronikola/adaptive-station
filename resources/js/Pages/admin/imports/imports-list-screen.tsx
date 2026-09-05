@@ -64,21 +64,31 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
         <AdminLayout>
             <Head title="Legacy Imports" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">Legacy Imports</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Review every legacy data import run for your school.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="4" y="15.4" width="16" height="4.6" rx="1.4" />
+                                <rect x="10.6" y="4" width="2.8" height="7.4" rx="1.2" />
+                                <polygon points="7.4,11 16.6,11 12,15.6" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">Legacy Imports</h1>
+                            <p className="pft-hero-subtitle">
+                                Review every legacy data import run for your school.
+                            </p>
+                        </div>
                     </div>
-                    <Link href={route('portal.imports.create')} className="pf-btn pf-btn-primary">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14" />
-                        </svg>
-                        New Import
-                    </Link>
+                    <div className="pft-hero-actions">
+                        <Link href={route('portal.imports.create')} className="pf-btn pf-btn-primary">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            New Import
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="pf-panel">

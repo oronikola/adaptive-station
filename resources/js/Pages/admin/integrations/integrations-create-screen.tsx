@@ -2,6 +2,7 @@ import InputError from '@/Components/InputError';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 const DEFAULT_CONFIG = JSON.stringify(
     {
@@ -38,21 +39,31 @@ export default function IntegrationsCreateScreen() {
         <AdminLayout>
             <Head title="New Integration Profile" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">New Integration Profile</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Connects to a school's existing legacy tapping database
-                            (read-only for roster/attendance import; write access
-                            only if you enable export). Credentials are encrypted
-                            and never shown again after saving.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="7" cy="12" r="3.4" />
+                                <rect x="9" y="10.3" width="6" height="3.4" rx="1.2" />
+                                <circle cx="17" cy="12" r="3.4" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">New Integration Profile</h1>
+                            <p className="pft-hero-subtitle">
+                                Connects to a school's existing legacy tapping database
+                                (read-only for roster/attendance import; write access
+                                only if you enable export). Credentials are encrypted
+                                and never shown again after saving.
+                            </p>
+                        </div>
                     </div>
-                    <Link href={route('portal.integrations.index')} className="pf-btn pf-btn-secondary">
-                        Back to Integrations
-                    </Link>
+                    <div className="pft-hero-actions">
+                        <Link href={route('portal.integrations.index')} className="pf-btn pf-btn-secondary">
+                            Back to Integrations
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="pf-panel">

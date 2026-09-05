@@ -2,6 +2,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
 import type { PaginatedData, PaginationLink, Station } from '@/types';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface StationListItem extends Station {
     is_online: boolean;
@@ -78,14 +79,22 @@ export default function StationsListScreen({ stations }: { stations: PaginatedDa
         <AdminLayout>
             <Head title="Stations" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">Stations</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Monitor and manage every kiosk registered to your school.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="4" y="5" width="16" height="10" rx="1.6" />
+                                <rect x="9.5" y="17" width="5" height="2" rx="1" />
+                                <rect x="7" y="19.4" width="10" height="1.6" rx="0.8" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">Stations</h1>
+                            <p className="pft-hero-subtitle">
+                                Monitor and manage every kiosk registered to your school.
+                            </p>
+                        </div>
                     </div>
                 </div>
 

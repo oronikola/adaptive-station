@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import type { PaginatedData, PaginationLink, User, PageProps } from '@/types';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface UserListItem extends User {
     is_active: boolean;
@@ -63,22 +64,31 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
         <AdminLayout>
             <Head title="Users" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">Users</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Manage the admin and operator accounts for your school.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="8.4" r="3.6" />
+                                <path d="M4.5 19.6a7.5 6 0 0 1 15 0z" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">Users</h1>
+                            <p className="pft-hero-subtitle">
+                                Manage the admin and operator accounts for your school.
+                            </p>
+                        </div>
                     </div>
                     {canManage && (
-                        <Link href={route('portal.users.create')} className="pf-btn pf-btn-primary">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
-                            Add User
-                        </Link>
+                        <div className="pft-hero-actions">
+                            <Link href={route('portal.users.create')} className="pf-btn pf-btn-primary">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
+                                Add User
+                            </Link>
+                        </div>
                     )}
                 </div>
 

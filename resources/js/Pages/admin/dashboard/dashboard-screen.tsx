@@ -14,27 +14,27 @@ interface StatCardProps {
 const STAT_ICONS: Record<string, React.ReactNode> = {
     people: (
         <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="8" r="3.2" />
-            <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
+            <circle cx="8.5" cy="8.5" r="3" />
+            <circle cx="16" cy="9.5" r="2.6" />
+            <path d="M3.2 19.5a5.5 4.6 0 0 1 11 0z" />
+            <path d="M12.8 19.5a5.2 4.2 0 0 1 10.4 0z" />
         </svg>
     ),
     stations: (
         <svg viewBox="0 0 24 24">
-            <rect x="4" y="5" width="16" height="13" rx="2" />
-            <path d="M8 21h8M9 9h6M9 13h4" />
+            <rect x="4" y="5" width="16" height="10" rx="1.6" />
+            <rect x="9.5" y="17" width="5" height="2" rx="1" />
+            <rect x="7" y="19.4" width="10" height="1.6" rx="0.8" />
         </svg>
     ),
     rfid: (
         <svg viewBox="0 0 24 24">
-            <rect x="3" y="6" width="18" height="12" rx="2" />
-            <path d="M3 10h18" />
-            <rect x="6" y="13" width="4" height="2.4" rx="0.5" />
+            <rect x="3" y="6" width="18" height="12" rx="2.4" />
         </svg>
     ),
     taps: (
         <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="8.5" />
-            <path d="M12 7.5V12l3 2" />
+            <path d="M7 2v11h3v9l7-12h-4l4-8z" />
         </svg>
     ),
 };
@@ -205,7 +205,6 @@ export default function DashboardScreen({ stats, recentActivity, weeklyAttendanc
                             </svg>
                         </span>
                         <div>
-                            <p className="pft-hero-kicker">School overview</p>
                             <h1 className="pft-hero-title">Dashboard</h1>
                             <p className="pft-hero-subtitle">
                                 Your school's own people, stations, and attendance —

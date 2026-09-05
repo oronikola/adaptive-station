@@ -20,7 +20,7 @@ export default function UsersCreateScreen() {
         <AdminLayout>
             <Head title="Add User" />
 
-            <div className="pf-dashboard">
+            <div className="pf-dashboard pft-page">
                 <Link href={route('portal.users.index')} className="pft-panel-link" style={{ marginBottom: 14 }}>
                     <svg viewBox="0 0 24 24">
                         <path d="m15 6-6 6 6 6" />
@@ -28,15 +28,22 @@ export default function UsersCreateScreen() {
                     Back to Users
                 </Link>
 
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">Add User</h1>
-                        <p className="pf-dashboard-subtitle">
-                            A temporary password will be generated and shown once.
-                            Relay it to the new user directly — they will be
-                            required to set their own password on first login.
-                        </p>
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="8.4" r="3.6" />
+                                <path d="M4.5 19.6a7.5 6 0 0 1 15 0z" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">Add User</h1>
+                            <p className="pft-hero-subtitle">
+                                A temporary password will be generated and shown once.
+                                Relay it to the new user directly — they will be
+                                required to set their own password on first login.
+                            </p>
+                        </div>
                     </div>
                 </div>
 

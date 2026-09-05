@@ -56,12 +56,12 @@ export default function ImportsShowScreen({ batch, openExceptionCount }: { batch
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24">
-                                <path d="M12 4v10m0 0-3.5-3.5M12 14l3.5-3.5" />
-                                <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+                                <rect x="4" y="15.4" width="16" height="4.6" rx="1.4" />
+                                <rect x="10.6" y="4" width="2.8" height="7.4" rx="1.2" />
+                                <polygon points="7.4,11 16.6,11 12,15.6" />
                             </svg>
                         </span>
                         <div>
-                            <p className="pft-hero-kicker">Legacy Import</p>
                             <h1 className="pft-hero-title">
                                 {batch.source_description ?? batch.source_system}
                             </h1>
@@ -73,7 +73,6 @@ export default function ImportsShowScreen({ batch, openExceptionCount }: { batch
                                 'pf-pill ' +
                                 (STATUS_PILL_CLASS[batch.status] ?? 'pf-pill--inactive')
                             }
-                            style={{ background: 'rgba(255,255,255,.16)', color: '#fff' }}
                         >
                             {batch.status}
                         </span>

@@ -2,6 +2,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { PaginatedData, PaginationLink, Person, Station } from '@/types';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface AttendanceEvent {
     id: number;
@@ -120,16 +121,24 @@ export default function AttendanceSearchScreen({
         <AdminLayout>
             <Head title="Attendance" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">Attendance</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Every RFID tap recorded across your school's stations.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="4" y="5.4" width="16" height="14.6" rx="2" />
+                                <rect x="7.2" y="3" width="2.2" height="4" rx="1" />
+                                <rect x="14.6" y="3" width="2.2" height="4" rx="1" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">Attendance</h1>
+                            <p className="pft-hero-subtitle">
+                                Every RFID tap recorded across your school's stations.
+                            </p>
+                        </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 10 }}>
+                    <div className="pft-hero-actions">
                         <Link href={route('portal.attendance.summary')} className="pf-btn pf-btn-secondary">
                             <svg viewBox="0 0 24 24">
                                 <rect x="4" y="5" width="16" height="13" rx="2" />

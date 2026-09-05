@@ -15,23 +15,26 @@ interface StatCardProps {
 const STAT_ICONS: Record<string, React.ReactNode> = {
     tenants: (
         <svg viewBox="0 0 24 24">
-            <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
+            <polygon points="12,3 19,9 5,9" />
+            <rect x="4" y="9" width="16" height="12" rx="1.6" />
         </svg>
     ),
     activeTenants: (
         <svg viewBox="0 0 24 24">
-            <path d="m5 12 4.5 4.5L19 7" />
+            <polygon points="12,3 19,9 5,9" />
+            <rect x="4" y="9" width="16" height="12" rx="1.6" />
         </svg>
     ),
     stations: (
         <svg viewBox="0 0 24 24">
-            <rect x="4" y="5" width="16" height="13" rx="2" />
-            <path d="M8 21h8M9 9h6M9 13h4" />
+            <rect x="4" y="5" width="16" height="10" rx="1.6" />
+            <rect x="9.5" y="17" width="5" height="2" rx="1" />
+            <rect x="7" y="19.4" width="10" height="1.6" rx="0.8" />
         </svg>
     ),
     activeStations: (
         <svg viewBox="0 0 24 24">
-            <path d="M12 3v6M8.5 6.5a6.5 6.5 0 1 0 7 0" />
+            <path d="M7 2v11h3v9l7-12h-4l4-8z" />
         </svg>
     ),
 };
@@ -193,7 +196,6 @@ export default function DashboardScreen({ stats, recentActivity, recentClients }
                             </svg>
                         </span>
                         <div>
-                            <p className="pft-hero-kicker">Platform overview</p>
                             <h1 className="pft-hero-title">Dashboard</h1>
                             <p className="pft-hero-subtitle">
                                 Everything happening across Adaptive Station, at a

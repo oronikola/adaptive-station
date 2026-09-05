@@ -6,6 +6,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { PaginatedData, PaginationLink, Tenant } from '@/types';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface StationRow {
     id: number;
@@ -99,26 +100,36 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
         <PlatformLayout>
             <Head title="Stations" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Platform overview</p>
-                        <h1 className="pf-dashboard-title">Stations</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Every tap-in device registered across all schools on
-                            Adaptive Station.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="4" y="5" width="16" height="10" rx="1.6" />
+                                <rect x="9.5" y="17" width="5" height="2" rx="1" />
+                                <rect x="7" y="19.4" width="10" height="1.6" rx="0.8" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">Stations</h1>
+                            <p className="pft-hero-subtitle">
+                                Every tap-in device registered across all schools on
+                                Adaptive Station.
+                            </p>
+                        </div>
                     </div>
-                    <button
-                        type="button"
-                        className="pf-btn pf-btn-primary"
-                        onClick={() => setCreateOpen(true)}
-                    >
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14" />
-                        </svg>
-                        Add Station
-                    </button>
+                    <div className="pft-hero-actions">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-primary"
+                            onClick={() => setCreateOpen(true)}
+                        >
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            Add Station
+                        </button>
+                    </div>
                 </div>
 
                 <SecretOnceCallout label="Activation code" value={flash?.activationCode} />

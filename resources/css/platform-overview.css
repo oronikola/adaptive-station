@@ -22,92 +22,64 @@
 /* ── Hero banner ─────────────────────────────────────────────────────── */
 
 .pft-hero {
-    position: relative;
-    overflow: hidden;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    padding: 30px clamp(20px, 3vw, 34px);
-    margin-bottom: 22px;
-    border-radius: 22px;
-    background: linear-gradient(135deg, #0b2a5b 0%, #123b78 55%, #1a4a94 100%);
-    box-shadow: 0 24px 48px -28px rgba(7, 28, 68, 0.65);
-}
-
-.pft-hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
-    background-size: 18px 18px;
-    -webkit-mask-image: radial-gradient(circle at 85% 20%, #000 0%, transparent 65%);
-    mask-image: radial-gradient(circle at 85% 20%, #000 0%, transparent 65%);
-    pointer-events: none;
+    padding: 22px clamp(18px, 2.6vw, 28px);
+    margin-bottom: 26px;
+    border-radius: 20px;
+    border: 1px solid #e7ecf4;
+    background: linear-gradient(180deg, #f7f9fd 0%, #ffffff 60%);
+    box-shadow: var(--as-shadow-card);
 }
 
 .pft-hero-main {
-    position: relative;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 16px;
     min-width: 0;
 }
 
 .pft-hero-icon {
     display: grid;
-    flex: 0 0 52px;
-    width: 52px;
-    height: 52px;
+    flex: 0 0 46px;
+    width: 46px;
+    height: 46px;
     place-items: center;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 14px;
+    background: #0b2a5b;
     color: #ffffff;
 }
 
 .pft-hero-icon svg {
-    width: 24px;
-    height: 24px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.pft-hero-kicker {
-    margin: 0 0 4px;
-    color: #bcd4f7;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+    stroke: none;
 }
 
 .pft-hero-title {
     margin: 0;
-    color: #ffffff;
-    font-size: 26px;
+    color: #0f172a;
+    font-size: 24px;
     font-weight: 700;
     letter-spacing: -0.02em;
 }
 
 .pft-hero-subtitle {
-    margin: 6px 0 0;
+    margin: 4px 0 0;
     max-width: 46ch;
-    color: rgba(255, 255, 255, 0.72);
+    color: #64748b;
     font-size: 13px;
     line-height: 1.55;
 }
 
 .pft-hero-actions {
-    position: relative;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
+    align-items: center;
+    gap: 12px;
 }
 
 .pft-hero-updated {
@@ -117,9 +89,9 @@
     height: 26px;
     padding: 0 12px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    color: rgba(255, 255, 255, 0.78);
+    background: #f1f5f9;
+    border: 1px solid #e7ecf4;
+    color: #64748b;
     font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
@@ -131,17 +103,6 @@
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
-}
-
-.pft-hero .pf-btn-primary {
-    border-color: #ffffff;
-    background: #ffffff;
-    color: #0b2a5b;
-    box-shadow: 0 12px 26px -14px rgba(0, 0, 0, 0.45);
-}
-
-.pft-hero .pf-btn-primary:hover {
-    background: #eaf1fc;
 }
 
 /* ── Stat cards ──────────────────────────────────────────────────────── */
@@ -191,29 +152,27 @@
 
 .pft-stat-icon {
     display: grid;
-    width: 36px;
-    height: 36px;
-    flex: 0 0 36px;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
     place-items: center;
-    border-radius: 11px;
+    border-radius: 12px;
+    color: #ffffff;
 }
 
 .pft-stat-icon svg {
-    width: 17px;
-    height: 17px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.9;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    width: 19px;
+    height: 19px;
+    fill: currentColor;
+    stroke: none;
 }
 
-/* Light tinted icon chips (our navy + semantic tones) instead of bold
-   gradient fills — matches the reference's subtle corner-icon treatment. */
-.pft-stat-icon--blue   { background: #e7effc; color: #174a96; }
-.pft-stat-icon--green  { background: #e3f6ea; color: #188352; }
-.pft-stat-icon--violet { background: #eee9fb; color: #6c47c9; }
-.pft-stat-icon--amber  { background: #fdf1e0; color: #c1791f; }
+/* Flat full-color badges with a solid white glyph — same tones used for
+   pills/toasts elsewhere, one per metric instead of a pastel tinted chip. */
+.pft-stat-icon--blue   { background: #2863bd; }
+.pft-stat-icon--green  { background: #1a8a4c; }
+.pft-stat-icon--violet { background: #6c47c9; }
+.pft-stat-icon--amber  { background: #c1791f; }
 
 .pft-stat-label {
     margin: 0;
@@ -233,7 +192,7 @@
 
 .pft-stat-meta {
     margin: 3px 0 0;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 11.5px;
 }
 
@@ -303,7 +262,7 @@
     align-items: center;
     gap: 10px;
     padding: 56px 24px !important;
-    color: #94a3b8;
+    color: #64748b;
 }
 
 .pft-empty svg {
@@ -438,14 +397,14 @@
 }
 
 .pft-feed-text span {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 11.5px;
 }
 
 .pft-feed-time {
     flex: 0 0 auto;
     margin-top: 1px;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 11px;
     white-space: nowrap;
 }
@@ -494,7 +453,7 @@
 
 .pft-recent-meta {
     margin: 1px 0 0;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 11.5px;
 }
 
@@ -614,7 +573,7 @@
 
 .pft-gauge-caption {
     max-width: 108px;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 11px;
     font-weight: 600;
     line-height: 1.4;
@@ -674,7 +633,7 @@
 }
 
 .pft-bar-label {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 11.5px;
     font-weight: 600;
 }
@@ -697,6 +656,7 @@
     }
 
     .pft-hero-actions {
+        flex-direction: column;
         align-items: stretch;
         width: 100%;
     }
@@ -711,10 +671,4 @@
         width: 100%;
         justify-content: center;
     }
-}
-
-/* ── Dark mode ───────────────────────────────────────────────────────── */
-
-@media (prefers-color-scheme: dark) {
-    .pft-hero { box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.65); }
 }

@@ -13,6 +13,12 @@
     display: flex;
     flex: 0 0 264px;
     flex-direction: column;
+    /* Capped to the viewport, not left to grow with page content — this is
+       what lets .pf-sidebar-nav's flex:1 + overflow-y:auto below actually
+       bound and internally scroll the nav list, and what keeps the footer
+       (with the collapse button) pinned in view instead of trailing off
+       the bottom of a long page. */
+    height: 100vh;
     padding: 28px 20px;
     border-right: 1px solid #e7ecf4;
     background: #ffffff;

@@ -2,38 +2,6 @@
     padding: 28px clamp(16px, 4vw, 40px) 56px;
 }
 
-.pf-dashboard-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 26px;
-}
-
-.pf-dashboard-kicker {
-    margin: 0 0 6px;
-    color: #174a96;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-}
-
-.pf-dashboard-title {
-    margin: 0;
-    color: #071c44;
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-}
-
-.pf-dashboard-subtitle {
-    margin: 6px 0 0;
-    color: #64748b;
-    font-size: 13px;
-}
-
 .pf-btn {
     display: inline-flex;
     align-items: center;
@@ -218,7 +186,7 @@
 
 .pf-panel-count {
     margin: 2px 0 0;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 12px;
 }
 
@@ -234,7 +202,7 @@
 .pf-table thead th {
     padding: 12px 24px;
     border-bottom: 1px solid #eef1f6;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.06em;
@@ -290,7 +258,7 @@
 .pf-tenant-code {
     display: block;
     margin-top: 1px;
-    color: #94a3b8;
+    color: #64748b;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 11px;
 }
@@ -367,7 +335,7 @@
 
 .pf-empty {
     padding: 48px 24px;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 13px;
     text-align: center;
 }
@@ -523,7 +491,7 @@
 
 .pf-field-hint {
     margin: 6px 0 0;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 11px;
 }
 

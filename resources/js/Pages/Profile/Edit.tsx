@@ -3,6 +3,7 @@ import PlatformLayout from '@/Layouts/PlatformLayout';
 import type { PageProps } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import '../../../css/platform-dashboard.css';
+import '../../../css/platform-overview.css';
 import '../../../css/profile.css';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
@@ -25,12 +26,19 @@ export default function Edit({ mustVerifyEmail, status }: EditProps) {
         <Layout>
             <Head title="Profile" />
 
-            <div className="pf-dashboard profile-page">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Account settings</p>
-                        <h1 className="pf-dashboard-title">My Profile</h1>
-                        <p className="pf-dashboard-subtitle">Manage your personal details and keep your account secure.</p>
+            <div className="pf-dashboard profile-page pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="8.4" r="3.6" />
+                                <path d="M4.5 19.6a7.5 6 0 0 1 15 0z" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">My Profile</h1>
+                            <p className="pft-hero-subtitle">Manage your personal details and keep your account secure.</p>
+                        </div>
                     </div>
                 </div>
 

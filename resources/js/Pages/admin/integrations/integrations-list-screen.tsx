@@ -1,6 +1,7 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface IntegrationProfile {
     id: number;
@@ -34,21 +35,31 @@ export default function IntegrationsListScreen({ profiles }: { profiles: Integra
         <AdminLayout>
             <Head title="Integrations" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">Integrations</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Connect and manage your school's legacy data sources.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="7" cy="12" r="3.4" />
+                                <rect x="9" y="10.3" width="6" height="3.4" rx="1.2" />
+                                <circle cx="17" cy="12" r="3.4" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">Integrations</h1>
+                            <p className="pft-hero-subtitle">
+                                Connect and manage your school's legacy data sources.
+                            </p>
+                        </div>
                     </div>
-                    <Link href={route('portal.integrations.create')} className="pf-btn pf-btn-primary">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14" />
-                        </svg>
-                        New Integration Profile
-                    </Link>
+                    <div className="pft-hero-actions">
+                        <Link href={route('portal.integrations.create')} className="pf-btn pf-btn-primary">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            New Integration Profile
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="pf-panel">

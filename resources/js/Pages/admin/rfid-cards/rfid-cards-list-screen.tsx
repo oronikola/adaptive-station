@@ -2,6 +2,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { PaginatedData, PaginationLink, Person, RfidCard } from '@/types';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface RfidCardWithPerson extends RfidCard {
     card_uid: string;
@@ -64,14 +65,20 @@ export default function RfidCardsListScreen({ rfidCards, filters }: { rfidCards:
         <AdminLayout>
             <Head title="RFID Cards" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">RFID Cards</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Track every card assigned to students and staff.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="3" y="6" width="18" height="12" rx="2.4" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">RFID Cards</h1>
+                            <p className="pft-hero-subtitle">
+                                Track every card assigned to students and staff.
+                            </p>
+                        </div>
                     </div>
                 </div>
 

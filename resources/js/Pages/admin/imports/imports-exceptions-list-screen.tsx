@@ -79,16 +79,23 @@ export default function ImportsExceptionsListScreen({ batch, exceptions, filters
         <AdminLayout>
             <Head title="Import Exceptions" />
 
-            <div className="pf-dashboard">
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">
-                            Exceptions — {batch.source_description ?? batch.source_system}
-                        </h1>
-                        <p className="pf-dashboard-subtitle">
-                            Records that need manual review or were skipped during matching.
-                        </p>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="5" y="3" width="2" height="18" rx="1" />
+                                <path d="M7 4h11l-3 4 3 4H7z" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">
+                                Exceptions — {batch.source_description ?? batch.source_system}
+                            </h1>
+                            <p className="pft-hero-subtitle">
+                                Records that need manual review or were skipped during matching.
+                            </p>
+                        </div>
                     </div>
                 </div>
 

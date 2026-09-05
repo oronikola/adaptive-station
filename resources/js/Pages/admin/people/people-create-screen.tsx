@@ -26,7 +26,7 @@ export default function PeopleCreateScreen() {
         <AdminLayout>
             <Head title="Add Person" />
 
-            <div className="pf-dashboard">
+            <div className="pf-dashboard pft-page">
                 <Link href={route('portal.people.index')} className="pft-panel-link" style={{ marginBottom: 14 }}>
                     <svg viewBox="0 0 24 24">
                         <path d="m15 6-6 6 6 6" />
@@ -34,13 +34,22 @@ export default function PeopleCreateScreen() {
                     Back to People
                 </Link>
 
-                <div className="pf-dashboard-header">
-                    <div>
-                        <p className="pf-dashboard-kicker">Admin overview</p>
-                        <h1 className="pf-dashboard-title">Add Person</h1>
-                        <p className="pf-dashboard-subtitle">
-                            Create a new student or staff record for your school.
-                        </p>
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="8.5" cy="8.5" r="3" />
+                                <circle cx="16" cy="9.5" r="2.6" />
+                                <path d="M3.2 19.5a5.5 4.6 0 0 1 11 0z" />
+                                <path d="M12.8 19.5a5.2 4.2 0 0 1 10.4 0z" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">Add Person</h1>
+                            <p className="pft-hero-subtitle">
+                                Create a new student or staff record for your school.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
