@@ -42,14 +42,14 @@ const STAT_ICONS: Record<string, React.ReactNode> = {
 function StatCard({ label, value, icon, tone, meta }: StatCardProps) {
     return (
         <div className="pft-stat-card">
-            <span className={`pft-stat-icon pft-stat-icon--${tone}`}>
-                {STAT_ICONS[icon]}
-            </span>
-            <div>
+            <div className="pft-stat-card-top">
                 <p className="pft-stat-label">{label}</p>
-                <p className="pft-stat-value">{value}</p>
-                {meta && <p className="pft-stat-meta">{meta}</p>}
+                <span className={`pft-stat-icon pft-stat-icon--${tone}`}>
+                    {STAT_ICONS[icon]}
+                </span>
             </div>
+            <p className="pft-stat-value">{value}</p>
+            {meta && <p className="pft-stat-meta">{meta}</p>}
         </div>
     );
 }

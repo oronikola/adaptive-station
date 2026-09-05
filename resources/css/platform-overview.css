@@ -3,6 +3,11 @@
    screens that share platform-dashboard.css (stations, people, audit log). */
 
 .pft-page {
+    /* One soft, symmetric shadow recipe shared by every widget card (stat
+       cards, panels, gauge/bar-chart cards) so none reads heavier or more
+       one-sided than its neighbor. */
+    --pft-card-shadow: 0 8px 24px rgba(15, 35, 70, 0.08);
+    --pft-card-shadow-hover: 0 12px 30px rgba(15, 35, 70, 0.12);
     animation: pft-fade-in 260ms ease both;
 }
 
@@ -161,13 +166,13 @@
 
 .pft-stat-card {
     display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 20px;
+    flex-direction: column;
+    gap: 2px;
+    padding: 20px 22px;
     border: 1px solid #e7ecf4;
-    border-radius: 18px;
+    border-radius: 20px;
     background: #ffffff;
-    box-shadow: 0 16px 34px -30px rgba(15, 35, 70, 0.5);
+    box-shadow: var(--pft-card-shadow);
     transition: box-shadow 180ms ease, transform 180ms ease;
     animation: pft-fade-in 320ms ease both;
 }
@@ -177,34 +182,43 @@
 .pft-stat-card:nth-child(4) { animation-delay: 120ms; }
 
 .pft-stat-card:hover {
-    box-shadow: 0 20px 40px -26px rgba(15, 35, 70, 0.55);
+    box-shadow: var(--pft-card-shadow-hover);
     transform: translateY(-2px);
+}
+
+.pft-stat-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
 .pft-stat-icon {
     display: grid;
-    width: 44px;
-    height: 44px;
-    flex: 0 0 44px;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
     place-items: center;
-    border-radius: 13px;
-    color: #ffffff;
+    border-radius: 11px;
 }
 
 .pft-stat-icon svg {
-    width: 20px;
-    height: 20px;
+    width: 17px;
+    height: 17px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.8;
+    stroke-width: 1.9;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
-.pft-stat-icon--blue   { background: linear-gradient(135deg, #2863bd, #0b2a5b); box-shadow: 0 8px 18px -8px rgba(11, 42, 91, 0.55); }
-.pft-stat-icon--green  { background: linear-gradient(135deg, #22b06b, #128a4f); box-shadow: 0 8px 18px -8px rgba(18, 138, 79, 0.5); }
-.pft-stat-icon--violet { background: linear-gradient(135deg, #8b6cf0, #6c47c9); box-shadow: 0 8px 18px -8px rgba(108, 71, 201, 0.5); }
-.pft-stat-icon--amber  { background: linear-gradient(135deg, #f0a637, #c1791f); box-shadow: 0 8px 18px -8px rgba(193, 121, 31, 0.5); }
+/* Light tinted icon chips (our navy + semantic tones) instead of bold
+   gradient fills — matches the reference's subtle corner-icon treatment. */
+.pft-stat-icon--blue   { background: #e7effc; color: #174a96; }
+.pft-stat-icon--green  { background: #e3f6ea; color: #188352; }
+.pft-stat-icon--violet { background: #eee9fb; color: #6c47c9; }
+.pft-stat-icon--amber  { background: #fdf1e0; color: #c1791f; }
 
 .pft-stat-label {
     margin: 0;
@@ -215,9 +229,9 @@
 }
 
 .pft-stat-value {
-    margin: 3px 0 0;
+    margin: 0;
     color: #0f172a;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 800;
     letter-spacing: -0.02em;
 }
@@ -525,6 +539,157 @@
 
 @media (max-width: 900px) {
     .pft-grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ── Widgets grid: wide main column + narrow side column ───────────────
+   (main = the two data-heavy cards; side = the two compact metric cards) */
+
+.pft-widgets-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    align-items: start;
+    gap: 16px;
+}
+
+@media (max-width: 1024px) {
+    .pft-widgets-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pft-widgets-main,
+.pft-widgets-side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ── Activation gauge card ──────────────────────────────────────────── */
+
+.pft-gauge-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 24px 26px;
+}
+
+.pft-gauge {
+    position: relative;
+    display: grid;
+    width: 148px;
+    height: 148px;
+    place-items: center;
+}
+
+.pft-gauge-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.pft-gauge-track {
+    fill: none;
+    stroke: #eef1f6;
+    stroke-width: 12;
+}
+
+.pft-gauge-value {
+    fill: none;
+    stroke: #0b2a5b;
+    stroke-width: 12;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 500ms ease;
+}
+
+.pft-gauge-center {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.pft-gauge-pct {
+    color: #071c44;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.pft-gauge-caption {
+    max-width: 108px;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.pft-gauge-meta {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* ── Status bar-chart card ──────────────────────────────────────────── */
+
+.pft-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 36px;
+    padding: 14px 24px 26px;
+}
+
+.pft-bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.pft-bar-value {
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pft-bar-track {
+    display: flex;
+    align-items: flex-end;
+    width: 46px;
+    height: 120px;
+}
+
+.pft-bar {
+    width: 100%;
+    min-height: 6px;
+    border-radius: 10px 10px 4px 4px;
+    transition: height 500ms ease;
+}
+
+.pft-bar--active {
+    background: linear-gradient(180deg, #2863bd, #0b2a5b);
+}
+
+.pft-bar--muted {
+    background: #eef1f6;
+}
+
+.pft-bar-label {
+    color: #94a3b8;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+/* Dashboard-scoped override: .pf-panel/.pf-filter-bar are shared with
+   screens outside .pft-page, so their shadow is balanced here rather than
+   at the base rule — same soft recipe as the stat/gauge/bar-chart cards. */
+.pft-page .pf-panel,
+.pft-page .pf-filter-bar {
+    box-shadow: var(--pft-card-shadow);
 }
 
 /* ── Responsive (scoped to .pft-page so other pf- screens are untouched) ── */

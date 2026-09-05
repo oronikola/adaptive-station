@@ -115,4 +115,7 @@ export interface NavItem {
      * (e.g. the kiosk screen), so navigating there doesn't stow the
      * admin's own sidebar/session in the same tab. */
     external?: boolean;
+    /** Optional count/status pill rendered at the end of the nav row
+     * (e.g. a pending-items count). Not populated by any nav list yet. */
+    badge?: string | number;
 }

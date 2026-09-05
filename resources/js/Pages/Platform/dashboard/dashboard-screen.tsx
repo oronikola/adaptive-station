@@ -39,13 +39,87 @@ const STAT_ICONS: Record<string, React.ReactNode> = {
 function StatCard({ label, value, icon, tone, meta }: StatCardProps) {
     return (
         <div className="pft-stat-card">
-            <span className={`pft-stat-icon pft-stat-icon--${tone}`}>
-                {STAT_ICONS[icon]}
-            </span>
-            <div>
+            <div className="pft-stat-card-top">
                 <p className="pft-stat-label">{label}</p>
-                <p className="pft-stat-value">{value}</p>
-                {meta && <p className="pft-stat-meta">{meta}</p>}
+                <span className={`pft-stat-icon pft-stat-icon--${tone}`}>
+                    {STAT_ICONS[icon]}
+                </span>
+            </div>
+            <p className="pft-stat-value">{value}</p>
+            {meta && <p className="pft-stat-meta">{meta}</p>}
+        </div>
+    );
+}
+
+/** Radial "percent of total" gauge — used for a real ratio we already have
+ * (e.g. active vs. total stations), not a fabricated trend. */
+function ActivationGauge({
+    label,
+    value,
+    total,
+}: {
+    label: string;
+    value: number;
+    total: number;
+}) {
+    const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+    const radius = 54;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (Math.min(100, pct) / 100) * circumference;
+
+    return (
+        <div className="pft-gauge-card">
+            <div className="pft-gauge">
+                <svg viewBox="0 0 130 130" className="pft-gauge-svg" aria-hidden="true">
+                    <circle cx="65" cy="65" r={radius} className="pft-gauge-track" />
+                    <circle
+                        cx="65"
+                        cy="65"
+                        r={radius}
+                        className="pft-gauge-value"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                    />
+                </svg>
+                <div className="pft-gauge-center">
+                    <span className="pft-gauge-pct">{pct}%</span>
+                </div>
+            </div>
+            <p className="pft-gauge-caption">{label}</p>
+            <p className="pft-gauge-meta">
+                {value} of {total} active
+            </p>
+        </div>
+    );
+}
+
+/** Two-category bar comparison (active vs. inactive clients) — the closest
+ * real equivalent we have to a categorical bar chart; there's no per-day
+ * usage data yet to power a "most active day" style breakdown. */
+function StatusBarChart({ active, inactive }: { active: number; inactive: number }) {
+    const max = Math.max(active, inactive, 1);
+
+    return (
+        <div className="pft-bars">
+            <div className="pft-bar-col">
+                <span className="pft-bar-value">{active}</span>
+                <div className="pft-bar-track">
+                    <div
+                        className="pft-bar pft-bar--active"
+                        style={{ height: `${(active / max) * 100}%` }}
+                    />
+                </div>
+                <span className="pft-bar-label">Active</span>
+            </div>
+            <div className="pft-bar-col">
+                <span className="pft-bar-value">{inactive}</span>
+                <div className="pft-bar-track">
+                    <div
+                        className="pft-bar pft-bar--muted"
+                        style={{ height: `${(inactive / max) * 100}%` }}
+                    />
+                </div>
+                <span className="pft-bar-label">Inactive</span>
             </div>
         </div>
     );
@@ -176,81 +250,112 @@ export default function DashboardScreen({ stats, recentActivity, recentClients }
                     />
                 </div>
 
-                <div className="pft-grid-2">
-                    <div className="pf-panel">
-                        <div className="pf-panel-header">
-                            <div>
-                                <h2 className="pf-panel-title">Recent Activity</h2>
-                                <p className="pf-panel-count">Latest platform-level events</p>
+                <div className="pft-widgets-grid">
+                    <div className="pft-widgets-main">
+                        <div className="pf-panel">
+                            <div className="pf-panel-header">
+                                <div>
+                                    <h2 className="pf-panel-title">Recent Activity</h2>
+                                    <p className="pf-panel-count">Latest platform-level events</p>
+                                </div>
+                            </div>
+                            <div style={{ padding: '4px 24px 20px' }}>
+                                {recentActivity.length === 0 ? (
+                                    <p className="pf-empty" style={{ padding: '32px 0' }}>
+                                        No activity recorded yet.
+                                    </p>
+                                ) : (
+                                    <ul className="pft-feed">
+                                        {recentActivity.map((log) => (
+                                            <li key={log.id} className="pft-feed-item">
+                                                <span className={`pft-feed-dot pft-feed-dot--${feedDotTone(log.action)}`} />
+                                                <span className="pft-feed-text">
+                                                    {describeAction(log)}
+                                                    {log.tenant?.name && <span> — {log.tenant.name}</span>}
+                                                </span>
+                                                <span className="pft-feed-time">{timeAgo(log.created_at)}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
                         </div>
-                        <div style={{ padding: '4px 24px 20px' }}>
-                            {recentActivity.length === 0 ? (
-                                <p className="pf-empty" style={{ padding: '32px 0' }}>
-                                    No activity recorded yet.
-                                </p>
-                            ) : (
-                                <ul className="pft-feed">
-                                    {recentActivity.map((log) => (
-                                        <li key={log.id} className="pft-feed-item">
-                                            <span className={`pft-feed-dot pft-feed-dot--${feedDotTone(log.action)}`} />
-                                            <span className="pft-feed-text">
-                                                {describeAction(log)}
-                                                {log.tenant?.name && <span> — {log.tenant.name}</span>}
-                                            </span>
-                                            <span className="pft-feed-time">{timeAgo(log.created_at)}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
+
+                        <div className="pf-panel">
+                            <div className="pf-panel-header">
+                                <div>
+                                    <h2 className="pf-panel-title">Recent Clients</h2>
+                                    <p className="pf-panel-count">
+                                        {stats.tenant_count} client{stats.tenant_count === 1 ? '' : 's'} registered
+                                    </p>
+                                </div>
+                                <Link href={route('platform.tenants.index')} className="pft-panel-link">
+                                    Manage all clients
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M9 6l6 6-6 6" />
+                                    </svg>
+                                </Link>
+                            </div>
+                            <div style={{ padding: '4px 24px 20px' }}>
+                                {recentClients.length === 0 ? (
+                                    <p className="pf-empty" style={{ padding: '32px 0' }}>
+                                        No client workspaces registered yet.
+                                    </p>
+                                ) : (
+                                    <ul className="pft-recent-list">
+                                        {recentClients.map((tenant) => (
+                                            <li key={tenant.id}>
+                                                <Link
+                                                    href={route('platform.tenants.show', tenant.code)}
+                                                    className="pft-recent-item"
+                                                >
+                                                    <div className="pft-recent-main">
+                                                        <span className="pft-tenant-avatar">
+                                                            {tenant.name.charAt(0).toUpperCase()}
+                                                        </span>
+                                                        <div style={{ minWidth: 0 }}>
+                                                            <p className="pft-recent-name">{tenant.name}</p>
+                                                            <p className="pft-recent-meta">{tenant.timezone}</p>
+                                                        </div>
+                                                    </div>
+                                                    <span className={'pf-pill ' + STATUS_PILL_CLASS[tenant.status]}>
+                                                        {tenant.status}
+                                                    </span>
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="pf-panel">
-                        <div className="pf-panel-header">
-                            <div>
-                                <h2 className="pf-panel-title">Recent Clients</h2>
-                                <p className="pf-panel-count">
-                                    {stats.tenant_count} client{stats.tenant_count === 1 ? '' : 's'} registered
-                                </p>
+                    <div className="pft-widgets-side">
+                        <div className="pf-panel">
+                            <div className="pf-panel-header">
+                                <div>
+                                    <h2 className="pf-panel-title">Station Activation</h2>
+                                    <p className="pf-panel-count">Share of stations currently active</p>
+                                </div>
                             </div>
-                            <Link href={route('platform.tenants.index')} className="pft-panel-link">
-                                Manage all clients
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M9 6l6 6-6 6" />
-                                </svg>
-                            </Link>
+                            <ActivationGauge
+                                label="Stations active"
+                                value={stats.active_station_count}
+                                total={stats.station_count}
+                            />
                         </div>
-                        <div style={{ padding: '4px 24px 20px' }}>
-                            {recentClients.length === 0 ? (
-                                <p className="pf-empty" style={{ padding: '32px 0' }}>
-                                    No client workspaces registered yet.
-                                </p>
-                            ) : (
-                                <ul className="pft-recent-list">
-                                    {recentClients.map((tenant) => (
-                                        <li key={tenant.id}>
-                                            <Link
-                                                href={route('platform.tenants.show', tenant.code)}
-                                                className="pft-recent-item"
-                                            >
-                                                <div className="pft-recent-main">
-                                                    <span className="pft-tenant-avatar">
-                                                        {tenant.name.charAt(0).toUpperCase()}
-                                                    </span>
-                                                    <div style={{ minWidth: 0 }}>
-                                                        <p className="pft-recent-name">{tenant.name}</p>
-                                                        <p className="pft-recent-meta">{tenant.timezone}</p>
-                                                    </div>
-                                                </div>
-                                                <span className={'pf-pill ' + STATUS_PILL_CLASS[tenant.status]}>
-                                                    {tenant.status}
-                                                </span>
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
+
+                        <div className="pf-panel">
+                            <div className="pf-panel-header">
+                                <div>
+                                    <h2 className="pf-panel-title">Clients by Status</h2>
+                                    <p className="pf-panel-count">Active vs. inactive workspaces</p>
+                                </div>
+                            </div>
+                            <StatusBarChart
+                                active={stats.active_tenant_count}
+                                inactive={Math.max(0, stats.tenant_count - stats.active_tenant_count)}
+                            />
                         </div>
                     </div>
                 </div>

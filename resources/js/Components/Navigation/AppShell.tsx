@@ -1,4 +1,5 @@
 import ApplicationLogo from '@/Components/Branding/ApplicationLogo';
+import Header from '@/Components/Navigation/Header';
 import Sidebar from '@/Components/Navigation/Sidebar';
 import {
     classifyFlashMessage,
@@ -112,6 +113,12 @@ export default function AppShell({
                         <span className="pf-sidebar-logo-text">{brand}</span>
                     </Link>
                 </div>
+
+                <Header
+                    user={user}
+                    schoolLabel={tenant?.name}
+                    isPlatform={user.role === 'platform_super_admin'}
+                />
 
                 {header && <div className="pf-shell-header">{header}</div>}
 

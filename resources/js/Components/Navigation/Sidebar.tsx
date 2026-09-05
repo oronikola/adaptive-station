@@ -57,7 +57,10 @@ export default function Sidebar({
                             }
                         >
                             <span className="pf-sidebar-icon">{item.icon}</span>
-                            <span>{item.label}</span>
+                            <span className="pf-sidebar-link-label">{item.label}</span>
+                            {item.badge != null && (
+                                <span className="pf-sidebar-badge">{item.badge}</span>
+                            )}
                         </Link>
                     ),
                 )}

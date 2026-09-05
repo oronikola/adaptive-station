@@ -1,5 +1,5 @@
-/* Shared app shell + sidebar (used by both the superadmin/platform layout
-   and the tenant admin portal layout). */
+/* Shared app shell + sidebar + top bar (used by both the superadmin/platform
+   layout and the tenant admin portal layout). */
 
 .pf-shell {
     display: flex;
@@ -81,11 +81,12 @@
 }
 
 .pf-sidebar-link {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 10px 14px;
-    border-radius: 12px;
+    border-radius: 14px;
     color: #64748b;
     font-size: 13px;
     font-weight: 600;
@@ -98,11 +99,51 @@
     color: #174a96;
 }
 
+.pf-sidebar-link-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Active state matches the reference's "light fill + left accent bar"
+   treatment (rather than a solid navy fill) using our navy token. */
 .pf-sidebar-link--active,
 .pf-sidebar-link--active:hover {
+    background: #eaf0fb;
+    color: #0b2a5b;
+}
+
+.pf-sidebar-link--active::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -9px;
+    width: 3px;
+    height: 18px;
+    border-radius: 999px;
     background: #0b2a5b;
-    color: #ffffff;
-    box-shadow: 0 10px 22px -15px rgba(7, 28, 68, 0.9);
+    transform: translateY(-50%);
+}
+
+.pf-sidebar-badge {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 7px;
+    margin-left: auto;
+    border-radius: 999px;
+    background: #eef1f6;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.pf-sidebar-link--active .pf-sidebar-badge {
+    background: #dbe6fb;
+    color: #0b2a5b;
 }
 
 .pf-sidebar-icon {
@@ -245,8 +286,8 @@
     align-items: center;
     justify-content: center;
     border: 1px solid #e7ecf4;
-    border-radius: 10px;
-    background: #ffffff;
+    border-radius: 999px;
+    background: #f4f6fb;
     color: #223047;
     cursor: pointer;
 }
@@ -274,4 +315,355 @@
 
 .pf-shell-content {
     flex: 1 1 auto;
+}
+
+/* Global top bar (rendered alongside the sidebar, above each page's own
+   header slot). */
+.pf-topbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px clamp(16px, 4vw, 40px);
+    border-bottom: 1px solid #e7ecf4;
+    background: #ffffff;
+}
+
+.pf-topbar-left {
+    display: flex;
+    flex: 0 1 auto;
+    min-width: 0;
+    align-items: center;
+}
+
+/* Pill-shaped search bar (decorative — see Header.tsx comment). */
+.pf-topbar-search {
+    display: flex;
+    flex: 1 1 320px;
+    align-items: center;
+    max-width: 420px;
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: #f4f6fb;
+    cursor: text;
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.pf-topbar-search:focus-within {
+    border-color: #c3d6f3;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(11, 42, 91, 0.08);
+}
+
+.pf-topbar-search svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    margin-right: 10px;
+    fill: none;
+    stroke: #94a3b8;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pf-topbar-search input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #0f172a;
+    font-size: 13px;
+}
+
+.pf-topbar-search input::placeholder {
+    color: #94a3b8;
+}
+
+.pf-topbar-search-kbd {
+    flex: 0 0 auto;
+    padding: 2px 7px;
+    margin-left: 10px;
+    border: 1px solid #e1e7f2;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (max-width: 760px) {
+    .pf-topbar-search {
+        display: none;
+    }
+}
+
+.pf-topbar-school {
+    overflow: hidden;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pf-topbar-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #eef2fb;
+    color: #174a96;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.pf-topbar-right {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.pf-topbar-icon-btn {
+    position: relative;
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 999px;
+    background: #f4f6fb;
+    color: #64748b;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.pf-topbar-icon-btn:hover {
+    background: #eaf0fb;
+    color: #0b2a5b;
+}
+
+.pf-topbar-icon-btn:focus-visible {
+    outline: 2px solid #2863bd;
+    outline-offset: 2px;
+}
+
+.pf-topbar-icon-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pf-topbar-badge-dot {
+    position: absolute;
+    top: 8px;
+    right: 9px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    border: 2px solid #ffffff;
+}
+
+.pf-topbar-divider {
+    width: 1px;
+    height: 24px;
+    margin: 0 4px;
+    background: #e7ecf4;
+}
+
+.pf-topbar-menu {
+    position: relative;
+}
+
+.pf-topbar-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px 6px 6px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}
+
+.pf-topbar-trigger:hover {
+    background: #f8faff;
+}
+
+.pf-topbar-trigger:focus-visible {
+    outline: 2px solid #2863bd;
+    outline-offset: 2px;
+}
+
+.pf-topbar-avatar {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #4f8fe8, #2863bd);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pf-topbar-user {
+    display: none;
+    min-width: 0;
+    flex-direction: column;
+    text-align: left;
+}
+
+@media (min-width: 640px) {
+    .pf-topbar-user {
+        display: flex;
+    }
+}
+
+.pf-topbar-user-name {
+    overflow: hidden;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pf-topbar-user-role {
+    overflow: hidden;
+    color: #2863bd;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pf-topbar-chevron {
+    display: none;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    fill: none;
+    stroke: #94a3b8;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 150ms ease;
+}
+
+@media (min-width: 640px) {
+    .pf-topbar-chevron {
+        display: block;
+    }
+}
+
+.pf-topbar-chevron--open {
+    transform: rotate(180deg);
+}
+
+.pf-topbar-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 30;
+    width: 208px;
+    padding: 8px;
+    border: 1px solid #eef1f6;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 24px 48px -20px rgba(15, 35, 70, 0.28);
+    animation: pf-topbar-dropdown-in 150ms ease;
+}
+
+@keyframes pf-topbar-dropdown-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-topbar-dropdown {
+        animation: none;
+    }
+}
+
+.pf-topbar-dropdown-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 10px;
+    background: none;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.pf-topbar-dropdown-item + .pf-topbar-dropdown-item {
+    margin-top: 2px;
+}
+
+.pf-topbar-dropdown-item svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pf-topbar-dropdown-item:hover,
+.pf-topbar-dropdown-item:focus-visible {
+    background: #f1f5fb;
+    color: #174a96;
+}
+
+.pf-topbar-dropdown-item:focus-visible {
+    outline: 2px solid #2863bd;
+    outline-offset: -2px;
+}
+
+.pf-topbar-dropdown-divider {
+    height: 1px;
+    margin: 6px 4px;
+    background: #eef1f6;
+}
+
+.pf-topbar-dropdown-item--danger {
+    color: #dc2626;
+}
+
+.pf-topbar-dropdown-item--danger:hover,
+.pf-topbar-dropdown-item--danger:focus-visible {
+    background: #fef2f2;
+    color: #dc2626;
 }
