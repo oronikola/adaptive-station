@@ -7,6 +7,44 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Local Development Setup
+
+1. Install dependencies:
+   ```bash
+   composer install
+   npm install
+   ```
+2. Copy the environment file and generate an app key:
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+3. Set up the database (see [Database Setup](#database-setup) below).
+4. Start the app:
+   ```bash
+   composer run dev
+   ```
+   This runs the PHP dev server (`http://127.0.0.1:8000`), the queue worker, and Vite together in one process. Keep it running in a terminal while you develop.
+
+## Database Setup
+
+Create the central database (name must match `DB_DATABASE` in `.env`), then run:
+
+```bash
+php artisan migrate
+php artisan db:seed
+```
+
+Seeding creates the platform super admin (`admin@adaptivestation.test`) so you have a login to provision the first school with.
+
+> Per-school databases (`adaptive_station_{code}`) are created and migrated automatically when you provision a school through the platform UI — never create or migrate these by hand.
+
+### Troubleshooting: `ERR_CONNECTION_REFUSED` / "Network Error" in the browser
+
+This means the PHP dev server isn't running — it's not a code bug. The app is served by `php artisan serve` on `127.0.0.1:8000` (started via `composer run dev`), so if that process was stopped or crashed, **every** request fails this way, including Inertia form submissions and Boost's own browser-log shipping.
+
+**Fix:** run `composer run dev` again from the project root and leave it running.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
