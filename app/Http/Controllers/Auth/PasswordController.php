@@ -22,6 +22,9 @@ class PasswordController extends Controller
 
         $request->user()->update([
             'password' => Hash::make($validated['password']),
+            // Kept in sync so the Admin Users panel's reveal-anytime password
+            // never goes stale — see the migration that added this column.
+            'password_plaintext' => $validated['password'],
         ]);
 
         return back();

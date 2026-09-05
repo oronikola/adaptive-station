@@ -3,8 +3,22 @@ import { NavItem } from '@/types';
 
 const navItems: NavItem[] = [
     {
-        name: 'schools',
-        label: 'Schools',
+        name: 'dashboard',
+        label: 'Dashboard',
+        route: 'platform.dashboard',
+        activePattern: 'platform.dashboard',
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+        ),
+    },
+    {
+        name: 'clients',
+        label: 'Client Management',
         route: 'platform.tenants.index',
         activePattern: 'platform.tenants.*',
         icon: (
@@ -47,7 +61,7 @@ interface PlatformLayoutProps {
 export default function PlatformLayout({ header, children }: PlatformLayoutProps) {
     return (
         <AppShell
-            brandHref={route('platform.tenants.index')}
+            brandHref={route('platform.dashboard')}
             items={navItems}
             header={header}
         >

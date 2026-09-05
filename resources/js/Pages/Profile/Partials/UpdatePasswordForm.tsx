@@ -1,6 +1,5 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
@@ -125,8 +124,10 @@ export default function UpdatePasswordForm({ className = '' }: UpdatePasswordFor
                     />
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                <div className="profile-form-actions">
+                    <button type="submit" className="pf-btn pf-btn-primary" disabled={processing}>
+                        {processing ? 'Updating...' : 'Update password'}
+                    </button>
 
                     <Transition
                         show={recentlySuccessful}
@@ -135,8 +136,8 @@ export default function UpdatePasswordForm({ className = '' }: UpdatePasswordFor
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Saved.
+                        <p role="status" className="text-sm text-green-700">
+                            Password updated.
                         </p>
                     </Transition>
                 </div>

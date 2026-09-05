@@ -48,6 +48,10 @@ class NewPasswordController extends Controller
             function ($user) use ($request) {
                 $user->forceFill([
                     'password' => Hash::make($request->password),
+                    // Kept in sync so the Admin Users panel's reveal-anytime
+                    // password never goes stale — see the migration that
+                    // added this column.
+                    'password_plaintext' => $request->password,
                     'remember_token' => Str::random(60),
                 ])->save();
 

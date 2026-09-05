@@ -65,6 +65,50 @@ class AttendanceController extends Controller
         ]);
     }
 
+    /**
+     * Per-student, per-month "days present" counts for a calendar year.
+     *
+     * Deliberately does not compute an "absent" count: that requires knowing
+     * which days were actual school days (holidays, breaks, weekends), and
+     * there is no school-calendar model in this app to answer that — only
+     * raw tap events. Showing an "absent" figure without one would silently
+     * misreport every non-school day as an absence.
+     */
+    public function studentSummary(Request $request, Person $person): Response
+    {
+        Gate::authorize('viewAny', TapEvent::class);
+        Gate::authorize('view', $person);
+
+        $years = TapEvent::query()
+            ->where('person_id', $person->id)
+            ->selectRaw('DISTINCT YEAR(attendance_date_local) as year')
+            ->orderByDesc('year')
+            ->pluck('year');
+
+        $year = (int) $request->integer('year', $years->first() ?? now()->year);
+
+        $daysPresentByMonth = TapEvent::query()
+            ->where('person_id', $person->id)
+            ->whereYear('attendance_date_local', $year)
+            ->selectRaw('MONTH(attendance_date_local) as month, COUNT(DISTINCT attendance_date_local) as days_present')
+            ->groupBy('month')
+            ->pluck('days_present', 'month');
+
+        $months = collect(range(1, 12))->map(fn (int $month) => [
+            'month' => $month,
+            'label' => now()->setDate($year, $month, 1)->format('F'),
+            'days_present' => (int) ($daysPresentByMonth[$month] ?? 0),
+        ]);
+
+        return Inertia::render('admin/attendance/attendance-student-summary-screen', [
+            'person' => $person,
+            'year' => $year,
+            'years' => $years,
+            'months' => $months,
+            'totalDaysPresent' => $months->sum('days_present'),
+        ]);
+    }
+
     public function export(Request $request): StreamedResponse
     {
         Gate::authorize('viewAny', TapEvent::class);

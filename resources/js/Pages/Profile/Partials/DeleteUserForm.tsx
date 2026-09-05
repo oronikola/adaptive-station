@@ -64,7 +64,7 @@ export default function DeleteUserForm({ className = '' }: DeleteUserFormProps) 
                 </p>
             </header>
 
-            <DangerButton onClick={confirmUserDeletion}>
+            <DangerButton className="profile-delete-button" onClick={confirmUserDeletion}>
                 Delete Account
             </DangerButton>
 

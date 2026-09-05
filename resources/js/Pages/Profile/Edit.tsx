@@ -1,5 +1,9 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import AdminLayout from '@/Layouts/AdminLayout';
+import PlatformLayout from '@/Layouts/PlatformLayout';
+import type { PageProps } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
+import '../../../css/platform-dashboard.css';
+import '../../../css/profile.css';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
@@ -10,35 +14,58 @@ interface EditProps {
 }
 
 export default function Edit({ mustVerifyEmail, status }: EditProps) {
+    const { auth } = usePage<PageProps>().props;
+    const user = auth.user;
+    const isSuperAdmin = user.role === 'platform_super_admin';
+    const Layout = isSuperAdmin ? PlatformLayout : AdminLayout;
+    const roleLabel = isSuperAdmin ? 'Superadmin' : user.role === 'tenant_admin' ? 'Admin' : 'Operator';
+    const initials = user.name.trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase();
+
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Profile
-                </h2>
-            }
-        >
+        <Layout>
             <Head title="Profile" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
+            <div className="pf-dashboard profile-page">
+                <div className="pf-dashboard-header">
+                    <div>
+                        <p className="pf-dashboard-kicker">Account settings</p>
+                        <h1 className="pf-dashboard-title">My Profile</h1>
+                        <p className="pf-dashboard-subtitle">Manage your personal details and keep your account secure.</p>
+                    </div>
+                </div>
+
+                <div className="profile-grid">
+                    <aside className="profile-summary" aria-label="Account summary">
+                        <div className="profile-summary-cover" />
+                        <div className="profile-summary-body">
+                            <div className="profile-avatar" aria-hidden="true">{initials}</div>
+                            <span className="profile-role">{roleLabel}</span>
+                            <h2 className="profile-name">{user.name}</h2>
+                            <p className="profile-email">{user.email}</p>
+                            <div className="profile-summary-note">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z" />
+                                    <path d="m8.5 12 2.5 2.5 4.5-5" />
+                                </svg>
+                                <div>
+                                    <strong>Your account, in one place</strong>
+                                    <p>Keep your contact information up to date and use a unique password.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <div className="profile-settings">
                         <UpdateProfileInformationForm
                             mustVerifyEmail={mustVerifyEmail}
                             status={status}
-                            className="max-w-xl"
+                            className="profile-card"
                         />
-                    </div>
-
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
-                        <UpdatePasswordForm className="max-w-xl" />
-                    </div>
-
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
-                        <DeleteUserForm className="max-w-xl" />
+                        <UpdatePasswordForm className="profile-card" />
+                        <DeleteUserForm className="profile-card profile-card--danger" />
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </Layout>
     );
 }

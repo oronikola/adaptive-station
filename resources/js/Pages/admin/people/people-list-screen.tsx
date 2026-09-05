@@ -171,18 +171,32 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                             </span>
                                         </td>
                                         <td>
-                                            <Link
-                                                href={route(
-                                                    'portal.people.edit',
-                                                    person.id,
-                                                )}
-                                                className="pf-row-action"
-                                            >
-                                                View
-                                                <svg viewBox="0 0 24 24">
-                                                    <path d="M9 6l6 6-6 6" />
-                                                </svg>
-                                            </Link>
+                                            <div style={{ display: 'flex', gap: 14 }}>
+                                                <Link
+                                                    href={route(
+                                                        'portal.people.edit',
+                                                        person.id,
+                                                    )}
+                                                    className="pf-row-action"
+                                                >
+                                                    View
+                                                    <svg viewBox="0 0 24 24">
+                                                        <path d="M9 6l6 6-6 6" />
+                                                    </svg>
+                                                </Link>
+                                                <Link
+                                                    href={route(
+                                                        'portal.attendance.students.show',
+                                                        person.id,
+                                                    )}
+                                                    className="pf-row-action"
+                                                >
+                                                    Attendance
+                                                    <svg viewBox="0 0 24 24">
+                                                        <path d="M9 6l6 6-6 6" />
+                                                    </svg>
+                                                </Link>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

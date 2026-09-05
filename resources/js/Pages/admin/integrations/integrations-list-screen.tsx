@@ -1,8 +1,6 @@
-import StatusBadge from '@/Components/admin/StatusBadge';
-import Table from '@/Components/admin/Table';
-import PrimaryButton from '@/Components/PrimaryButton';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
+import '../../../../css/platform-dashboard.css';
 
 interface IntegrationProfile {
     id: number;
@@ -13,74 +11,118 @@ interface IntegrationProfile {
     last_successful_run_at: string | null;
 }
 
-const statusLabels: Record<string, string> = {
+const STATUS_PILL_CLASS: Record<string, string> = {
+    active: 'pf-pill--active',
+    disabled: 'pf-pill--inactive',
+    error: 'pf-pill--danger',
+};
+
+const STATUS_LABELS: Record<string, string> = {
     active: 'Active',
     disabled: 'Disabled',
     error: 'Error',
 };
 
+const DIRECTION_LABELS: Record<string, string> = {
+    import_only: 'Import only',
+    export_only: 'Export only',
+    bidirectional: 'Import + Export',
+};
+
 export default function IntegrationsListScreen({ profiles }: { profiles: IntegrationProfile[] }) {
     return (
-        <AdminLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        Integrations
-                    </h2>
-                    <Link href={route('portal.integrations.create')}>
-                        <PrimaryButton type="button">New Integration Profile</PrimaryButton>
-                    </Link>
-                </div>
-            }
-        >
+        <AdminLayout>
             <Head title="Integrations" />
 
-            <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-                <Table>
-                    <Table.Head>
-                        <Table.Th>Name</Table.Th>
-                        <Table.Th>Driver</Table.Th>
-                        <Table.Th>Direction</Table.Th>
-                        <Table.Th>Status</Table.Th>
-                        <Table.Th>Last Successful Run</Table.Th>
-                        <Table.Th>
-                            <span className="sr-only">Actions</span>
-                        </Table.Th>
-                    </Table.Head>
-                    <Table.Body>
-                        {profiles.length === 0 && (
-                            <Table.Empty colSpan={6}>No integration profiles yet.</Table.Empty>
-                        )}
+            <div className="pf-dashboard">
+                <div className="pf-dashboard-header">
+                    <div>
+                        <p className="pf-dashboard-kicker">Admin overview</p>
+                        <h1 className="pf-dashboard-title">Integrations</h1>
+                        <p className="pf-dashboard-subtitle">
+                            Connect and manage your school's legacy data sources.
+                        </p>
+                    </div>
+                    <Link href={route('portal.integrations.create')} className="pf-btn pf-btn-primary">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        New Integration Profile
+                    </Link>
+                </div>
 
-                        {profiles.map((profile: IntegrationProfile) => (
-                            <tr key={profile.id}>
-                                <Table.Td className="font-medium text-gray-900 dark:text-gray-100">
-                                    {profile.name}
-                                </Table.Td>
-                                <Table.Td className="font-mono">{profile.driver}</Table.Td>
-                                <Table.Td>{profile.direction}</Table.Td>
-                                <Table.Td>
-                                    <StatusBadge color={profile.status === 'active' ? 'green' : profile.status === 'error' ? 'red' : 'gray'}>
-                                        {statusLabels[profile.status] ?? profile.status}
-                                    </StatusBadge>
-                                </Table.Td>
-                                <Table.Td>
-                                    {profile.last_successful_run_at
-                                        ? new Date(profile.last_successful_run_at).toLocaleString()
-                                        : 'Never'}
-                                </Table.Td>
-                                <Table.Td className="text-right">
-                                    <Link
-                                        href={route('portal.integrations.edit', profile.id)}
-                                        className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                                    >
-                                        Manage
-                                    </Link>
-                                </Table.Td>
-                            </tr>
-                        ))}
-                    </Table.Body>
-                </Table>
+                <div className="pf-panel">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 className="pf-panel-title">All Integration Profiles</h2>
+                            <p className="pf-panel-count">
+                                {profiles.length} shown
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="pf-table-wrap">
+                        <table className="pf-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Driver</th>
+                                    <th scope="col">Direction</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Last Successful Run</th>
+                                    <th scope="col">
+                                        <span className="sr-only">Actions</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {profiles.length === 0 && (
+                                    <tr>
+                                        <td colSpan={6} className="pf-empty">
+                                            No integration profiles yet.
+                                        </td>
+                                    </tr>
+                                )}
+
+                                {profiles.map((profile: IntegrationProfile) => (
+                                    <tr key={profile.id}>
+                                        <td className="pf-tenant-name">
+                                            {profile.name}
+                                        </td>
+                                        <td className="font-mono">{profile.driver}</td>
+                                        <td>{DIRECTION_LABELS[profile.direction] ?? profile.direction}</td>
+                                        <td>
+                                            <span
+                                                className={
+                                                    'pf-pill ' +
+                                                    (STATUS_PILL_CLASS[profile.status] ?? 'pf-pill--inactive')
+                                                }
+                                            >
+                                                {STATUS_LABELS[profile.status] ?? profile.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {profile.last_successful_run_at
+                                                ? new Date(profile.last_successful_run_at).toLocaleString()
+                                                : 'Never'}
+                                        </td>
+                                        <td>
+                                            <Link
+                                                href={route('portal.integrations.edit', profile.id)}
+                                                className="pf-row-action"
+                                            >
+                                                Manage
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M9 6l6 6-6 6" />
+                                                </svg>
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </AdminLayout>
     );

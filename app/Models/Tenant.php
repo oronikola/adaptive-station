@@ -36,6 +36,19 @@ class Tenant extends Model
      */
     protected $connection = 'mysql';
 
+    /**
+     * Route-model binding (and `route('platform.tenants.show', $tenant)`
+     * URL generation) resolves by `code`, not the UUID `id` — the platform
+     * super admin browses tenants by their own short, human-chosen slug
+     * ("example-school"), and a raw UUID in the address bar tells them
+     * nothing. `code` is unique platform-wide (StoreTenantRequest), so this
+     * is safe as a lookup key.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'code';
+    }
+
     protected function casts(): array
     {
         return [
@@ -102,6 +115,26 @@ class Tenant extends Model
         }
 
         return $tenant;
+    }
+
+    /**
+     * Stations live one physical database per tenant — there is no single
+     * query that counts across all of them, so this loops every tenant's own
+     * database and sums in PHP. Shared by the platform dashboard and the
+     * clients list, both of which need the same platform-wide totals.
+     */
+    public static function platformStationTotals(): array
+    {
+        $total = 0;
+        $active = 0;
+
+        foreach (static::all() as $tenant) {
+            TenantDatabase::use($tenant);
+            $total += Station::allTenants()->count();
+            $active += Station::allTenants()->where('status', 'active')->count();
+        }
+
+        return ['total' => $total, 'active' => $active];
     }
 
     public static function updateStatus(self $tenant, TenantStatus $status, ?User $actor = null): self

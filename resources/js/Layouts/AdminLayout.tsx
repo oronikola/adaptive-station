@@ -4,6 +4,20 @@ import { NavItem } from '@/types';
 
 const navItems: NavItem[] = [
     {
+        name: 'dashboard',
+        label: 'Dashboard',
+        route: 'portal.dashboard',
+        activePattern: 'portal.dashboard',
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+        ),
+    },
+    {
         name: 'people',
         label: 'People',
         route: 'portal.people.index',
@@ -92,6 +106,21 @@ const navItems: NavItem[] = [
             </svg>
         ),
     },
+    {
+        name: 'kiosk',
+        label: 'Kiosk',
+        route: 'kiosk',
+        activePattern: 'kiosk',
+        external: true,
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <rect x="2.5" y="5.5" width="13" height="14" rx="2.6" />
+                <circle cx="9" cy="12.5" r="1.6" fill="currentColor" stroke="none" />
+                <path d="M16.8 8.8a5.2 5.2 0 0 1 0 7.4" />
+                <path d="M19.4 6.2a9 9 0 0 1 0 13" opacity="0.55" />
+            </svg>
+        ),
+    },
 ];
 
 interface AdminLayoutProps {
@@ -109,7 +138,7 @@ export default function AdminLayout({ header, children }: AdminLayoutProps) {
 
     return (
         <AppShell
-            brandHref={route('portal.people.index')}
+            brandHref={route('portal.dashboard')}
             items={visibleNavItems}
             header={header}
         >

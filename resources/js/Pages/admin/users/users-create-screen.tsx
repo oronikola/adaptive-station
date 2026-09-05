@@ -1,10 +1,8 @@
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 export default function UsersCreateScreen() {
     const { data, setData, post, processing, errors } = useForm({
@@ -19,73 +17,79 @@ export default function UsersCreateScreen() {
     }
 
     return (
-        <AdminLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Add User
-                </h2>
-            }
-        >
+        <AdminLayout>
             <Head title="Add User" />
 
-            <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8">
-                <form
-                    onSubmit={submit}
-                    className="space-y-6 rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800"
-                >
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                        A temporary password will be generated and shown once.
-                        Relay it to the new user directly — they will be
-                        required to set their own password on first login.
-                    </p>
+            <div className="pf-dashboard">
+                <Link href={route('portal.users.index')} className="pft-panel-link" style={{ marginBottom: 14 }}>
+                    <svg viewBox="0 0 24 24">
+                        <path d="m15 6-6 6 6 6" />
+                    </svg>
+                    Back to Users
+                </Link>
 
+                <div className="pf-dashboard-header">
                     <div>
-                        <InputLabel htmlFor="name" value="Name" />
-                        <TextInput
-                            id="name"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            className="mt-1 block w-full"
-                            isFocused
-                            required
-                        />
-                        <InputError message={errors.name} className="mt-2" />
+                        <p className="pf-dashboard-kicker">Admin overview</p>
+                        <h1 className="pf-dashboard-title">Add User</h1>
+                        <p className="pf-dashboard-subtitle">
+                            A temporary password will be generated and shown once.
+                            Relay it to the new user directly — they will be
+                            required to set their own password on first login.
+                        </p>
                     </div>
+                </div>
 
-                    <div>
-                        <InputLabel htmlFor="email" value="Email" />
-                        <TextInput
-                            id="email"
-                            type="email"
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            className="mt-1 block w-full"
-                            required
-                        />
-                        <InputError message={errors.email} className="mt-2" />
-                    </div>
+                <div className="pf-panel">
+                    <form onSubmit={submit} className="pft-form-grid">
+                        <div className="pf-field">
+                            <label htmlFor="name">Name</label>
+                            <input
+                                id="name"
+                                type="text"
+                                value={data.name}
+                                onChange={(e) => setData('name', e.target.value)}
+                                autoFocus
+                                required
+                            />
+                            <InputError message={errors.name} className="mt-2" />
+                        </div>
 
-                    <div>
-                        <InputLabel htmlFor="role" value="Role" />
-                        <select
-                            id="role"
-                            value={data.role}
-                            onChange={(e) => setData('role', e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="tenant_operator">Operator (view-only)</option>
-                            <option value="tenant_admin">Admin (full access)</option>
-                        </select>
-                        <InputError message={errors.role} className="mt-2" />
-                    </div>
+                        <div className="pf-field">
+                            <label htmlFor="email">Email</label>
+                            <input
+                                id="email"
+                                type="email"
+                                value={data.email}
+                                onChange={(e) => setData('email', e.target.value)}
+                                required
+                            />
+                            <InputError message={errors.email} className="mt-2" />
+                        </div>
 
-                    <div className="flex items-center gap-3">
-                        <PrimaryButton disabled={processing}>Create User</PrimaryButton>
-                        <Link href={route('portal.users.index')}>
-                            <SecondaryButton type="button">Cancel</SecondaryButton>
-                        </Link>
-                    </div>
-                </form>
+                        <div className="pf-field">
+                            <label htmlFor="role">Role</label>
+                            <select
+                                id="role"
+                                value={data.role}
+                                onChange={(e) => setData('role', e.target.value)}
+                            >
+                                <option value="tenant_operator">Operator (view-only)</option>
+                                <option value="tenant_admin">Admin (full access)</option>
+                            </select>
+                            <InputError message={errors.role} className="mt-2" />
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <button type="submit" className="pf-btn pf-btn-primary" disabled={processing}>
+                                Create User
+                            </button>
+                            <Link href={route('portal.users.index')} className="pf-btn pf-btn-secondary">
+                                Cancel
+                            </Link>
+                        </div>
+                    </form>
+                </div>
             </div>
         </AdminLayout>
     );

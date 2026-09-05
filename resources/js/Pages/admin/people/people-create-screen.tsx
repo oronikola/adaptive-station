@@ -1,10 +1,8 @@
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 export default function PeopleCreateScreen() {
     const { data, setData, post, processing, errors } = useForm({
@@ -25,144 +23,150 @@ export default function PeopleCreateScreen() {
     }
 
     return (
-        <AdminLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Add Person
-                </h2>
-            }
-        >
+        <AdminLayout>
             <Head title="Add Person" />
 
-            <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8">
-                <form
-                    onSubmit={submit}
-                    className="space-y-6 rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800"
-                >
+            <div className="pf-dashboard">
+                <Link href={route('portal.people.index')} className="pft-panel-link" style={{ marginBottom: 14 }}>
+                    <svg viewBox="0 0 24 24">
+                        <path d="m15 6-6 6 6 6" />
+                    </svg>
+                    Back to People
+                </Link>
+
+                <div className="pf-dashboard-header">
                     <div>
-                        <InputLabel htmlFor="person_type" value="Type" />
-                        <select
-                            id="person_type"
-                            value={data.person_type}
-                            onChange={(e) =>
-                                setData('person_type', e.target.value)
-                            }
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="student">Student</option>
-                            <option value="staff">Staff</option>
-                        </select>
-                        <InputError message={errors.person_type} className="mt-2" />
+                        <p className="pf-dashboard-kicker">Admin overview</p>
+                        <h1 className="pf-dashboard-title">Add Person</h1>
+                        <p className="pf-dashboard-subtitle">
+                            Create a new student or staff record for your school.
+                        </p>
                     </div>
+                </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div>
-                            <InputLabel htmlFor="first_name" value="First name" />
-                            <TextInput
-                                id="first_name"
-                                value={data.first_name}
-                                onChange={(e) => setData('first_name', e.target.value)}
-                                className="mt-1 block w-full"
-                                required
-                            />
-                            <InputError message={errors.first_name} className="mt-2" />
+                <div className="pf-panel">
+                    <form onSubmit={submit} className="pft-form-panel">
+                        <div className="pf-field">
+                            <label htmlFor="person_type">Type</label>
+                            <select
+                                id="person_type"
+                                value={data.person_type}
+                                onChange={(e) =>
+                                    setData('person_type', e.target.value)
+                                }
+                            >
+                                <option value="student">Student</option>
+                                <option value="staff">Staff</option>
+                            </select>
+                            <InputError message={errors.person_type} className="mt-2" />
                         </div>
 
-                        <div>
-                            <InputLabel htmlFor="middle_name" value="Middle name" />
-                            <TextInput
-                                id="middle_name"
-                                value={data.middle_name}
-                                onChange={(e) => setData('middle_name', e.target.value)}
-                                className="mt-1 block w-full"
-                            />
-                            <InputError message={errors.middle_name} className="mt-2" />
+                        <div className="pft-form-grid">
+                            <div className="pf-field">
+                                <label htmlFor="first_name">First name</label>
+                                <input
+                                    id="first_name"
+                                    type="text"
+                                    value={data.first_name}
+                                    onChange={(e) => setData('first_name', e.target.value)}
+                                    required
+                                />
+                                <InputError message={errors.first_name} className="mt-2" />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="last_name">Last name</label>
+                                <input
+                                    id="last_name"
+                                    type="text"
+                                    value={data.last_name}
+                                    onChange={(e) => setData('last_name', e.target.value)}
+                                    required
+                                />
+                                <InputError message={errors.last_name} className="mt-2" />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="middle_name">Middle name</label>
+                                <input
+                                    id="middle_name"
+                                    type="text"
+                                    value={data.middle_name}
+                                    onChange={(e) => setData('middle_name', e.target.value)}
+                                />
+                                <InputError message={errors.middle_name} className="mt-2" />
+                            </div>
                         </div>
 
-                        <div>
-                            <InputLabel htmlFor="last_name" value="Last name" />
-                            <TextInput
-                                id="last_name"
-                                value={data.last_name}
-                                onChange={(e) => setData('last_name', e.target.value)}
-                                className="mt-1 block w-full"
-                                required
+                        <div className="pf-field">
+                            <label htmlFor="display_name">
+                                Display name (optional — derived from the name above if left blank)
+                            </label>
+                            <input
+                                id="display_name"
+                                type="text"
+                                value={data.display_name}
+                                onChange={(e) => setData('display_name', e.target.value)}
                             />
-                            <InputError message={errors.last_name} className="mt-2" />
-                        </div>
-                    </div>
-
-                    <div>
-                        <InputLabel
-                            htmlFor="display_name"
-                            value="Display name (optional — derived from the name above if left blank)"
-                        />
-                        <TextInput
-                            id="display_name"
-                            value={data.display_name}
-                            onChange={(e) => setData('display_name', e.target.value)}
-                            className="mt-1 block w-full"
-                        />
-                        <InputError message={errors.display_name} className="mt-2" />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <InputLabel htmlFor="grade_level" value="Grade level" />
-                            <TextInput
-                                id="grade_level"
-                                value={data.grade_level}
-                                onChange={(e) => setData('grade_level', e.target.value)}
-                                className="mt-1 block w-full"
-                            />
-                            <InputError message={errors.grade_level} className="mt-2" />
+                            <InputError message={errors.display_name} className="mt-2" />
                         </div>
 
-                        <div>
-                            <InputLabel htmlFor="section" value="Section" />
-                            <TextInput
-                                id="section"
-                                value={data.section}
-                                onChange={(e) => setData('section', e.target.value)}
-                                className="mt-1 block w-full"
-                            />
-                            <InputError message={errors.section} className="mt-2" />
+                        <div className="pft-form-grid">
+                            <div className="pf-field">
+                                <label htmlFor="grade_level">Grade level</label>
+                                <input
+                                    id="grade_level"
+                                    type="text"
+                                    value={data.grade_level}
+                                    onChange={(e) => setData('grade_level', e.target.value)}
+                                />
+                                <InputError message={errors.grade_level} className="mt-2" />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="section">Section</label>
+                                <input
+                                    id="section"
+                                    type="text"
+                                    value={data.section}
+                                    onChange={(e) => setData('section', e.target.value)}
+                                />
+                                <InputError message={errors.section} className="mt-2" />
+                            </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <InputLabel htmlFor="external_id" value="External ID (from SIS, optional)" />
-                        <TextInput
-                            id="external_id"
-                            value={data.external_id}
-                            onChange={(e) => setData('external_id', e.target.value)}
-                            className="mt-1 block w-full"
-                        />
-                        <InputError message={errors.external_id} className="mt-2" />
-                    </div>
+                        <div className="pf-field">
+                            <label htmlFor="external_id">External ID (from SIS, optional)</label>
+                            <input
+                                id="external_id"
+                                type="text"
+                                value={data.external_id}
+                                onChange={(e) => setData('external_id', e.target.value)}
+                            />
+                            <InputError message={errors.external_id} className="mt-2" />
+                        </div>
 
-                    <div>
-                        <InputLabel htmlFor="photo_url" value="Photo URL (optional)" />
-                        <TextInput
-                            id="photo_url"
-                            value={data.photo_url}
-                            onChange={(e) => setData('photo_url', e.target.value)}
-                            className="mt-1 block w-full"
-                        />
-                        <InputError message={errors.photo_url} className="mt-2" />
-                    </div>
+                        <div className="pf-field">
+                            <label htmlFor="photo_url">Photo URL (optional)</label>
+                            <input
+                                id="photo_url"
+                                type="text"
+                                value={data.photo_url}
+                                onChange={(e) => setData('photo_url', e.target.value)}
+                            />
+                            <InputError message={errors.photo_url} className="mt-2" />
+                        </div>
 
-                    <div className="flex items-center gap-3">
-                        <PrimaryButton disabled={processing}>
-                            Create Person
-                        </PrimaryButton>
-                        <Link href={route('portal.people.index')}>
-                            <SecondaryButton type="button">
+                        <div className="pft-form-actions">
+                            <Link href={route('portal.people.index')} className="pf-btn pf-btn-secondary">
                                 Cancel
-                            </SecondaryButton>
-                        </Link>
-                    </div>
-                </form>
+                            </Link>
+                            <button type="submit" className="pf-btn pf-btn-primary" disabled={processing}>
+                                Create Person
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </AdminLayout>
     );

@@ -1,10 +1,8 @@
-import Pagination from '@/Components/admin/Pagination';
-import StatusBadge from '@/Components/admin/StatusBadge';
-import Table from '@/Components/admin/Table';
-import PrimaryButton from '@/Components/PrimaryButton';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
-import type { PaginatedData } from '@/types';
+import type { PaginatedData, PaginationLink } from '@/types';
+import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface ImportBatch {
     id: number;
@@ -14,73 +12,143 @@ interface ImportBatch {
     started_at: string | null;
 }
 
-const statusColors: Record<string, string> = {
-    completed: 'green',
-    completed_with_exceptions: 'yellow',
-    failed: 'red',
-    importing: 'yellow',
-    validating: 'yellow',
-    draft: 'gray',
+const STATUS_PILL_CLASS: Record<string, string> = {
+    completed: 'pf-pill--active',
+    completed_with_exceptions: 'pft-pill--suspended',
+    failed: 'pf-pill--danger',
+    importing: 'pft-pill--suspended',
+    validating: 'pft-pill--suspended',
+    draft: 'pf-pill--inactive',
 };
+
+function PaginationBar({ links }: { links: PaginationLink[] }) {
+    if (!links || links.length <= 3) {
+        return null;
+    }
+
+    return (
+        <nav className="pf-pagination">
+            {links.map((link: PaginationLink, index: number) => {
+                const label = link.label
+                    .replace('&laquo; Previous', '‹ Previous')
+                    .replace('Next &raquo;', 'Next ›');
+
+                if (link.url === null) {
+                    return (
+                        <span key={index} className="pf-page-link pf-page-link--disabled">
+                            {label}
+                        </span>
+                    );
+                }
+
+                return (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        preserveScroll
+                        className={
+                            'pf-page-link' +
+                            (link.active ? ' pf-page-link--active' : '')
+                        }
+                    >
+                        {label}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}
 
 export default function ImportsListScreen({ batches }: { batches: PaginatedData<ImportBatch> }) {
     return (
-        <AdminLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        Legacy Imports
-                    </h2>
-                    <Link href={route('portal.imports.create')}>
-                        <PrimaryButton type="button">New Import</PrimaryButton>
-                    </Link>
-                </div>
-            }
-        >
+        <AdminLayout>
             <Head title="Legacy Imports" />
 
-            <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-                <Table>
-                    <Table.Head>
-                        <Table.Th>Description</Table.Th>
-                        <Table.Th>Status</Table.Th>
-                        <Table.Th>Started</Table.Th>
-                        <Table.Th>
-                            <span className="sr-only">Actions</span>
-                        </Table.Th>
-                    </Table.Head>
-                    <Table.Body>
-                        {batches.data.length === 0 && (
-                            <Table.Empty colSpan={4}>No imports run yet.</Table.Empty>
-                        )}
+            <div className="pf-dashboard">
+                <div className="pf-dashboard-header">
+                    <div>
+                        <p className="pf-dashboard-kicker">Admin overview</p>
+                        <h1 className="pf-dashboard-title">Legacy Imports</h1>
+                        <p className="pf-dashboard-subtitle">
+                            Review every legacy data import run for your school.
+                        </p>
+                    </div>
+                    <Link href={route('portal.imports.create')} className="pf-btn pf-btn-primary">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        New Import
+                    </Link>
+                </div>
 
-                        {batches.data.map((batch: ImportBatch) => (
-                            <tr key={batch.id}>
-                                <Table.Td className="font-medium text-gray-900 dark:text-gray-100">
-                                    {batch.source_description ?? batch.source_system}
-                                </Table.Td>
-                                <Table.Td>
-                                    <StatusBadge color={(statusColors[batch.status] ?? 'gray') as 'green' | 'gray' | 'red' | 'yellow'}>
-                                        {batch.status}
-                                    </StatusBadge>
-                                </Table.Td>
-                                <Table.Td>
-                                    {batch.started_at ? new Date(batch.started_at).toLocaleString() : '—'}
-                                </Table.Td>
-                                <Table.Td className="text-right">
-                                    <Link
-                                        href={route('portal.imports.show', batch.id)}
-                                        className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                                    >
-                                        View
-                                    </Link>
-                                </Table.Td>
-                            </tr>
-                        ))}
-                    </Table.Body>
-                </Table>
+                <div className="pf-panel">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 className="pf-panel-title">Import Batches</h2>
+                            <p className="pf-panel-count">
+                                {batches.data.length} shown
+                            </p>
+                        </div>
+                    </div>
 
-                <Pagination links={batches.links} />
+                    <div className="pf-table-wrap">
+                        <table className="pf-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Description</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Started</th>
+                                    <th scope="col">
+                                        <span className="sr-only">Actions</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {batches.data.length === 0 && (
+                                    <tr>
+                                        <td colSpan={4} className="pf-empty">
+                                            No imports run yet.
+                                        </td>
+                                    </tr>
+                                )}
+
+                                {batches.data.map((batch: ImportBatch) => (
+                                    <tr key={batch.id}>
+                                        <td className="pf-tenant-name">
+                                            {batch.source_description ?? batch.source_system}
+                                        </td>
+                                        <td>
+                                            <span
+                                                className={
+                                                    'pf-pill ' +
+                                                    (STATUS_PILL_CLASS[batch.status] ?? 'pf-pill--inactive')
+                                                }
+                                            >
+                                                {batch.status}
+                                            </span>
+                                        </td>
+                                        <td className="pft-created">
+                                            {batch.started_at ? new Date(batch.started_at).toLocaleString() : '—'}
+                                        </td>
+                                        <td>
+                                            <Link
+                                                href={route('portal.imports.show', batch.id)}
+                                                className="pf-row-action"
+                                            >
+                                                View
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M9 6l6 6-6 6" />
+                                                </svg>
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <PaginationBar links={batches.links} />
+                </div>
             </div>
         </AdminLayout>
     );

@@ -1,9 +1,8 @@
-import Pagination from '@/Components/admin/Pagination';
-import StatusBadge from '@/Components/admin/StatusBadge';
-import Table from '@/Components/admin/Table';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import type { PaginatedData } from '@/types';
+import type { PaginatedData, PaginationLink } from '@/types';
+import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface ImportBatch {
     id: number;
@@ -23,6 +22,50 @@ interface ExceptionsFilters {
     resolution?: string;
 }
 
+const RESOLUTION_PILL_CLASS: Record<ImportException['resolution'], string> = {
+    open: 'pft-pill--suspended',
+    resolved: 'pf-pill--active',
+    ignored: 'pf-pill--inactive',
+};
+
+function PaginationBar({ links }: { links: PaginationLink[] }) {
+    if (!links || links.length <= 3) {
+        return null;
+    }
+
+    return (
+        <nav className="pf-pagination">
+            {links.map((link: PaginationLink, index: number) => {
+                const label = link.label
+                    .replace('&laquo; Previous', '‹ Previous')
+                    .replace('Next &raquo;', 'Next ›');
+
+                if (link.url === null) {
+                    return (
+                        <span key={index} className="pf-page-link pf-page-link--disabled">
+                            {label}
+                        </span>
+                    );
+                }
+
+                return (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        preserveScroll
+                        className={
+                            'pf-page-link' +
+                            (link.active ? ' pf-page-link--active' : '')
+                        }
+                    >
+                        {label}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}
+
 export default function ImportsExceptionsListScreen({ batch, exceptions, filters }: { batch: ImportBatch; exceptions: PaginatedData<ImportException>; filters: ExceptionsFilters }) {
     function resolve(exception: ImportException, resolution: string) {
         const note = window.prompt('Optional note for this resolution:') ?? '';
@@ -33,74 +76,109 @@ export default function ImportsExceptionsListScreen({ batch, exceptions, filters
     }
 
     return (
-        <AdminLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Exceptions — {batch.source_description ?? batch.source_system}
-                </h2>
-            }
-        >
+        <AdminLayout>
             <Head title="Import Exceptions" />
 
-            <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-                <Link
-                    href={route('portal.imports.show', batch.id)}
-                    className="mb-4 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                >
+            <div className="pf-dashboard">
+                <div className="pf-dashboard-header">
+                    <div>
+                        <p className="pf-dashboard-kicker">Admin overview</p>
+                        <h1 className="pf-dashboard-title">
+                            Exceptions — {batch.source_description ?? batch.source_system}
+                        </h1>
+                        <p className="pf-dashboard-subtitle">
+                            Records that need manual review or were skipped during matching.
+                        </p>
+                    </div>
+                </div>
+
+                <Link href={route('portal.imports.show', batch.id)} className="pft-panel-link" style={{ marginBottom: 14 }}>
+                    <svg viewBox="0 0 24 24">
+                        <path d="m15 6-6 6 6 6" />
+                    </svg>
                     Back to Import
                 </Link>
 
-                <Table>
-                    <Table.Head>
-                        <Table.Th>Entity</Table.Th>
-                        <Table.Th>Source Record</Table.Th>
-                        <Table.Th>Type</Table.Th>
-                        <Table.Th>Resolution</Table.Th>
-                        <Table.Th>
-                            <span className="sr-only">Actions</span>
-                        </Table.Th>
-                    </Table.Head>
-                    <Table.Body>
-                        {exceptions.data.length === 0 && (
-                            <Table.Empty colSpan={5}>No exceptions{filters.resolution ? ` with resolution "${filters.resolution}"` : ''}.</Table.Empty>
-                        )}
+                <div className="pf-panel">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 className="pf-panel-title">Exceptions</h2>
+                            <p className="pf-panel-count">
+                                {exceptions.data.length} shown
+                            </p>
+                        </div>
+                    </div>
 
-                        {exceptions.data.map((exception: ImportException) => (
-                            <tr key={exception.id}>
-                                <Table.Td>{exception.entity_type}</Table.Td>
-                                <Table.Td className="font-mono">{exception.source_record_id ?? '—'}</Table.Td>
-                                <Table.Td>{exception.exception_type}</Table.Td>
-                                <Table.Td>
-                                    <StatusBadge color={exception.resolution === 'open' ? 'yellow' : exception.resolution === 'resolved' ? 'green' : 'gray'}>
-                                        {exception.resolution}
-                                    </StatusBadge>
-                                </Table.Td>
-                                <Table.Td className="text-right">
-                                    {exception.resolution === 'open' && (
-                                        <div className="flex justify-end gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => resolve(exception, 'resolved')}
-                                                className="font-medium text-[#174a96] hover:text-[#2863bd] dark:text-indigo-400"
-                                            >
-                                                Resolve
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => resolve(exception, 'ignored')}
-                                                className="font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400"
-                                            >
-                                                Ignore
-                                            </button>
-                                        </div>
-                                    )}
-                                </Table.Td>
-                            </tr>
-                        ))}
-                    </Table.Body>
-                </Table>
+                    <div className="pf-table-wrap">
+                        <table className="pf-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Entity</th>
+                                    <th scope="col">Source Record</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Resolution</th>
+                                    <th scope="col">
+                                        <span className="sr-only">Actions</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {exceptions.data.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="pf-empty">
+                                            No exceptions{filters.resolution ? ` with resolution "${filters.resolution}"` : ''}.
+                                        </td>
+                                    </tr>
+                                )}
 
-                <Pagination links={exceptions.links} />
+                                {exceptions.data.map((exception: ImportException) => (
+                                    <tr key={exception.id}>
+                                        <td>{exception.entity_type}</td>
+                                        <td className="font-mono">{exception.source_record_id ?? '—'}</td>
+                                        <td>{exception.exception_type}</td>
+                                        <td>
+                                            <span
+                                                className={
+                                                    'pf-pill ' + RESOLUTION_PILL_CLASS[exception.resolution]
+                                                }
+                                            >
+                                                {exception.resolution}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {exception.resolution === 'open' && (
+                                                <div className="pft-row-actions">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => resolve(exception, 'resolved')}
+                                                        className="pf-row-action"
+                                                    >
+                                                        <svg viewBox="0 0 24 24">
+                                                            <path d="M20 6 9 17l-5-5" />
+                                                        </svg>
+                                                        Resolve
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => resolve(exception, 'ignored')}
+                                                        className="pf-row-action"
+                                                    >
+                                                        <svg viewBox="0 0 24 24">
+                                                            <path d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                        Ignore
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <PaginationBar links={exceptions.links} />
+                </div>
             </div>
         </AdminLayout>
     );

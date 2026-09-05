@@ -56,7 +56,7 @@ class TenantProvisioningTest extends TestCase
         ])->assertSessionHasErrors('code');
     }
 
-    public function test_creating_a_tenant_admin_returns_a_temporary_password_and_forces_reset(): void
+    public function test_creating_a_tenant_admin_generates_a_password_usable_immediately(): void
     {
         $platformAdmin = User::factory()->platformSuperAdmin()->create();
         $tenant = Tenant::factory()->create();
@@ -67,31 +67,15 @@ class TenantProvisioningTest extends TestCase
         ]);
 
         $response->assertRedirect(route('platform.tenants.show', $tenant));
-        $response->assertSessionHas('temporaryPassword');
 
-        $temporaryPassword = session('temporaryPassword');
         $admin = User::where('email', 'school-admin@example.test')->firstOrFail();
 
-        $this->assertTrue($admin->must_reset_password);
-        $this->assertTrue(Hash::check($temporaryPassword, $admin->password));
+        // Revealable anytime from the Admin Users table, not just a one-time flash.
+        $this->assertNotNull($admin->password_plaintext);
+        $this->assertTrue(Hash::check($admin->password_plaintext, $admin->password));
 
-        // Forced to the reset screen before reaching anything else.
-        $this->actingAs($admin)->get(route('portal.people.index'))
-            ->assertRedirect(route('password.force-reset'));
-
-        $this->actingAs($admin)->get(route('password.force-reset'))
-            ->assertInertia(fn ($page) => $page->component('Auth/force-reset-password-screen'));
-
-        $this->actingAs($admin)->put(route('password.force-reset.update'), [
-            'current_password' => $temporaryPassword,
-            'password' => 'a-brand-new-password',
-            'password_confirmation' => 'a-brand-new-password',
-        ])->assertRedirect(route('dashboard'));
-
-        $this->assertFalse($admin->fresh()->must_reset_password);
-
-        // No longer forced after resetting.
-        $this->actingAs($admin->fresh())->get(route('portal.people.index'))->assertOk();
+        // No forced reset — the generated password works immediately.
+        $this->actingAs($admin)->get(route('portal.people.index'))->assertOk();
     }
 
     public function test_platform_super_admin_can_suspend_and_reactivate_a_tenant(): void

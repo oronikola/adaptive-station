@@ -1,11 +1,7 @@
-import FilterBar from '@/Components/admin/FilterBar';
-import Pagination from '@/Components/admin/Pagination';
-import Table from '@/Components/admin/Table';
-import InputLabel from '@/Components/InputLabel';
-import TextInput from '@/Components/TextInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import type { PaginatedData, Station } from '@/types';
+import type { PaginatedData, PaginationLink, Station } from '@/types';
+import '../../../../css/platform-dashboard.css';
 
 interface SummaryRow {
     attendance_date_local: string;
@@ -20,7 +16,64 @@ interface SummaryFilters {
     event_type?: string;
 }
 
-export default function AttendanceSummaryScreen({ summary, filters, stations }: { summary: PaginatedData<SummaryRow>; filters: SummaryFilters; stations: Station[] }) {
+// attendance_date_local serializes as an ISO datetime at UTC midnight
+// (Carbon's default date-cast JSON format) — read the Y-M-D straight out of
+// the string rather than letting `new Date(...)` reinterpret it in the
+// browser's own timezone, which can silently shift it a day either way.
+function formatDate(value: string): string {
+    const [year, month, day] = value.slice(0, 10).split('-').map(Number);
+    return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+    });
+}
+
+function PaginationBar({ links }: { links: PaginationLink[] }) {
+    if (!links || links.length <= 3) {
+        return null;
+    }
+
+    return (
+        <nav className="pf-pagination">
+            {links.map((link, index) => {
+                const label = link.label
+                    .replace('&laquo; Previous', '‹ Previous')
+                    .replace('Next &raquo;', 'Next ›');
+
+                if (link.url === null) {
+                    return (
+                        <span key={index} className="pf-page-link pf-page-link--disabled">
+                            {label}
+                        </span>
+                    );
+                }
+
+                return (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        preserveScroll
+                        className={'pf-page-link' + (link.active ? ' pf-page-link--active' : '')}
+                    >
+                        {label}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}
+
+export default function AttendanceSummaryScreen({
+    summary,
+    filters,
+    stations,
+}: {
+    summary: PaginatedData<SummaryRow>;
+    filters: SummaryFilters;
+    stations: Station[];
+}) {
     const { data, setData } = useForm({
         date_from: filters.date_from ?? '',
         date_to: filters.date_to ?? '',
@@ -33,58 +86,59 @@ export default function AttendanceSummaryScreen({ summary, filters, stations }: 
         router.get(route('portal.attendance.summary'), data, { preserveState: true });
     }
 
+    const hasFilters = Object.values(filters).some((v) => v);
+
     return (
-        <AdminLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        Daily Attendance Summary
-                    </h2>
-                    <Link
-                        href={route('portal.attendance.index')}
-                        className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                    >
+        <AdminLayout>
+            <Head title="Daily Attendance Summary" />
+
+            <div className="pf-dashboard">
+                <div className="pf-dashboard-header">
+                    <div>
+                        <p className="pf-dashboard-kicker">Admin overview</p>
+                        <h1 className="pf-dashboard-title">Daily Attendance Summary</h1>
+                        <p className="pf-dashboard-subtitle">
+                            Total taps and unique people recorded per day.
+                        </p>
+                    </div>
+                    <Link href={route('portal.attendance.index')} className="pf-btn pf-btn-secondary">
+                        <svg viewBox="0 0 24 24">
+                            <path d="m15 6-6 6 6 6" />
+                        </svg>
                         Back to Search
                     </Link>
                 </div>
-            }
-        >
-            <Head title="Daily Attendance Summary" />
 
-            <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-                <FilterBar onSubmit={submit} resetHref={route('portal.attendance.summary')}>
-                    <div>
-                        <InputLabel htmlFor="date_from" value="From" />
-                        <TextInput
+                <form onSubmit={submit} className="pf-filter-bar">
+                    <div className="pf-field">
+                        <label htmlFor="date_from">From</label>
+                        <input
                             id="date_from"
                             type="date"
                             value={data.date_from}
                             onChange={(e) => setData('date_from', e.target.value)}
-                            className="mt-1 block"
                         />
                     </div>
 
-                    <div>
-                        <InputLabel htmlFor="date_to" value="To" />
-                        <TextInput
+                    <div className="pf-field">
+                        <label htmlFor="date_to">To</label>
+                        <input
                             id="date_to"
                             type="date"
                             value={data.date_to}
                             onChange={(e) => setData('date_to', e.target.value)}
-                            className="mt-1 block"
                         />
                     </div>
 
-                    <div>
-                        <InputLabel htmlFor="station_id" value="Station" />
+                    <div className="pf-field">
+                        <label htmlFor="station_id">Station</label>
                         <select
                             id="station_id"
                             value={data.station_id}
                             onChange={(e) => setData('station_id', e.target.value)}
-                            className="mt-1 block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
                         >
                             <option value="">All</option>
-                            {stations.map((station: Station) => (
+                            {stations.map((station) => (
                                 <option key={station.id} value={station.id}>
                                     {station.name}
                                 </option>
@@ -92,45 +146,70 @@ export default function AttendanceSummaryScreen({ summary, filters, stations }: 
                         </select>
                     </div>
 
-                    <div>
-                        <InputLabel htmlFor="event_type" value="Event" />
+                    <div className="pf-field">
+                        <label htmlFor="event_type">Event</label>
                         <select
                             id="event_type"
                             value={data.event_type}
                             onChange={(e) => setData('event_type', e.target.value)}
-                            className="mt-1 block w-28 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
                         >
                             <option value="">All</option>
                             <option value="IN">IN</option>
                             <option value="OUT">OUT</option>
                         </select>
                     </div>
-                </FilterBar>
 
-                <Table>
-                    <Table.Head>
-                        <Table.Th>Date</Table.Th>
-                        <Table.Th>Total Taps</Table.Th>
-                        <Table.Th>Unique People</Table.Th>
-                    </Table.Head>
-                    <Table.Body>
-                        {summary.data.length === 0 && (
-                            <Table.Empty colSpan={3}>No attendance data for this range.</Table.Empty>
+                    <div className="pf-filter-bar-actions">
+                        <button type="submit" className="pf-btn pf-btn-primary">
+                            Filter
+                        </button>
+                        {hasFilters && (
+                            <Link href={route('portal.attendance.summary')} className="pf-btn pf-btn-secondary">
+                                Reset
+                            </Link>
                         )}
+                    </div>
+                </form>
 
-                        {summary.data.map((row: SummaryRow) => (
-                            <tr key={row.attendance_date_local}>
-                                <Table.Td className="font-medium text-gray-900 dark:text-gray-100">
-                                    {row.attendance_date_local}
-                                </Table.Td>
-                                <Table.Td>{row.total}</Table.Td>
-                                <Table.Td>{row.unique_people}</Table.Td>
-                            </tr>
-                        ))}
-                    </Table.Body>
-                </Table>
+                <div className="pf-panel">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 className="pf-panel-title">Daily Totals</h2>
+                            <p className="pf-panel-count">{summary.data.length} shown</p>
+                        </div>
+                    </div>
 
-                <Pagination links={summary.links} />
+                    <div className="pf-table-wrap">
+                        <table className="pf-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Total Taps</th>
+                                    <th scope="col">Unique People</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {summary.data.length === 0 && (
+                                    <tr>
+                                        <td colSpan={3} className="pf-empty">
+                                            No attendance data for this range.
+                                        </td>
+                                    </tr>
+                                )}
+
+                                {summary.data.map((row) => (
+                                    <tr key={row.attendance_date_local}>
+                                        <td className="pf-tenant-name">{formatDate(row.attendance_date_local)}</td>
+                                        <td>{row.total}</td>
+                                        <td>{row.unique_people}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <PaginationBar links={summary.links} />
+                </div>
             </div>
         </AdminLayout>
     );

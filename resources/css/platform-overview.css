@@ -1,0 +1,568 @@
+/* Shared design for the platform Dashboard and Client Management screens —
+   everything here lives under .pft-page so it never leaks into the other
+   screens that share platform-dashboard.css (stations, people, audit log). */
+
+.pft-page {
+    animation: pft-fade-in 260ms ease both;
+}
+
+@keyframes pft-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pft-page,
+    .pft-hero,
+    .pft-stat-grid > * {
+        animation: none !important;
+    }
+}
+
+/* ── Hero banner ─────────────────────────────────────────────────────── */
+
+.pft-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 30px clamp(20px, 3vw, 34px);
+    margin-bottom: 22px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #0b2a5b 0%, #123b78 55%, #1a4a94 100%);
+    box-shadow: 0 24px 48px -28px rgba(7, 28, 68, 0.65);
+}
+
+.pft-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+    background-size: 18px 18px;
+    -webkit-mask-image: radial-gradient(circle at 85% 20%, #000 0%, transparent 65%);
+    mask-image: radial-gradient(circle at 85% 20%, #000 0%, transparent 65%);
+    pointer-events: none;
+}
+
+.pft-hero-main {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    min-width: 0;
+}
+
+.pft-hero-icon {
+    display: grid;
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    place-items: center;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+
+.pft-hero-icon svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pft-hero-kicker {
+    margin: 0 0 4px;
+    color: #bcd4f7;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.pft-hero-title {
+    margin: 0;
+    color: #ffffff;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.pft-hero-subtitle {
+    margin: 6px 0 0;
+    max-width: 46ch;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.pft-hero-actions {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.pft-hero-updated {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.pft-hero-updated svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.pft-hero .pf-btn-primary {
+    border-color: #ffffff;
+    background: #ffffff;
+    color: #0b2a5b;
+    box-shadow: 0 12px 26px -14px rgba(0, 0, 0, 0.45);
+}
+
+.pft-hero .pf-btn-primary:hover {
+    background: #eaf1fc;
+}
+
+/* ── Stat cards ──────────────────────────────────────────────────────── */
+
+.pft-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+@media (min-width: 900px) {
+    .pft-stat-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.pft-stat-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 20px;
+    border: 1px solid #e7ecf4;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 16px 34px -30px rgba(15, 35, 70, 0.5);
+    transition: box-shadow 180ms ease, transform 180ms ease;
+    animation: pft-fade-in 320ms ease both;
+}
+
+.pft-stat-card:nth-child(2) { animation-delay: 40ms; }
+.pft-stat-card:nth-child(3) { animation-delay: 80ms; }
+.pft-stat-card:nth-child(4) { animation-delay: 120ms; }
+
+.pft-stat-card:hover {
+    box-shadow: 0 20px 40px -26px rgba(15, 35, 70, 0.55);
+    transform: translateY(-2px);
+}
+
+.pft-stat-icon {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    place-items: center;
+    border-radius: 13px;
+    color: #ffffff;
+}
+
+.pft-stat-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pft-stat-icon--blue   { background: linear-gradient(135deg, #2863bd, #0b2a5b); box-shadow: 0 8px 18px -8px rgba(11, 42, 91, 0.55); }
+.pft-stat-icon--green  { background: linear-gradient(135deg, #22b06b, #128a4f); box-shadow: 0 8px 18px -8px rgba(18, 138, 79, 0.5); }
+.pft-stat-icon--violet { background: linear-gradient(135deg, #8b6cf0, #6c47c9); box-shadow: 0 8px 18px -8px rgba(108, 71, 201, 0.5); }
+.pft-stat-icon--amber  { background: linear-gradient(135deg, #f0a637, #c1791f); box-shadow: 0 8px 18px -8px rgba(193, 121, 31, 0.5); }
+
+.pft-stat-label {
+    margin: 0;
+    color: #64748b;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.pft-stat-value {
+    margin: 3px 0 0;
+    color: #0f172a;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.pft-stat-meta {
+    margin: 3px 0 0;
+    color: #94a3b8;
+    font-size: 11.5px;
+}
+
+/* ── Filter bar tweaks ───────────────────────────────────────────────── */
+
+.pft-page .pf-filter-bar {
+    align-items: center;
+}
+
+.pft-search-field {
+    position: relative;
+    flex: 1 1 220px;
+}
+
+.pft-search-field svg {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    width: 15px;
+    height: 15px;
+    transform: translateY(-50%);
+    fill: none;
+    stroke: #94a3b8;
+    stroke-width: 2;
+    pointer-events: none;
+}
+
+.pft-search-field input {
+    padding-left: 38px !important;
+}
+
+/* ── Table row polish ────────────────────────────────────────────────── */
+
+.pft-tenant-avatar {
+    position: relative;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border-radius: 11px;
+    background: linear-gradient(145deg, #2863bd, #0b2a5b);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 6px 14px -6px rgba(11, 42, 91, 0.55);
+}
+
+.pft-created {
+    color: #64748b;
+    font-size: 12.5px;
+}
+
+.pft-pill--suspended {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.pft-pill--archived {
+    background: #f1f3f7;
+    color: #64748b;
+}
+
+.pft-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 56px 24px !important;
+    color: #94a3b8;
+}
+
+.pft-empty svg {
+    width: 34px;
+    height: 34px;
+    fill: none;
+    stroke: #cbd5e1;
+    stroke-width: 1.5;
+}
+
+.pft-row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+}
+
+/* ── Tab switcher (Client Management: All Clients / Add Client) ────────── */
+
+.pft-tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 20px;
+    border-radius: 14px;
+    background: #eef1f6;
+}
+
+.pft-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 36px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 11px;
+    background: transparent;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+
+.pft-tab svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pft-tab:hover {
+    color: #223047;
+}
+
+.pft-tab--active {
+    background: #ffffff;
+    color: #0b2a5b;
+    box-shadow: 0 6px 16px -8px rgba(15, 35, 70, 0.35);
+}
+
+/* ── Inline "Add Client" form panel ──────────────────────────────────── */
+
+.pft-form-panel {
+    padding: 26px clamp(20px, 3vw, 30px) 28px;
+}
+
+.pft-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+}
+
+@media (max-width: 720px) {
+    .pft-form-grid { grid-template-columns: 1fr; }
+}
+
+.pft-form-grid .pf-field:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+}
+
+.pft-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+/* ── Activity feed (Dashboard) ───────────────────────────────────────── */
+
+.pft-feed {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pft-feed-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid #f1f4f9;
+}
+
+.pft-feed-item:last-child {
+    border-bottom: none;
+}
+
+.pft-feed-dot {
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    margin-top: 5px;
+    border-radius: 50%;
+}
+
+.pft-feed-dot--blue   { background: #2863bd; }
+.pft-feed-dot--green  { background: #10b981; }
+.pft-feed-dot--amber  { background: #f59e0b; }
+.pft-feed-dot--red    { background: #ef4444; }
+.pft-feed-dot--gray   { background: #94a3b8; }
+
+.pft-feed-text {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    color: #0f172a;
+    line-height: 1.5;
+}
+
+.pft-feed-text span {
+    color: #94a3b8;
+    font-size: 11.5px;
+}
+
+.pft-feed-time {
+    flex: 0 0 auto;
+    margin-top: 1px;
+    color: #94a3b8;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+/* ── Recent clients list (Dashboard) ─────────────────────────────────── */
+
+.pft-recent-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pft-recent-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 4px;
+    border-bottom: 1px solid #f1f4f9;
+    text-decoration: none;
+}
+
+.pft-recent-item:last-child {
+    border-bottom: none;
+}
+
+.pft-recent-main {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+
+.pft-recent-name {
+    margin: 0;
+    color: #0f172a;
+    font-size: 13.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pft-recent-meta {
+    margin: 1px 0 0;
+    color: #94a3b8;
+    font-size: 11.5px;
+}
+
+.pft-panel-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    color: #2863bd;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.pft-panel-link:hover {
+    background: #eaf1fc;
+    transform: translateX(2px);
+}
+
+.pft-panel-link svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+/* ── Two-column dashboard grid ───────────────────────────────────────── */
+
+.pft-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 900px) {
+    .pft-grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ── Responsive (scoped to .pft-page so other pf- screens are untouched) ── */
+
+.pft-page .pf-panel-header {
+    flex-wrap: wrap;
+    row-gap: 12px;
+}
+
+.pft-page .pf-filter-bar {
+    row-gap: 12px;
+}
+
+@media (max-width: 640px) {
+    .pft-hero {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pft-hero-actions {
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .pft-hero-actions .pf-btn,
+    .pft-hero-actions .pft-hero-updated {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .pft-page .pf-panel-header .pf-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ── Dark mode ───────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+    .pft-hero { box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.65); }
+}

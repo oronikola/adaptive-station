@@ -31,12 +31,10 @@ class UserManagementTest extends TestCase
 
         $this->assertSame($tenant->id, $newUser->tenant_id);
         $this->assertSame('tenant_operator', $newUser->role->value);
-        $this->assertTrue($newUser->must_reset_password);
         $this->assertTrue(Hash::check($temporaryPassword, $newUser->password));
 
-        // Reuses the already-tested forced-reset flow.
-        $this->actingAs($newUser)->get(route('portal.attendance.index'))
-            ->assertRedirect(route('password.force-reset'));
+        // No forced reset — the generated password works immediately.
+        $this->actingAs($newUser)->get(route('portal.attendance.index'))->assertOk();
     }
 
     public function test_tenant_admin_can_invite_an_additional_tenant_admin(): void
@@ -54,7 +52,6 @@ class UserManagementTest extends TestCase
 
         $this->assertSame($tenant->id, $newAdmin->tenant_id);
         $this->assertSame('tenant_admin', $newAdmin->role->value);
-        $this->assertTrue($newAdmin->must_reset_password);
     }
 
     public function test_tenant_operator_cannot_invite_anyone(): void

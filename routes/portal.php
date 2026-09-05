@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Portal\AttendanceController;
+use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\ImportBatchController;
 use App\Http\Controllers\Portal\ImportExceptionController;
 use App\Http\Controllers\Portal\IntegrationProfileController;
@@ -15,6 +16,8 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
     ->prefix('portal')
     ->name('portal.')
     ->group(function () {
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
         Route::get('people', [PersonController::class, 'index'])->name('people.index');
         Route::get('people/create', [PersonController::class, 'create'])->name('people.create');
         Route::post('people', [PersonController::class, 'store'])->name('people.store');
@@ -41,6 +44,7 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
 
         Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::get('attendance/summary', [AttendanceController::class, 'summary'])->name('attendance.summary');
+        Route::get('attendance/students/{person}', [AttendanceController::class, 'studentSummary'])->name('attendance.students.show');
         Route::get('attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
 
         Route::get('users', [UserController::class, 'index'])->name('users.index');

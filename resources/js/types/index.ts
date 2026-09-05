@@ -13,7 +13,7 @@ export interface Tenant {
     name: string;
     code: string;
     timezone: string;
-    status: 'active' | 'inactive';
+    status: 'active' | 'suspended' | 'archived';
     created_at: string;
     updated_at: string;
 }
@@ -22,9 +22,13 @@ export interface Station {
     id: number;
     tenant_id: number;
     name: string;
+    station_code: string;
     status: 'pending_activation' | 'active' | 'disabled' | 'retired';
+    app_version: string | null;
     configuration: Record<string, unknown> | null;
-    last_heartbeat_at: string | null;
+    legacy_station_id: string | null;
+    last_seen_at: string | null;
+    last_pending_count: number | null;
     created_at: string;
     updated_at: string;
 }
@@ -106,4 +110,9 @@ export interface NavItem {
     activePattern: string;
     icon: React.ReactNode;
     adminOnly?: boolean;
+    /** Opens in a new tab via a plain <a> instead of an Inertia visit —
+     * for links to a page outside this app's own layout/session flow
+     * (e.g. the kiosk screen), so navigating there doesn't stow the
+     * admin's own sidebar/session in the same tab. */
+    external?: boolean;
 }

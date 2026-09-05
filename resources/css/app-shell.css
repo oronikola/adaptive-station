@@ -125,15 +125,19 @@
 
 .pf-sidebar-footer {
     margin-top: auto;
-    padding-top: 20px;
+    padding-top: 16px;
     border-top: 1px solid #eef1f6;
 }
 
-.pf-sidebar-user {
+.pf-sidebar-account {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
+    gap: 11px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 14px;
+    background: #f8faff;
+    border: 1px solid #eef2fb;
 }
 
 .pf-sidebar-avatar {
@@ -143,10 +147,11 @@
     flex: 0 0 36px;
     place-items: center;
     border-radius: 10px;
-    background: linear-gradient(145deg, #eaf2fd, #d6e5f9);
-    color: #174a96;
+    background: linear-gradient(145deg, #2863bd, #0b2a5b);
+    color: #ffffff;
     font-size: 14px;
     font-weight: 700;
+    box-shadow: 0 6px 14px -6px rgba(11, 42, 91, 0.5);
 }
 
 .pf-sidebar-user-info {
@@ -158,7 +163,7 @@
     overflow: hidden;
     color: #0f172a;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -174,22 +179,47 @@
 
 .pf-sidebar-footer-links {
     display: flex;
-    gap: 14px;
+    gap: 6px;
 }
 
 .pf-sidebar-footer-link {
-    padding: 0;
-    border: none;
-    background: none;
-    color: #174a96;
-    font-size: 11px;
-    font-weight: 600;
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border: 1px solid #e7ecf4;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
     text-decoration: none;
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.pf-sidebar-footer-link svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .pf-sidebar-footer-link:hover {
-    text-decoration: underline;
+    background: #f1f5fb;
+    border-color: #d7e2f3;
+    color: #174a96;
+}
+
+.pf-sidebar-footer-link--danger:hover {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
 }
 
 .pf-mobile-topbar {
