@@ -18,7 +18,7 @@ class DashboardController extends Controller
 
         $stationTotals = Tenant::platformStationTotals();
 
-        return Inertia::render('superadmin/dashboard/dashboard-screen', [
+        return Inertia::render('Platform/dashboard/dashboard-screen', [
             'stats' => [
                 'tenant_count' => Tenant::query()->count(),
                 'active_tenant_count' => Tenant::query()->where('status', TenantStatus::Active)->count(),

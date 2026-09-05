@@ -28,7 +28,7 @@ class RfidCardController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return Inertia::render('admin/rfid-cards/rfid-cards-list-screen', [
+        return Inertia::render('Admin/rfid-cards/rfid-cards-list-screen', [
             'rfidCards' => $rfidCards,
             'filters' => $request->only(['search', 'status']),
         ]);

@@ -26,7 +26,7 @@ class UserController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return Inertia::render('admin/users/users-list-screen', [
+        return Inertia::render('Admin/users/users-list-screen', [
             'users' => $users,
         ]);
     }
@@ -35,7 +35,7 @@ class UserController extends Controller
     {
         Gate::authorize('create', [User::class, $request->user()->tenant]);
 
-        return Inertia::render('admin/users/users-create-screen');
+        return Inertia::render('Admin/users/users-create-screen');
     }
 
     public function store(StoreTenantUserRequest $request): RedirectResponse

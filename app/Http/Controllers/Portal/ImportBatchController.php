@@ -23,7 +23,7 @@ class ImportBatchController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return Inertia::render('admin/imports/imports-list-screen', [
+        return Inertia::render('Admin/imports/imports-list-screen', [
             'batches' => $batches,
         ]);
     }
@@ -32,7 +32,7 @@ class ImportBatchController extends Controller
     {
         Gate::authorize('create', ImportBatch::class);
 
-        return Inertia::render('admin/imports/imports-create-screen', [
+        return Inertia::render('Admin/imports/imports-create-screen', [
             'profiles' => IntegrationProfile::query()
                 ->orderBy('name')
                 ->get(['id', 'name', 'driver']),
@@ -88,7 +88,7 @@ class ImportBatchController extends Controller
     {
         Gate::authorize('view', $batch);
 
-        return Inertia::render('admin/imports/imports-show-screen', [
+        return Inertia::render('Admin/imports/imports-show-screen', [
             'batch' => $batch,
             'openExceptionCount' => $batch->exceptions()->where('resolution', 'open')->count(),
         ]);

@@ -1,4 +1,4 @@
-import officialLogo from '../../assets/images/adaptive_station_logo.png';
+import officialLogo from '../../../assets/images/adaptive_station_logo.png';
 
 export const applicationLogoUrl = officialLogo;
 

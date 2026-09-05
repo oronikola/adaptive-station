@@ -26,7 +26,7 @@ class DashboardController extends Controller
     {
         $today = Date::today();
 
-        return Inertia::render('admin/dashboard/dashboard-screen', [
+        return Inertia::render('Admin/dashboard/dashboard-screen', [
             'stats' => [
                 'person_count' => Person::query()->count(),
                 'active_person_count' => Person::query()->where('is_active', true)->count(),

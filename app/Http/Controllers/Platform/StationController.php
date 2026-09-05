@@ -53,7 +53,7 @@ class StationController extends Controller
             ['path' => $request->url(), 'query' => $request->query()],
         );
 
-        return Inertia::render('superadmin/stations/stations-list-screen', [
+        return Inertia::render('Platform/stations/stations-list-screen', [
             'stations' => $stations,
             'tenants' => $tenants,
         ]);

@@ -32,7 +32,7 @@ class PersonController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return Inertia::render('admin/people/people-list-screen', [
+        return Inertia::render('Admin/people/people-list-screen', [
             'people' => $people,
             'filters' => $request->only(['search', 'status']),
         ]);
@@ -42,7 +42,7 @@ class PersonController extends Controller
     {
         Gate::authorize('create', Person::class);
 
-        return Inertia::render('admin/people/people-create-screen');
+        return Inertia::render('Admin/people/people-create-screen');
     }
 
     public function store(StorePersonRequest $request): RedirectResponse
@@ -62,7 +62,7 @@ class PersonController extends Controller
 
         $person->load(['rfidCards' => fn ($query) => $query->orderByDesc('assigned_at')]);
 
-        return Inertia::render('admin/people/people-edit-screen', [
+        return Inertia::render('Admin/people/people-edit-screen', [
             'person' => $person,
         ]);
     }

@@ -39,7 +39,7 @@ class StationController extends Controller
                     && $station->last_seen_at->gt(Date::now()->subMinutes($thresholdMinutes)),
             ]);
 
-        return Inertia::render('admin/stations/stations-list-screen', [
+        return Inertia::render('Admin/stations/stations-list-screen', [
             'stations' => $stations,
         ]);
     }
@@ -48,7 +48,7 @@ class StationController extends Controller
     {
         Gate::authorize('view', $station);
 
-        return Inertia::render('admin/stations/station-detail-screen', [
+        return Inertia::render('Admin/stations/station-detail-screen', [
             'station' => $station,
             'credentials' => $station->credentials()->orderByDesc('created_at')->get(),
         ]);

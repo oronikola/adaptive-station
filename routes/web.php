@@ -6,11 +6,11 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('landingpage/LandingPage');
+    return Inertia::render('Landing/LandingPage');
 })->name('home');
 
 Route::get('/landing', function () {
-    return Inertia::render('landingpage/LandingPage');
+    return Inertia::render('Landing/LandingPage');
 })->name('landing');
 
 Route::get('/kiosk', [KioskController::class, 'show'])->name('kiosk');

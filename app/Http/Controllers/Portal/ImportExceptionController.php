@@ -26,7 +26,7 @@ class ImportExceptionController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return Inertia::render('admin/imports/imports-exceptions-list-screen', [
+        return Inertia::render('Admin/imports/imports-exceptions-list-screen', [
             'batch' => $batch->only(['id', 'source_system', 'source_description', 'status']),
             'exceptions' => $exceptions,
             'filters' => ['resolution' => $resolution],

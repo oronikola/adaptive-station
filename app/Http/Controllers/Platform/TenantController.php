@@ -41,7 +41,7 @@ class TenantController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return Inertia::render('superadmin/tenants/tenants-list-screen', [
+        return Inertia::render('Platform/tenants/tenants-list-screen', [
             'tenants' => $tenants,
             'filters' => $filters,
         ]);
@@ -64,7 +64,7 @@ class TenantController extends Controller
         // switched it via SetTenantContext.
         TenantDatabase::use($tenant);
 
-        return Inertia::render('superadmin/tenants/tenant-detail-screen', [
+        return Inertia::render('Platform/tenants/tenant-detail-screen', [
             'tenant' => $tenant,
             // password_plaintext is hidden by default (see User's #[Hidden]
             // attribute) — makeVisible() here is the deliberate, greppable

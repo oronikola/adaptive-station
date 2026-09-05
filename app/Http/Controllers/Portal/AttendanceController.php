@@ -25,7 +25,7 @@ class AttendanceController extends Controller
             ->paginate(50)
             ->withQueryString();
 
-        return Inertia::render('admin/attendance/attendance-search-screen', [
+        return Inertia::render('Admin/attendance/attendance-search-screen', [
             'events' => $events,
             'filters' => $filters,
             'people' => Person::query()->orderBy('last_name')->get(['id', 'display_name']),
@@ -58,7 +58,7 @@ class AttendanceController extends Controller
                 'unique_people' => (int) $row->unique_people,
             ]);
 
-        return Inertia::render('admin/attendance/attendance-summary-screen', [
+        return Inertia::render('Admin/attendance/attendance-summary-screen', [
             'summary' => $summary,
             'filters' => $filters,
             'stations' => Station::query()->orderBy('name')->get(['id', 'name']),
@@ -100,7 +100,7 @@ class AttendanceController extends Controller
             'days_present' => (int) ($daysPresentByMonth[$month] ?? 0),
         ]);
 
-        return Inertia::render('admin/attendance/attendance-student-summary-screen', [
+        return Inertia::render('Admin/attendance/attendance-student-summary-screen', [
             'person' => $person,
             'year' => $year,
             'years' => $years,

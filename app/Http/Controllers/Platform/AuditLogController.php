@@ -21,7 +21,7 @@ class AuditLogController extends Controller
             ->paginate(50)
             ->withQueryString();
 
-        return Inertia::render('superadmin/audit-log/audit-log-list-screen', [
+        return Inertia::render('Platform/audit-log/audit-log-list-screen', [
             'logs' => $logs,
         ]);
     }

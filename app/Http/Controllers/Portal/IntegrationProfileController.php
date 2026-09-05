@@ -23,7 +23,7 @@ class IntegrationProfileController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'driver', 'direction', 'status', 'last_successful_run_at']);
 
-        return Inertia::render('admin/integrations/integrations-list-screen', [
+        return Inertia::render('Admin/integrations/integrations-list-screen', [
             'profiles' => $profiles,
         ]);
     }
@@ -32,7 +32,7 @@ class IntegrationProfileController extends Controller
     {
         Gate::authorize('create', IntegrationProfile::class);
 
-        return Inertia::render('admin/integrations/integrations-create-screen');
+        return Inertia::render('Admin/integrations/integrations-create-screen');
     }
 
     public function store(Request $request): RedirectResponse
@@ -65,7 +65,7 @@ class IntegrationProfileController extends Controller
     {
         Gate::authorize('update', $profile);
 
-        return Inertia::render('admin/integrations/integrations-edit-screen', [
+        return Inertia::render('Admin/integrations/integrations-edit-screen', [
             'profile' => $profile->only(['id', 'name', 'driver', 'direction', 'status', 'last_successful_run_at']),
             'runs' => IntegrationRun::where('integration_profile_id', $profile->id)
                 ->orderByDesc('created_at')

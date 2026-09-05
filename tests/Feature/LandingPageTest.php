@@ -16,7 +16,7 @@ class LandingPageTest extends TestCase
 
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->component('landingpage/LandingPage')
+                ->component('Landing/LandingPage')
                 ->where('auth.user', null));
     }
 
@@ -26,7 +26,7 @@ class LandingPageTest extends TestCase
 
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->component('landingpage/LandingPage')
+                ->component('Landing/LandingPage')
                 ->where('auth.user', null));
     }
 
@@ -38,7 +38,7 @@ class LandingPageTest extends TestCase
 
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->component('landingpage/LandingPage')
+                ->component('Landing/LandingPage')
                 ->where('auth.user.id', $user->id));
     }
 }
