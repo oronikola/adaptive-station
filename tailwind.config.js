@@ -36,7 +36,7 @@ export default {
                 },
             },
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Plus Jakarta Sans', ...defaultTheme.fontFamily.sans],
             },
             boxShadow: {
                 'station-float': '0 30px 70px -42px rgba(7, 28, 68, 0.58)',

@@ -71,7 +71,7 @@
     border-color: #0b2a5b;
     background: #0b2a5b;
     color: #ffffff;
-    box-shadow: 0 10px 22px -15px rgba(7, 28, 68, 0.9);
+    box-shadow: 0 8px 20px rgba(11, 42, 91, 0.22);
 }
 
 .pf-btn-primary:hover {
@@ -98,7 +98,7 @@
     border-color: #dc2626;
     background: #dc2626;
     color: #ffffff;
-    box-shadow: 0 10px 22px -15px rgba(220, 38, 38, 0.9);
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.22);
 }
 
 .pf-btn-danger:hover {
@@ -131,9 +131,9 @@
     gap: 14px;
     padding: 18px 20px;
     border: 1px solid #e7ecf4;
-    border-radius: 18px;
+    border-radius: 20px;
     background: #ffffff;
-    box-shadow: 0 16px 34px -30px rgba(15, 35, 70, 0.5);
+    box-shadow: var(--as-shadow-card);
 }
 
 .pf-stat-icon {
@@ -197,7 +197,7 @@
     border: 1px solid #e7ecf4;
     border-radius: 20px;
     background: #ffffff;
-    box-shadow: 0 20px 44px -34px rgba(15, 35, 70, 0.55);
+    box-shadow: var(--as-shadow-card);
 }
 
 .pf-panel-header {
@@ -508,7 +508,7 @@
     border: 1px solid #e7ecf4;
     border-radius: 20px;
     background: #ffffff;
-    box-shadow: 0 16px 34px -30px rgba(15, 35, 70, 0.5);
+    box-shadow: var(--as-shadow-card);
 }
 
 .pf-filter-bar .pf-field {

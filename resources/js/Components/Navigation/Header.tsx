@@ -64,7 +64,7 @@ export default function Header({
 
     return (
         <header className="pf-topbar">
-            <div className="pf-topbar-left">
+            {/* <div className="pf-topbar-left">
                 {isPlatform ? (
                     <span className="pf-topbar-badge">Platform</span>
                 ) : (
@@ -74,22 +74,7 @@ export default function Header({
                         </span>
                     )
                 )}
-            </div>
-
-            {/* Decorative for now — no search endpoint exists yet to wire this
-                up to; keeps the layout/pill styling from the reference without
-                pretending a real search feature is behind it. */}
-            <label className="pf-topbar-search">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="m20 20-3.5-3.5" />
-                </svg>
-                <span className="sr-only">Search</span>
-                <input type="text" placeholder="Search anything…" />
-                <span className="pf-topbar-search-kbd" aria-hidden="true">
-                    ⌘K
-                </span>
-            </label>
+            </div> */}
 
             <div className="pf-topbar-right">
                 <button

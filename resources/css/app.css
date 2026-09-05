@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Shared design tokens for the pf-* admin design system (platform-dashboard.css,
+   platform-overview.css, components/navigation.css) — defined globally here
+   since app.css is the one stylesheet every page loads, so every admin/
+   platform screen picks up the same soft, balanced card shadow. */
+:root {
+    --as-shadow-card: 0 8px 24px rgba(15, 35, 70, 0.08);
+    --as-shadow-card-hover: 0 12px 30px rgba(15, 35, 70, 0.12);
+}

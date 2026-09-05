@@ -54,6 +54,79 @@ function StatCard({ label, value, icon, tone, meta }: StatCardProps) {
     );
 }
 
+/** Radial "percent of total" gauge — mirrors the platform dashboard's
+ * widget so both dashboards share the same visual language. */
+function ActivationGauge({
+    label,
+    value,
+    total,
+}: {
+    label: string;
+    value: number;
+    total: number;
+}) {
+    const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+    const radius = 54;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (Math.min(100, pct) / 100) * circumference;
+
+    return (
+        <div className="pft-gauge-card">
+            <div className="pft-gauge">
+                <svg viewBox="0 0 130 130" className="pft-gauge-svg" aria-hidden="true">
+                    <circle cx="65" cy="65" r={radius} className="pft-gauge-track" />
+                    <circle
+                        cx="65"
+                        cy="65"
+                        r={radius}
+                        className="pft-gauge-value"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                    />
+                </svg>
+                <div className="pft-gauge-center">
+                    <span className="pft-gauge-pct">{pct}%</span>
+                </div>
+            </div>
+            <p className="pft-gauge-caption">{label}</p>
+            <p className="pft-gauge-meta">
+                {value} of {total} active
+            </p>
+        </div>
+    );
+}
+
+/** Two-category bar comparison (active vs. inactive people) — the same
+ * pattern used on the platform dashboard's "Clients by Status" widget. */
+function StatusBarChart({ active, inactive }: { active: number; inactive: number }) {
+    const max = Math.max(active, inactive, 1);
+
+    return (
+        <div className="pft-bars">
+            <div className="pft-bar-col">
+                <span className="pft-bar-value">{active}</span>
+                <div className="pft-bar-track">
+                    <div
+                        className="pft-bar pft-bar--active"
+                        style={{ height: `${(active / max) * 100}%` }}
+                    />
+                </div>
+                <span className="pft-bar-label">Active</span>
+            </div>
+            <div className="pft-bar-col">
+                <span className="pft-bar-value">{inactive}</span>
+                <div className="pft-bar-track">
+                    <div
+                        className="pft-bar pft-bar--muted"
+                        style={{ height: `${(inactive / max) * 100}%` }}
+                    />
+                </div>
+                <span className="pft-bar-label">Inactive</span>
+            </div>
+        </div>
+    );
+}
+
 interface ActivityLog {
     id: string;
     actor_type: 'user' | 'station' | 'system';
@@ -181,73 +254,104 @@ export default function DashboardScreen({ stats, recentActivity, weeklyAttendanc
                     />
                 </div>
 
-                <div className="pft-grid-2">
-                    <div className="pf-panel">
-                        <div className="pf-panel-header">
-                            <div>
-                                <h2 className="pf-panel-title">Recent Activity</h2>
-                                <p className="pf-panel-count">This school's latest events</p>
+                <div className="pft-widgets-grid">
+                    <div className="pft-widgets-main">
+                        <div className="pf-panel">
+                            <div className="pf-panel-header">
+                                <div>
+                                    <h2 className="pf-panel-title">Recent Activity</h2>
+                                    <p className="pf-panel-count">This school's latest events</p>
+                                </div>
+                            </div>
+                            <div style={{ padding: '4px 24px 20px' }}>
+                                {recentActivity.length === 0 ? (
+                                    <p className="pf-empty" style={{ padding: '32px 0' }}>
+                                        No activity recorded yet.
+                                    </p>
+                                ) : (
+                                    <ul className="pft-feed">
+                                        {recentActivity.map((log) => (
+                                            <li key={log.id} className="pft-feed-item">
+                                                <span className={`pft-feed-dot pft-feed-dot--${feedDotTone(log.action)}`} />
+                                                <span className="pft-feed-text">{describeAction(log)}</span>
+                                                <span className="pft-feed-time">{timeAgo(log.created_at)}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
                         </div>
-                        <div style={{ padding: '4px 24px 20px' }}>
-                            {recentActivity.length === 0 ? (
-                                <p className="pf-empty" style={{ padding: '32px 0' }}>
-                                    No activity recorded yet.
-                                </p>
-                            ) : (
-                                <ul className="pft-feed">
-                                    {recentActivity.map((log) => (
-                                        <li key={log.id} className="pft-feed-item">
-                                            <span className={`pft-feed-dot pft-feed-dot--${feedDotTone(log.action)}`} />
-                                            <span className="pft-feed-text">{describeAction(log)}</span>
-                                            <span className="pft-feed-time">{timeAgo(log.created_at)}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
+
+                        <div className="pf-panel">
+                            <div className="pf-panel-header">
+                                <div>
+                                    <h2 className="pf-panel-title">This Week's Attendance</h2>
+                                    <p className="pf-panel-count">Taps per day, last 7 days</p>
+                                </div>
+                                <Link href={route('portal.attendance.summary')} className="pft-panel-link">
+                                    Full summary
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M9 6l6 6-6 6" />
+                                    </svg>
+                                </Link>
+                            </div>
+                            <div className="pf-table-wrap">
+                                <table className="pf-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">Taps</th>
+                                            <th scope="col">Unique people</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {weeklyAttendance.length === 0 && (
+                                            <tr>
+                                                <td colSpan={3} className="pf-empty">
+                                                    No attendance recorded this week.
+                                                </td>
+                                            </tr>
+                                        )}
+
+                                        {weeklyAttendance.map((row) => (
+                                            <tr key={row.attendance_date_local}>
+                                                <td>{formatWeekday(row.attendance_date_local)}</td>
+                                                <td>{row.total}</td>
+                                                <td>{row.unique_people}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="pf-panel">
-                        <div className="pf-panel-header">
-                            <div>
-                                <h2 className="pf-panel-title">This Week's Attendance</h2>
-                                <p className="pf-panel-count">Taps per day, last 7 days</p>
+                    <div className="pft-widgets-side">
+                        <div className="pf-panel">
+                            <div className="pf-panel-header">
+                                <div>
+                                    <h2 className="pf-panel-title">Station Activation</h2>
+                                    <p className="pf-panel-count">Share of stations currently active</p>
+                                </div>
                             </div>
-                            <Link href={route('portal.attendance.summary')} className="pft-panel-link">
-                                Full summary
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M9 6l6 6-6 6" />
-                                </svg>
-                            </Link>
+                            <ActivationGauge
+                                label="Stations active"
+                                value={stats.active_station_count}
+                                total={stats.station_count}
+                            />
                         </div>
-                        <div className="pf-table-wrap">
-                            <table className="pf-table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Date</th>
-                                        <th scope="col">Taps</th>
-                                        <th scope="col">Unique people</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {weeklyAttendance.length === 0 && (
-                                        <tr>
-                                            <td colSpan={3} className="pf-empty">
-                                                No attendance recorded this week.
-                                            </td>
-                                        </tr>
-                                    )}
 
-                                    {weeklyAttendance.map((row) => (
-                                        <tr key={row.attendance_date_local}>
-                                            <td>{formatWeekday(row.attendance_date_local)}</td>
-                                            <td>{row.total}</td>
-                                            <td>{row.unique_people}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div className="pf-panel">
+                            <div className="pf-panel-header">
+                                <div>
+                                    <h2 className="pf-panel-title">People by Status</h2>
+                                    <p className="pf-panel-count">Active vs. inactive people</p>
+                                </div>
+                            </div>
+                            <StatusBarChart
+                                active={stats.active_person_count}
+                                inactive={Math.max(0, stats.person_count - stats.active_person_count)}
+                            />
                         </div>
                     </div>
                 </div>

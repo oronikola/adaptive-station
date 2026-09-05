@@ -18,6 +18,18 @@ interface AppShellProps {
     children: React.ReactNode;
 }
 
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'pf-sidebar-collapsed';
+
+/** Reads the sidebar's collapsed preference synchronously so the first
+ * render already matches it (no expanded-then-collapse flash on load). */
+function readStoredCollapsed(): boolean {
+    try {
+        return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === '1';
+    } catch {
+        return false;
+    }
+}
+
 /** Shared application shell used by the platform and tenant portals. */
 export default function AppShell({
     brand = 'Adaptive Station',
@@ -29,7 +41,23 @@ export default function AppShell({
     const { auth, tenant, flash } = usePage<PageProps>().props;
     const user = auth.user;
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
+    // Each Inertia page mounts its own layout, so this preference is
+    // persisted to localStorage rather than lifted state — it needs to
+    // survive across page navigations, not just re-renders.
+    const [collapsed, setCollapsed] = useState(readStoredCollapsed);
     const { showToast } = useToast();
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(
+                SIDEBAR_COLLAPSED_STORAGE_KEY,
+                collapsed ? '1' : '0',
+            );
+        } catch {
+            // Private browsing / storage disabled — the toggle still works
+            // for this session, it just won't be remembered next time.
+        }
+    }, [collapsed]);
 
     useEffect(() => {
         if (flash?.success) {
@@ -50,13 +78,18 @@ export default function AppShell({
 
     return (
         <div className="pf-shell">
-            <aside className="pf-sidebar">
+            <aside
+                className={
+                    'pf-sidebar' + (collapsed ? ' pf-sidebar--collapsed' : '')
+                }
+            >
                 <Sidebar
                     brand={brand}
                     brandHref={brandHref}
                     items={items}
-                    user={user}
                     tenantLabel={tenant?.name}
+                    collapsed={collapsed}
+                    onToggleCollapse={() => setCollapsed((previous) => !previous)}
                 />
             </aside>
 
@@ -73,7 +106,6 @@ export default function AppShell({
                             brand={brand}
                             brandHref={brandHref}
                             items={items}
-                            user={user}
                             tenantLabel={tenant?.name}
                         />
                     </aside>

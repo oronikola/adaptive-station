@@ -8,13 +8,27 @@
 }
 
 .pf-sidebar {
+    position: sticky;
+    top: 0;
     display: flex;
     flex: 0 0 264px;
     flex-direction: column;
-    width: 264px;
     padding: 28px 20px;
     border-right: 1px solid #e7ecf4;
     background: #ffffff;
+    overflow: hidden;
+    /* flex-basis is the only property that actually sizes a flex item here
+       (`flex: 0 0 <n>` sets it explicitly, so a plain `width` transition is
+       inert dead weight — removed). Padding rides the same clock so it
+       doesn't jump ahead of the resize. `contain` scopes the reflow this
+       triggers to the sidebar's own subtree instead of forcing the browser
+       to re-check layout beyond it on every frame — the sidebar has no
+       fixed/absolutely-positioned descendants, so this is safe. */
+    contain: layout paint;
+    transition:
+        flex-basis 240ms cubic-bezier(0.4, 0, 0.2, 1),
+        padding 240ms cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: flex-basis;
 }
 
 @media (max-width: 1023px) {
@@ -33,6 +47,13 @@
     box-shadow: 0 20px 44px -20px rgba(15, 35, 70, 0.55);
 }
 
+.pf-sidebar--collapsed {
+    flex-basis: 84px;
+    width: 84px;
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
 .pf-sidebar-overlay {
     position: fixed;
     inset: 0;
@@ -41,6 +62,7 @@
 }
 
 .pf-sidebar-header {
+    flex: 0 0 auto;
     margin-bottom: 28px;
 }
 
@@ -48,36 +70,114 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
     text-decoration: none;
 }
 
 .pf-sidebar-logo-mark {
-    width: 36px;
-    height: 36px;
-    flex: 0 0 36px;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
     object-fit: contain;
 }
 
 .pf-sidebar-logo-text {
+    overflow: hidden;
+    min-width: 0;
+    max-width: 160px;
     color: #071c44;
     font-size: 15px;
     font-weight: 700;
     letter-spacing: -0.01em;
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity 160ms ease, max-width 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pf-sidebar-collapse-btn {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.pf-sidebar-collapse-btn:hover {
+    background: #f1f5fb;
+    color: #0b2a5b;
+}
+
+.pf-sidebar-collapse-btn:focus-visible {
+    outline: 2px solid #2863bd;
+    outline-offset: 2px;
+}
+
+.pf-sidebar-collapse-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pf-sidebar--collapsed .pf-sidebar-collapse-btn svg {
+    transform: rotate(180deg);
 }
 
 .pf-sidebar-tenant {
     margin: 6px 0 0;
+    overflow: hidden;
+    max-width: 100%;
     color: #94a3b8;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity 160ms ease, max-width 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pf-sidebar--collapsed .pf-sidebar-logo-text,
+.pf-sidebar--collapsed .pf-sidebar-tenant {
+    max-width: 0;
+    opacity: 0;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-logo {
+    justify-content: center;
+    gap: 0;
 }
 
 .pf-sidebar-nav {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     gap: 4px;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* Pinned below the nav list regardless of how tall it or the page gets —
+   .pf-sidebar-nav's own flex:1 + overflow-y:auto absorbs the extra height
+   instead of pushing this out of view. */
+.pf-sidebar-footer {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    padding-top: 16px;
+    margin-top: 12px;
+    border-top: 1px solid #eef1f6;
 }
 
 .pf-sidebar-link {
@@ -101,8 +201,12 @@
 
 .pf-sidebar-link-label {
     overflow: hidden;
+    min-width: 0;
+    max-width: 180px;
     text-overflow: ellipsis;
     white-space: nowrap;
+    opacity: 1;
+    transition: opacity 140ms ease, max-width 240ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Active state matches the reference's "light fill + left accent bar"
@@ -114,10 +218,14 @@
 }
 
 .pf-sidebar-link--active::before {
+    /* Sits flush at the link's own left edge rather than poking out into
+       the sidebar's padding gutter — .pf-sidebar-nav now scrolls (for the
+       collapse feature), and a negative offset here would get clipped by
+       that scroll container instead of showing. */
     content: '';
     position: absolute;
     top: 50%;
-    left: -9px;
+    left: 0;
     width: 3px;
     height: 18px;
     border-radius: 999px;
@@ -164,103 +272,27 @@
     stroke-linejoin: round;
 }
 
-.pf-sidebar-footer {
-    margin-top: auto;
-    padding-top: 16px;
-    border-top: 1px solid #eef1f6;
-}
-
-.pf-sidebar-account {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 14px;
-    background: #f8faff;
-    border: 1px solid #eef2fb;
-}
-
-.pf-sidebar-avatar {
-    display: grid;
-    width: 36px;
-    height: 36px;
-    flex: 0 0 36px;
-    place-items: center;
-    border-radius: 10px;
-    background: linear-gradient(145deg, #2863bd, #0b2a5b);
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 700;
-    box-shadow: 0 6px 14px -6px rgba(11, 42, 91, 0.5);
-}
-
-.pf-sidebar-user-info {
-    min-width: 0;
-}
-
-.pf-sidebar-user-name {
-    margin: 0;
-    overflow: hidden;
-    color: #0f172a;
-    font-size: 13px;
-    font-weight: 700;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pf-sidebar-user-email {
-    margin: 1px 0 0;
-    overflow: hidden;
-    color: #94a3b8;
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pf-sidebar-footer-links {
-    display: flex;
-    gap: 6px;
-}
-
-.pf-sidebar-footer-link {
-    display: flex;
-    flex: 1 1 0;
-    align-items: center;
+/* Collapsed rail: icon-only, centered, labels/badges fade+collapse away
+   rather than snapping with display:none, so the rail animates smoothly. */
+.pf-sidebar--collapsed .pf-sidebar-link {
     justify-content: center;
-    gap: 6px;
-    padding: 8px 10px;
-    border: 1px solid #e7ecf4;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #475569;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+    gap: 0;
+    padding: 10px;
 }
 
-.pf-sidebar-footer-link svg {
-    width: 14px;
-    height: 14px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+.pf-sidebar--collapsed .pf-sidebar-link-label,
+.pf-sidebar--collapsed .pf-sidebar-badge {
+    max-width: 0;
+    opacity: 0;
 }
 
-.pf-sidebar-footer-link:hover {
-    background: #f1f5fb;
-    border-color: #d7e2f3;
-    color: #174a96;
-}
-
-.pf-sidebar-footer-link--danger:hover {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #dc2626;
+.pf-sidebar--collapsed .pf-sidebar-badge {
+    min-width: 0;
+    width: 0;
+    height: 0;
+    margin-left: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 .pf-mobile-topbar {
@@ -315,6 +347,15 @@
 
 .pf-shell-content {
     flex: 1 1 auto;
+    /* This is the big cost of the sidebar collapse animation: as the
+       sidebar's width changes every frame, this area (potentially a large
+       table or a dashboard full of cards) resizes and would otherwise be
+       fully relaid-out in lockstep. `contain: layout` scopes that
+       recalculation to this subtree instead of the whole document. Safe
+       here — Modal (Headless UI Dialog) already portals to <body>, so
+       nothing that depends on fixed/absolute positioning relative to the
+       viewport lives inside this container. */
+    contain: layout;
 }
 
 /* Global top bar (rendered alongside the sidebar, above each page's own
@@ -333,72 +374,6 @@
     flex: 0 1 auto;
     min-width: 0;
     align-items: center;
-}
-
-/* Pill-shaped search bar (decorative — see Header.tsx comment). */
-.pf-topbar-search {
-    display: flex;
-    flex: 1 1 320px;
-    align-items: center;
-    max-width: 420px;
-    height: 44px;
-    padding: 0 16px;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    background: #f4f6fb;
-    cursor: text;
-    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
-}
-
-.pf-topbar-search:focus-within {
-    border-color: #c3d6f3;
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(11, 42, 91, 0.08);
-}
-
-.pf-topbar-search svg {
-    width: 16px;
-    height: 16px;
-    flex: 0 0 16px;
-    margin-right: 10px;
-    fill: none;
-    stroke: #94a3b8;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.pf-topbar-search input {
-    flex: 1 1 auto;
-    min-width: 0;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: #0f172a;
-    font-size: 13px;
-}
-
-.pf-topbar-search input::placeholder {
-    color: #94a3b8;
-}
-
-.pf-topbar-search-kbd {
-    flex: 0 0 auto;
-    padding: 2px 7px;
-    margin-left: 10px;
-    border: 1px solid #e1e7f2;
-    border-radius: 6px;
-    background: #ffffff;
-    color: #94a3b8;
-    font-size: 11px;
-    font-weight: 700;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-@media (max-width: 760px) {
-    .pf-topbar-search {
-        display: none;
-    }
 }
 
 .pf-topbar-school {

@@ -6,19 +6,21 @@ interface SidebarProps {
     brand: string;
     brandHref: string;
     items: NavItem[];
-    user: {
-        name: string;
-        email: string;
-    };
     tenantLabel?: string;
+    /** Icon-only collapsed rail. Omit both this and onToggleCollapse to
+     * always render expanded with no toggle — used for the mobile drawer,
+     * which is already a compact overlay. */
+    collapsed?: boolean;
+    onToggleCollapse?: () => void;
 }
 
 export default function Sidebar({
     brand,
     brandHref,
     items,
-    user,
     tenantLabel,
+    collapsed = false,
+    onToggleCollapse,
 }: SidebarProps) {
     return (
         <>
@@ -41,14 +43,16 @@ export default function Sidebar({
                             target="_blank"
                             rel="noopener noreferrer"
                             className="pf-sidebar-link"
+                            title={collapsed ? item.label : undefined}
                         >
                             <span className="pf-sidebar-icon">{item.icon}</span>
-                            <span>{item.label}</span>
+                            <span className="pf-sidebar-link-label">{item.label}</span>
                         </a>
                     ) : (
                         <Link
                             key={item.name}
                             href={route(item.route)}
+                            title={collapsed ? item.label : undefined}
                             className={
                                 'pf-sidebar-link' +
                                 (route().current(item.activePattern)
@@ -66,41 +70,24 @@ export default function Sidebar({
                 )}
             </nav>
 
-            <div className="pf-sidebar-footer">
-                <div className="pf-sidebar-account">
-                    <span className="pf-sidebar-avatar">
-                        {user.name.charAt(0).toUpperCase()}
-                    </span>
-                    <div className="pf-sidebar-user-info">
-                        <p className="pf-sidebar-user-name">{user.name}</p>
-                        <p className="pf-sidebar-user-email">{user.email}</p>
-                    </div>
-                </div>
-                <div className="pf-sidebar-footer-links">
-                    <Link
-                        href={route('profile.edit')}
-                        className="pf-sidebar-footer-link"
+            {/* Pinned below the (possibly scrollable) nav list — stays put
+                regardless of how many nav items there are or how tall the
+                page content is. */}
+            {onToggleCollapse && (
+                <div className="pf-sidebar-footer">
+                    <button
+                        type="button"
+                        className="pf-sidebar-collapse-btn"
+                        onClick={onToggleCollapse}
+                        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                        aria-expanded={!collapsed}
                     >
-                        <svg viewBox="0 0 24 24">
-                            <circle cx="12" cy="8" r="3.2" />
-                            <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M14 6l-6 6 6 6" />
                         </svg>
-                        Profile
-                    </Link>
-                    <Link
-                        href={route('logout')}
-                        method="post"
-                        as="button"
-                        className="pf-sidebar-footer-link pf-sidebar-footer-link--danger"
-                    >
-                        <svg viewBox="0 0 24 24">
-                            <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7" />
-                            <path d="M10 12h11m0 0-3.5-3.5M21 12l-3.5 3.5" />
-                        </svg>
-                        Log Out
-                    </Link>
+                    </button>
                 </div>
-            </div>
+            )}
         </>
     );
 }
