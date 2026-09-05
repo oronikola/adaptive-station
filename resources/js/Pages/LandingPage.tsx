@@ -5,7 +5,7 @@ import { User } from '@/types';
 const capabilitySignals = [
     'Offline-first capture',
     'Safe retry sync',
-    'Tenant-isolated data',
+    'School-isolated data',
     'Multiple stations per school',
     'Attendance reporting',
     'Legacy system connectivity',
@@ -15,7 +15,7 @@ const workflowSteps = [
     {
         title: 'Provision the school',
         description:
-            'Set up the tenant, administrators, station records, people, and cards in one controlled workspace.',
+            'Set up the school, administrators, station records, people, and cards in one controlled workspace.',
     },
     {
         title: 'Record every tap locally',

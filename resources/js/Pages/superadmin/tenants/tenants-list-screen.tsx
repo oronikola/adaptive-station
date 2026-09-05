@@ -165,13 +165,13 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
 
     return (
         <PlatformLayout>
-            <Head title="Tenants" />
+            <Head title="Schools" />
 
             <div className="pf-dashboard">
                 <div className="pf-dashboard-header">
                     <div>
                         <p className="pf-dashboard-kicker">Platform overview</p>
-                        <h1 className="pf-dashboard-title">Tenants</h1>
+                        <h1 className="pf-dashboard-title">Schools</h1>
                         <p className="pf-dashboard-subtitle">
                             Manage every school on Adaptive Station and keep tabs on
                             their stations at a glance.
@@ -185,19 +185,19 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
                         <svg viewBox="0 0 24 24">
                             <path d="M12 5v14M5 12h14" />
                         </svg>
-                        Add Tenant
+                        Provision a School
                     </button>
                 </div>
 
                 <div className="pf-stat-grid">
                     <StatCard
-                        label="Tenants"
+                        label="Schools"
                         value={stats.tenant_count}
                         icon="tenants"
                         tone="blue"
                     />
                     <StatCard
-                        label="Active Tenants"
+                        label="Active Schools"
                         value={stats.active_tenant_count}
                         icon="activeTenants"
                         tone="green"
@@ -219,7 +219,7 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
                 <div className="pf-panel">
                     <div className="pf-panel-header">
                         <div>
-                            <h2 className="pf-panel-title">All Tenants</h2>
+                            <h2 className="pf-panel-title">All Schools</h2>
                             <p className="pf-panel-count">
                                 {tenants.data.length} shown
                             </p>
@@ -242,7 +242,7 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
                                 {tenants.data.length === 0 && (
                                     <tr>
                                         <td colSpan={4} className="pf-empty">
-                                            No tenants yet.
+                                            No schools yet.
                                         </td>
                                     </tr>
                                 )}
@@ -304,7 +304,7 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
             <Modal show={createOpen} onClose={() => setCreateOpen(false)}>
                 <form onSubmit={submit} className="pf-modal">
                     <div className="pf-modal-header">
-                        <h3 className="pf-modal-title">Add Tenant</h3>
+                        <h3 className="pf-modal-title">Provision a School</h3>
                         <button
                             type="button"
                             className="pf-modal-close"

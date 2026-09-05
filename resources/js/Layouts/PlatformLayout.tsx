@@ -3,8 +3,8 @@ import { NavItem } from '@/types';
 
 const navItems: NavItem[] = [
     {
-        name: 'tenants',
-        label: 'Tenants',
+        name: 'schools',
+        label: 'Schools',
         route: 'platform.tenants.index',
         activePattern: 'platform.tenants.*',
         icon: (

@@ -139,7 +139,7 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                                 <tr>
                                     <th scope="col">Name</th>
                                     <th scope="col">Code</th>
-                                    <th scope="col">Tenant</th>
+                                    <th scope="col">School</th>
                                     <th scope="col">Status</th>
                                     <th scope="col">
                                         <span className="sr-only">Actions</span>
@@ -213,7 +213,7 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                     </div>
 
                     <div className="pf-field">
-                        <label htmlFor="tenant_id">Tenant</label>
+                        <label htmlFor="tenant_id">School</label>
                         <select
                             id="tenant_id"
                             value={data.tenant_id}

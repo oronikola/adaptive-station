@@ -72,7 +72,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
 
         if (
             nextStatus === 'suspended' &&
-            !confirm('Suspend this tenant? Its stations and portal will stop working until reactivated.')
+            !confirm('Suspend this school? Its stations and portal will stop working until reactivated.')
         ) {
             return;
         }
@@ -111,7 +111,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                     href={route('platform.tenants.index')}
                     className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
                 >
-                    Back to Tenants
+                    Back to Schools
                 </Link>
 
                 <SecretOnceCallout label="Temporary password" value={flash?.temporaryPassword} />
@@ -201,14 +201,14 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                         Danger Zone
                     </h3>
                     <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                        Permanently deletes this tenant and every row it owns — people,
+                        Permanently deletes this school and every row it owns — people,
                         cards, stations, attendance history, users, and integrations.
-                        There is no per-tenant database to drop (this platform uses one
+                        There is no per-school database to drop (this platform uses one
                         shared database), so this action deletes the rows directly and
                         cannot be undone.
                     </p>
                     <DangerButton type="button" onClick={() => setDeleteOpen(true)}>
-                        Delete Tenant
+                        Delete School
                     </DangerButton>
                 </div>
             </div>
@@ -219,7 +219,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                         Delete "{tenant.name}"?
                     </h3>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        This permanently deletes all of this tenant's people, cards,
+                        This permanently deletes all of this school's people, cards,
                         stations, attendance history, users, and integrations. This
                         cannot be undone.
                     </p>

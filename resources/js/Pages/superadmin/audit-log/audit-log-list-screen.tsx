@@ -91,7 +91,7 @@ export default function AuditLogListScreen({ logs }: AuditLogListScreenProps) {
                             <thead>
                                 <tr>
                                     <th scope="col">When</th>
-                                    <th scope="col">Tenant</th>
+                                    <th scope="col">School</th>
                                     <th scope="col">Actor</th>
                                     <th scope="col">Action</th>
                                     <th scope="col">Entity</th>
