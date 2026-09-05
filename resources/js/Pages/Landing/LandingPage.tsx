@@ -1,4 +1,4 @@
-import StationLogo from '@/Components/StationLogo';
+import StationLogo from '@/Components/Branding/StationLogo';
 import { Head, Link } from '@inertiajs/react';
 import { User } from '@/types';
 

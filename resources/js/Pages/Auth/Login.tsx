@@ -1,8 +1,8 @@
 import InputError from '@/Components/InputError';
-import StationLogo from '@/Components/StationLogo';
+import StationLogo from '@/Components/Branding/StationLogo';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import '../../../css/login.css';
+import '../../../css/pages/login.css';
 
 interface EyeIconProps {
     isVisible: boolean;

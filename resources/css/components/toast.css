@@ -1,4 +1,4 @@
-/* Global toast/snackbar system (see Components/toast/ToastProvider.jsx).
+/* Global toast/snackbar system (see Components/Toast/ToastProvider.tsx).
    Colors are lifted from platform-dashboard.css's stat-icon tones so toasts
    read as part of the same design system, not a bolted-on widget.
 

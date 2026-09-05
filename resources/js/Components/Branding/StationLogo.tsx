@@ -1,4 +1,4 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
+import ApplicationLogo from '@/Components/Branding/ApplicationLogo';
 
 export default function StationLogo({
     alt = '',

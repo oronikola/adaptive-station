@@ -1,9 +1,9 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import { classifyFlashMessage, useToast } from '@/Components/toast/ToastProvider';
+import ApplicationLogo from '@/Components/Branding/ApplicationLogo';
+import { classifyFlashMessage, useToast } from '@/Components/Toast/ToastProvider';
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { NavItem, PageProps } from '@/types';
-import '../../css/app-shell.css';
+import '../../../css/components/navigation.css';
 
 function SidebarContent({ brand, brandHref, items, user, tenantLabel }: { brand: string; brandHref: string; items: NavItem[]; user: { name: string; email: string }; tenantLabel?: string }) {
     return (

@@ -1,6 +1,6 @@
-import StationLogo from '@/Components/StationLogo';
+import StationLogo from '@/Components/Branding/StationLogo';
 import { Head, Link } from '@inertiajs/react';
-import '../../css/login.css';
+import '../../css/pages/login.css';
 
 interface AuthLayoutProps {
     /** <Head title> for the page. */

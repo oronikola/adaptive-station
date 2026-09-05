@@ -1,5 +1,5 @@
 import InputError from '@/Components/InputError';
-import { useToast } from '@/Components/toast/ToastProvider';
+import { useToast } from '@/Components/Toast/ToastProvider';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ShowToastOptions, ToastType } from '@/types';
-import '../../../css/toast.css';
+import '../../../css/components/toast.css';
 
 /**
  * Global toast/snackbar system.
@@ -12,7 +12,7 @@ import '../../../css/toast.css';
  *
  * Usage from any component:
  *
- *   import { useToast } from '@/Components/toast/ToastProvider';
+ *   import { useToast } from '@/Components/Toast/ToastProvider';
  *
  *   const { showToast } = useToast();
  *   showToast({ type: 'success', message: 'Tenant created successfully' });
