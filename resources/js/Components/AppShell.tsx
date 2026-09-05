@@ -10,7 +10,7 @@ function SidebarContent({ brand, brandHref, items, user, tenantLabel }: { brand:
         <>
             <div className="pf-sidebar-header">
                 <Link href={brandHref} className="pf-sidebar-logo">
-                    <ApplicationLogo className="pf-sidebar-logo-mark" />
+                    <ApplicationLogo className="pf-sidebar-logo-mark" alt="" />
                     <span className="pf-sidebar-logo-text">{brand}</span>
                 </Link>
                 {tenantLabel && (
@@ -183,7 +183,7 @@ export default function AppShell({
                         )}
                     </button>
                     <Link href={brandHref} className="pf-sidebar-logo">
-                        <ApplicationLogo className="pf-sidebar-logo-mark" />
+                        <ApplicationLogo className="pf-sidebar-logo-mark" alt="" />
                         <span className="pf-sidebar-logo-text">{brand}</span>
                     </Link>
                 </div>

@@ -16,7 +16,17 @@ class LandingPageTest extends TestCase
 
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->component('LandingPage')
+                ->component('landingpage/LandingPage')
+                ->where('auth.user', null));
+    }
+
+    public function test_guest_can_view_the_landing_page_from_the_landing_url(): void
+    {
+        $response = $this->get(route('landing'));
+
+        $response->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('landingpage/LandingPage')
                 ->where('auth.user', null));
     }
 
@@ -28,7 +38,7 @@ class LandingPageTest extends TestCase
 
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->component('LandingPage')
+                ->component('landingpage/LandingPage')
                 ->where('auth.user.id', $user->id));
     }
 }

@@ -258,11 +258,11 @@ function Brand({ compact = false }: BrandProps) {
     return (
         <span className="inline-flex items-center gap-3">
             <span
-                className={`grid place-items-center rounded-xl bg-station-navy-soft text-white shadow-station-float ${
+                className={`grid place-items-center ${
                     compact ? 'h-9 w-9' : 'h-11 w-11'
                 }`}
             >
-                <StationLogo className={compact ? 'h-6 w-6' : 'h-7 w-7'} />
+                <StationLogo className="h-full w-full object-contain" />
             </span>
             <span className="text-[15px] font-bold tracking-[-0.02em] text-station-navy">
                 Adaptive Station
@@ -590,8 +590,8 @@ function FeaturesSection() {
                                     <span className="absolute -top-1 right-0 h-2 w-2 rotate-45 border-r border-t border-station-blue" />
                                     <span className="absolute -bottom-1 left-0 h-2 w-2 -rotate-[135deg] border-r border-t border-station-blue" />
                                 </span>
-                                <span className="grid h-20 w-20 place-items-center rounded-2xl bg-station-navy text-white">
-                                    <StationLogo className="h-9 w-9" />
+                                <span className="grid h-20 w-20 place-items-center">
+                                    <StationLogo className="h-full w-full object-contain" />
                                 </span>
                             </div>
                         </div>

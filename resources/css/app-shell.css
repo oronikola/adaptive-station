@@ -52,10 +52,10 @@
 }
 
 .pf-sidebar-logo-mark {
-    width: 30px;
-    height: 30px;
-    flex: 0 0 30px;
-    fill: #0b2a5b;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    object-fit: contain;
 }
 
 .pf-sidebar-logo-text {
