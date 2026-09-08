@@ -1,9 +1,13 @@
 <?php
 
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SetTenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,6 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+    )
+    // Registered separately (not via withRouting's `channels:` param) so the
+    // auth endpoint lands at api/v1/parent/broadcasting/auth behind the
+    // parent-token guard, matching the rest of the parent API, instead of
+    // the framework's session-based 'web' guard default.
+    ->withBroadcasting(
+        __DIR__.'/../routes/channels.php',
+        ['prefix' => 'api/v1/parent', 'middleware' => ['auth:parent']],
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->throttleApi();
@@ -22,12 +34,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // 'web' group appends SubstituteBindings before any custom middleware,
         // so it is removed here and re-appended after SetTenantContext.
         $middleware->web(
-            remove: [\Illuminate\Routing\Middleware\SubstituteBindings::class],
+            remove: [SubstituteBindings::class],
             append: [
-                \App\Http\Middleware\HandleInertiaRequests::class,
-                \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-                \App\Http\Middleware\SetTenantContext::class,
-                \Illuminate\Routing\Middleware\SubstituteBindings::class,
+                HandleInertiaRequests::class,
+                AddLinkHeadersForPreloadedAssets::class,
+                SetTenantContext::class,
+                SubstituteBindings::class,
             ],
         );
 

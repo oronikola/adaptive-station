@@ -5,7 +5,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { applicationLogoUrl } from '@/Components/Branding/ApplicationLogo';
-import { ToastProvider } from '@/Components/Toast/ToastProvider';
+import { ToastProvider } from '@/Components/toast/ToastProvider';
 
 const configuredAppName = import.meta.env.VITE_APP_NAME;
 const appName =

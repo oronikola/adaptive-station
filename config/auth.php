@@ -42,6 +42,15 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Backs the Reverb private-channel broadcasting auth endpoint for
+        // the parent mobile app (see AppServiceProvider's Auth::viaRequest
+        // registration and bootstrap/app.php's withBroadcasting call) — no
+        // 'provider' needed, the viaRequest callback resolves the
+        // ParentAccount itself.
+        'parent' => [
+            'driver' => 'parent-token',
+        ],
     ],
 
     /*

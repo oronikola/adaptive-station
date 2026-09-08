@@ -1,7 +1,7 @@
 import ToastItem, {
     isToastType,
     ToastItemData,
-} from '@/Components/Toast/ToastItem';
+} from '@/Components/toast/ToastItem';
 import {
     createContext,
     useCallback,

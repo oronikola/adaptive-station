@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\PersonType;
 use App\Enums\TapEventType;
+use App\Jobs\DispatchParentTapNotification;
 use App\Models\Concerns\HasTenantScope;
 use App\Models\Concerns\HasUuidV4;
 use App\Models\Contracts\TenantScoped;
@@ -131,7 +132,7 @@ class TapEvent extends Model implements TenantScoped
                 ->first();
 
             try {
-                static::create([
+                $tapEvent = static::create([
                     'id' => $data['id'],
                     'tenant_id' => $station->tenant_id,
                     'station_id' => $station->id,
@@ -147,6 +148,14 @@ class TapEvent extends Model implements TenantScoped
                 ]);
 
                 $accepted[] = $data['id'];
+
+                // Only for a genuinely new row — the duplicate-key branch
+                // below means this tap already triggered a notification on
+                // its first submission, and re-notifying on every kiosk
+                // retry of an already-accepted tap would spam parents.
+                if ($tapEvent->person_type === PersonType::Student && $tapEvent->person_id !== null) {
+                    DispatchParentTapNotification::dispatch($tapEvent->tenant_id, $tapEvent->id);
+                }
             } catch (QueryException $e) {
                 if ((int) ($e->errorInfo[1] ?? 0) === 1062) {
                     $accepted[] = $data['id'];

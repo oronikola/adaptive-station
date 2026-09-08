@@ -67,6 +67,16 @@ class StationController extends Controller
         return redirect()->route('portal.stations.show', $station)->with('success', 'Configuration updated.');
     }
 
+    public function resetActivation(Request $request, Station $station): RedirectResponse
+    {
+        Gate::authorize('update', $station);
+
+        Station::resetToPendingActivation($station, $request->user());
+
+        return redirect()->route('portal.stations.show', $station)
+            ->with('success', 'Station reset to pending activation. Existing credentials were revoked — issue a new activation code to re-provision it.');
+    }
+
     public function issueCredential(Request $request, Station $station): RedirectResponse
     {
         Gate::authorize('create', StationCredential::class);

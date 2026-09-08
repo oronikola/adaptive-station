@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    /*
+    | credentials_path points at the downloaded Firebase service-account
+    | JSON file (App\Services\FcmClient reads and decodes it) — defaults to
+    | storage/app/firebase-service-account.json, which is gitignored since
+    | it's a real secret. Missing/unset in dev/test — FcmClient no-ops (logs
+    | a warning) rather than throwing, so parent-notification dispatch
+    | degrades gracefully until a real project is wired up.
+    */
+    'fcm' => [
+        'project_id' => env('FCM_PROJECT_ID'),
+        'credentials_path' => env('FCM_CREDENTIALS_PATH', storage_path('app/firebase-service-account.json')),
+    ],
+
 ];

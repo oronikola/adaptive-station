@@ -57,7 +57,7 @@ export default function StationDetailScreen({ station, credentials }: { station:
             return;
         }
 
-        router.patch(route('portal.stations.configuration', station.id), {
+        router.patch(route('portal.stations.configuration', station.station_code), {
             configuration: parsed as unknown as string,
         });
     }
@@ -67,7 +67,7 @@ export default function StationDetailScreen({ station, credentials }: { station:
 
     function submitIssueCredential(e: React.FormEvent) {
         e.preventDefault();
-        credentialForm.post(route('portal.stations.credentials.store', station.id), {
+        credentialForm.post(route('portal.stations.credentials.store', station.station_code), {
             onSuccess: () => {
                 setIssueCredentialOpen(false);
                 credentialForm.reset();
@@ -79,11 +79,18 @@ export default function StationDetailScreen({ station, credentials }: { station:
         if (!confirm(`Revoke credential "${credential.label ?? 'Untitled'}"? The kiosk using it will lose access immediately.`)) {
             return;
         }
-        router.patch(route('portal.stations.credentials.revoke', [station.id, credential.id] as unknown as Record<string, unknown>), {}, { preserveScroll: true });
+        router.patch(route('portal.stations.credentials.revoke', [station.station_code, credential.id] as unknown as Record<string, unknown>), {}, { preserveScroll: true });
     }
 
     function issueActivationCode() {
-        router.post(route('portal.stations.activation-code', station.id));
+        router.post(route('portal.stations.activation-code', station.station_code));
+    }
+
+    function resetActivation() {
+        if (!confirm('Reset this station to Pending Activation? Its existing device credentials will be revoked immediately and it will need a new activation code.')) {
+            return;
+        }
+        router.patch(route('portal.stations.reset-activation', station.station_code));
     }
 
     return (
@@ -125,6 +132,11 @@ export default function StationDetailScreen({ station, credentials }: { station:
                         {station.status === 'pending_activation' && (
                             <button type="button" className="pf-btn pf-btn-primary" onClick={issueActivationCode}>
                                 Issue Activation Code
+                            </button>
+                        )}
+                        {station.status === 'active' && (
+                            <button type="button" className="pf-btn pf-btn-secondary" onClick={resetActivation}>
+                                Reset to Pending Activation
                             </button>
                         )}
                     </div>

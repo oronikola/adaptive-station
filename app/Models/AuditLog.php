@@ -46,6 +46,7 @@ class AuditLog extends Model implements TenantScoped
         return match ($this->actor_type) {
             AuditActorType::User => User::find($this->actor_id),
             AuditActorType::Station => Station::allTenants()->find($this->actor_id),
+            AuditActorType::ParentAccount => ParentAccount::allTenants()->find($this->actor_id),
             default => null,
         };
     }
@@ -55,6 +56,7 @@ class AuditLog extends Model implements TenantScoped
         $actorType = match (true) {
             $actor instanceof User => AuditActorType::User,
             $actor instanceof Station => AuditActorType::Station,
+            $actor instanceof ParentAccount => AuditActorType::ParentAccount,
             default => AuditActorType::System,
         };
 

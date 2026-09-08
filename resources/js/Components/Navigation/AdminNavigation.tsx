@@ -65,6 +65,20 @@ export const adminNavigationItems: NavItem[] = [
         ),
     },
     {
+        name: 'parents',
+        label: 'Parents',
+        route: 'portal.parents.index',
+        activePattern: 'portal.parents.*',
+        adminOnly: true,
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <circle cx="8" cy="7" r="3" />
+                <circle cx="17" cy="10" r="2.5" />
+                <path d="M2 20v-2a6 6 0 0 1 12 0v2M14 16a4.5 4.5 0 0 1 8 3v1" />
+            </svg>
+        ),
+    },
+    {
         name: 'users',
         label: 'Users',
         route: 'portal.users.index',

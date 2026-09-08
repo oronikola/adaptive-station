@@ -37,6 +37,17 @@ class Station extends Model implements TenantScoped
         ];
     }
 
+    /**
+     * station_code is unique per tenant (not globally), so route model
+     * binding on it is only safe where a tenant scope is already active —
+     * i.e. portal routes. Platform routes resolve stations explicitly via
+     * allTenants() instead and never rely on this.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'station_code';
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
@@ -70,6 +81,32 @@ class Station extends Model implements TenantScoped
                 MasterDataOperation::Upsert, ['id' => $station->id, 'name' => $station->name, 'station_code' => $station->station_code],
             );
             AuditLog::record('station.created', $actor, $station->tenant_id, 'station', $station->id);
+
+            return $station;
+        });
+    }
+
+    /**
+     * Reverts an already-activated station back to pending_activation so it
+     * can be re-provisioned with a fresh activation code — e.g. a kiosk that
+     * lost its device credential and needs to redo the first-time setup
+     * flow. Revokes every still-active credential the station holds, since
+     * leaving them live would defeat the point of forcing re-activation.
+     */
+    public static function resetToPendingActivation(self $station, ?User $actor = null): self
+    {
+        return DB::transaction(function () use ($station, $actor) {
+            $station->forceFill(['status' => StationStatus::PendingActivation])->save();
+
+            $station->credentials()->whereNull('revoked_at')->get()->each(
+                fn (StationCredential $credential) => StationCredential::revoke($credential, $actor),
+            );
+
+            MasterDataChange::record(
+                $station->tenant_id, MasterDataEntityType::StationConfig, $station->id,
+                MasterDataOperation::Upsert, ['id' => $station->id, 'status' => $station->status->value],
+            );
+            AuditLog::record('station.reset_to_pending', $actor, $station->tenant_id, 'station', $station->id);
 
             return $station;
         });

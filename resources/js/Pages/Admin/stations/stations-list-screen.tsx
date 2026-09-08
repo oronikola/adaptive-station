@@ -166,7 +166,7 @@ export default function StationsListScreen({ stations }: { stations: PaginatedDa
                                         </td>
                                         <td>
                                             <Link
-                                                href={route('portal.stations.show', station.id)}
+                                                href={route('portal.stations.show', station.station_code)}
                                                 className="pf-row-action"
                                             >
                                                 Manage

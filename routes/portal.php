@@ -5,6 +5,7 @@ use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\ImportBatchController;
 use App\Http\Controllers\Portal\ImportExceptionController;
 use App\Http\Controllers\Portal\IntegrationProfileController;
+use App\Http\Controllers\Portal\ParentAccountController;
 use App\Http\Controllers\Portal\PersonController;
 use App\Http\Controllers\Portal\RfidCardController;
 use App\Http\Controllers\Portal\StationController;
@@ -35,6 +36,8 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
         Route::get('stations/{station}', [StationController::class, 'show'])->name('stations.show');
         Route::patch('stations/{station}/configuration', [StationController::class, 'updateConfiguration'])
             ->name('stations.configuration');
+        Route::patch('stations/{station}/reset-activation', [StationController::class, 'resetActivation'])
+            ->name('stations.reset-activation');
         Route::post('stations/{station}/credentials', [StationController::class, 'issueCredential'])
             ->name('stations.credentials.store');
         Route::patch('stations/{station}/credentials/{credential}/revoke', [StationController::class, 'revokeCredential'])
@@ -46,6 +49,14 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
         Route::get('attendance/summary', [AttendanceController::class, 'summary'])->name('attendance.summary');
         Route::get('attendance/students/{person}', [AttendanceController::class, 'studentSummary'])->name('attendance.students.show');
         Route::get('attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
+
+        Route::get('parents', [ParentAccountController::class, 'index'])->name('parents.index');
+        Route::get('parents/create', [ParentAccountController::class, 'create'])->name('parents.create');
+        Route::get('parents/students', [ParentAccountController::class, 'students'])->name('parents.students');
+        Route::post('parents', [ParentAccountController::class, 'store'])->name('parents.store');
+        Route::get('parents/{parent}/edit', [ParentAccountController::class, 'edit'])->name('parents.edit');
+        Route::put('parents/{parent}', [ParentAccountController::class, 'update'])->name('parents.update');
+        Route::patch('parents/{parent}/status', [ParentAccountController::class, 'status'])->name('parents.status');
 
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::get('users/create', [UserController::class, 'create'])->name('users.create');

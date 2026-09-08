@@ -4,7 +4,7 @@ import Sidebar from '@/Components/Navigation/Sidebar';
 import {
     classifyFlashMessage,
     useToast,
-} from '@/Components/Toast/ToastProvider';
+} from '@/Components/toast/ToastProvider';
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { NavItem, PageProps } from '@/types';
