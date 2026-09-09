@@ -81,10 +81,16 @@ export default function Sidebar({
                         onClick={onToggleCollapse}
                         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         aria-expanded={!collapsed}
+                        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                     >
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M14 6l-6 6 6 6" />
-                        </svg>
+                        <span className="pf-sidebar-collapse-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M14 6l-6 6 6 6" />
+                            </svg>
+                        </span>
+                        <span className="pf-sidebar-collapse-label">
+                            Collapse sidebar
+                        </span>
                     </button>
                 </div>
             )}
