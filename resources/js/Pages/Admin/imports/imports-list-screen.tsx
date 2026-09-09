@@ -82,6 +82,12 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                         </div>
                     </div>
                     <div className="pft-hero-actions">
+                        <Link href={route('portal.imports.csv.create')} className="pf-btn pf-btn-secondary">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            Upload CSV
+                        </Link>
                         <Link href={route('portal.imports.create')} className="pf-btn pf-btn-primary">
                             <svg viewBox="0 0 24 24">
                                 <path d="M12 5v14M5 12h14" />

@@ -1,6 +1,7 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import type { Person } from '@/types';
+import { personRouteKey } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -27,7 +28,7 @@ export default function AttendanceStudentSummaryScreen({
 }: AttendanceStudentSummaryScreenProps) {
     function changeYear(e: React.ChangeEvent<HTMLSelectElement>) {
         router.get(
-            route('portal.attendance.students.show', person.id),
+            route('portal.attendance.students.show', personRouteKey(person)),
             { year: e.target.value },
             { preserveState: true },
         );

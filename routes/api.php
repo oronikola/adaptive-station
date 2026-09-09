@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Device\DeviceActivationController;
 use App\Http\Controllers\Api\Device\DeviceConfigController;
 use App\Http\Controllers\Api\Device\DeviceHeartbeatController;
 use App\Http\Controllers\Api\Device\DeviceSessionController;
 use App\Http\Controllers\Api\Device\MasterDataFeedController;
+use App\Http\Controllers\Api\Device\SmsGatewayController;
 use App\Http\Controllers\Api\Device\TapEventBatchController;
 use App\Http\Controllers\Api\ParentPortal\AttendanceController as ParentAttendanceController;
 use App\Http\Controllers\Api\ParentPortal\AuthController as ParentAuthController;
@@ -13,10 +15,15 @@ use App\Http\Controllers\Api\ParentPortal\DeviceTokenController as ParentDeviceT
 use App\Http\Controllers\Api\ParentPortal\NotificationPreferenceController as ParentNotificationPreferenceController;
 use App\Http\Controllers\HealthController;
 use App\Http\Middleware\AuthenticateParent;
+use App\Http\Middleware\AuthenticateSmsGatewayDevice;
 use App\Http\Middleware\AuthenticateStation;
 use Illuminate\Support\Facades\Route;
 
 Route::get('health', [HealthController::class, 'check'])->name('api.health');
+
+// One shared login for the mobile app's two account types (parent vs
+// gateway-sender device) — see LoginController's docblock.
+Route::post('v1/auth/login', [LoginController::class, 'login'])->name('api.auth.login');
 
 Route::prefix('v1/device')->name('api.device.')->group(function () {
     // No credential exists yet at activation time — not behind AuthenticateStation.
@@ -29,6 +36,15 @@ Route::prefix('v1/device')->name('api.device.')->group(function () {
         Route::post('heartbeat', [DeviceHeartbeatController::class, 'store'])->name('heartbeat');
         Route::get('config', [DeviceConfigController::class, 'show'])->name('config');
     });
+});
+
+// A distinct device class from v1/device above — an SMS gateway phone isn't
+// tenant-scoped (see AuthenticateSmsGatewayDevice), it claims sms_outbox
+// rows across every tenant from one shared pool.
+Route::prefix('v1/device/sms')->name('api.device.sms.')->middleware(AuthenticateSmsGatewayDevice::class)->group(function () {
+    Route::post('logout', [SmsGatewayController::class, 'logout'])->name('logout');
+    Route::post('claim', [SmsGatewayController::class, 'claim'])->name('claim');
+    Route::post('messages/{message}/status', [SmsGatewayController::class, 'reportStatus'])->name('messages.status');
 });
 
 Route::prefix('v1/parent')->name('api.parent.')->group(function () {

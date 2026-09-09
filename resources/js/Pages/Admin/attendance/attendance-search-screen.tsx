@@ -1,6 +1,7 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { PaginatedData, PaginationLink, Person, Station } from '@/types';
+import { personRouteKey } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -280,7 +281,7 @@ export default function AttendanceSearchScreen({
                                         <td>
                                             {event.person ? (
                                                 <Link
-                                                    href={route('portal.attendance.students.show', event.person.id)}
+                                                    href={route('portal.attendance.students.show', personRouteKey(event.person))}
                                                     className="pf-row-action"
                                                 >
                                                     {event.person.display_name}

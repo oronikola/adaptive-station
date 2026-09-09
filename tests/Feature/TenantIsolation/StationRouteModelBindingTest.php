@@ -23,7 +23,10 @@ class StationRouteModelBindingTest extends TestCase
         $adminA = User::factory()->tenantAdmin($tenantA)->create();
         $stationB = Station::factory()->for($tenantB)->create();
 
-        $response = $this->actingAs($adminA)->get("/__test/stations/{$stationB->id}");
+        // Uses tenant B's real station_code (not a random/garbage value) so
+        // this actually proves cross-tenant denial via the tenant scope,
+        // not just that an unrelated UUID never matches a station_code.
+        $response = $this->actingAs($adminA)->get("/__test/stations/{$stationB->station_code}");
 
         $response->assertNotFound();
     }
@@ -36,7 +39,9 @@ class StationRouteModelBindingTest extends TestCase
         $adminA = User::factory()->tenantAdmin($tenantA)->create();
         $stationA = Station::factory()->for($tenantA)->create();
 
-        $response = $this->actingAs($adminA)->get("/__test/stations/{$stationA->id}");
+        // Station's route key is station_code, not id (see the portal URL
+        // slug change) — route model binding resolves on that column now.
+        $response = $this->actingAs($adminA)->get("/__test/stations/{$stationA->station_code}");
 
         $response->assertOk()->assertJson(['id' => $stationA->id]);
     }

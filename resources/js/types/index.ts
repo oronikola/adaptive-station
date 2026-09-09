@@ -48,6 +48,17 @@ export interface Person {
     updated_at: string;
 }
 
+/**
+ * The value to pass as the route parameter for any {person}-bound portal
+ * route (people.edit/update/deactivate/reactivate, attendance.students.show)
+ * — mirrors Person::getRouteKey() on the backend: external_id when set,
+ * UUID otherwise. Never use this for a person_id passed as a plain form
+ * field or query filter value — those must stay the real id.
+ */
+export function personRouteKey(person: Pick<Person, 'id' | 'external_id'>): string | number {
+    return person.external_id ?? person.id;
+}
+
 export interface RfidCard {
     id: number;
     tenant_id: number;

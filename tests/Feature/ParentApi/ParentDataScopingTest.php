@@ -97,7 +97,7 @@ class ParentDataScopingTest extends TestCase
         $this->withHeaders($headers)->patchJson('/api/v1/parent/notification-preferences', ['notify_in' => true, 'notify_out' => false])
             ->assertOk()->assertJson(['preferences' => ['notify_in' => true, 'notify_out' => false]]);
 
-        $this->assertSame(['notify_in' => true, 'notify_out' => false], $parent->fresh()->notification_preferences);
+        $this->assertSame(['notify_in' => true, 'notify_out' => false, 'notify_sms' => false], $parent->fresh()->notification_preferences);
     }
 
     public function test_device_token_registration_and_removal(): void

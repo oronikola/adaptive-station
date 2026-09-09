@@ -15,6 +15,11 @@ export default function PeopleCreateScreen() {
         section: '',
         external_id: '',
         photo_url: '',
+        status: 'active',
+        rfid_card_uid: '',
+        guardian_name: '',
+        guardian_email: '',
+        guardian_phone: '',
     });
 
     function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -155,15 +160,85 @@ export default function PeopleCreateScreen() {
                             <InputError message={errors.external_id} className="mt-2" />
                         </div>
 
+                        <div className="pft-form-grid">
+                            <div className="pf-field">
+                                <label htmlFor="photo_url">Photo URL (optional)</label>
+                                <input
+                                    id="photo_url"
+                                    type="text"
+                                    value={data.photo_url}
+                                    onChange={(e) => setData('photo_url', e.target.value)}
+                                />
+                                <InputError message={errors.photo_url} className="mt-2" />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="status">Status</label>
+                                <select
+                                    id="status"
+                                    value={data.status}
+                                    onChange={(e) => setData('status', e.target.value)}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                                <InputError message={errors.status} className="mt-2" />
+                            </div>
+                        </div>
+
                         <div className="pf-field">
-                            <label htmlFor="photo_url">Photo URL (optional)</label>
+                            <label htmlFor="rfid_card_uid">RFID card UID (optional)</label>
                             <input
-                                id="photo_url"
+                                id="rfid_card_uid"
                                 type="text"
-                                value={data.photo_url}
-                                onChange={(e) => setData('photo_url', e.target.value)}
+                                value={data.rfid_card_uid}
+                                onChange={(e) => setData('rfid_card_uid', e.target.value)}
                             />
-                            <InputError message={errors.photo_url} className="mt-2" />
+                            <InputError message={errors.rfid_card_uid} className="mt-2" />
+                        </div>
+
+                        <div className="pf-field">
+                            <label htmlFor="guardian_name">Guardian (optional)</label>
+                            <p className="pf-field-hint" style={{ marginTop: '-4px', marginBottom: '10px' }}>
+                                Creates or reuses a parent/guardian account and links it to this person. Guardian
+                                phone number is where SMS tap alerts are sent, once the guardian enables SMS
+                                notifications after logging in.
+                            </p>
+                        </div>
+
+                        <div className="pft-form-grid">
+                            <div className="pf-field">
+                                <label htmlFor="guardian_name">Guardian name</label>
+                                <input
+                                    id="guardian_name"
+                                    type="text"
+                                    value={data.guardian_name}
+                                    onChange={(e) => setData('guardian_name', e.target.value)}
+                                />
+                                <InputError message={errors.guardian_name} className="mt-2" />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="guardian_email">Guardian email</label>
+                                <input
+                                    id="guardian_email"
+                                    type="email"
+                                    value={data.guardian_email}
+                                    onChange={(e) => setData('guardian_email', e.target.value)}
+                                />
+                                <InputError message={errors.guardian_email} className="mt-2" />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="guardian_phone">Guardian phone</label>
+                                <input
+                                    id="guardian_phone"
+                                    type="text"
+                                    value={data.guardian_phone}
+                                    onChange={(e) => setData('guardian_phone', e.target.value)}
+                                />
+                                <InputError message={errors.guardian_phone} className="mt-2" />
+                            </div>
                         </div>
 
                         <div className="pft-form-actions">

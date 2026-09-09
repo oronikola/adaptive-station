@@ -1,11 +1,13 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
+import SecretOnceCallout from '@/Components/SecretOnceCallout';
 import TextInput from '@/Components/TextInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import type { Person, RfidCard } from '@/types';
+import type { PageProps, Person, RfidCard } from '@/types';
+import { personRouteKey } from '@/types';
 import '../../../../css/platform-dashboard.css';
 
 interface RfidCardWithAssign extends RfidCard {
@@ -19,8 +21,19 @@ interface PersonWithCards extends Person {
     rfid_cards: RfidCardWithAssign[];
 }
 
-export default function PeopleEditScreen({ person }: { person: PersonWithCards }) {
-    const { props } = usePage<import('@/types').PageProps>();
+interface Guardian {
+    id: string;
+    name: string;
+    email: string;
+    phone_number: string | null;
+}
+
+interface PeopleEditPageProps extends PageProps {
+    flash?: PageProps['flash'] & { temporaryPassword?: string };
+}
+
+export default function PeopleEditScreen({ person, guardian }: { person: PersonWithCards; guardian: Guardian | null }) {
+    const { props } = usePage<PeopleEditPageProps>();
     const canManage = props.auth.user.role === 'tenant_admin';
 
     const detailsForm = useForm({
@@ -33,11 +46,15 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
         section: person.section ?? '',
         external_id: person.external_id ?? '',
         photo_url: person.photo_url ?? '',
+        status: person.is_active ? 'active' : 'inactive',
+        guardian_name: guardian?.name ?? '',
+        guardian_email: guardian?.email ?? '',
+        guardian_phone: guardian?.phone_number ?? '',
     });
 
     function submitDetails(e: React.FormEvent) {
         e.preventDefault();
-        detailsForm.put(route('portal.people.update', person.id));
+        detailsForm.put(route('portal.people.update', personRouteKey(person)));
     }
 
     const [assignOpen, setAssignOpen] = useState(false);
@@ -69,36 +86,16 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
     return (
         <AdminLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        {person.display_name}
-                    </h2>
-                    {canManage && (
-                        <Link
-                            href={route(
-                                person.is_active
-                                    ? 'portal.people.deactivate'
-                                    : 'portal.people.reactivate',
-                                person.id,
-                            )}
-                            method="patch"
-                            as="button"
-                            className={
-                                'pf-btn ' +
-                                (person.is_active
-                                    ? 'pf-btn-danger'
-                                    : 'pf-btn-primary')
-                            }
-                        >
-                            {person.is_active ? 'Deactivate' : 'Reactivate'}
-                        </Link>
-                    )}
-                </div>
+                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    {person.display_name}
+                </h2>
             }
         >
             <Head title={person.display_name} />
 
             <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+                <SecretOnceCallout label="Guardian temporary password" value={props.flash?.temporaryPassword} />
+
                 <div className="flex items-center gap-3">
                     <span
                         className={
@@ -215,16 +212,81 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
                         </div>
                     </div>
 
-                    <div>
-                        <InputLabel htmlFor="external_id" value="External ID" />
-                        <TextInput
-                            id="external_id"
-                            value={detailsForm.data.external_id}
-                            onChange={(e) => detailsForm.setData('external_id', e.target.value)}
-                            className="mt-1 block w-full"
-                            disabled={!canManage}
-                        />
-                        <InputError message={detailsForm.errors.external_id} className="mt-2" />
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <InputLabel htmlFor="external_id" value="External ID" />
+                            <TextInput
+                                id="external_id"
+                                value={detailsForm.data.external_id}
+                                onChange={(e) => detailsForm.setData('external_id', e.target.value)}
+                                className="mt-1 block w-full"
+                                disabled={!canManage}
+                            />
+                            <InputError message={detailsForm.errors.external_id} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="status" value="Status" />
+                            <select
+                                id="status"
+                                value={detailsForm.data.status}
+                                onChange={(e) => detailsForm.setData('status', e.target.value)}
+                                disabled={!canManage}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                            >
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <InputError message={detailsForm.errors.status} className="mt-2" />
+                        </div>
+                    </div>
+
+                    <div className="border-t border-gray-200 pt-6 dark:border-gray-700">
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Guardian</h4>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Creates or reuses a parent/guardian account and links it to this person. Guardian phone
+                            number is where SMS tap alerts are sent, once the guardian enables SMS notifications
+                            after logging in. Clearing the email removes the link.
+                        </p>
+
+                        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div>
+                                <InputLabel htmlFor="guardian_name" value="Guardian name" />
+                                <TextInput
+                                    id="guardian_name"
+                                    value={detailsForm.data.guardian_name}
+                                    onChange={(e) => detailsForm.setData('guardian_name', e.target.value)}
+                                    className="mt-1 block w-full"
+                                    disabled={!canManage}
+                                />
+                                <InputError message={detailsForm.errors.guardian_name} className="mt-2" />
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="guardian_email" value="Guardian email" />
+                                <TextInput
+                                    id="guardian_email"
+                                    type="email"
+                                    value={detailsForm.data.guardian_email}
+                                    onChange={(e) => detailsForm.setData('guardian_email', e.target.value)}
+                                    className="mt-1 block w-full"
+                                    disabled={!canManage}
+                                />
+                                <InputError message={detailsForm.errors.guardian_email} className="mt-2" />
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="guardian_phone" value="Guardian phone" />
+                                <TextInput
+                                    id="guardian_phone"
+                                    value={detailsForm.data.guardian_phone}
+                                    onChange={(e) => detailsForm.setData('guardian_phone', e.target.value)}
+                                    className="mt-1 block w-full"
+                                    disabled={!canManage}
+                                />
+                                <InputError message={detailsForm.errors.guardian_phone} className="mt-2" />
+                            </div>
+                        </div>
                     </div>
 
                     {canManage && (

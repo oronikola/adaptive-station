@@ -14,6 +14,9 @@ interface ImportBatch {
         skipped_known?: number;
         rejected?: number;
         manual_review?: number;
+        guardians_created?: number;
+        guardians_linked?: number;
+        new_parent_account_ids?: string[];
     } | null;
 }
 
@@ -85,7 +88,23 @@ export default function ImportsShowScreen({ batch, openExceptionCount }: { batch
                     <StatCard label="Skipped (known)" value={summary.skipped_known} />
                     <StatCard label="Rejected" value={summary.rejected} />
                     <StatCard label="Manual Review" value={summary.manual_review} />
+                    {(summary.guardians_created !== undefined || summary.guardians_linked !== undefined) && (
+                        <>
+                            <StatCard label="Guardians Created" value={summary.guardians_created} />
+                            <StatCard label="Guardians Linked" value={summary.guardians_linked} />
+                        </>
+                    )}
                 </div>
+
+                {(summary.new_parent_account_ids?.length ?? 0) > 0 && (
+                    <div className="pf-notice" style={{ marginBottom: 20 }}>
+                        {summary.new_parent_account_ids!.length} new guardian account(s) were created with generated
+                        passwords.{' '}
+                        <a href={route('portal.imports.credentials', batch.id)} className="pft-panel-link" style={{ display: 'inline-flex' }}>
+                            Download credentials CSV
+                        </a>
+                    </div>
+                )}
 
                 {openExceptionCount > 0 && (
                     <div className="pf-notice" style={{ marginBottom: 20 }}>

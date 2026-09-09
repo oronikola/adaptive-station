@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\RunCsvRosterImportJob;
 use App\Jobs\RunLegacyImportJob;
 use App\Models\ImportBatch;
 use App\Models\IntegrationProfile;
+use App\Models\ParentAccount;
+use App\Services\Integrations\RosterCsvImporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ImportBatchController extends Controller
 {
@@ -92,5 +96,75 @@ class ImportBatchController extends Controller
             'batch' => $batch,
             'openExceptionCount' => $batch->exceptions()->where('resolution', 'open')->count(),
         ]);
+    }
+
+    public function createCsv(): Response
+    {
+        Gate::authorize('create', ImportBatch::class);
+
+        return Inertia::render('Admin/imports/imports-csv-create-screen');
+    }
+
+    /**
+     * Same dispatchSync/preview-vs-commit shape as store() above. The file is
+     * stored to disk first (a job's constructor args must be serializable,
+     * so an UploadedFile instance can't be passed through) and always
+     * deleted by the job once it finishes, success or failure.
+     */
+    public function storeCsv(Request $request): RedirectResponse
+    {
+        Gate::authorize('create', ImportBatch::class);
+
+        $data = $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:10240'],
+            'commit' => ['required', 'boolean'],
+        ]);
+
+        $storedPath = $data['file']->store('imports/'.$request->user()->tenant_id, 'local');
+
+        $batch = ImportBatch::start(
+            $request->user()->tenant_id,
+            null,
+            RosterCsvImporter::SOURCE_SYSTEM,
+            $data['commit'] ? 'CSV upload' : 'CSV upload (preview)',
+            $request->user(),
+        );
+
+        RunCsvRosterImportJob::dispatchSync(
+            $request->user()->tenant_id,
+            $batch->id,
+            $storedPath,
+            $data['commit'],
+            $request->user()->id,
+        );
+
+        return redirect()->route('portal.imports.show', $batch)
+            ->with('success', $data['commit'] ? 'Import completed.' : 'Preview completed.');
+    }
+
+    /**
+     * Streams a CSV of email + temporary password for every guardian account
+     * this batch newly created — the one-time-per-batch view into passwords
+     * that would otherwise never reach anyone, since a CSV row can't type
+     * one in. Passwords stay recoverable afterward too (same as
+     * User/SmsGatewayDevice), so re-downloading later still works.
+     */
+    public function downloadCredentials(ImportBatch $batch): StreamedResponse
+    {
+        Gate::authorize('view', $batch);
+
+        $ids = $batch->summary['new_parent_account_ids'] ?? [];
+        abort_if($ids === [], 404);
+
+        $accounts = ParentAccount::allTenants()->whereIn('id', $ids)->get(['email', 'password_plaintext']);
+
+        return response()->streamDownload(function () use ($accounts) {
+            $out = fopen('php://output', 'wb');
+            fputcsv($out, ['email', 'temporary_password']);
+            foreach ($accounts as $account) {
+                fputcsv($out, [$account->email, $account->password_plaintext]);
+            }
+            fclose($out);
+        }, 'import-'.$batch->id.'-guardian-credentials.csv', ['Content-Type' => 'text/csv']);
     }
 }

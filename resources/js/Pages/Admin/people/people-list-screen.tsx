@@ -1,6 +1,7 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { PaginatedData, Person, PaginationLink } from '@/types';
+import { personRouteKey } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -187,7 +188,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                                 <Link
                                                     href={route(
                                                         'portal.people.edit',
-                                                        person.id,
+                                                        personRouteKey(person),
                                                     )}
                                                     className="pf-row-action"
                                                 >
@@ -199,7 +200,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                                 <Link
                                                     href={route(
                                                         'portal.attendance.students.show',
-                                                        person.id,
+                                                        personRouteKey(person),
                                                     )}
                                                     className="pf-row-action"
                                                 >

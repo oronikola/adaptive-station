@@ -74,7 +74,10 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
         Route::get('imports', [ImportBatchController::class, 'index'])->name('imports.index');
         Route::get('imports/create', [ImportBatchController::class, 'create'])->name('imports.create');
         Route::post('imports', [ImportBatchController::class, 'store'])->name('imports.store');
+        Route::get('imports/csv/create', [ImportBatchController::class, 'createCsv'])->name('imports.csv.create');
+        Route::post('imports/csv', [ImportBatchController::class, 'storeCsv'])->name('imports.csv.store');
         Route::get('imports/{batch}', [ImportBatchController::class, 'show'])->name('imports.show');
+        Route::get('imports/{batch}/credentials', [ImportBatchController::class, 'downloadCredentials'])->name('imports.credentials');
         Route::get('imports/{batch}/exceptions', [ImportExceptionController::class, 'index'])->name('imports.exceptions.index');
         Route::patch('imports/{batch}/exceptions/{exception}/resolve', [ImportExceptionController::class, 'resolve'])->name('imports.exceptions.resolve');
     });

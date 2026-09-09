@@ -42,6 +42,30 @@ class Person extends Model implements TenantScoped
         ];
     }
 
+    /**
+     * external_id is optional (unlike Station::station_code) and unique per
+     * tenant only when present, so it can't be the route key outright — a
+     * person without one would be unreachable. getRouteKey() falls back to
+     * the UUID, and resolveRouteBinding() tries external_id first, then id,
+     * so both kinds of URL keep working. Only safe where a tenant scope is
+     * already active (portal routes), same caveat as Station::station_code.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'external_id';
+    }
+
+    public function getRouteKey()
+    {
+        return $this->external_id ?? $this->id;
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return static::where('external_id', $value)->first()
+            ?? static::where($this->getKeyName(), $value)->first();
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

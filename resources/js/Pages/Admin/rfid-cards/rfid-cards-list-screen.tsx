@@ -1,6 +1,7 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { PaginatedData, PaginationLink, Person, RfidCard } from '@/types';
+import { personRouteKey } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -176,7 +177,7 @@ export default function RfidCardsListScreen({ rfidCards, filters }: { rfidCards:
                                                 <Link
                                                     href={route(
                                                         'portal.people.edit',
-                                                        card.person.id,
+                                                        personRouteKey(card.person),
                                                     )}
                                                     className="pf-row-action"
                                                 >

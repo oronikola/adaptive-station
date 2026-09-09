@@ -39,6 +39,18 @@ export const platformNavigationItems: NavItem[] = [
         ),
     },
     {
+        name: 'sms-gateway',
+        label: 'SMS Gateway',
+        route: 'platform.sms-gateway.devices.index',
+        activePattern: 'platform.sms-gateway.*',
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <rect x="7" y="2" width="10" height="20" rx="2" />
+                <path d="M11 18h2" />
+            </svg>
+        ),
+    },
+    {
         name: 'audit-log',
         label: 'Audit Log',
         route: 'platform.audit-log.index',

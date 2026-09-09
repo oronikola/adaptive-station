@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Platform\AuditLogController;
 use App\Http\Controllers\Platform\DashboardController;
+use App\Http\Controllers\Platform\SmsGatewayDeviceController;
 use App\Http\Controllers\Platform\StationController;
 use App\Http\Controllers\Platform\TenantController;
 use App\Http\Middleware\EnsurePlatformAccess;
@@ -27,6 +28,11 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
         Route::post('stations', [StationController::class, 'store'])->name('stations.store');
         Route::post('stations/{station}/activation-code', [StationController::class, 'issueActivationCode'])
             ->name('stations.activation-code');
+
+        Route::get('sms-gateway/devices', [SmsGatewayDeviceController::class, 'index'])->name('sms-gateway.devices.index');
+        Route::post('sms-gateway/devices', [SmsGatewayDeviceController::class, 'store'])->name('sms-gateway.devices.store');
+        Route::patch('sms-gateway/devices/{device}/revoke', [SmsGatewayDeviceController::class, 'revoke'])->name('sms-gateway.devices.revoke');
+        Route::patch('sms-gateway/devices/{device}/reset-password', [SmsGatewayDeviceController::class, 'resetPassword'])->name('sms-gateway.devices.reset-password');
 
         Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
     });
