@@ -31,6 +31,7 @@ class ParentAccountService
             if ($creating) {
                 $parent->tenant_id = $actor->tenant_id;
                 $parent->is_active = true;
+                $parent->login_id = ParentAccount::generateLoginId($actor->tenant_id);
             }
             if (! empty($data['password'])) {
                 $parent->password = $data['password'];

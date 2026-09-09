@@ -9,6 +9,7 @@ interface ParentAccount {
     id: string;
     name: string;
     email: string;
+    login_id: string | null;
     is_active: boolean;
     student_links_count: number;
 }
@@ -32,7 +33,7 @@ export default function ParentsListScreen({ parents, filters }: {
                 <form className="pf-filter-bar" onSubmit={(event) => { event.preventDefault(); get(route('portal.parents.index')); }}>
                     <div className="pf-field">
                         <label htmlFor="parent-search">Search parents</label>
-                        <input id="parent-search" value={data.search} maxLength={100} placeholder="Name or email" onChange={(event) => setData('search', event.target.value)} />
+                        <input id="parent-search" value={data.search} maxLength={100} placeholder="Name, email, or login ID" onChange={(event) => setData('search', event.target.value)} />
                     </div>
                     <button type="submit" className="pf-btn pf-btn-secondary" disabled={processing}>Search</button>
                     {filters.search && <Link href={route('portal.parents.index')} className="pf-btn pf-btn-secondary">Clear</Link>}
@@ -40,12 +41,13 @@ export default function ParentsListScreen({ parents, filters }: {
                 <div className="pf-panel">
                     <div className="pf-table-wrap">
                         <table className="pf-table">
-                            <thead><tr><th scope="col">Parent</th><th scope="col">Email</th><th scope="col">Linked students</th><th scope="col">Status</th><th scope="col">Manage</th></tr></thead>
+                            <thead><tr><th scope="col">Parent</th><th scope="col">Login ID</th><th scope="col">Email</th><th scope="col">Linked students</th><th scope="col">Status</th><th scope="col">Manage</th></tr></thead>
                             <tbody>
-                                {parents.data.length === 0 && <tr><td colSpan={5} className="pf-empty">{filters.search ? 'No parents match your search.' : 'No parent accounts yet. Add a parent to begin linking their children.'}</td></tr>}
+                                {parents.data.length === 0 && <tr><td colSpan={6} className="pf-empty">{filters.search ? 'No parents match your search.' : 'No parent accounts yet. Add a parent to begin linking their children.'}</td></tr>}
                                 {parents.data.map((parent) => (
                                     <tr key={parent.id}>
                                         <td className="pf-tenant-name">{parent.name}</td>
+                                        <td style={{ fontFamily: 'monospace' }}>{parent.login_id ?? '—'}</td>
                                         <td>{parent.email}</td>
                                         <td>{parent.student_links_count}</td>
                                         <td><span className={`pf-pill ${parent.is_active ? 'pf-pill--active' : 'pf-pill--inactive'}`}>{parent.is_active ? 'Active' : 'Inactive'}</span></td>

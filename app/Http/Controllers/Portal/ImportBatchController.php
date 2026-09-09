@@ -156,13 +156,13 @@ class ImportBatchController extends Controller
         $ids = $batch->summary['new_parent_account_ids'] ?? [];
         abort_if($ids === [], 404);
 
-        $accounts = ParentAccount::allTenants()->whereIn('id', $ids)->get(['email', 'password_plaintext']);
+        $accounts = ParentAccount::allTenants()->whereIn('id', $ids)->get(['login_id', 'email', 'password_plaintext']);
 
         return response()->streamDownload(function () use ($accounts) {
             $out = fopen('php://output', 'wb');
-            fputcsv($out, ['email', 'temporary_password']);
+            fputcsv($out, ['login_id', 'email', 'temporary_password']);
             foreach ($accounts as $account) {
-                fputcsv($out, [$account->email, $account->password_plaintext]);
+                fputcsv($out, [$account->login_id, $account->email, $account->password_plaintext]);
             }
             fclose($out);
         }, 'import-'.$batch->id.'-guardian-credentials.csv', ['Content-Type' => 'text/csv']);

@@ -16,7 +16,7 @@ interface Student {
     unavailable?: boolean;
 }
 
-interface ParentAccount { id: string; name: string; email: string; is_active: boolean }
+interface ParentAccount { id: string; name: string; email: string; login_id: string | null; is_active: boolean }
 
 export default function ParentFormScreen({ parent, linkedStudents }: { parent: ParentAccount | null; linkedStudents: Student[] }) {
     const form = useForm({ name: parent?.name ?? '', email: parent?.email ?? '', password: '', password_confirmation: '', student_ids: linkedStudents.map((student) => student.id) });
@@ -71,6 +71,12 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                     </div>
                     {parent && <span className={`pf-pill ${parent.is_active ? 'pf-pill--active' : 'pf-pill--inactive'}`}>{parent.is_active ? 'Active account' : 'Inactive account'}</span>}
                 </div>
+                {parent?.login_id && (
+                    <div className="pf-notice" style={{ marginBottom: 20 }}>
+                        This parent logs in with <strong style={{ fontFamily: 'monospace' }}>{parent.login_id}</strong> and
+                        their password — not their email. Share this ID with them.
+                    </div>
+                )}
                 <form onSubmit={submit} className="parent-form">
                     <fieldset className="pf-panel parent-section" disabled={form.processing || statusForm.processing}>
                         <legend>Parent details</legend>

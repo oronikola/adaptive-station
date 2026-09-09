@@ -15,6 +15,7 @@ class ParentAccountFactory extends Factory
             'tenant_id' => Tenant::factory(),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'login_id' => fake()->unique()->regexify('[A-Z]{4}[0-9]{10}'),
             'password' => 'test-parent-password',
             'is_active' => true,
         ];

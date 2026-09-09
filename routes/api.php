@@ -48,8 +48,6 @@ Route::prefix('v1/device/sms')->name('api.device.sms.')->middleware(Authenticate
 });
 
 Route::prefix('v1/parent')->name('api.parent.')->group(function () {
-    Route::post('login', [ParentAuthController::class, 'login'])->name('login');
-
     Route::middleware(AuthenticateParent::class)->group(function () {
         Route::post('logout', [ParentAuthController::class, 'logout'])->name('logout');
         Route::get('children', [ParentChildrenController::class, 'index'])->name('children');

@@ -14,10 +14,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-#[Fillable(['tenant_id', 'name', 'email', 'phone_number', 'password', 'password_plaintext', 'is_active', 'notification_preferences'])]
+#[Fillable(['tenant_id', 'name', 'email', 'login_id', 'phone_number', 'password', 'password_plaintext', 'is_active', 'notification_preferences'])]
 #[Hidden(['password', 'password_plaintext', 'remember_token'])]
 #[ScopedBy(TenantScope::class)]
 class ParentAccount extends Authenticatable implements TenantScoped
@@ -61,6 +62,7 @@ class ParentAccount extends Authenticatable implements TenantScoped
             $account = static::create([
                 ...$attributes,
                 'tenant_id' => $tenantId,
+                'login_id' => static::generateLoginId($tenantId),
                 'password' => $password,
                 'password_plaintext' => $password,
                 'is_active' => true,
@@ -69,6 +71,46 @@ class ParentAccount extends Authenticatable implements TenantScoped
             AuditLog::record('parent.created', $actor, $tenantId, 'parent_account', $account->id, ['source' => 'csv_import']);
 
             return ['account' => $account, 'temporary_password' => $password];
+        });
+    }
+
+    /**
+     * A globally-unique login credential — {TENANT_CODE}{YEAR}{5-digit
+     * sequence}, e.g. "ATEST202600001" — that replaces email as how a
+     * parent logs in (see the login-id plan: the same email can legitimately
+     * exist at two different schools, which makes email-only login
+     * ambiguous with no school code; a generated ID sidesteps that
+     * entirely). Uniqueness is free because tenants.code is already
+     * globally unique; the sequence resets to 1 per tenant per year.
+     *
+     * insertOrIgnore() + a locked re-select (rather than a plain
+     * find-or-create) closes the race where two concurrent callers are both
+     * the very first parent created for a given tenant+year: at most one
+     * insert wins, and every caller then increments the same locked row.
+     */
+    public static function generateLoginId(string $tenantId): string
+    {
+        $tenantCode = Tenant::query()->where('id', $tenantId)->value('code');
+        $year = (int) Date::now()->format('Y');
+
+        return DB::connection('mysql')->transaction(function () use ($tenantId, $tenantCode, $year) {
+            DB::connection('mysql')->table('parent_login_sequences')->insertOrIgnore([
+                'tenant_id' => $tenantId, 'year' => $year, 'next_number' => 1,
+                'created_at' => Date::now(), 'updated_at' => Date::now(),
+            ]);
+
+            $sequence = DB::connection('mysql')->table('parent_login_sequences')
+                ->where('tenant_id', $tenantId)
+                ->where('year', $year)
+                ->lockForUpdate()
+                ->first();
+
+            DB::connection('mysql')->table('parent_login_sequences')
+                ->where('tenant_id', $tenantId)
+                ->where('year', $year)
+                ->update(['next_number' => $sequence->next_number + 1, 'updated_at' => Date::now()]);
+
+            return sprintf('%s%d%05d', strtoupper((string) $tenantCode), $year, $sequence->next_number);
         });
     }
 
