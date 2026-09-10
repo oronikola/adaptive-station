@@ -17,12 +17,17 @@ class AuditLogController extends Controller
 
         $logs = AuditLog::allTenants()
             ->with('tenant:id,name')
+            ->when($request->filled('search'), fn ($q) => $q->where('action', 'like', '%'.$request->search.'%'))
+            ->when($request->filled('actor_type'), fn ($q) => $q->where('actor_type', $request->actor_type))
+            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->latest('created_at')
             ->paginate(50)
             ->withQueryString();
 
         return Inertia::render('Platform/audit-log/audit-log-list-screen', [
             'logs' => $logs,
+            'filters' => $request->only(['search', 'actor_type', 'date_from', 'date_to']),
         ]);
     }
 }
