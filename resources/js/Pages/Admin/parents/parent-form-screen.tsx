@@ -1,6 +1,6 @@
 import InputError from '@/Components/InputError';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import '../../../../css/platform-dashboard.css';
@@ -41,9 +41,26 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
         return () => { window.clearTimeout(timer); controller.abort(); };
     }, [query, retry]);
 
+    // Link/Unlink used to only stage the change in local React state — it
+    // looked like it worked, but a reload with no intervening "Save changes"
+    // click silently discarded it, since nothing was ever sent to the
+    // server. When editing an existing parent, persist immediately instead;
+    // the create form has no parent id to save against yet, so it keeps
+    // staging until the whole form is submitted.
     function selectStudents(students: Student[]) {
         setSelected(students);
-        form.setData('student_ids', students.map((student) => student.id));
+        const studentIds = students.map((student) => student.id);
+        form.setData('student_ids', studentIds);
+
+        if (parent) {
+            router.put(route('portal.parents.update', parent.id), {
+                name: form.data.name,
+                email: form.data.email,
+                password: '',
+                password_confirmation: '',
+                student_ids: studentIds,
+            }, { preserveScroll: true, preserveState: true });
+        }
     }
 
     function submit(event: React.FormEvent<HTMLFormElement>) {
