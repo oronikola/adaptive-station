@@ -43,7 +43,7 @@ const DIRECTION_LABELS: Record<string, string> = {
 const textareaStyle: React.CSSProperties = {
     width: '100%',
     padding: '12px 14px',
-    border: '1px solid #d7dde7',
+    border: '1px solid var(--as-border)',
     borderRadius: 12,
     outline: 'none',
     fontSize: 13,
@@ -160,7 +160,11 @@ export default function IntegrationsEditScreen({ profile, runs }: { profile: Int
                         </div>
 
                         <div className="pf-modal-footer" style={{ justifyContent: 'flex-start' }}>
-                            <button type="submit" className="pf-btn pf-btn-primary" disabled={form.processing}>
+                            <button
+                                type="submit"
+                                className={'pf-btn pf-btn-primary' + (form.processing ? ' pf-btn--loading' : '')}
+                                disabled={form.processing}
+                            >
                                 Save
                             </button>
                         </div>
@@ -204,7 +208,11 @@ export default function IntegrationsEditScreen({ profile, runs }: { profile: Int
                             <InputError message={exportForm.errors.date_from ?? exportForm.errors.date_to} className="mt-2" />
 
                             <div className="pf-modal-footer" style={{ justifyContent: 'flex-start' }}>
-                                <button type="submit" className="pf-btn pf-btn-primary" disabled={exportForm.processing}>
+                                <button
+                                    type="submit"
+                                    className={'pf-btn pf-btn-primary' + (exportForm.processing ? ' pf-btn--loading' : '')}
+                                    disabled={exportForm.processing}
+                                >
                                     Run Export
                                 </button>
                             </div>
