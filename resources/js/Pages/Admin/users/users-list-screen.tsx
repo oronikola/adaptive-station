@@ -1,7 +1,10 @@
+import Pagination from '@/Components/admin/Pagination';
 import SecretOnceCallout from '@/Components/SecretOnceCallout';
+import Modal from '@/Components/Modal';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, Link, usePage } from '@inertiajs/react';
-import type { PaginatedData, PaginationLink, User, PageProps } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import type { PaginatedData, User, PageProps } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -18,47 +21,22 @@ const roleLabels: Record<string, string> = {
     tenant_operator: 'Operator',
 };
 
-function PaginationBar({ links }: { links: PaginationLink[] }) {
-    if (!links || links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="pf-pagination">
-            {links.map((link: PaginationLink, index: number) => {
-                const label = link.label
-                    .replace('&laquo; Previous', '‹ Previous')
-                    .replace('Next &raquo;', 'Next ›');
-
-                if (link.url === null) {
-                    return (
-                        <span key={index} className="pf-page-link pf-page-link--disabled">
-                            {label}
-                        </span>
-                    );
-                }
-
-                return (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        preserveScroll
-                        className={
-                            'pf-page-link' +
-                            (link.active ? ' pf-page-link--active' : '')
-                        }
-                    >
-                        {label}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
-}
-
 export default function UsersListScreen({ users }: { users: PaginatedData<UserListItem> }) {
     const { auth, flash } = usePage<UsersListPageProps>().props;
     const canManage = auth.user.role === 'tenant_admin';
+    const [deactivatingUser, setDeactivatingUser] = useState<UserListItem | null>(null);
+    const [isDeactivating, setIsDeactivating] = useState(false);
+
+    function submitDeactivate() {
+        if (!deactivatingUser) { return; }
+        setIsDeactivating(true);
+        router.patch(route('portal.users.deactivate', deactivatingUser.id), {}, {
+            onFinish: () => {
+                setIsDeactivating(false);
+                setDeactivatingUser(null);
+            },
+        });
+    }
 
     return (
         <AdminLayout>
@@ -99,7 +77,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                         <div>
                             <h2 className="pf-panel-title">All Users</h2>
                             <p className="pf-panel-count">
-                                {users.data.length} shown
+                                {users.from !== null ? `${users.from}–${users.to} of ${users.total}` : 'No results'}
                             </p>
                         </div>
                     </div>
@@ -131,7 +109,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                         <td className="pf-tenant-name">
                                             {user.name}
                                             {user.id === auth.user.id && (
-                                                <span className="ms-2 text-xs text-gray-400"> (you)</span>
+                                                <span style={{ marginLeft: '0.5rem', fontSize: '11px', color: 'var(--as-text-muted)' }}>(you)</span>
                                             )}
                                         </td>
                                         <td>{user.email}</td>
@@ -152,17 +130,16 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                             {canManage && user.id !== auth.user.id && (
                                                 <div className="pft-row-actions">
                                                     {user.is_active ? (
-                                                        <Link
-                                                            href={route('portal.users.deactivate', user.id)}
-                                                            method="patch"
-                                                            as="button"
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setDeactivatingUser(user)}
                                                             className="pf-row-action pf-row-action--danger"
                                                         >
                                                             <svg viewBox="0 0 24 24">
                                                                 <path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-7 0v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7" />
                                                             </svg>
                                                             Deactivate
-                                                        </Link>
+                                                        </button>
                                                     ) : (
                                                         <Link
                                                             href={route('portal.users.reactivate', user.id)}
@@ -185,9 +162,111 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                         </table>
                     </div>
 
-                    <PaginationBar links={users.links} />
+                    <Pagination links={users.links} />
                 </div>
             </div>
+            <Modal show={deactivatingUser !== null} onClose={() => setDeactivatingUser(null)}>
+                <div className="pf-modal">
+                    <div className="pf-modal-header">
+                        <h2 className="pf-modal-title">Deactivate user?</h2>
+                        <button
+                            type="button"
+                            className="pf-modal-close"
+                            onClick={() => setDeactivatingUser(null)}
+                            aria-label="Close"
+                        >
+                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+
+                    {/* User summary card */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 14,
+                            padding: '14px 16px',
+                            borderRadius: 14,
+                            border: '1px solid var(--as-border)',
+                            background: 'var(--as-surface-active)',
+                            marginBottom: 14,
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: 42,
+                                height: 42,
+                                borderRadius: '50%',
+                                background: 'var(--as-brand-blue)',
+                                color: '#fff',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 700,
+                                fontSize: 16,
+                                flexShrink: 0,
+                            }}
+                        >
+                            {deactivatingUser?.name?.charAt(0).toUpperCase() ?? '?'}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                            <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--as-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {deactivatingUser?.name}
+                            </span>
+                            <span style={{ fontSize: 12, color: 'var(--as-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {deactivatingUser?.email}
+                            </span>
+                            <span style={{ fontSize: 11, color: 'var(--as-text-muted)', marginTop: 2 }}>
+                                {roleLabels[deactivatingUser?.role ?? ''] ?? deactivatingUser?.role}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Consequence notice */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 10,
+                            padding: '11px 14px',
+                            borderRadius: 12,
+                            border: '1px solid var(--as-danger-bg-alt)',
+                            background: 'var(--as-danger-bg)',
+                            marginBottom: 18,
+                        }}
+                    >
+                        <svg viewBox="0 0 24 24" style={{ width: 15, height: 15, flexShrink: 0, fill: 'none', stroke: 'var(--as-danger)', strokeWidth: 2, marginTop: 1 }}>
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 7v5" />
+                            <circle cx="12" cy="16.5" r=".5" fill="var(--as-danger)" />
+                        </svg>
+                        <p style={{ margin: 0, fontSize: 12.5, color: 'var(--as-danger)', lineHeight: 1.5 }}>
+                            This user will lose access <strong>immediately</strong>. They will not be notified.
+                            You can reactivate them at any time from this screen.
+                        </p>
+                    </div>
+
+                    {/* Actions — stacked column */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <button
+                            type="button"
+                            className={'pf-btn pf-btn-danger' + (isDeactivating ? ' pf-btn--loading' : '')}
+                            onClick={submitDeactivate}
+                            disabled={isDeactivating}
+                        >
+                            Deactivate {deactivatingUser?.name?.split(' ')[0]}
+                        </button>
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={() => setDeactivatingUser(null)}
+                            disabled={isDeactivating}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </AdminLayout>
     );
 }
