@@ -78,7 +78,10 @@ export default function AppShell({
 
     return (
         <div className="pf-shell">
+            <a href="#main-content" className="pf-skip-link">Skip to content</a>
+
             <aside
+                aria-label="Main navigation"
                 className={
                     'pf-sidebar' + (collapsed ? ' pf-sidebar--collapsed' : '')
                 }
@@ -99,6 +102,7 @@ export default function AppShell({
                     onClick={() => setMobileNavOpen(false)}
                 >
                     <aside
+                        aria-label="Navigation menu"
                         className="pf-sidebar pf-sidebar--mobile"
                         onClick={(event) => event.stopPropagation()}
                     >
@@ -154,7 +158,7 @@ export default function AppShell({
 
                 {header && <div className="pf-shell-header">{header}</div>}
 
-                <main className="pf-shell-content">{children}</main>
+                <main id="main-content" className="pf-shell-content">{children}</main>
             </div>
         </div>
     );

@@ -1,17 +1,45 @@
 import ApplicationLogo from '@/Components/Branding/ApplicationLogo';
-import { Link } from '@inertiajs/react';
 import { NavItem } from '@/types';
+import { Link } from '@inertiajs/react';
+import { motion } from 'motion/react';
 
 interface SidebarProps {
     brand: string;
     brandHref: string;
     items: NavItem[];
     tenantLabel?: string;
-    /** Icon-only collapsed rail. Omit both this and onToggleCollapse to
-     * always render expanded with no toggle — used for the mobile drawer,
-     * which is already a compact overlay. */
     collapsed?: boolean;
     onToggleCollapse?: () => void;
+}
+
+const SPRING = { type: 'spring' as const, stiffness: 520, damping: 42, mass: 0.75 };
+const OPACITY = { type: 'spring' as const, stiffness: 600, damping: 50, mass: 0.5 };
+
+function AnimatedLabel({
+    collapsed,
+    children,
+    className,
+    maxW = 180,
+}: {
+    collapsed: boolean;
+    children: React.ReactNode;
+    className?: string;
+    maxW?: number;
+}) {
+    return (
+        <motion.span
+            className={className}
+            animate={{
+                opacity: collapsed ? 0 : 1,
+                maxWidth: collapsed ? 0 : maxW,
+            }}
+            transition={SPRING}
+            style={{ overflow: 'hidden', whiteSpace: 'nowrap', display: 'block', minWidth: 0 }}
+            aria-hidden={collapsed ? true : undefined}
+        >
+            {children}
+        </motion.span>
+    );
 }
 
 export default function Sidebar({
@@ -27,52 +55,78 @@ export default function Sidebar({
             <div className="pf-sidebar-header">
                 <Link href={brandHref} className="pf-sidebar-logo">
                     <ApplicationLogo className="pf-sidebar-logo-mark" alt="" />
-                    <span className="pf-sidebar-logo-text">{brand}</span>
+                    <AnimatedLabel
+                        collapsed={collapsed}
+                        className="pf-sidebar-logo-text"
+                        maxW={160}
+                    >
+                        {brand}
+                    </AnimatedLabel>
                 </Link>
                 {tenantLabel && (
-                    <p className="pf-sidebar-tenant">{tenantLabel}</p>
+                    <AnimatedLabel
+                        collapsed={collapsed}
+                        className="pf-sidebar-tenant"
+                        maxW={220}
+                    >
+                        {tenantLabel}
+                    </AnimatedLabel>
                 )}
             </div>
 
             <nav className="pf-sidebar-nav">
-                {items.map((item) =>
-                    item.external ? (
+                {items.map((item) => {
+                    const isActive = route().current(item.activePattern);
+                    const linkClass =
+                        'pf-sidebar-link' + (isActive ? ' pf-sidebar-link--active' : '');
+
+                    const inner = (
+                        <>
+                            <span className="pf-sidebar-icon">{item.icon}</span>
+                            <AnimatedLabel collapsed={collapsed} maxW={180}>
+                                {item.label}
+                            </AnimatedLabel>
+                            {item.badge != null && (
+                                <motion.span
+                                    className="pf-sidebar-badge"
+                                    animate={{
+                                        opacity: collapsed ? 0 : 1,
+                                        maxWidth: collapsed ? 0 : 40,
+                                        marginLeft: collapsed ? 0 : 'auto',
+                                    }}
+                                    transition={OPACITY}
+                                    style={{ overflow: 'hidden', minWidth: 0, flexShrink: 0 }}
+                                >
+                                    {item.badge}
+                                </motion.span>
+                            )}
+                        </>
+                    );
+
+                    return item.external ? (
                         <a
                             key={item.name}
                             href={route(item.route)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="pf-sidebar-link"
+                            className={linkClass}
                             title={collapsed ? item.label : undefined}
                         >
-                            <span className="pf-sidebar-icon">{item.icon}</span>
-                            <span className="pf-sidebar-link-label">{item.label}</span>
+                            {inner}
                         </a>
                     ) : (
                         <Link
                             key={item.name}
                             href={route(item.route)}
+                            className={linkClass}
                             title={collapsed ? item.label : undefined}
-                            className={
-                                'pf-sidebar-link' +
-                                (route().current(item.activePattern)
-                                    ? ' pf-sidebar-link--active'
-                                    : '')
-                            }
                         >
-                            <span className="pf-sidebar-icon">{item.icon}</span>
-                            <span className="pf-sidebar-link-label">{item.label}</span>
-                            {item.badge != null && (
-                                <span className="pf-sidebar-badge">{item.badge}</span>
-                            )}
+                            {inner}
                         </Link>
-                    ),
-                )}
+                    );
+                })}
             </nav>
 
-            {/* Pinned below the (possibly scrollable) nav list — stays put
-                regardless of how many nav items there are or how tall the
-                page content is. */}
             {onToggleCollapse && (
                 <div className="pf-sidebar-footer">
                     <button
@@ -81,16 +135,20 @@ export default function Sidebar({
                         onClick={onToggleCollapse}
                         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         aria-expanded={!collapsed}
-                        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                        title={collapsed ? 'Expand sidebar' : undefined}
                     >
                         <span className="pf-sidebar-collapse-icon">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M14 6l-6 6 6 6" />
                             </svg>
                         </span>
-                        <span className="pf-sidebar-collapse-label">
+                        <AnimatedLabel
+                            collapsed={collapsed}
+                            className="pf-sidebar-collapse-label"
+                            maxW={130}
+                        >
                             Collapse sidebar
-                        </span>
+                        </AnimatedLabel>
                     </button>
                 </div>
             )}
