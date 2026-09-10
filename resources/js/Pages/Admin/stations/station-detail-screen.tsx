@@ -17,9 +17,9 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_PILL_CLASS: Record<string, string> = {
     active: 'pf-pill--active',
-    pending_activation: 'pft-pill--suspended',
-    disabled: 'pft-pill--archived',
-    retired: 'pft-pill--archived',
+    pending_activation: 'pf-pill--suspended',
+    disabled: 'pf-pill--archived',
+    retired: 'pf-pill--archived',
 };
 
 // last_used_at is a full UTC timestamp — displayed in GMT+8 (Asia/Manila, no
@@ -75,22 +75,40 @@ export default function StationDetailScreen({ station, credentials }: { station:
         });
     }
 
-    function revokeCredential(credential: StationCredential) {
-        if (!confirm(`Revoke credential "${credential.label ?? 'Untitled'}"? The kiosk using it will lose access immediately.`)) {
-            return;
-        }
-        router.patch(route('portal.stations.credentials.revoke', [station.station_code, credential.id] as unknown as Record<string, unknown>), {}, { preserveScroll: true });
+    const [revokingCredential, setRevokingCredential] = useState<StationCredential | null>(null);
+    const [isRevoking, setIsRevoking] = useState(false);
+
+    function submitRevokeCredential() {
+        if (!revokingCredential) { return; }
+        setIsRevoking(true);
+        router.patch(
+            route('portal.stations.credentials.revoke', [station.station_code, revokingCredential.id] as unknown as Record<string, unknown>),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setIsRevoking(false);
+                    setRevokingCredential(null);
+                },
+            },
+        );
+    }
+
+    const [resetModalOpen, setResetModalOpen] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
+
+    function submitResetActivation() {
+        setIsResetting(true);
+        router.patch(route('portal.stations.reset-activation', station.station_code), {}, {
+            onFinish: () => {
+                setIsResetting(false);
+                setResetModalOpen(false);
+            },
+        });
     }
 
     function issueActivationCode() {
         router.post(route('portal.stations.activation-code', station.station_code));
-    }
-
-    function resetActivation() {
-        if (!confirm('Reset this station to Pending Activation? Its existing device credentials will be revoked immediately and it will need a new activation code.')) {
-            return;
-        }
-        router.patch(route('portal.stations.reset-activation', station.station_code));
     }
 
     return (
@@ -135,7 +153,7 @@ export default function StationDetailScreen({ station, credentials }: { station:
                             </button>
                         )}
                         {station.status === 'active' && (
-                            <button type="button" className="pf-btn pf-btn-secondary" onClick={resetActivation}>
+                            <button type="button" className="pf-btn pf-btn-secondary" onClick={() => setResetModalOpen(true)}>
                                 Reset to Pending Activation
                             </button>
                         )}
@@ -168,17 +186,21 @@ export default function StationDetailScreen({ station, credentials }: { station:
                                 style={{
                                     width: '100%',
                                     padding: '12px 14px',
-                                    border: '1px solid #d7dde7',
+                                    border: '1px solid var(--as-border)',
                                     borderRadius: 12,
                                     fontSize: 12.5,
                                     lineHeight: 1.6,
-                                    color: '#162033',
+                                    color: 'var(--as-brand-dark)',
                                 }}
                             />
                             <InputError message={configError ?? configForm.errors.configuration} className="mt-2" />
                         </div>
 
-                        <button type="submit" className="pf-btn pf-btn-primary" disabled={configForm.processing}>
+                        <button
+                            type="submit"
+                            className={'pf-btn pf-btn-primary' + (configForm.processing ? ' pf-btn--loading' : '')}
+                            disabled={configForm.processing}
+                        >
                             Save Configuration
                         </button>
                     </form>
@@ -237,7 +259,7 @@ export default function StationDetailScreen({ station, credentials }: { station:
                                             <span
                                                 className={
                                                     'pf-pill ' +
-                                                    (credential.revoked_at ? 'pft-pill--archived' : 'pf-pill--active')
+                                                    (credential.revoked_at ? 'pf-pill--archived' : 'pf-pill--active')
                                                 }
                                             >
                                                 {credential.revoked_at ? 'Revoked' : 'Active'}
@@ -249,7 +271,7 @@ export default function StationDetailScreen({ station, credentials }: { station:
                                                     <button
                                                         type="button"
                                                         className="pf-row-action pf-row-action--danger"
-                                                        onClick={() => revokeCredential(credential)}
+                                                        onClick={() => setRevokingCredential(credential)}
                                                     >
                                                         <svg viewBox="0 0 24 24">
                                                             <path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-7 0v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7" />
@@ -321,11 +343,73 @@ export default function StationDetailScreen({ station, credentials }: { station:
                         >
                             Cancel
                         </button>
-                        <button type="submit" className="pf-btn pf-btn-primary" disabled={credentialForm.processing}>
-                            Issue
+                        <button
+                            type="submit"
+                            className={'pf-btn pf-btn-primary' + (credentialForm.processing ? ' pf-btn--loading' : '')}
+                            disabled={credentialForm.processing}
+                        >
+                            {credentialForm.processing ? 'Issuing…' : 'Issue'}
                         </button>
                     </div>
                 </form>
+            </Modal>
+
+            <Modal show={revokingCredential !== null} onClose={() => setRevokingCredential(null)}>
+                <div className="pf-modal">
+                    <div className="pf-modal-header">
+                        <h2 className="pf-modal-title">Revoke credential?</h2>
+                        <p className="pf-modal-desc">
+                            <strong>{revokingCredential?.label ?? 'Untitled'}</strong> — the kiosk using this credential will lose access immediately.
+                        </p>
+                    </div>
+                    <div className="pf-modal-footer">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={() => setRevokingCredential(null)}
+                            disabled={isRevoking}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className={'pf-btn pf-btn-danger' + (isRevoking ? ' pf-btn--loading' : '')}
+                            onClick={submitRevokeCredential}
+                            disabled={isRevoking}
+                        >
+                            Revoke
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal show={resetModalOpen} onClose={() => setResetModalOpen(false)}>
+                <div className="pf-modal">
+                    <div className="pf-modal-header">
+                        <h2 className="pf-modal-title">Reset to Pending Activation?</h2>
+                        <p className="pf-modal-desc">
+                            All existing device credentials will be revoked immediately. The station will need a new activation code before it can go back online.
+                        </p>
+                    </div>
+                    <div className="pf-modal-footer">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={() => setResetModalOpen(false)}
+                            disabled={isResetting}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className={'pf-btn pf-btn-danger' + (isResetting ? ' pf-btn--loading' : '')}
+                            onClick={submitResetActivation}
+                            disabled={isResetting}
+                        >
+                            Reset station
+                        </button>
+                    </div>
+                </div>
             </Modal>
         </AdminLayout>
     );
