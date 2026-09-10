@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 #[Fillable(['tenant_id', 'station_id', 'code_hash', 'expires_at', 'created_by_user_id'])]
 #[Hidden(['code_hash'])]
@@ -25,6 +24,15 @@ class StationActivationCode extends Model implements TenantScoped
 
     /** Explicit for the same cross-connection-relation reason as Tenant. */
     protected $connection = 'mysql';
+
+    /**
+     * Excludes visually ambiguous characters (0/O, 1/I/L) — this code gets
+     * read off one screen (the portal) and typed on another (the kiosk's
+     * on-screen keyboard), so it must survive that transcription by eye.
+     */
+    private const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+    private const CODE_LENGTH = 10;
 
     const UPDATED_AT = null;
 
@@ -63,7 +71,7 @@ class StationActivationCode extends Model implements TenantScoped
     public static function findValidByPlaintextCode(string $code): ?self
     {
         return static::allTenants()
-            ->where('code_hash', hash('sha256', $code))
+            ->where('code_hash', hash('sha256', self::normalize($code)))
             ->whereNull('consumed_at')
             ->where('expires_at', '>', Date::now())
             ->first();
@@ -77,7 +85,7 @@ class StationActivationCode extends Model implements TenantScoped
     {
         return DB::transaction(function () use ($plaintextCode) {
             $activationCode = static::allTenants()
-                ->where('code_hash', hash('sha256', $plaintextCode))
+                ->where('code_hash', hash('sha256', self::normalize($plaintextCode)))
                 ->whereNull('consumed_at')
                 ->where('expires_at', '>', Date::now())
                 ->lockForUpdate()
@@ -98,11 +106,15 @@ class StationActivationCode extends Model implements TenantScoped
      * alongside the persisted (hashed) record. The plaintext is never
      * stored — surface it to the caller immediately and discard it.
      *
+     * The returned code is formatted for hand-transcription (e.g.
+     * "ABCDE-2F3GH"); findValidByPlaintextCode()/redeem() normalize
+     * whatever the kiosk submits, so the dash and case are cosmetic only.
+     *
      * @return array{activationCode: self, code: string}
      */
     public static function issueFor(Station $station, User $createdBy, ?\DateTimeInterface $expiresAt = null): array
     {
-        $code = Str::random(64);
+        $code = self::generatePlaintextCode();
 
         $activationCode = static::allTenants()->create([
             'tenant_id' => $station->tenant_id,
@@ -112,6 +124,30 @@ class StationActivationCode extends Model implements TenantScoped
             'created_by_user_id' => $createdBy->id,
         ]);
 
-        return ['activationCode' => $activationCode, 'code' => $code];
+        return ['activationCode' => $activationCode, 'code' => self::format($code)];
+    }
+
+    private static function generatePlaintextCode(): string
+    {
+        $lastIndex = strlen(self::CODE_ALPHABET) - 1;
+        $code = '';
+
+        for ($i = 0; $i < self::CODE_LENGTH; $i++) {
+            $code .= self::CODE_ALPHABET[random_int(0, $lastIndex)];
+        }
+
+        return $code;
+    }
+
+    /** Groups the raw code into dash-separated chunks for readability, e.g. "ABCDE-2F3GH". */
+    private static function format(string $code): string
+    {
+        return implode('-', str_split($code, 5));
+    }
+
+    /** Undoes formatting/typos: strips everything but letters and digits, then uppercases. */
+    private static function normalize(string $code): string
+    {
+        return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code) ?? '');
     }
 }

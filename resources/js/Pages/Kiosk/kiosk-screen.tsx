@@ -8,16 +8,64 @@ import {
     getLastTap,
     setLastTap,
     addPendingEvent,
+    clearCredential,
     type TapEventType,
 } from '@/kiosk/db';
 import { activate, DeviceUnauthorizedError } from '@/kiosk/api';
 import { syncMasterData, flushPendingEvents, heartbeat } from '@/kiosk/sync';
+
+/**
+ * `crypto.randomUUID()` only exists in secure contexts (HTTPS or
+ * `localhost`) — a kiosk served over plain HTTP on a LAN hostname (e.g.
+ * `http://adaptive-station.ck`) doesn't get it, and calling it throws
+ * synchronously, which used to abort the whole tap handler before it ever
+ * recorded the event. `crypto.getRandomValues` has no such restriction, so
+ * it's used to build an RFC 4122 v4 UUID by hand; `Math.random` is a last
+ * resort if `crypto` itself is unavailable.
+ */
+function generateEventId(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+
+    const bytes = new Uint8Array(16);
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+        crypto.getRandomValues(bytes);
+    } else {
+        for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+    }
+
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10
+
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
 
 const DOUBLE_TAP_GRACE_MS = 10_000;
 const RESULT_CLEAR_MS = 3_000;
 const MASTER_DATA_SYNC_MS = 15_000;
 const EVENT_FLUSH_MS = 7_000;
 const HEARTBEAT_MS = 60_000;
+const EXIT_GESTURE_TAPS = 5;
+const EXIT_GESTURE_WINDOW_MS = 3_000;
+
+/**
+ * Best-effort lockdown: fullscreen + the Keyboard Lock API (Chrome only,
+ * requires fullscreen) so Escape/Alt+Tab/system shortcuts get captured by
+ * the page instead of the OS while the kiosk is running. Both calls need a
+ * user gesture in most browsers, so this is called from click/submit
+ * handlers, not on mount — and both fail silently since a station already
+ * running inside an OS-level kiosk browser (Chrome --kiosk, Assigned
+ * Access, etc.) doesn't need either and shouldn't be blocked if they throw.
+ */
+function requestKioskLockdown() {
+    if (document.fullscreenElement == null) {
+        document.documentElement.requestFullscreen?.().catch(() => {});
+    }
+    const nav = navigator as Navigator & { keyboard?: { lock?: (keys?: string[]) => Promise<void> } };
+    nav.keyboard?.lock?.().catch(() => {});
+}
 
 type Phase = 'booting' | 'activation' | 'ready';
 
@@ -93,6 +141,38 @@ export default function KioskScreen() {
     const [result, setResult] = useState<TapResult | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const resultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // ── Hidden admin exit: tap the station badge 5x fast to reveal a
+    // reconfigure/deactivate dialog. There's no staff login on this screen
+    // to gate against (the kiosk authenticates itself, not a person), so
+    // this is a deliberate-friction confirmation, not a password — the real
+    // security boundary is physical access to the station, same as it
+    // would be to reach devtools/localStorage directly.
+    const [exitDialogOpen, setExitDialogOpen] = useState(false);
+    const [exitConfirmText, setExitConfirmText] = useState('');
+    const exitTapCountRef = useRef(0);
+    const exitTapResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    function handleBadgeTap() {
+        exitTapCountRef.current += 1;
+        if (exitTapResetRef.current) clearTimeout(exitTapResetRef.current);
+        if (exitTapCountRef.current >= EXIT_GESTURE_TAPS) {
+            exitTapCountRef.current = 0;
+            setExitConfirmText('');
+            setExitDialogOpen(true);
+            return;
+        }
+        exitTapResetRef.current = setTimeout(() => {
+            exitTapCountRef.current = 0;
+        }, EXIT_GESTURE_WINDOW_MS);
+    }
+
+    async function confirmDeactivate() {
+        await clearCredential();
+        setExitDialogOpen(false);
+        setExitConfirmText('');
+        setPhase('activation');
+    }
 
     // A live clock is a small, familiar touch on a physical kiosk display —
     // purely decorative, no logic depends on it.
@@ -173,24 +253,38 @@ export default function KioskScreen() {
     }, [phase]);
 
     // ── Keep the tap input focused at all times while ready ─────────────
+    // Refocus is driven by the input's own blur (see onBlur on the <input>
+    // below), which can tell a stray blur (click on empty space) apart from
+    // focus legitimately moving to a real control (the exit dialog's text
+    // field, its buttons) — a blanket "refocus on any click" would yank
+    // focus away from those mid-keystroke. Window 'focus' still refocuses
+    // unconditionally: that only fires when the OS hands focus back to this
+    // browser window/tab (e.g. after Alt+Tab away and back), which should
+    // always return control to the reader input, dialog or not.
     useEffect(() => {
         if (phase !== 'ready') return;
-        const input = inputRef.current;
-        input?.focus();
+        inputRef.current?.focus();
+        requestKioskLockdown();
 
-        function refocus() {
-            // A short delay lets a genuine click elsewhere (there is none
-            // today, but keeps this safe if a button is ever added) win.
+        function refocusOnWindowFocus() {
+            if (exitDialogOpen) return;
             setTimeout(() => inputRef.current?.focus(), 50);
         }
 
-        window.addEventListener('click', refocus);
-        window.addEventListener('focus', refocus);
-        return () => {
-            window.removeEventListener('click', refocus);
-            window.removeEventListener('focus', refocus);
-        };
-    }, [phase]);
+        window.addEventListener('focus', refocusOnWindowFocus);
+        return () => window.removeEventListener('focus', refocusOnWindowFocus);
+    }, [phase, exitDialogOpen]);
+
+    function handleInputBlur(e: React.FocusEvent<HTMLInputElement>) {
+        if (exitDialogOpen) return;
+        const next = e.relatedTarget as HTMLElement | null;
+        if (next && (next.tagName === 'BUTTON' || next.tagName === 'INPUT')) return;
+        setTimeout(() => {
+            if (document.activeElement === document.body) {
+                inputRef.current?.focus();
+            }
+        }, 50);
+    }
 
     function showResult(next: TapResult) {
         setResult(next);
@@ -205,6 +299,7 @@ export default function KioskScreen() {
         e.preventDefault();
         setActivating(true);
         setActivationError(null);
+        requestKioskLockdown();
 
         try {
             const response = await activate(activationCode.trim());
@@ -266,7 +361,7 @@ export default function KioskScreen() {
         const now = new Date();
 
         await addPendingEvent({
-            id: crypto.randomUUID(),
+            id: generateEventId(),
             card_uid: cardUid,
             event_type: eventType,
             occurred_at: now.toISOString(),
@@ -290,9 +385,21 @@ export default function KioskScreen() {
 
     return (
         <>
-            <Head title="Kiosk" />
+            <Head title="Kiosk">
+                {/* Overrides app.blade.php's default viewport for this page only —
+                    a physical touch kiosk shouldn't let a stray two-finger
+                    gesture zoom the layout or trigger a pull-to-refresh reload. */}
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+            </Head>
             <style>{`
-                html, body, #app { height: 100%; margin: 0; background: #060a14; }
+                html, body, #app {
+                    height: 100%; margin: 0; background: #060a14;
+                    overscroll-behavior: none;
+                    touch-action: manipulation;
+                    -webkit-user-select: none;
+                    user-select: none;
+                }
+                input, textarea { -webkit-user-select: text; user-select: text; }
 
                 @keyframes kiosk-pulse-ring {
                     0%   { transform: scale(1);    opacity: .55; }
@@ -373,6 +480,8 @@ export default function KioskScreen() {
                         }}
                     >
                         <span
+                            onClick={handleBadgeTap}
+                            title=""
                             style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -382,6 +491,7 @@ export default function KioskScreen() {
                                 borderRadius: 999,
                                 background: 'rgba(255,255,255,.06)',
                                 border: '1px solid rgba(255,255,255,.1)',
+                                cursor: 'default',
                             }}
                         >
                             <span style={{ position: 'relative', width: 8, height: 8 }}>
@@ -477,7 +587,10 @@ export default function KioskScreen() {
                             onChange={(e) => setActivationCode(e.target.value)}
                             autoFocus
                             required
-                            placeholder="Activation code"
+                            autoCapitalize="characters"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            placeholder="ABCDE-2F3GH"
                             style={{
                                 width: '100%',
                                 boxSizing: 'border-box',
@@ -486,7 +599,11 @@ export default function KioskScreen() {
                                 border: '1px solid rgba(255,255,255,.18)',
                                 background: 'rgba(255,255,255,.06)',
                                 color: '#f8fafc',
-                                fontSize: 16,
+                                fontSize: 20,
+                                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                                letterSpacing: '.06em',
+                                textTransform: 'uppercase',
+                                textAlign: 'center',
                                 marginBottom: 14,
                                 outline: 'none',
                             }}
@@ -656,6 +773,7 @@ export default function KioskScreen() {
                             ref={inputRef}
                             type="text"
                             onKeyDown={handleTapSubmit}
+                            onBlur={handleInputBlur}
                             autoFocus
                             autoComplete="off"
                             aria-label="Card reader input"
@@ -668,6 +786,113 @@ export default function KioskScreen() {
                             }}
                         />
                     </>
+                )}
+
+                {/* Hidden admin exit — reached only via 5 fast taps on the
+                    station badge (handleBadgeTap). Typing the station name
+                    is friction against an accidental deactivation, not a
+                    password: this screen has no staff session to protect,
+                    so the real security boundary is physical access to the
+                    device. Confirming clears the local credential and drops
+                    back to the activation screen. */}
+                {exitDialogOpen && (
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Deactivate this kiosk"
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            zIndex: 200,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(0,0,0,.7)',
+                            backdropFilter: 'blur(4px)',
+                            padding: 24,
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') setExitDialogOpen(false);
+                        }}
+                    >
+                        <div
+                            className="kiosk-fade-in"
+                            style={{
+                                width: 'min(420px, 100%)',
+                                background: '#0c1326',
+                                border: '1px solid rgba(255,255,255,.14)',
+                                borderRadius: 20,
+                                padding: '28px 26px',
+                                boxShadow: '0 24px 60px -20px rgba(0,0,0,.6)',
+                                textAlign: 'left',
+                            }}
+                        >
+                            <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 800 }}>
+                                Deactivate this kiosk?
+                            </h2>
+                            <p style={{ margin: '0 0 16px', fontSize: 13, opacity: 0.65, lineHeight: 1.5 }}>
+                                This clears the station's credential and returns to the activation
+                                screen. Type <strong>{stationName}</strong> to confirm.
+                            </p>
+                            <input
+                                type="text"
+                                value={exitConfirmText}
+                                onChange={(e) => setExitConfirmText(e.target.value)}
+                                autoFocus
+                                placeholder={stationName}
+                                style={{
+                                    width: '100%',
+                                    boxSizing: 'border-box',
+                                    padding: '11px 14px',
+                                    borderRadius: 10,
+                                    border: '1px solid rgba(255,255,255,.18)',
+                                    background: 'rgba(255,255,255,.06)',
+                                    color: '#f8fafc',
+                                    fontSize: 14,
+                                    marginBottom: 16,
+                                    outline: 'none',
+                                }}
+                            />
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setExitDialogOpen(false)}
+                                    style={{
+                                        flex: 1,
+                                        padding: '10px 14px',
+                                        borderRadius: 10,
+                                        border: '1px solid rgba(255,255,255,.14)',
+                                        background: 'rgba(255,255,255,.05)',
+                                        color: '#f8fafc',
+                                        fontWeight: 700,
+                                        fontSize: 13.5,
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={confirmDeactivate}
+                                    disabled={exitConfirmText.trim() !== stationName}
+                                    style={{
+                                        flex: 1,
+                                        padding: '10px 14px',
+                                        borderRadius: 10,
+                                        border: 'none',
+                                        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                                        color: '#fff',
+                                        fontWeight: 700,
+                                        fontSize: 13.5,
+                                        cursor: exitConfirmText.trim() === stationName ? 'pointer' : 'default',
+                                        opacity: exitConfirmText.trim() === stationName ? 1 : 0.5,
+                                    }}
+                                >
+                                    Deactivate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </>

@@ -5,6 +5,7 @@ namespace Tests\Feature\ParentApi;
 use App\Enums\PersonType;
 use App\Enums\SmsOutboxStatus;
 use App\Enums\TapEventType;
+use App\Events\SmsGatewayWakeUp;
 use App\Jobs\DispatchParentTapNotification;
 use App\Models\ParentAccount;
 use App\Models\Person;
@@ -15,6 +16,7 @@ use App\Models\Tenant;
 use App\Services\FcmClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -54,6 +56,48 @@ class ParentSmsNotificationTest extends TestCase
         $this->assertSame('+639171234567', $row->phone_number);
         $this->assertSame($tenant->id, $row->tenant_id);
         $this->assertStringContainsString('Jamie Cruz', $row->message);
+    }
+
+    public function test_a_tap_that_queues_sms_broadcasts_a_gateway_wake_up_event(): void
+    {
+        Event::fake([SmsGatewayWakeUp::class]);
+
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create();
+        $student = Person::factory()->create(['tenant_id' => $tenant->id, 'person_type' => PersonType::Student]);
+        $parent = ParentAccount::factory()->create([
+            'tenant_id' => $tenant->id,
+            'phone_number' => '+639171234567',
+            'notification_preferences' => ['notify_in' => true, 'notify_out' => true, 'notify_sms' => true],
+        ]);
+        $parent->studentLinks()->create(['person_id' => $student->id]);
+
+        $event = $this->makeEvent($tenant, $station, $student, TapEventType::In);
+
+        (new DispatchParentTapNotification($tenant->id, $event->id))->handle(app(FcmClient::class));
+
+        Event::assertDispatchedTimes(SmsGatewayWakeUp::class, 1);
+    }
+
+    public function test_a_tap_that_does_not_queue_sms_never_broadcasts_a_gateway_wake_up_event(): void
+    {
+        Event::fake([SmsGatewayWakeUp::class]);
+
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create();
+        $student = Person::factory()->create(['tenant_id' => $tenant->id, 'person_type' => PersonType::Student]);
+        $parent = ParentAccount::factory()->create([
+            'tenant_id' => $tenant->id,
+            'phone_number' => '+639171234567',
+            'notification_preferences' => ['notify_in' => true, 'notify_out' => true, 'notify_sms' => false],
+        ]);
+        $parent->studentLinks()->create(['person_id' => $student->id]);
+
+        $event = $this->makeEvent($tenant, $station, $student, TapEventType::In);
+
+        (new DispatchParentTapNotification($tenant->id, $event->id))->handle(app(FcmClient::class));
+
+        Event::assertNotDispatched(SmsGatewayWakeUp::class);
     }
 
     public function test_sms_message_uses_the_formal_letterhead_layout_with_gmt8_time(): void

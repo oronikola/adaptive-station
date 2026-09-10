@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\TapEventType;
 use App\Enums\TenantStatus;
+use App\Events\SmsGatewayWakeUp;
 use App\Events\TapRecorded;
 use App\Models\ParentStudentLink;
 use App\Models\Person;
@@ -71,6 +72,11 @@ class DispatchParentTapNotification implements ShouldQueue
             return;
         }
 
+        // Broadcast at most once per job run, and only if a message was
+        // actually queued below — a wake-up nudge with nothing to claim
+        // would just cost every idle device a wasted /claim round-trip.
+        $queuedSms = false;
+
         $preferenceKey = $event->event_type === TapEventType::In ? 'notify_in' : 'notify_out';
         $verb = $event->event_type === TapEventType::In ? 'tapped in' : 'tapped out';
         $studentName = Person::find($event->person_id)?->display_name ?? 'Your child';
@@ -117,6 +123,7 @@ class DispatchParentTapNotification implements ShouldQueue
                     'status' => 'pending',
                     'expires_at' => Date::now()->addMinutes(30),
                 ]);
+                $queuedSms = true;
             }
 
             foreach ($parent->deviceTokens as $deviceToken) {
@@ -130,6 +137,10 @@ class DispatchParentTapNotification implements ShouldQueue
                     $deviceToken->delete();
                 }
             }
+        }
+
+        if ($queuedSms) {
+            broadcast(new SmsGatewayWakeUp);
         }
     }
 
