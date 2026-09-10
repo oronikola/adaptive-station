@@ -1,21 +1,39 @@
 import InputError from '@/Components/InputError';
+import Pagination from '@/Components/admin/Pagination';
 import { useToast } from '@/Components/toast/ToastProvider';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useState } from 'react';
-import { PaginatedData, PaginationLink, Tenant } from '@/types';
+import { useRef, useState } from 'react';
+import { PaginatedData, Tenant } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
-interface PaginationBarProps {
-    links: PaginationLink[];
-}
-
 const STATUS_PILL_CLASS: Record<Tenant['status'], string> = {
     active: 'pf-pill--active',
-    suspended: 'pft-pill--suspended',
-    archived: 'pft-pill--archived',
+    suspended: 'pf-pill--suspended',
+    archived: 'pf-pill--archived',
 };
+
+const TIMEZONES = [
+    'Asia/Manila',
+    'Asia/Singapore',
+    'Asia/Jakarta',
+    'Asia/Bangkok',
+    'Asia/Kolkata',
+    'Asia/Tokyo',
+    'Asia/Seoul',
+    'Asia/Shanghai',
+    'Asia/Dubai',
+    'Europe/London',
+    'Europe/Paris',
+    'America/New_York',
+    'America/Chicago',
+    'America/Denver',
+    'America/Los_Angeles',
+    'Pacific/Auckland',
+    'Australia/Sydney',
+    'UTC',
+];
 
 function formatDate(value: string): string {
     return new Date(value).toLocaleDateString(undefined, {
@@ -25,54 +43,14 @@ function formatDate(value: string): string {
     });
 }
 
-function PaginationBar({ links }: PaginationBarProps) {
-    if (!links || links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="pf-pagination">
-            {links.map((link, index) => {
-                const label = link.label
-                    .replace('&laquo; Previous', '‹ Previous')
-                    .replace('Next &raquo;', 'Next ›');
-
-                if (link.url === null) {
-                    return (
-                        <span key={index} className="pf-page-link pf-page-link--disabled">
-                            {label}
-                        </span>
-                    );
-                }
-
-                return (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        preserveScroll
-                        className={
-                            'pf-page-link' +
-                            (link.active ? ' pf-page-link--active' : '')
-                        }
-                    >
-                        {label}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
-}
-
-// Mirrors the server-side Str::slug() normalization in
-// StoreTenantRequest::prepareForValidation() — this is only a preview so the
-// operator sees the code they'll actually get; the backend re-normalizes
-// regardless of what reaches it.
-function slugify(value: string): string {
-    return value
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+// Generates a concise acronym-style code from a school name.
+// e.g. "Santo Tomas National High School" → "stnhs"
+// e.g. "Pilgrims Christian College" → "pcc"
+// The backend always re-normalizes for uniqueness, so this is just a preview.
+function generateCode(name: string): string {
+    const words = name.trim().split(/\s+/).filter((w) => w.length > 0);
+    if (words.length === 0) return '';
+    return words.map((w) => w[0].toLowerCase()).join('').slice(0, 8);
 }
 
 interface TenantsListScreenProps {
@@ -89,48 +67,61 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
     const { showToast } = useToast();
     const [tab, setTab] = useState<ClientTab>('all');
     const [codeTouched, setCodeTouched] = useState(false);
+    const [codeEditing, setCodeEditing] = useState(false);
+    const [codeFormatError, setCodeFormatError] = useState('');
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         code: '',
         timezone: 'Asia/Manila',
     });
 
-    const filterForm = useForm({
-        search: filters.search ?? '',
-        status: filters.status ?? '',
-    });
+    // Debounce timer for search
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [searchValue, setSearchValue] = useState(filters.search ?? '');
+    const [statusValue, setStatusValue] = useState(filters.status ?? '');
+
+    function handleSearchChange(value: string) {
+        setSearchValue(value);
+        if (debounceRef.current) { clearTimeout(debounceRef.current); }
+        debounceRef.current = setTimeout(() => {
+            router.get(route('platform.tenants.index'), { search: value, status: statusValue }, { preserveState: true });
+        }, 400);
+    }
 
     function submitFilters(e: React.FormEvent) {
         e.preventDefault();
-        router.get(route('platform.tenants.index'), filterForm.data, { preserveState: true });
+        if (debounceRef.current) { clearTimeout(debounceRef.current); }
+        router.get(route('platform.tenants.index'), { search: searchValue, status: statusValue }, { preserveState: true });
     }
 
     function handleNameChange(value: string) {
         setData((current) => ({
             ...current,
             name: value,
-            code: codeTouched ? current.code : slugify(value),
+            code: codeTouched ? current.code : generateCode(value),
         }));
     }
 
     function handleCodeChange(value: string) {
         setCodeTouched(true);
         setData('code', value);
+        if (value && !/^[a-z0-9-]+$/.test(value)) {
+            setCodeFormatError('Only lowercase letters, numbers, and hyphens.');
+        } else {
+            setCodeFormatError('');
+        }
     }
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
+        if (codeFormatError) { return; }
+        if (!data.name.trim()) { return; }
         post(route('platform.tenants.store'), {
-            // No onSuccess toast here — the store action redirects to the
-            // tenant's detail page, and that redirect's `success` flash is
-            // already turned into a toast automatically by AppShell.
             onSuccess: () => {
                 setCodeTouched(false);
+                setCodeEditing(false);
                 reset();
             },
-            // A validation failure re-renders this same page (no flash),
-            // so it's the one case the automatic flash toast can't cover —
-            // this is the one-line manual call for that gap.
             onError: () => {
                 showToast({
                     type: 'error',
@@ -203,8 +194,8 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                 </div>
 
                 {tab === 'all' && (
-                    <>
-                        <form onSubmit={submitFilters} className="pf-filter-bar">
+                    <div className="pft-tab-panel">
+                        <form onSubmit={submitFilters} className="pf-filter-bar" role="search">
                             <div className="pf-field pft-search-field">
                                 <label htmlFor="search">Search</label>
                                 <svg viewBox="0 0 24 24">
@@ -214,8 +205,8 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                 <input
                                     id="search"
                                     type="text"
-                                    value={filterForm.data.search}
-                                    onChange={(e) => filterForm.setData('search', e.target.value)}
+                                    value={searchValue}
+                                    onChange={(e) => handleSearchChange(e.target.value)}
                                     placeholder="Client name or code..."
                                 />
                             </div>
@@ -224,8 +215,8 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                 <label htmlFor="status">Status</label>
                                 <select
                                     id="status"
-                                    value={filterForm.data.status}
-                                    onChange={(e) => filterForm.setData('status', e.target.value)}
+                                    value={statusValue}
+                                    onChange={(e) => setStatusValue(e.target.value)}
                                 >
                                     <option value="">All</option>
                                     <option value="active">Active</option>
@@ -254,7 +245,7 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                 <div>
                                     <h2 className="pf-panel-title">All Clients</h2>
                                     <p className="pf-panel-count">
-                                        {tenants.data.length} shown
+                                        {tenants.from !== null ? `${tenants.from}–${tenants.to} of ${tenants.total}` : 'No results'}
                                     </p>
                                 </div>
                             </div>
@@ -279,9 +270,21 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                                     <svg viewBox="0 0 24 24">
                                                         <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
                                                     </svg>
-                                                    {hasFilters
-                                                        ? 'No clients match these filters.'
-                                                        : 'No clients yet.'}
+                                                    {hasFilters ? (
+                                                            'No clients match these filters.'
+                                                        ) : (
+                                                            <>
+                                                                No clients yet.{' '}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setTab('add')}
+                                                                    className="pf-row-action"
+                                                                    style={{ display: 'inline', marginLeft: 4 }}
+                                                                >
+                                                                    Provision your first client →
+                                                                </button>
+                                                            </>
+                                                        )}
                                                 </td>
                                             </tr>
                                         )}
@@ -336,13 +339,13 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                 </table>
                             </div>
 
-                            <PaginationBar links={tenants.links} />
+                            <Pagination links={tenants.links} />
                         </div>
-                    </>
+                    </div>
                 )}
 
                 {tab === 'add' && (
-                    <div className="pf-panel">
+                    <div className="pf-panel pft-tab-panel">
                         <div className="pf-panel-header">
                             <div>
                                 <h2 className="pf-panel-title">Add Client</h2>
@@ -368,29 +371,49 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
 
                                 <div className="pf-field">
                                     <label htmlFor="code">Code (short, unique)</label>
-                                    <input
-                                        id="code"
-                                        type="text"
-                                        value={data.code}
-                                        onChange={(e) => handleCodeChange(e.target.value)}
-                                        className="font-mono"
-                                        required
-                                    />
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                        <input
+                                            id="code"
+                                            type="text"
+                                            value={data.code}
+                                            onChange={(e) => handleCodeChange(e.target.value)}
+                                            className="font-mono"
+                                            readOnly={!codeEditing}
+                                            style={!codeEditing ? { background: 'var(--as-surface-active)', color: 'var(--as-text-muted)', cursor: 'default' } : undefined}
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            className="pf-btn pf-btn-secondary"
+                                            style={{ flexShrink: 0, padding: '0 12px', fontSize: 12 }}
+                                            onClick={() => setCodeEditing((v) => !v)}
+                                        >
+                                            {codeEditing ? 'Lock' : 'Edit'}
+                                        </button>
+                                    </div>
                                     <p className="pf-field-hint">
-                                        Auto-filled from the school name — edit if you want something different.
+                                        Auto-filled from the school name — click Edit to override. Only lowercase letters, numbers, and hyphens.
                                     </p>
+                                    {codeFormatError && (
+                                        <p className="pf-field-error-msg">{codeFormatError}</p>
+                                    )}
                                     <InputError message={errors.code} className="mt-2" />
                                 </div>
 
                                 <div className="pf-field">
-                                    <label htmlFor="timezone">Timezone (e.g. Asia/Manila)</label>
-                                    <input
+                                    <label htmlFor="timezone">Timezone</label>
+                                    <select
                                         id="timezone"
-                                        type="text"
                                         value={data.timezone}
                                         onChange={(e) => setData('timezone', e.target.value)}
+                                        className="font-mono"
                                         required
-                                    />
+                                    >
+                                        {TIMEZONES.map((tz) => (
+                                            <option key={tz} value={tz}>{tz}</option>
+                                        ))}
+                                    </select>
+                                    <p className="pf-field-hint">Select the school's local timezone (IANA name).</p>
                                     <InputError message={errors.timezone} className="mt-2" />
                                 </div>
                             </div>
@@ -405,8 +428,8 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                 </button>
                                 <button
                                     type="submit"
-                                    className="pf-btn pf-btn-primary"
-                                    disabled={processing}
+                                    className={'pf-btn pf-btn-primary' + (processing ? ' pf-btn--loading' : '')}
+                                    disabled={processing || Boolean(codeFormatError)}
                                 >
                                     <svg viewBox="0 0 24 24">
                                         <path d="M12 5v14M5 12h14" />
