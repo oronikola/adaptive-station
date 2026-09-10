@@ -1,6 +1,8 @@
 import AdminLayout from '@/Layouts/AdminLayout';
+import Pagination from '@/Components/admin/Pagination';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import type { PaginatedData, PaginationLink, Person, Station } from '@/types';
+import { useState } from 'react';
+import type { PaginatedData, Person, Station } from '@/types';
 import { personRouteKey } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
@@ -52,41 +54,6 @@ function formatLocalTime(value: string): string {
     });
 }
 
-function PaginationBar({ links }: { links: PaginationLink[] }) {
-    if (!links || links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="pf-pagination">
-            {links.map((link, index) => {
-                const label = link.label
-                    .replace('&laquo; Previous', '‹ Previous')
-                    .replace('Next &raquo;', 'Next ›');
-
-                if (link.url === null) {
-                    return (
-                        <span key={index} className="pf-page-link pf-page-link--disabled">
-                            {label}
-                        </span>
-                    );
-                }
-
-                return (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        preserveScroll
-                        className={'pf-page-link' + (link.active ? ' pf-page-link--active' : '')}
-                    >
-                        {label}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
-}
-
 export default function AttendanceSearchScreen({
     events,
     filters,
@@ -107,16 +74,45 @@ export default function AttendanceSearchScreen({
         event_type: filters.event_type ?? '',
     });
 
+    const [isFiltering, setIsFiltering] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+
     function submit(e: React.FormEvent) {
         e.preventDefault();
-        router.get(route('portal.attendance.index'), data, { preserveState: true });
+        setIsFiltering(true);
+        router.get(route('portal.attendance.index'), data, {
+            preserveState: true,
+            onFinish: () => setIsFiltering(false),
+        });
+    }
+
+    async function handleExport() {
+        setIsExporting(true);
+        try {
+            const params = new URLSearchParams(
+                Object.fromEntries(Object.entries(data).filter(([, v]) => v !== '')),
+            );
+            const response = await fetch(`${route('portal.attendance.export')}?${params.toString()}`);
+            if (!response.ok) throw new Error('Export failed');
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const now = new Date();
+            const month = now.toLocaleDateString('en-US', { month: 'long' });
+            const day = String(now.getDate()).padStart(2, '0');
+            const year = now.getFullYear();
+            a.download = `${month} ${day} ${year} - ATTENDANCE.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch {
+            alert('Export failed. Please try again.');
+        } finally {
+            setIsExporting(false);
+        }
     }
 
     const hasFilters = Object.values(filters).some((v) => v);
-
-    const exportUrl = `${route('portal.attendance.export')}?${new URLSearchParams(
-        Object.fromEntries(Object.entries(data).filter(([, v]) => v !== '')),
-    ).toString()}`;
 
     return (
         <AdminLayout>
@@ -147,13 +143,18 @@ export default function AttendanceSearchScreen({
                             </svg>
                             Daily Summary
                         </Link>
-                        <a href={exportUrl} className="pf-btn pf-btn-secondary">
+                        <button
+                            type="button"
+                            className={'pf-btn pf-btn-secondary' + (isExporting ? ' pf-btn--loading' : '')}
+                            onClick={handleExport}
+                            disabled={isExporting}
+                        >
                             <svg viewBox="0 0 24 24">
                                 <path d="M12 4v10m0 0-3.5-3.5M12 14l3.5-3.5" />
                                 <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
                             </svg>
                             Export CSV
-                        </a>
+                        </button>
                     </div>
                 </div>
 
@@ -188,7 +189,7 @@ export default function AttendanceSearchScreen({
                             <option value="">All</option>
                             {people.map((person) => (
                                 <option key={person.id} value={person.id}>
-                                    {person.display_name}
+                                    {person.display_name}{(person as any).grade_level ? ` (${(person as any).grade_level})` : ''}
                                 </option>
                             ))}
                         </select>
@@ -234,7 +235,11 @@ export default function AttendanceSearchScreen({
                     </div>
 
                     <div className="pf-filter-bar-actions">
-                        <button type="submit" className="pf-btn pf-btn-primary">
+                        <button
+                            type="submit"
+                            className={'pf-btn pf-btn-primary' + (isFiltering ? ' pf-btn--loading' : '')}
+                            disabled={isFiltering}
+                        >
                             Filter
                         </button>
                         {hasFilters && (
@@ -249,7 +254,7 @@ export default function AttendanceSearchScreen({
                     <div className="pf-panel-header">
                         <div>
                             <h2 className="pf-panel-title">Tap Events</h2>
-                            <p className="pf-panel-count">{events.data.length} shown</p>
+                            <p className="pf-panel-count">{events.from !== null ? `${events.from}–${events.to} of ${events.total}` : 'No results'}</p>
                         </div>
                     </div>
 
@@ -308,7 +313,7 @@ export default function AttendanceSearchScreen({
                         </table>
                     </div>
 
-                    <PaginationBar links={events.links} />
+                    <Pagination links={events.links} />
                 </div>
             </div>
         </AdminLayout>

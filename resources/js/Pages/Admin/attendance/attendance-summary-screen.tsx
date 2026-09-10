@@ -1,6 +1,8 @@
 import AdminLayout from '@/Layouts/AdminLayout';
+import Pagination from '@/Components/admin/Pagination';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import type { PaginatedData, PaginationLink, Station } from '@/types';
+import { useState } from 'react';
+import type { PaginatedData, Station } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -31,41 +33,6 @@ function formatDate(value: string): string {
     });
 }
 
-function PaginationBar({ links }: { links: PaginationLink[] }) {
-    if (!links || links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="pf-pagination">
-            {links.map((link, index) => {
-                const label = link.label
-                    .replace('&laquo; Previous', '‹ Previous')
-                    .replace('Next &raquo;', 'Next ›');
-
-                if (link.url === null) {
-                    return (
-                        <span key={index} className="pf-page-link pf-page-link--disabled">
-                            {label}
-                        </span>
-                    );
-                }
-
-                return (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        preserveScroll
-                        className={'pf-page-link' + (link.active ? ' pf-page-link--active' : '')}
-                    >
-                        {label}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
-}
-
 export default function AttendanceSummaryScreen({
     summary,
     filters,
@@ -75,6 +42,7 @@ export default function AttendanceSummaryScreen({
     filters: SummaryFilters;
     stations: Station[];
 }) {
+    const [isFiltering, setIsFiltering] = useState(false);
     const { data, setData } = useForm({
         date_from: filters.date_from ?? '',
         date_to: filters.date_to ?? '',
@@ -84,7 +52,11 @@ export default function AttendanceSummaryScreen({
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
-        router.get(route('portal.attendance.summary'), data, { preserveState: true });
+        setIsFiltering(true);
+        router.get(route('portal.attendance.summary'), data, {
+            preserveState: true,
+            onFinish: () => setIsFiltering(false),
+        });
     }
 
     const hasFilters = Object.values(filters).some((v) => v);
@@ -171,7 +143,11 @@ export default function AttendanceSummaryScreen({
                     </div>
 
                     <div className="pf-filter-bar-actions">
-                        <button type="submit" className="pf-btn pf-btn-primary">
+                        <button
+                            type="submit"
+                            className={'pf-btn pf-btn-primary' + (isFiltering ? ' pf-btn--loading' : '')}
+                            disabled={isFiltering}
+                        >
                             Filter
                         </button>
                         {hasFilters && (
@@ -186,7 +162,7 @@ export default function AttendanceSummaryScreen({
                     <div className="pf-panel-header">
                         <div>
                             <h2 className="pf-panel-title">Daily Totals</h2>
-                            <p className="pf-panel-count">{summary.data.length} shown</p>
+                            <p className="pf-panel-count">{summary.from !== null ? `${summary.from}–${summary.to} of ${summary.total}` : 'No results'}</p>
                         </div>
                     </div>
 
@@ -219,7 +195,7 @@ export default function AttendanceSummaryScreen({
                         </table>
                     </div>
 
-                    <PaginationBar links={summary.links} />
+                    <Pagination links={summary.links} />
                 </div>
             </div>
         </AdminLayout>
