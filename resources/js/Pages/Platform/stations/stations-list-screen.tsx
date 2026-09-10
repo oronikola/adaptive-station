@@ -4,7 +4,8 @@ import SecretOnceCallout from '@/Components/SecretOnceCallout';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { PaginatedData, PaginationLink, Tenant } from '@/types';
+import Pagination from '@/Components/admin/Pagination';
+import { PaginatedData, Tenant } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -15,48 +16,6 @@ interface StationRow {
     status: string;
     tenant?: { name: string } | null;
     tenant_id: number;
-}
-
-interface PaginationBarProps {
-    links: PaginationLink[];
-}
-
-function PaginationBar({ links }: PaginationBarProps) {
-    if (!links || links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="pf-pagination">
-            {links.map((link, index) => {
-                const label = link.label
-                    .replace('&laquo; Previous', '‹ Previous')
-                    .replace('Next &raquo;', 'Next ›');
-
-                if (link.url === null) {
-                    return (
-                        <span key={index} className="pf-page-link pf-page-link--disabled">
-                            {label}
-                        </span>
-                    );
-                }
-
-                return (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        preserveScroll
-                        className={
-                            'pf-page-link' +
-                            (link.active ? ' pf-page-link--active' : '')
-                        }
-                    >
-                        {label}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
 }
 
 interface StationsListScreenProps {
@@ -70,21 +29,40 @@ interface PagePropsWithFlash {
     };
 }
 
+// Mirrors server-side slugification for station codes
+function slugifyStation(value: string): string {
+    return value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
 export default function StationsListScreen({ stations, tenants }: StationsListScreenProps) {
     const { flash } = usePage().props as PagePropsWithFlash;
 
     const [createOpen, setCreateOpen] = useState(false);
+    const [stationCodeTouched, setStationCodeTouched] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         tenant_id: tenants[0]?.id ?? '',
         name: '',
         station_code: '',
     });
 
+    function handleStationNameChange(value: string) {
+        setData((current) => ({
+            ...current,
+            name: value,
+            station_code: stationCodeTouched ? current.station_code : slugifyStation(value),
+        }));
+    }
+
     function submit(e: React.FormEvent) {
         e.preventDefault();
         post(route('platform.stations.store'), {
             onSuccess: () => {
                 setCreateOpen(false);
+                setStationCodeTouched(false);
                 reset();
             },
         });
@@ -139,7 +117,7 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                         <div>
                             <h2 className="pf-panel-title">All Stations</h2>
                             <p className="pf-panel-count">
-                                {stations.data.length} shown
+                                {stations.from !== null ? `${stations.from}–${stations.to} of ${stations.total}` : 'No results'}
                             </p>
                         </div>
                     </div>
@@ -175,12 +153,15 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                                             <span
                                                 className={
                                                     'pf-pill ' +
-                                                    (station.status === 'active'
-                                                        ? 'pf-pill--active'
-                                                        : 'pf-pill--inactive')
+                                                    ({
+                                                        active: 'pf-pill--active',
+                                                        pending_activation: 'pf-pill--suspended',
+                                                        disabled: 'pf-pill--archived',
+                                                        retired: 'pf-pill--archived',
+                                                    }[station.status] ?? 'pf-pill--inactive')
                                                 }
                                             >
-                                                {station.status}
+                                                {station.status.replace(/_/g, ' ')}
                                             </span>
                                         </td>
                                         <td>
@@ -203,18 +184,18 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                         </table>
                     </div>
 
-                    <PaginationBar links={stations.links} />
+                    <Pagination links={stations.links} />
                 </div>
             </div>
 
-            <Modal show={createOpen} onClose={() => setCreateOpen(false)}>
+            <Modal show={createOpen} onClose={() => { setCreateOpen(false); setStationCodeTouched(false); reset(); }}>
                 <form onSubmit={submit} className="pf-modal">
                     <div className="pf-modal-header">
                         <h3 className="pf-modal-title">Add Station</h3>
                         <button
                             type="button"
                             className="pf-modal-close"
-                            onClick={() => setCreateOpen(false)}
+                            onClick={() => { setCreateOpen(false); setStationCodeTouched(false); reset(); }}
                             aria-label="Close"
                         >
                             <svg viewBox="0 0 24 24">
@@ -245,7 +226,7 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                             id="name"
                             type="text"
                             value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
+                            onChange={(e) => handleStationNameChange(e.target.value)}
                             autoFocus
                             required
                         />
@@ -258,10 +239,11 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                             id="station_code"
                             type="text"
                             value={data.station_code}
-                            onChange={(e) => setData('station_code', e.target.value)}
+                            onChange={(e) => { setStationCodeTouched(true); setData('station_code', e.target.value); }}
                             className="font-mono"
                             required
                         />
+                        <p className="pf-field-hint">Auto-filled from the station name — edit if you want something different.</p>
                         <InputError message={errors.station_code} className="mt-2" />
                     </div>
 
@@ -269,13 +251,13 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                         <button
                             type="button"
                             className="pf-btn pf-btn-secondary"
-                            onClick={() => setCreateOpen(false)}
+                            onClick={() => { setCreateOpen(false); setStationCodeTouched(false); reset(); }}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="pf-btn pf-btn-primary"
+                            className={'pf-btn pf-btn-primary' + (processing ? ' pf-btn--loading' : '')}
                             disabled={processing}
                         >
                             Create
