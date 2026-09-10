@@ -1,0 +1,115 @@
+# Critique: All Screens
+**Method:** Dual-assessment (design review + code scan)  
+**Date:** 2026-09-10  
+**Target:** All Pages — Platform, Admin/Portal, Kiosk, Auth
+
+---
+
+## Design Health Score
+
+| Heuristic | Score | Note |
+|---|---|---|
+| H1 Visibility of system status | 2/4 | Kiosk excellent. Admin processing state missing on People Edit save button. Platform "Updated [time]" is SSR-render timestamp — stale after load. |
+| H2 Match between system and real world | 3/4 | "Taps" metaphor correct. Platform says "Clients", admin says "school" — intentional split, consistent within each surface. |
+| H3 User control and freedom | 2/4 | Card Deactivate has no confirmation modal. No undo. Breadcrumbs absent — only inline "Back to People" link. |
+| H4 Consistency and standards | 2/4 | People Edit is an island: Tailwind dark-mode classes (`rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800`) while every other screen uses the `pf-*` system. The edit form's "Back to People" link uses `text-indigo-600` not `--as-brand-blue`. |
+| H5 Error prevention | 2/4 | Card Deactivate is a single click — no confirm. No required-field marking before submit. |
+| H6 Recognition rather than recall | 2/4 | Sidebar icons are unlabelled when collapsed. Filter Reset button always shows on RFID Cards (no `hasFilters` guard unlike Tenants). |
+| H7 Flexibility and efficiency | 1/4 | Filters require explicit Submit click. No bulk actions. No keyboard shortcuts. |
+| H8 Aesthetic and minimalist design | 3/4 | Hero pattern, pf-panel table structure, and status pills are coherent. Kiosk is excellent. People Edit breaks the language. Platform dashboard shows "Clients" + "Active Clients" as two separate stat cards — redundant. |
+| H9 Error recognition and recovery | 3/4 | InputError component wires validation well. Kiosk error states (color + icon + text) are strong. |
+| H10 Help and documentation | 2/4 | Guardian section has exemplary explanatory copy. Empty states ("No people found", "No clients yet") are dead ends — no illustration, no CTA. |
+
+**Total: 22 / 40**
+
+---
+
+## Design Specificity Verdict
+
+**Moderate.** The `pf-*` / `pft-*` CSS system, token layer, and component patterns are coherent and now correctly cross-referenced after recent fixes. The system breaks down at one critical seam: the People Edit screen — the most-used data-entry screen for school registrars — is styled with a different visual language than every screen surrounding it.
+
+---
+
+## Overall Impression
+
+The application has a clear, quiet identity — navy sidebar, clean tables, functional hero headers — and that reads well. The Kiosk is a genuine standout: it solves its specific problem (physical RFID reader, no mouse, glanceable feedback) with real craft. Dashboard widgets give honest data without fabricated trends.
+
+The gap is screen-to-screen consistency. Navigating from the People list into People Edit feels like entering a different product. The Tailwind form language (white card, `space-y-6`, dark-mode classes) is not wrong on its own — but it was clearly built at a different time and never aligned with the `pf-*` system that now governs everything else.
+
+Empty states and missing confirmation dialogs are the two areas where the product stops feeling "quiet and confident" and starts feeling unfinished.
+
+---
+
+## What's Working
+
+- **Kiosk screen** — focused, beautiful, correct UX for its physical context. Pulse animation, live clock, and 3-second feedback clear are exactly right.
+- **Hero pattern** — icon + title + subtitle + actions repeats reliably across all list screens. Strong orienting signal.
+- **Status pill system** — now correctly namespaced and styled (`pf-pill--active/inactive/suspended/archived/warning/in-progress`).
+- **Dashboard widgets** — stat cards, radial gauge, and bar chart show real ratios from real data. No fabricated trends.
+- **Activity feed** — `timeAgo()` relative timestamps and color-coded dots are appropriate for glanceable scanning.
+- **Pagination** — consolidated to one component with `aria-label="Pagination"`.
+- **Guardian section** — the copy explaining what the guardian link does and why is one of the best pieces of inline help in the app.
+
+---
+
+## Priority Issues
+
+### P0 — Ships with a trust-destroying defect
+
+**Card Deactivate has no confirmation.**  
+`people-edit-screen.tsx:371–377` — `<Link method="patch" href={route('portal.rfid-cards.deactivate', card.id)} className="pf-row-action pf-row-action--danger">Deactivate</Link>` fires a PATCH immediately on click. A single misclick deactivates a physical RFID card with no undo. For school registrars managing dozens of students, this is one accidental tap away from a student being locked out at the gate. Needs a confirmation modal (match the pattern in `people-edit-screen.tsx:389–434` that already exists for Assign).
+
+---
+
+### P1 — Severely inconsistent; damages trust and daily use
+
+**People Edit is visually isolated from the rest of the app.**  
+`people-edit-screen.tsx:96–297` — The entire details form uses Tailwind (`mx-auto max-w-3xl space-y-6 px-4 py-6`, `rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800`, `text-gray-900 dark:text-gray-100`, `border-gray-200 dark:border-gray-700`, `text-indigo-600`). Every other admin screen uses `pf-panel`, `pf-field`, `pf-btn`, and the `--as-*` token layer. Registrars land here from People List (navy `pf-*` skin) and the form looks white/light with indigo accents — a different product. Fix: rewrite the form section to match `pf-panel` / `pf-field` / `pf-btn` pattern. The RFID table already at the bottom of the same screen uses `pf-panel` correctly — copy that pattern upward.
+
+**Platform dashboard "Updated" time is frozen at SSR render.**  
+`Pages/Platform/dashboard/dashboard-screen.tsx:211` — `{new Date().toLocaleString(...)}` evaluates once when the server renders the page. After the initial load, as Inertia keeps the page alive, this timestamp goes stale while showing a "freshness" signal to the operator. Remove the timestamp, or make it client-side with a `useState` / `useEffect` that actually refreshes, or show it only as "Loaded at [time]" to set honest expectations.
+
+---
+
+### P2 — Frustrating; workaroundable but erodes confidence
+
+**Empty states are dead ends.**  
+"No people found", "No clients yet", "No imports run yet" — bare text with no illustration and no CTA button. For a new school just provisioned, the People list, RFID Cards list, and Stations list will all show empty states simultaneously. The first-run experience is a wall of "nothing here." Add a contextual CTA ("Add your first person →") to each empty state.
+
+**Pagination shows "N shown" but no total or page context.**  
+Every list screen shows `{people.data.length} shown` but never the total count or "Page 2 of 5." Users cannot tell if they've seen all records. Fix: pass `total` from the paginated data and render "Showing 15 of 342" or similar.
+
+**RFID Cards filter bar Reset always renders** (no `hasFilters` guard).  
+`rfid-cards-list-screen.tsx:78–83` — Reset link appears even when both filters are empty, unlike Tenants list which conditionally shows it. Minor but inconsistent.
+
+---
+
+### P3 — Minor polish
+
+- **Platform dashboard: two redundant "Client" stat cards.** "Clients" (total) and "Active Clients" both show in the 4-card grid — the ActivationGauge widget already below shows the ratio. Drop one card or merge as "Clients — N active of M total".
+- **Kiosk clock hardcoded to Asia/Manila** (`kiosk-screen.tsx:404`). The station's timezone is already stored in the database and returned during sync (`syncMasterData`). The clock should use the station's timezone, not a hardcoded string.
+- **`photo_url` is a plain text input** (`people-edit-screen.tsx:183–188`). A photo URL field invites paste errors. Should at minimum be `type="url"` to get native browser validation.
+- **Activity feed has no type filter.** High-volume schools will see tap events drown out admin actions. A simple "Actor type" toggle (system / user / station) would help registrars find the action they're looking for.
+- **Inline padding styles on dashboard panels** (`style={{ padding: '4px 24px 20px' }}`). Should be a CSS class for consistency and theme-awareness.
+
+---
+
+## Persona Red Flags
+
+**Alex — IT admin / power user:**
+- Card Deactivate with no confirm is his biggest nightmare: bulk card management during enrollment, one misclick.
+- No keyboard shortcut to jump to search or "Add Person" from any list screen.
+- The "N shown" without totals means he can't gauge how long a bulk operation will take.
+
+**Sam — School registrar / non-technical:**
+- Entering People Edit and seeing a visually different form is disorienting. She may wonder if she's in the right place.
+- Empty states give her no cue about what to do first when a school is newly provisioned.
+- No confirmation on Deactivate makes her anxious about accidentally breaking a student's access.
+
+---
+
+## Questions to Consider
+
+1. Should People Edit be the next fix target — it's the highest-traffic data entry screen and the largest consistency gap?
+2. Should empty states get illustrations + CTAs, or is a simpler "X shown of Y total" header count + text link sufficient for this audience?
+3. The platform dashboard's stale "Updated" timestamp — remove it, make it live, or relabel as "Loaded at"?

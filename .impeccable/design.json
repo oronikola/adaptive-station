@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-10T00:00:00Z",
+  "title": "Design System: Adaptive Station",
+  "extensions": {
+    "colorMeta": {
+      "brand-dark":    { "role": "primary",  "displayName": "Abyss",       "canonical": "#0f172a", "tonalRamp": ["#020408","#0a1120","#0f172a","#1a2540","#1e293b","#334155","#475569","#64748b"] },
+      "brand":         { "role": "primary",  "displayName": "Gunmetal",    "canonical": "#1e293b", "tonalRamp": ["#0a1120","#0f172a","#1a2540","#1e293b","#2d3f55","#334155","#475569","#64748b"] },
+      "brand-mid":     { "role": "primary",  "displayName": "Slate Deck",  "canonical": "#334155", "tonalRamp": ["#1a2540","#1e293b","#2d3f55","#334155","#47576b","#475569","#64748b","#94a3b8"] },
+      "brand-muted":   { "role": "secondary","displayName": "Steel",       "canonical": "#475569", "tonalRamp": ["#1e293b","#334155","#3c4c61","#475569","#5a6a80","#64748b","#94a3b8","#cbd5e1"] },
+      "brand-light":   { "role": "secondary","displayName": "Ash",         "canonical": "#64748b", "tonalRamp": ["#334155","#475569","#5a6a80","#64748b","#7b8fa5","#94a3b8","#b8c4d0","#e2e8f0"] },
+      "surface-bg":    { "role": "neutral",  "displayName": "Canvas",      "canonical": "#f4f6f9", "tonalRamp": ["#cbd5e1","#e2e8f0","#eef1f6","#f1f5f9","#f4f6f9","#f8fafc","#fafcfe","#ffffff"] },
+      "surface":       { "role": "neutral",  "displayName": "White",       "canonical": "#ffffff", "tonalRamp": ["#e2e8f0","#f1f5f9","#f4f6f9","#f8fafc","#fafcfe","#ffffff","#ffffff","#ffffff"] },
+      "border":        { "role": "neutral",  "displayName": "Hairline",    "canonical": "#e2e8f0", "tonalRamp": ["#94a3b8","#b8c4d0","#cbd5e1","#dce4ee","#e2e8f0","#eef1f6","#f1f5f9","#f8fafc"] },
+      "text-primary":  { "role": "neutral",  "displayName": "Ink",         "canonical": "#0f172a", "tonalRamp": ["#020408","#0a1120","#0f172a","#1a2540","#1e293b","#334155","#475569","#64748b"] },
+      "text-body":     { "role": "neutral",  "displayName": "Graphite",    "canonical": "#334155", "tonalRamp": ["#1a2540","#1e293b","#2d3f55","#334155","#47576b","#475569","#64748b","#94a3b8"] },
+      "text-secondary":{ "role": "neutral",  "displayName": "Pewter",      "canonical": "#64748b", "tonalRamp": ["#334155","#475569","#5a6a80","#64748b","#7b8fa5","#94a3b8","#b8c4d0","#e2e8f0"] },
+      "text-muted":    { "role": "neutral",  "displayName": "Fog",         "canonical": "#94a3b8", "tonalRamp": ["#475569","#64748b","#7b8fa5","#94a3b8","#adb8c8","#cbd5e1","#e2e8f0","#f1f5f9"] },
+      "success":       { "role": "semantic", "displayName": "Emerald",     "canonical": "#1a8a4c", "tonalRamp": ["#0a4a28","#0f6637","#1a8a4c","#22a860","#2dc774","#53dea0","#a7f0c8","#e3f6ea"] },
+      "warning":       { "role": "semantic", "displayName": "Amber",       "canonical": "#c1791f", "tonalRamp": ["#6b4010","#8b5515","#c1791f","#d4892a","#e8a040","#f5c070","#fde0a0","#fdf1e0"] },
+      "danger":        { "role": "semantic", "displayName": "Crimson",     "canonical": "#dc2626", "tonalRamp": ["#7f1d1d","#991b1b","#b91c1c","#dc2626","#ef4444","#f87171","#fca5a5","#fef2f2"] },
+      "info":          { "role": "semantic", "displayName": "Steel-Info",  "canonical": "#475569", "tonalRamp": ["#1e293b","#334155","#3c4c61","#475569","#5a6a80","#64748b","#94a3b8","#f1f5f9"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Auth page hero and landing section headlines. Tight tracking for visual compression at large scale." },
+      "headline": { "displayName": "Headline", "purpose": "Page-level headings inside content cards (People, RFID Cards, Stations, etc.)." },
+      "title":    { "displayName": "Title", "purpose": "Section titles within panels, modal headings." },
+      "body":     { "displayName": "Body", "purpose": "All paragraph, table cell, form field, and description text." },
+      "label":    { "displayName": "Label", "purpose": "Column headers, pill eyebrows, status tags, uppercase nav text. Positive tracking compensates for small size." },
+      "mono":     { "displayName": "Mono", "purpose": "API keys, integration tokens, import keys only. Never for general UI." }
+    },
+    "shadows": [
+      { "name": "card-ambient",  "value": "0 8px 24px rgba(15,35,70,0.08)",      "purpose": "Default resting shadow on content cards floating above the shell." },
+      { "name": "card-hover",    "value": "0 12px 30px rgba(15,35,70,0.12)",     "purpose": "Hover lift on interactive cards." },
+      { "name": "panel-sm",      "value": "0 4px 12px -8px rgba(23,74,150,0.75)","purpose": "Structural inner shadow on form panels and sub-panels." },
+      { "name": "overlay",       "value": "0 20px 44px -20px rgba(15,35,70,0.55)","purpose": "Deep modal and drawer shadow." },
+      { "name": "deep",          "value": "0 18px 30px -22px rgba(7,28,68,0.82)", "purpose": "Auth card and device-mock maximum presence." },
+      { "name": "button-glow",   "value": "0 8px 20px -8px rgba(71,85,105,0.45)", "purpose": "Diffuse halo under primary/danger buttons on dark backgrounds." }
+    ],
+    "motion": [
+      { "name": "ease-out",    "value": "cubic-bezier(0.23, 1, 0.32, 1)",    "purpose": "Standard easing for UI transitions (button, panel, accordion)." },
+      { "name": "ease-in-out", "value": "cubic-bezier(0.77, 0, 0.175, 1)",  "purpose": "Drawer and modal entry/exit." },
+      { "name": "ease-drawer", "value": "cubic-bezier(0.32, 0.72, 0, 1)",   "purpose": "Sidebar collapse and mobile drawer slide." },
+      { "name": "duration-fast","value": "100ms", "purpose": "Tactile press (scale). Instant feedback." },
+      { "name": "duration-std", "value": "160ms", "purpose": "Button hover, filter transition." },
+      { "name": "duration-slow","value": "260ms", "purpose": "Panel expand, content fade-in." }
+    ],
+    "breakpoints": [
+      { "name": "sm",  "value": "640px" },
+      { "name": "md",  "value": "768px" },
+      { "name": "lg",  "value": "1024px" },
+      { "name": "xl",  "value": "1280px" },
+      { "name": "2xl", "value": "1536px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Single primary action per form. Slate gradient, glass shimmer, tactile press.",
+      "html": "<button class=\"ds-btn-primary\">Save Changes</button>",
+      "css": ".ds-btn-primary { position: relative; overflow: hidden; isolation: isolate; display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.24); background: linear-gradient(180deg, #64748b 0%, #475569 50%, #334155 100%); color: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; line-height: 1; cursor: pointer; box-shadow: inset 0 1px 1px 0 rgba(255,255,255,0.42), inset 0 -1px 1px 0 rgba(0,0,0,0.14), 0 8px 20px -8px rgba(71,85,105,0.45); transition: transform 160ms cubic-bezier(0.23,1,0.32,1), filter 160ms cubic-bezier(0.23,1,0.32,1); } .ds-btn-primary::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.06) 45%, rgba(255,255,255,0) 100%); pointer-events: none; z-index: 1; } .ds-btn-primary:hover { transform: translateY(-1px); filter: brightness(1.08); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #475569; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Cancel, navigate-back actions on white surfaces. White glass with border.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { position: relative; overflow: hidden; isolation: isolate; display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; border: 1px solid rgba(226,232,240,0.9); background: rgba(255,255,255,0.85); color: #334155; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; line-height: 1; cursor: pointer; box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.95), inset 0 -1px 0 0 rgba(0,0,0,0.04), 0 1px 2px 0 rgba(0,0,0,0.05); transition: transform 160ms cubic-bezier(0.23,1,0.32,1), border-color 160ms ease, filter 160ms ease; } .ds-btn-secondary:hover { transform: translateY(-1px); border-color: #cbd5e1; filter: brightness(0.98); } .ds-btn-secondary:active { transform: scale(0.97); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #94a3b8; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Irreversible destructive actions only — deactivate, delete, revoke.",
+      "html": "<button class=\"ds-btn-danger\">Deactivate</button>",
+      "css": ".ds-btn-danger { position: relative; overflow: hidden; isolation: isolate; display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25); background: linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%); color: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; line-height: 1; cursor: pointer; box-shadow: inset 0 1px 1px 0 rgba(255,255,255,0.42), inset 0 -1px 1px 0 rgba(0,0,0,0.15), 0 1px 2px 0 rgba(220,38,38,0.12); transition: transform 160ms cubic-bezier(0.23,1,0.32,1), filter 160ms cubic-bezier(0.23,1,0.32,1); } .ds-btn-danger::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0) 100%); pointer-events: none; z-index: 1; } .ds-btn-danger:hover { transform: translateY(-1px); filter: brightness(1.06); } .ds-btn-danger:active { transform: scale(0.97); } .ds-btn-danger:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #dc2626; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "button-secondary",
+      "description": "Standard text / search input. Rounded, subtle focus ring.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\">STUDENT NAME</label><input class=\"ds-input\" type=\"text\" placeholder=\"Search…\" /></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 8px; } .ds-field-label { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: #334155; } .ds-input { width: 100%; box-sizing: border-box; padding: 14px 16px; border-radius: 16px; border: 1px solid #e2e8f0; background: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 400; color: #0f172a; outline: none; transition: border-color 160ms ease, box-shadow 160ms ease; } .ds-input::placeholder { color: #94a3b8; } .ds-input:focus { border-color: #cbd5e1; box-shadow: 0 0 0 4px rgba(71,85,105,0.11); }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "button-secondary",
+      "description": "Pill label conveying system state. Colour is semantic — never decorative.",
+      "html": "<span class=\"ds-badge ds-badge--success\">Present</span><span class=\"ds-badge ds-badge--warning\">Late</span><span class=\"ds-badge ds-badge--danger\">Absent</span><span class=\"ds-badge ds-badge--info\">Inactive</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; } .ds-badge--success { color: #1a8a4c; background: #e3f6ea; } .ds-badge--warning { color: #c1791f; background: #fdf1e0; } .ds-badge--danger { color: #dc2626; background: #fef2f2; } .ds-badge--info { color: #475569; background: #f1f5f9; }"
+    },
+    {
+      "name": "Content Panel",
+      "kind": "card",
+      "refersTo": "button-secondary",
+      "description": "Main content container floating on the slate shell. White card, large radius, ambient shadow.",
+      "html": "<div class=\"ds-panel\"><h2 class=\"ds-panel-title\">People</h2><p class=\"ds-panel-body\">Manage student and staff records, RFID card assignments, and attendance history.</p></div>",
+      "css": ".ds-panel { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 24px; box-shadow: 0 8px 24px rgba(15,35,70,0.08); } .ds-panel-title { margin: 0 0 8px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: #0f172a; } .ds-panel-body { margin: 0; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 400; color: #334155; line-height: 1.5; }"
+    },
+    {
+      "name": "Navigation Sidebar",
+      "kind": "nav",
+      "refersTo": "button-secondary",
+      "description": "Slate gradient sidebar with pill nav links. Active state inverts to white pill with slate text.",
+      "html": "<nav class=\"ds-sidebar\"><a class=\"ds-nav-link ds-nav-link--active\" href=\"#\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M23 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/></svg>People</a><a class=\"ds-nav-link\" href=\"#\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"5\" width=\"20\" height=\"14\" rx=\"2\"/><line x1=\"2\" y1=\"10\" x2=\"22\" y2=\"10\"/></svg>RFID Cards</a></nav>",
+      "css": ".ds-sidebar { display: flex; flex-direction: column; gap: 2px; padding: 8px; background: linear-gradient(145deg, #0f172a 0%, #1e293b 42%, #334155 100%); height: 100%; } .ds-nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.70); text-decoration: none; transition: background 160ms ease, color 160ms ease; } .ds-nav-link:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.90); } .ds-nav-link--active { background: #ffffff; color: #1e293b; box-shadow: inset 0 1px 2px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.22); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Granite Ledger",
+    "overview": "Adaptive Station's visual language is institutional and earned — a slate-and-white system that communicates permanence, precision, and low ceremony. The shell is a deep slate gradient (slate-900 to slate-700: #0f172a → #1e293b → #334155), giving the interface architectural weight without vibration. White content cards with large radii float inside this shell with visible breathing room, creating a clear signal hierarchy: chrome lives in the dark; work lives in the white.\n\nEvery decision optimises for the daily operator: the school registrar who opens the portal at 7 AM and works through the same eight flows every day. Nothing in the system bids for attention unless it has news to deliver. Colour is reserved for status (green, amber, red) and confirmation (gradient primary buttons). At rest, the interface is almost achromatic — slate text on white card — and only state and status are coloured.\n\nThe tactile press animation (subtle scale(0.97) on active) and glass shimmer on buttons give the system its one indulgence: a sense that every button click has physical weight. Everything else is restrained.",
+    "keyCharacteristics": [
+      "Deep slate shell with floating white content cards",
+      "Status-only colour; palette is near-achromatic at rest",
+      "Plus Jakarta Sans throughout — geometric, contemporary, optimistic",
+      "Glass shimmer on dark-background buttons; flat/bordered on light surfaces",
+      "Tactile press on every interactive element",
+      "Pill navigation links; pill badges; soft-radius inputs and panels"
+    ],
+    "rules": [
+      { "name": "The Status-Only Colour Rule", "body": "Saturated hue (green, amber, red) appears only when the system is communicating state — success, warning, error, deactivation. Never use a status colour decoratively.", "section": "colors" },
+      { "name": "The One Brand Rule", "body": "The slate gradient lives in the shell. Inside content cards, brand presence is reduced to text weights and subtle borders — never a tinted background, never a brand-coloured CTA that isn't the primary action.", "section": "colors" },
+      { "name": "The Weight Hierarchy Rule", "body": "700 for structural elements (headings, labels, buttons), 600 for supporting data, 400/500 for reading text. Never use 300 or lighter anywhere in the portal.", "section": "typography" },
+      { "name": "The Tight-Tracking Display Rule", "body": "letter-spacing: -0.04em or tighter only above 20px. Below that, tracking stays neutral or slightly positive.", "section": "typography" },
+      { "name": "The Depth By Shell Rule", "body": "The shell's dark colour creates the primary depth illusion — content cards appear elevated simply by contrast. Shadows reinforce structure, not height.", "section": "elevation" },
+      { "name": "The State-Responsive Shadow Rule", "body": "Shadows increase only in response to hover or modal state. Resting surfaces are flat or near-flat.", "section": "elevation" },
+      { "name": "The No-Hard-Corner Rule", "body": "No element in the authenticated portal uses border-radius: 0 or border-radius: 4px. Pill shape is the system's identity.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do use pf-btn-primary for one primary action per panel.",
+      "Do apply pf-btn--loading class during async operations.",
+      "Do use the --as-* CSS custom properties when adding new components; never hard-code hex values that duplicate a token.",
+      "Do use border-radius: 999px for all buttons, nav links, and badges.",
+      "Do keep saturated colour for status only.",
+      "Do pair glass shimmer with dark-background buttons only (primary, danger)."
+    ],
+    "donts": [
+      "Don't use border-radius: 0 or values below 8px on any visible component.",
+      "Don't introduce a new brand colour outside the slate-900 → slate-500 ramp without explicit design decision.",
+      "Don't add a shadow to a panel or card that is already sitting inside the dark shell.",
+      "Don't use the PrimaryButton or SecondaryButton Tailwind components from resources/js/Components/ in portal screens.",
+      "Don't place status colour on decorative elements, headings, or link text.",
+      "Don't use <form className=\"pf-modal\"> as a layout wrapper — pf-modal wraps the overlay element, not the form."
+    ]
+  }
+}

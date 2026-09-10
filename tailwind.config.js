@@ -20,15 +20,15 @@ export default {
         extend: {
             colors: {
                 station: {
-                    canvas: '#f4f7fd',
-                    panel: '#edf3fc',
-                    line: '#dbe3ef',
+                    canvas: '#f4f6f9',
+                    panel: '#f1f5f9',
+                    line: '#e2e8f0',
                     muted: '#64748b',
                     ink: '#0f172a',
-                    navy: '#071c44',
-                    'navy-soft': '#0b2a5b',
-                    blue: '#174a96',
-                    'blue-bright': '#2863bd',
+                    navy: '#1e293b',
+                    'navy-soft': '#334155',
+                    blue: '#475569',
+                    'blue-bright': '#64748b',
                     success: '#188352',
                     'success-soft': '#e3f6ea',
                     warning: '#c1791f',
@@ -39,7 +39,7 @@ export default {
                 sans: ['Plus Jakarta Sans', ...defaultTheme.fontFamily.sans],
             },
             boxShadow: {
-                'station-float': '0 30px 70px -42px rgba(7, 28, 68, 0.58)',
+                'station-float': '0 30px 70px -42px rgba(15, 23, 42, 0.45)',
             },
             keyframes: {
                 'capability-marquee': {

@@ -299,10 +299,10 @@ function HeroDemonstration() {
                 <div className="grid gap-5 p-5 sm:grid-cols-[1fr_0.8fr] sm:p-6">
                     <div className="relative flex min-h-[270px] flex-col overflow-hidden rounded-2xl bg-station-navy p-5 text-white">
                         <div className="flex items-center justify-between gap-4">
-                            <span className="text-xs font-semibold text-[#bcd4f7]">
+                            <span className="text-xs font-semibold text-[#94a3b8]">
                                 Main gate · Station 01
                             </span>
-                            <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#bcd4f7]">
+                            <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#94a3b8]">
                                 Local mode
                             </span>
                         </div>
@@ -315,12 +315,12 @@ function HeroDemonstration() {
                             <strong className="mt-5 text-xl tracking-[-0.02em]">
                                 Hold your card near the reader
                             </strong>
-                            <span className="mt-2 text-xs leading-5 text-[#bcd4f7]">
+                            <span className="mt-2 text-xs leading-5 text-[#94a3b8]">
                                 Validation and event capture happen on this station first.
                             </span>
                         </div>
 
-                        <div className="flex items-center justify-between border-t border-white/10 pt-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#bcd4f7]">
+                        <div className="flex items-center justify-between border-t border-white/10 pt-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#94a3b8]">
                             <span>RFID ready</span>
                             <span>SQLite active</span>
                         </div>
@@ -493,14 +493,14 @@ function FeaturesSection() {
                                 <h3 className="mt-8 text-3xl font-bold tracking-[-0.03em]">
                                     The kiosk keeps the line moving.
                                 </h3>
-                                <p className="mt-4 text-sm leading-6 text-[#bcd4f7]">
+                                <p className="mt-4 text-sm leading-6 text-[#94a3b8]">
                                     Local card lookup, duplicate protection, IN/OUT
                                     determination, and SQLite-first persistence happen
                                     before any network request.
                                 </p>
                             </div>
                             <div className="rounded-2xl bg-white/[0.07] p-4">
-                                <div className="flex items-center justify-between border-b border-white/10 pb-4 text-[11px] font-semibold text-[#bcd4f7]">
+                                <div className="flex items-center justify-between border-b border-white/10 pb-4 text-[11px] font-semibold text-[#94a3b8]">
                                     <span>Tap path</span>
                                     <span className="text-[#75e2ae]">Available offline</span>
                                 </div>
@@ -650,7 +650,7 @@ function DifferentiatorSection() {
                         <h2 className="text-4xl font-bold leading-[1.08] tracking-[-0.035em] sm:text-5xl">
                             Local-first is the architecture, not an emergency mode.
                         </h2>
-                        <p className="mt-6 max-w-xl text-base leading-7 text-[#bcd4f7]">
+                        <p className="mt-6 max-w-xl text-base leading-7 text-[#94a3b8]">
                             The critical path ends with a durable local event and clear
                             kiosk feedback. Cloud synchronization follows as a separate,
                             recoverable process—so connectivity can change without
@@ -671,7 +671,7 @@ function DifferentiatorSection() {
                                             {number}
                                         </span>
                                         <strong className="mt-5 block text-lg">{title}</strong>
-                                        <span className="mt-1 block text-xs text-[#bcd4f7]">{detail}</span>
+                                        <span className="mt-1 block text-xs text-[#94a3b8]">{detail}</span>
                                     </div>
                                     {index < 2 && (
                                         <ArrowIcon className="hidden h-5 w-5 text-[#75e2ae] sm:block" />
@@ -808,14 +808,14 @@ function FinalCallToAction({ workspaceHref, workspaceLabel }: FinalCallToActionP
                     <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
                         <a
                             href="#workflow"
-                            className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-station-navy-soft px-6 text-sm font-bold text-white transition-colors hover:bg-station-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-station-blue-bright focus-visible:ring-offset-2"
+                            className="btn-glass-primary tactile-press inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#64748b] via-[#475569] to-[#334155] px-6 text-sm font-bold text-white transition-all hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#334155] focus-visible:ring-offset-2"
                         >
                             Review the workflow
                             <ArrowIcon />
                         </a>
                         <Link
                             href={workspaceHref}
-                            className="inline-flex h-12 items-center justify-center rounded-full border border-[#b9c9df] bg-white px-6 text-sm font-bold text-station-navy transition-colors hover:border-station-blue-bright hover:bg-[#f8faff] focus:outline-none focus-visible:ring-2 focus-visible:ring-station-blue-bright focus-visible:ring-offset-2"
+                            className="btn-glass-secondary tactile-press inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-b from-white to-slate-50/95 px-6 text-sm font-bold text-[#1e293b] transition-all hover:brightness-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#334155] focus-visible:ring-offset-2"
                         >
                             {workspaceLabel}
                         </Link>
@@ -853,7 +853,7 @@ export default function LandingPage({ auth }: LandingPageProps) {
                 Skip to content
             </a>
 
-            <header className="sticky top-0 z-50 border-b border-station-line/80 bg-white/95 backdrop-blur-md">
+            <header className="sticky top-0 z-50 border-b border-white/[0.10] bg-white/82 backdrop-blur-2xl" style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.04)' }}>
                 <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between gap-6 px-5 sm:px-8">
                     <Link
                         href={route('home')}
@@ -886,22 +886,28 @@ export default function LandingPage({ auth }: LandingPageProps) {
 
                     <Link
                         href={workspaceHref}
-                        className="inline-flex h-10 items-center justify-center rounded-full bg-station-navy-soft px-5 text-sm font-bold text-white transition-colors hover:bg-station-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-station-blue-bright focus-visible:ring-offset-2"
+                        className="btn-glass-primary tactile-press inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-b from-[#64748b] via-[#475569] to-[#334155] px-5 text-sm font-bold text-white transition-all hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#334155] focus-visible:ring-offset-2"
                     >
-                        {workspaceLabel}
+                        <span className="relative z-10">{workspaceLabel}</span>
                     </Link>
                 </div>
             </header>
 
             <main id="main-content">
-                <section className="relative overflow-hidden px-5 pb-20 pt-16 sm:px-8 sm:pb-24 sm:pt-20 lg:pb-28 lg:pt-24">
-                    <div className="absolute inset-x-0 top-0 h-[560px] bg-[radial-gradient(circle_at_78%_22%,rgba(40,99,189,0.13),transparent_32%),radial-gradient(circle_at_10%_15%,rgba(83,222,160,0.1),transparent_25%)]" />
+                <section
+                    className="relative overflow-hidden px-5 pb-20 pt-16 sm:px-8 sm:pb-24 sm:pt-20 lg:pb-28 lg:pt-24"
+                    style={{
+                        background: 'radial-gradient(ellipse at 18% 65%, rgba(148,163,184,0.18) 0%, transparent 52%), radial-gradient(ellipse at 82% 12%, rgba(100,116,139,0.12) 0%, transparent 46%), radial-gradient(ellipse at 55% 90%, rgba(71,85,105,0.10) 0%, transparent 40%), linear-gradient(145deg, #0f172a 0%, #1e293b 42%, #334155 100%)',
+                    }}
+                >
+                    {/* subtle shimmer at top */}
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/20" />
                     <div className="relative mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.88fr_1.12fr] lg:items-center lg:gap-16">
                         <div className="min-w-0 max-w-2xl">
-                            <h1 className="text-5xl font-bold leading-[1.02] tracking-[-0.04em] text-station-navy sm:text-6xl lg:text-[72px]">
+                            <h1 className="text-5xl font-bold leading-[1.02] tracking-[-0.04em] text-white sm:text-6xl lg:text-[72px]" style={{ textShadow: '0 2px 24px rgba(0,0,0,0.18)' }}>
                                 Attendance that keeps moving—<wbr />even when the network doesn't.
                             </h1>
-                            <p className="mt-7 max-w-xl text-lg leading-8 text-station-muted">
+                            <p className="mt-7 max-w-xl text-lg leading-8 text-[#94a3b8]">
                                 Adaptive Station records RFID taps on the kiosk first,
                                 synchronizes them safely when connectivity returns, and
                                 gives school teams one clear place to manage attendance.
@@ -909,25 +915,27 @@ export default function LandingPage({ auth }: LandingPageProps) {
                             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                                 <a
                                     href="#workflow"
-                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-station-navy-soft px-6 text-sm font-bold text-white transition-colors hover:bg-station-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-station-blue-bright focus-visible:ring-offset-2"
+                                    className="btn-glass-secondary tactile-press inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-b from-white to-slate-50/95 px-6 text-sm font-bold text-[#1e293b] transition-all hover:brightness-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                                 >
-                                    See how it works
-                                    <ArrowIcon />
+                                    <span className="relative z-10 inline-flex items-center gap-2">
+                                        See how it works
+                                        <ArrowIcon />
+                                    </span>
                                 </a>
                                 <Link
                                     href={workspaceHref}
-                                    className="inline-flex h-12 items-center justify-center rounded-full border border-[#b9c9df] bg-white px-6 text-sm font-bold text-station-navy transition-colors hover:border-station-blue-bright hover:bg-[#f8faff] focus:outline-none focus-visible:ring-2 focus-visible:ring-station-blue-bright focus-visible:ring-offset-2"
+                                    className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white/14 px-6 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/22 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
                                 >
                                     {workspaceLabel}
                                 </Link>
                             </div>
-                            <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-[#526989]">
+                            <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-white/70">
                                 <span className="inline-flex items-center gap-2">
-                                    <CheckIcon className="h-4 w-4 text-station-success" />
+                                    <CheckIcon className="h-4 w-4 text-[#75e2ae]" />
                                     Built for student and staff attendance
                                 </span>
                                 <span className="inline-flex items-center gap-2">
-                                    <CheckIcon className="h-4 w-4 text-station-success" />
+                                    <CheckIcon className="h-4 w-4 text-[#75e2ae]" />
                                     Works alongside existing school systems
                                 </span>
                             </div>
