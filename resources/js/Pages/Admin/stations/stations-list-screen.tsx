@@ -1,6 +1,7 @@
 import AdminLayout from '@/Layouts/AdminLayout';
+import Pagination from '@/Components/admin/Pagination';
 import { Head, Link } from '@inertiajs/react';
-import type { PaginatedData, PaginationLink, Station } from '@/types';
+import type { PaginatedData, Station } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -17,9 +18,9 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_PILL_CLASS: Record<string, string> = {
     active: 'pf-pill--active',
-    pending_activation: 'pft-pill--suspended',
-    disabled: 'pft-pill--archived',
-    retired: 'pft-pill--archived',
+    pending_activation: 'pf-pill--suspended',
+    disabled: 'pf-pill--archived',
+    retired: 'pf-pill--archived',
 };
 
 // last_seen_at is a full UTC timestamp — displayed in GMT+8 (Asia/Manila, no
@@ -34,44 +35,6 @@ function formatDateTime(value: string): string {
         hour12: true,
         timeZone: 'Asia/Manila',
     });
-}
-
-function PaginationBar({ links }: { links: PaginationLink[] }) {
-    if (!links || links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="pf-pagination">
-            {links.map((link: PaginationLink, index: number) => {
-                const label = link.label
-                    .replace('&laquo; Previous', '‹ Previous')
-                    .replace('Next &raquo;', 'Next ›');
-
-                if (link.url === null) {
-                    return (
-                        <span key={index} className="pf-page-link pf-page-link--disabled">
-                            {label}
-                        </span>
-                    );
-                }
-
-                return (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        preserveScroll
-                        className={
-                            'pf-page-link' +
-                            (link.active ? ' pf-page-link--active' : '')
-                        }
-                    >
-                        {label}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
 }
 
 export default function StationsListScreen({ stations }: { stations: PaginatedData<StationListItem> }) {
@@ -103,7 +66,7 @@ export default function StationsListScreen({ stations }: { stations: PaginatedDa
                         <div>
                             <h2 className="pf-panel-title">All Stations</h2>
                             <p className="pf-panel-count">
-                                {stations.data.length} shown
+                                {stations.from !== null ? `${stations.from}–${stations.to} of ${stations.total}` : 'No results'}
                             </p>
                         </div>
                     </div>
@@ -181,7 +144,7 @@ export default function StationsListScreen({ stations }: { stations: PaginatedDa
                         </table>
                     </div>
 
-                    <PaginationBar links={stations.links} />
+                    <Pagination links={stations.links} />
                 </div>
             </div>
         </AdminLayout>

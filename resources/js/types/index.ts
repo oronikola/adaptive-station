@@ -89,6 +89,11 @@ export interface PaginationLink {
 export interface PaginatedData<T> {
     data: T[];
     links: PaginationLink[];
+    total: number;
+    per_page: number;
+    current_page: number;
+    from: number | null;
+    to: number | null;
 }
 
 export interface PageProps {

@@ -1,49 +1,17 @@
+import Pagination from '@/Components/admin/Pagination';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import type { PaginatedData, Person, PaginationLink } from '@/types';
+import { useState } from 'react';
+import type { PaginatedData, Person } from '@/types';
 import { personRouteKey } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
-function PaginationBar({ links }: { links: PaginationLink[] }) {
-    if (!links || links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="pf-pagination">
-            {links.map((link: PaginationLink, index: number) => {
-                const label = link.label
-                    .replace('&laquo; Previous', '‹ Previous')
-                    .replace('Next &raquo;', 'Next ›');
-
-                if (link.url === null) {
-                    return (
-                        <span key={index} className="pf-page-link pf-page-link--disabled">
-                            {label}
-                        </span>
-                    );
-                }
-
-                return (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        preserveScroll
-                        className={
-                            'pf-page-link' +
-                            (link.active ? ' pf-page-link--active' : '')
-                        }
-                    >
-                        {label}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
-}
+const hasFilters = (filters: { search?: string; status?: string }) =>
+    Boolean(filters.search || filters.status);
 
 export default function PeopleListScreen({ people, filters }: { people: PaginatedData<Person>; filters: { search?: string; status?: string } }) {
+    const [isFiltering, setIsFiltering] = useState(false);
     const { data, setData } = useForm({
         search: filters.search ?? '',
         status: filters.status ?? '',
@@ -51,7 +19,11 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
 
     function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        router.get(route('portal.people.index'), data, { preserveState: true });
+        setIsFiltering(true);
+        router.get(route('portal.people.index'), data, {
+            preserveState: true,
+            onFinish: () => setIsFiltering(false),
+        });
     }
 
     return (
@@ -86,7 +58,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                     </div>
                 </div>
 
-                <form onSubmit={submit} className="pf-filter-bar">
+                <form onSubmit={submit} className="pf-filter-bar" role="search">
                     <div className="pf-field">
                         <label htmlFor="search">Search</label>
                         <input
@@ -112,7 +84,11 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                     </div>
 
                     <div className="pf-filter-bar-actions">
-                        <button type="submit" className="pf-btn pf-btn-primary">
+                        <button
+                            type="submit"
+                            className={'pf-btn pf-btn-primary' + (isFiltering ? ' pf-btn--loading' : '')}
+                            disabled={isFiltering}
+                        >
                             Filter
                         </button>
                         <Link
@@ -129,7 +105,9 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                         <div>
                             <h2 className="pf-panel-title">All People</h2>
                             <p className="pf-panel-count">
-                                {people.data.length} shown
+                                {people.from !== null
+                                    ? `${people.from}–${people.to} of ${people.total}`
+                                    : 'No results'}
                             </p>
                         </div>
                     </div>
@@ -152,7 +130,16 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                 {people.data.length === 0 && (
                                     <tr>
                                         <td colSpan={6} className="pf-empty">
-                                            No people found.
+                                            {hasFilters(filters) ? (
+                                                'No people match these filters.'
+                                            ) : (
+                                                <>
+                                                    No people yet.{' '}
+                                                    <Link href={route('portal.people.create')} className="pf-row-action" style={{ display: 'inline' }}>
+                                                        Add your first person →
+                                                    </Link>
+                                                </>
+                                            )}
                                         </td>
                                     </tr>
                                 )}
@@ -217,7 +204,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                         </table>
                     </div>
 
-                    <PaginationBar links={people.links} />
+                    <Pagination links={people.links} />
                 </div>
             </div>
         </AdminLayout>

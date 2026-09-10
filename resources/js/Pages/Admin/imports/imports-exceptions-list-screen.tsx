@@ -1,6 +1,7 @@
 import AdminLayout from '@/Layouts/AdminLayout';
+import Pagination from '@/Components/admin/Pagination';
 import { Head, Link, router } from '@inertiajs/react';
-import type { PaginatedData, PaginationLink } from '@/types';
+import type { PaginatedData } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -23,48 +24,10 @@ interface ExceptionsFilters {
 }
 
 const RESOLUTION_PILL_CLASS: Record<ImportException['resolution'], string> = {
-    open: 'pft-pill--suspended',
+    open: 'pf-pill--suspended',
     resolved: 'pf-pill--active',
     ignored: 'pf-pill--inactive',
 };
-
-function PaginationBar({ links }: { links: PaginationLink[] }) {
-    if (!links || links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="pf-pagination">
-            {links.map((link: PaginationLink, index: number) => {
-                const label = link.label
-                    .replace('&laquo; Previous', '‹ Previous')
-                    .replace('Next &raquo;', 'Next ›');
-
-                if (link.url === null) {
-                    return (
-                        <span key={index} className="pf-page-link pf-page-link--disabled">
-                            {label}
-                        </span>
-                    );
-                }
-
-                return (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        preserveScroll
-                        className={
-                            'pf-page-link' +
-                            (link.active ? ' pf-page-link--active' : '')
-                        }
-                    >
-                        {label}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
-}
 
 export default function ImportsExceptionsListScreen({ batch, exceptions, filters }: { batch: ImportBatch; exceptions: PaginatedData<ImportException>; filters: ExceptionsFilters }) {
     function resolve(exception: ImportException, resolution: string) {
@@ -111,7 +74,7 @@ export default function ImportsExceptionsListScreen({ batch, exceptions, filters
                         <div>
                             <h2 className="pf-panel-title">Exceptions</h2>
                             <p className="pf-panel-count">
-                                {exceptions.data.length} shown
+                                {exceptions.from !== null ? `${exceptions.from}–${exceptions.to} of ${exceptions.total}` : 'No results'}
                             </p>
                         </div>
                     </div>
@@ -184,7 +147,7 @@ export default function ImportsExceptionsListScreen({ batch, exceptions, filters
                         </table>
                     </div>
 
-                    <PaginationBar links={exceptions.links} />
+                    <Pagination links={exceptions.links} />
                 </div>
             </div>
         </AdminLayout>

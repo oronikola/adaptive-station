@@ -1,9 +1,5 @@
-import DangerButton from '@/Components/DangerButton';
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
-import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
@@ -44,78 +40,84 @@ export default function DeleteUserForm({ className = '' }: DeleteUserFormProps) 
 
     const closeModal = () => {
         setConfirmingUserDeletion(false);
-
         clearErrors();
         reset();
     };
 
     return (
-        <section className={`space-y-6 ${className}`}>
+        <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                    Delete Account
-                </h2>
-
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <h2>Delete Account</h2>
+                <p>
                     Once your account is deleted, all of its resources and data
                     will be permanently deleted. Before deleting your account,
-                    please download any data or information that you wish to
-                    retain.
+                    please download any data or information that you wish to retain.
                 </p>
             </header>
 
-            <DangerButton className="profile-delete-button" onClick={confirmUserDeletion}>
+            <button
+                type="button"
+                className="pf-btn pf-btn-danger profile-delete-button"
+                style={{ marginTop: 12 }}
+                onClick={confirmUserDeletion}
+            >
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+                </svg>
                 Delete Account
-            </DangerButton>
+            </button>
 
             <Modal show={confirmingUserDeletion} onClose={closeModal}>
-                <form onSubmit={deleteUser} className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        Are you sure you want to delete your account?
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        Once your account is deleted, all of its resources and
-                        data will be permanently deleted. Please enter your
-                        password to confirm you would like to permanently delete
-                        your account.
-                    </p>
-
-                    <div className="mt-6">
-                        <InputLabel
-                            htmlFor="password"
-                            value="Password"
-                            className="sr-only"
-                        />
-
-                        <TextInput
-                            id="password"
-                            type="password"
-                            name="password"
-                            ref={passwordInput}
-                            value={data.password}
-                            onChange={(e) =>
-                                setData('password', e.target.value)
-                            }
-                            className="mt-1 block w-3/4"
-                            isFocused
-                            placeholder="Password"
-                        />
-
-                        <InputError
-                            message={errors.password}
-                            className="mt-2"
-                        />
+                <form onSubmit={deleteUser} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <div>
+                            <h2 className="pf-modal-title">Delete your account?</h2>
+                            <p className="pf-modal-subtitle">
+                                This is permanent. All your data will be removed and cannot be recovered.
+                                Enter your password to confirm.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            className="pf-modal-close"
+                            onClick={closeModal}
+                            aria-label="Close"
+                        >
+                            <svg viewBox="0 0 24 24">
+                                <path d="M18 6 6 18M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
 
-                    <div className="mt-6 flex justify-end">
-                        <SecondaryButton onClick={closeModal}>
-                            Cancel
-                        </SecondaryButton>
+                    <div className="pf-field">
+                        <label htmlFor="delete-password">Password</label>
+                        <input
+                            id="delete-password"
+                            type="password"
+                            ref={passwordInput}
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            autoFocus
+                            placeholder="Enter your current password"
+                        />
+                        <InputError message={errors.password} className="mt-2" />
+                    </div>
 
-                        <DangerButton className="ms-3" disabled={processing}>
-                            Delete Account
-                        </DangerButton>
+                    <div className="pf-modal-footer">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={closeModal}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className={'pf-btn pf-btn-danger' + (processing ? ' pf-btn--loading' : '')}
+                            disabled={processing}
+                        >
+                            {processing ? 'Deleting…' : 'Delete Account'}
+                        </button>
                     </div>
                 </form>
             </Modal>

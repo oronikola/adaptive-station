@@ -1,13 +1,13 @@
 .parent-form { display: grid; gap: 24px; max-width: 1000px; margin-bottom: 24px; }
 .parent-section { padding: 24px; min-width: 0; max-width: 1000px; }
-.parent-section legend { padding: 0 8px; font-weight: 700; color: #071c44; font-size: 17px; }
+.parent-section legend { padding: 0 8px; font-weight: 700; color: var(--as-brand-dark); font-size: 17px; }
 .parent-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
-.parent-help { color: #64748b; font-size: 13px; line-height: 1.7; margin: 12px 0 20px; }
-.parent-subtitle { color: #071c44; font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+.parent-help { color: var(--as-text-secondary); font-size: 13px; line-height: 1.7; margin: 12px 0 20px; }
+.parent-subtitle { color: var(--as-brand-dark); font-size: 15px; font-weight: 700; margin-bottom: 12px; }
 .parent-student-list { list-style: none; padding: 0; margin: 12px 0 20px; max-height: 360px; overflow-y: auto; }
-.parent-student-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #e7ecf4; padding: 12px 4px; }
-.parent-student-list strong { display: block; color: #223047; font-size: 13px; overflow-wrap: anywhere; }
-.parent-student-list span { display: block; color: #64748b; font-size: 12px; margin-top: 4px; }
+.parent-student-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--as-border); padding: 12px 4px; }
+.parent-student-list strong { display: block; color: var(--as-text-slate); font-size: 13px; overflow-wrap: anywhere; }
+.parent-student-list span { display: block; color: var(--as-text-secondary); font-size: 12px; margin-top: 4px; }
 .parent-student-list .pf-btn { flex-shrink: 0; }
 .parent-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 @media (max-width: 600px) {

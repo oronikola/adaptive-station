@@ -70,7 +70,9 @@ export default function Edit({ mustVerifyEmail, status }: EditProps) {
                             className="profile-card"
                         />
                         <UpdatePasswordForm className="profile-card" />
-                        <DeleteUserForm className="profile-card profile-card--danger" />
+                        <div style={{ marginTop: 16 }}>
+                            <DeleteUserForm className="profile-card profile-card--danger" />
+                        </div>
                     </div>
                 </div>
             </div>

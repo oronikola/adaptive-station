@@ -22,10 +22,10 @@ interface ImportBatch {
 
 const STATUS_PILL_CLASS: Record<string, string> = {
     completed: 'pf-pill--active',
-    completed_with_exceptions: 'pft-pill--suspended',
+    completed_with_exceptions: 'pf-pill--suspended',
     failed: 'pf-pill--danger',
-    importing: 'pft-pill--suspended',
-    validating: 'pft-pill--suspended',
+    importing: 'pf-pill--suspended',
+    validating: 'pf-pill--suspended',
     draft: 'pf-pill--inactive',
 };
 

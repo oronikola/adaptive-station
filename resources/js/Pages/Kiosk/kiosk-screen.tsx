@@ -313,7 +313,19 @@ export default function KioskScreen() {
             setActivationCode('');
             setPhase('ready');
         } catch (error) {
-            setActivationError(error instanceof Error ? error.message : 'Activation failed.');
+            const safeMessage = (() => {
+                if (error instanceof Error) {
+                    const msg = error.message.toLowerCase();
+                    if (msg.includes('invalid') || msg.includes('not found') || msg.includes('expired')) {
+                        return 'Invalid activation code — check it and try again.';
+                    }
+                    if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch')) {
+                        return 'Cannot reach the server. Check your internet connection and try again.';
+                    }
+                }
+                return 'Activation failed. Please double-check the code or contact your administrator.';
+            })();
+            setActivationError(safeMessage);
         } finally {
             setActivating(false);
         }
@@ -332,14 +344,14 @@ export default function KioskScreen() {
         const card = await getCardByUid(cardUid);
         if (!card || !card.is_active) {
             speak('Card not recognized.');
-            showResult({ kind: 'error', title: 'Card not recognized' });
+            showResult({ kind: 'error', title: 'Card not recognized', subtitle: 'Please go to the office or try another card.' });
             return;
         }
 
         const person = await getPerson(card.person_id);
         if (!person || !person.is_active) {
             speak('No active record for this card.');
-            showResult({ kind: 'error', title: 'No active record for this card' });
+            showResult({ kind: 'error', title: 'No active record for this card', subtitle: 'Please contact the office to resolve this.' });
             return;
         }
 

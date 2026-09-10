@@ -1,6 +1,7 @@
+import Pagination from '@/Components/admin/Pagination';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
-import type { PaginatedData, PaginationLink } from '@/types';
+import type { PaginatedData } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -14,55 +15,26 @@ interface ImportBatch {
 
 const STATUS_PILL_CLASS: Record<string, string> = {
     completed: 'pf-pill--active',
-    completed_with_exceptions: 'pft-pill--suspended',
+    completed_with_exceptions: 'pf-pill--warning',
     failed: 'pf-pill--danger',
-    importing: 'pft-pill--suspended',
-    validating: 'pft-pill--suspended',
+    importing: 'pf-pill--in-progress',
+    validating: 'pf-pill--in-progress',
     draft: 'pf-pill--inactive',
 };
 
-function PaginationBar({ links }: { links: PaginationLink[] }) {
-    if (!links || links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="pf-pagination">
-            {links.map((link: PaginationLink, index: number) => {
-                const label = link.label
-                    .replace('&laquo; Previous', '‹ Previous')
-                    .replace('Next &raquo;', 'Next ›');
-
-                if (link.url === null) {
-                    return (
-                        <span key={index} className="pf-page-link pf-page-link--disabled">
-                            {label}
-                        </span>
-                    );
-                }
-
-                return (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        preserveScroll
-                        className={
-                            'pf-page-link' +
-                            (link.active ? ' pf-page-link--active' : '')
-                        }
-                    >
-                        {label}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
-}
+const STATUS_LABELS: Record<string, string> = {
+    completed: 'Completed',
+    completed_with_exceptions: 'Completed with exceptions',
+    failed: 'Failed',
+    importing: 'Importing…',
+    validating: 'Validating…',
+    draft: 'Draft',
+};
 
 export default function ImportsListScreen({ batches }: { batches: PaginatedData<ImportBatch> }) {
     return (
         <AdminLayout>
-            <Head title="Legacy Imports" />
+            <Head title="Imports" />
 
             <div className="pf-dashboard pft-page">
                 <div className="pft-hero">
@@ -75,9 +47,9 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                             </svg>
                         </span>
                         <div>
-                            <h1 className="pft-hero-title">Legacy Imports</h1>
+                            <h1 className="pft-hero-title">Imports</h1>
                             <p className="pft-hero-subtitle">
-                                Review every legacy data import run for your school.
+                                Review every data import batch for your school.
                             </p>
                         </div>
                     </div>
@@ -102,7 +74,7 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                         <div>
                             <h2 className="pf-panel-title">Import Batches</h2>
                             <p className="pf-panel-count">
-                                {batches.data.length} shown
+                                {batches.from !== null ? `${batches.from}–${batches.to} of ${batches.total}` : 'No results'}
                             </p>
                         </div>
                     </div>
@@ -123,7 +95,10 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                                 {batches.data.length === 0 && (
                                     <tr>
                                         <td colSpan={4} className="pf-empty">
-                                            No imports run yet.
+                                            No imports run yet.{' '}
+                                            <Link href={route('portal.imports.create')} className="pf-row-action" style={{ display: 'inline', marginLeft: 4 }}>
+                                                Start your first import →
+                                            </Link>
                                         </td>
                                     </tr>
                                 )}
@@ -140,7 +115,7 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                                                     (STATUS_PILL_CLASS[batch.status] ?? 'pf-pill--inactive')
                                                 }
                                             >
-                                                {batch.status}
+                                                {STATUS_LABELS[batch.status] ?? batch.status}
                                             </span>
                                         </td>
                                         <td className="pft-created">
@@ -163,7 +138,7 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                         </table>
                     </div>
 
-                    <PaginationBar links={batches.links} />
+                    <Pagination links={batches.links} />
                 </div>
             </div>
         </AdminLayout>

@@ -10,6 +10,7 @@ interface IntegrationProfile {
     direction: string;
     status: string;
     last_successful_run_at: string | null;
+    last_error?: string | null;
 }
 
 const STATUS_PILL_CLASS: Record<string, string> = {
@@ -111,6 +112,11 @@ export default function IntegrationsListScreen({ profiles }: { profiles: Integra
                                             >
                                                 {STATUS_LABELS[profile.status] ?? profile.status}
                                             </span>
+                                            {profile.status === 'error' && profile.last_error && (
+                                                <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--as-danger)', lineHeight: 1.4, maxWidth: 260 }}>
+                                                    {profile.last_error}
+                                                </p>
+                                            )}
                                         </td>
                                         <td>
                                             {profile.last_successful_run_at

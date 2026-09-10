@@ -35,8 +35,10 @@ export default function ParentsListScreen({ parents, filters }: {
                         <label htmlFor="parent-search">Search parents</label>
                         <input id="parent-search" value={data.search} maxLength={100} placeholder="Name, email, or login ID" onChange={(event) => setData('search', event.target.value)} />
                     </div>
-                    <button type="submit" className="pf-btn pf-btn-secondary" disabled={processing}>Search</button>
-                    {filters.search && <Link href={route('portal.parents.index')} className="pf-btn pf-btn-secondary">Clear</Link>}
+                    <div className="pf-filter-bar-actions">
+                        <button type="submit" className={'pf-btn pf-btn-primary' + (processing ? ' pf-btn--loading' : '')} disabled={processing}>Search</button>
+                        {filters.search && <Link href={route('portal.parents.index')} className="pf-btn pf-btn-secondary">Clear</Link>}
+                    </div>
                 </form>
                 <div className="pf-panel">
                     <div className="pf-table-wrap">

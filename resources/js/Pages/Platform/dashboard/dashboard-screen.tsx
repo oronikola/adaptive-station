@@ -130,8 +130,8 @@ function StatusBarChart({ active, inactive }: { active: number; inactive: number
 
 const STATUS_PILL_CLASS: Record<Tenant['status'], string> = {
     active: 'pf-pill--active',
-    suspended: 'pft-pill--suspended',
-    archived: 'pft-pill--archived',
+    suspended: 'pf-pill--suspended',
+    archived: 'pf-pill--archived',
 };
 
 interface ActivityLog {
@@ -209,7 +209,7 @@ export default function DashboardScreen({ stats, recentActivity, recentClients }
                                 <circle cx="12" cy="12" r="9" />
                                 <path d="M12 7v5l3.2 2" />
                             </svg>
-                            Updated {new Date().toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                            Live directory
                         </span>
                         <Link href={route('platform.tenants.index')} className="pf-btn pf-btn-primary">
                             <svg viewBox="0 0 24 24">

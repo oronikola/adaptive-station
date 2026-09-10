@@ -34,8 +34,8 @@
     align-items: flex-start;
     gap: 12px;
     padding: 14px 14px 14px 16px;
-    border: 1px solid #e7ecf4;
-    border-left: 4px solid var(--pf-toast-accent, #94a3b8);
+    border: 1px solid var(--as-border);
+    border-left: 4px solid var(--pf-toast-accent, var(--as-text-muted));
     border-radius: 14px;
     background: #ffffff;
     box-shadow: 0 20px 44px -22px rgba(15, 35, 70, 0.45);
@@ -62,8 +62,8 @@
     flex: 0 0 32px;
     place-items: center;
     border-radius: 10px;
-    background: var(--pf-toast-icon-bg, #eef1f6);
-    color: var(--pf-toast-icon-fg, #64748b);
+    background: var(--pf-toast-icon-bg, var(--as-border-light));
+    color: var(--pf-toast-icon-fg, var(--as-text-secondary));
 }
 
 .pf-toast-icon svg {
@@ -85,7 +85,7 @@
 .pf-toast-message {
     margin: 0;
     overflow-wrap: break-word;
-    color: #0f172a;
+    color: var(--as-text);
     font-size: 13px;
     font-weight: 600;
     line-height: 1.4;
@@ -93,7 +93,7 @@
 
 .pf-toast-description {
     margin: 3px 0 0;
-    color: #64748b;
+    color: var(--as-text-secondary);
     font-size: 12px;
     line-height: 1.4;
 }
@@ -108,18 +108,18 @@
     border: none;
     border-radius: 999px;
     background: transparent;
-    color: #94a3b8;
+    color: var(--as-text-muted);
     cursor: pointer;
     transition: background-color 150ms ease, color 150ms ease;
 }
 
 .pf-toast-close:hover {
     background: #f1f4f9;
-    color: #223047;
+    color: var(--as-text-slate);
 }
 
 .pf-toast-close:focus-visible {
-    outline: 2px solid #2863bd;
+    outline: 2px solid var(--as-brand-blue);
     outline-offset: 2px;
 }
 
@@ -137,32 +137,32 @@
    several toasts of different types can stack without clashing. */
 
 .pf-toast--success {
-    --pf-toast-accent: #1a8a4c;
-    --pf-toast-icon-bg: #e3f6ea;
-    --pf-toast-icon-fg: #1a8a4c;
+    --pf-toast-accent: var(--as-success);
+    --pf-toast-icon-bg: var(--as-success-bg);
+    --pf-toast-icon-fg: var(--as-success);
 }
 
 .pf-toast--update {
-    --pf-toast-accent: #2863bd;
+    --pf-toast-accent: var(--as-brand-blue);
     --pf-toast-icon-bg: #e7effc;
-    --pf-toast-icon-fg: #2863bd;
+    --pf-toast-icon-fg: var(--as-brand-blue);
 }
 
 .pf-toast--delete {
-    --pf-toast-accent: #c1791f;
-    --pf-toast-icon-bg: #fdf1e0;
-    --pf-toast-icon-fg: #c1791f;
+    --pf-toast-accent: var(--as-warning);
+    --pf-toast-icon-bg: var(--as-warning-bg);
+    --pf-toast-icon-fg: var(--as-warning);
 }
 
 .pf-toast--error {
-    --pf-toast-accent: #dc2626;
+    --pf-toast-accent: var(--as-danger);
     --pf-toast-icon-bg: #fdecea;
-    --pf-toast-icon-fg: #dc2626;
+    --pf-toast-icon-fg: var(--as-danger);
 }
 
 .pf-toast--info {
-    --pf-toast-accent: #64748b;
-    --pf-toast-icon-bg: #eef1f6;
+    --pf-toast-accent: var(--as-text-secondary);
+    --pf-toast-icon-bg: var(--as-border-light);
     --pf-toast-icon-fg: #475569;
 }
 
@@ -178,11 +178,11 @@
     }
 
     .pf-toast-description {
-        color: #94a3b8;
+        color: var(--as-text-muted);
     }
 
     .pf-toast-close {
-        color: #64748b;
+        color: var(--as-text-secondary);
     }
 
     .pf-toast-close:hover {

@@ -1,6 +1,8 @@
+import Pagination from '@/Components/admin/Pagination';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import type { PaginatedData, PaginationLink, Person, RfidCard } from '@/types';
+import { useState } from 'react';
+import type { PaginatedData, Person, RfidCard } from '@/types';
 import { personRouteKey } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
@@ -11,45 +13,9 @@ interface RfidCardWithPerson extends RfidCard {
     person?: Person;
 }
 
-function PaginationBar({ links }: { links: PaginationLink[] }) {
-    if (!links || links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="pf-pagination">
-            {links.map((link: PaginationLink, index: number) => {
-                const label = link.label
-                    .replace('&laquo; Previous', '‹ Previous')
-                    .replace('Next &raquo;', 'Next ›');
-
-                if (link.url === null) {
-                    return (
-                        <span key={index} className="pf-page-link pf-page-link--disabled">
-                            {label}
-                        </span>
-                    );
-                }
-
-                return (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        preserveScroll
-                        className={
-                            'pf-page-link' +
-                            (link.active ? ' pf-page-link--active' : '')
-                        }
-                    >
-                        {label}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
-}
-
 export default function RfidCardsListScreen({ rfidCards, filters }: { rfidCards: PaginatedData<RfidCardWithPerson>; filters: { search?: string; status?: string } }) {
+    const hasFilters = Boolean(filters.search || filters.status);
+    const [isFiltering, setIsFiltering] = useState(false);
     const { data, setData } = useForm({
         search: filters.search ?? '',
         status: filters.status ?? '',
@@ -57,8 +23,10 @@ export default function RfidCardsListScreen({ rfidCards, filters }: { rfidCards:
 
     function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        setIsFiltering(true);
         router.get(route('portal.rfid-cards.index'), data, {
             preserveState: true,
+            onFinish: () => setIsFiltering(false),
         });
     }
 
@@ -83,7 +51,7 @@ export default function RfidCardsListScreen({ rfidCards, filters }: { rfidCards:
                     </div>
                 </div>
 
-                <form onSubmit={submit} className="pf-filter-bar">
+                <form onSubmit={submit} className="pf-filter-bar" role="search">
                     <div className="pf-field">
                         <label htmlFor="search">Card UID</label>
                         <input
@@ -109,15 +77,21 @@ export default function RfidCardsListScreen({ rfidCards, filters }: { rfidCards:
                     </div>
 
                     <div className="pf-filter-bar-actions">
-                        <button type="submit" className="pf-btn pf-btn-primary">
+                        <button
+                            type="submit"
+                            className={'pf-btn pf-btn-primary' + (isFiltering ? ' pf-btn--loading' : '')}
+                            disabled={isFiltering}
+                        >
                             Filter
                         </button>
-                        <Link
-                            href={route('portal.rfid-cards.index')}
-                            className="pf-btn pf-btn-secondary"
-                        >
-                            Reset
-                        </Link>
+                        {hasFilters && (
+                            <Link
+                                href={route('portal.rfid-cards.index')}
+                                className="pf-btn pf-btn-secondary"
+                            >
+                                Reset
+                            </Link>
+                        )}
                     </div>
                 </form>
 
@@ -126,7 +100,7 @@ export default function RfidCardsListScreen({ rfidCards, filters }: { rfidCards:
                         <div>
                             <h2 className="pf-panel-title">All Cards</h2>
                             <p className="pf-panel-count">
-                                {rfidCards.data.length} shown
+                                {rfidCards.from !== null ? `${rfidCards.from}–${rfidCards.to} of ${rfidCards.total}` : 'No results'}
                             </p>
                         </div>
                     </div>
@@ -194,7 +168,7 @@ export default function RfidCardsListScreen({ rfidCards, filters }: { rfidCards:
                         </table>
                     </div>
 
-                    <PaginationBar links={rfidCards.links} />
+                    <Pagination links={rfidCards.links} />
                 </div>
             </div>
         </AdminLayout>

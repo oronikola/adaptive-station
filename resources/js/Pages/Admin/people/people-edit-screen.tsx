@@ -1,14 +1,13 @@
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
 import SecretOnceCallout from '@/Components/SecretOnceCallout';
-import TextInput from '@/Components/TextInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { PageProps, Person, RfidCard } from '@/types';
 import { personRouteKey } from '@/types';
 import '../../../../css/platform-dashboard.css';
+import '../../../../css/platform-overview.css';
 
 interface RfidCardWithAssign extends RfidCard {
     card_uid: string;
@@ -83,225 +82,258 @@ export default function PeopleEditScreen({ person, guardian }: { person: PersonW
         });
     }
 
+    const [deactivatingCard, setDeactivatingCard] = useState<number | null>(null);
+    const deactivateForm = useForm({});
+
+    function submitDeactivate(e: React.FormEvent) {
+        e.preventDefault();
+        deactivateForm.patch(route('portal.rfid-cards.deactivate', deactivatingCard ?? 0), {
+            onSuccess: () => setDeactivatingCard(null),
+        });
+    }
+
     return (
-        <AdminLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    {person.display_name}
-                </h2>
-            }
-        >
+        <AdminLayout>
             <Head title={person.display_name} />
 
-            <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-                <SecretOnceCallout label="Guardian temporary password" value={props.flash?.temporaryPassword} />
-
-                <div className="flex items-center gap-3">
-                    <span
-                        className={
-                            'pf-pill ' +
-                            (person.is_active ? 'pf-pill--active' : 'pf-pill--inactive')
-                        }
-                    >
-                        {person.is_active ? 'active' : 'inactive'}
-                    </span>
-                    <Link
-                        href={route('portal.people.index')}
-                        className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                    >
-                        Back to People
-                    </Link>
+            <div className="pf-dashboard pft-page">
+                <div className="pft-hero">
+                    <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="8" r="4" />
+                                <path d="M4 20a8 8 0 0 1 16 0" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h1 className="pft-hero-title">{person.display_name}</h1>
+                            <p className="pft-hero-subtitle">
+                                {person.person_type === 'student' ? 'Student' : 'Staff'} record
+                                {person.grade_level ? ` · ${[person.grade_level, person.section].filter(Boolean).join(' ')}` : ''}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="pft-hero-actions">
+                        <span
+                            className={
+                                'pf-pill ' +
+                                (person.is_active ? 'pf-pill--active' : 'pf-pill--inactive')
+                            }
+                        >
+                            {person.is_active ? 'active' : 'inactive'}
+                        </span>
+                        <Link href={route('portal.people.index')} className="pf-btn pf-btn-secondary">
+                            Back to People
+                        </Link>
+                    </div>
                 </div>
 
-                <form
-                    onSubmit={submitDetails}
-                    className="space-y-6 rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800"
-                >
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        Details
-                    </h3>
+                <SecretOnceCallout label="Guardian temporary password" value={props.flash?.temporaryPassword} />
 
-                    <div>
-                        <InputLabel htmlFor="person_type" value="Type" />
-                        <select
-                            id="person_type"
-                            value={detailsForm.data.person_type}
-                            onChange={(e) =>
-                                detailsForm.setData('person_type', e.target.value as 'student' | 'staff')
-                            }
-                            disabled={!canManage}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="student">Student</option>
-                            <option value="staff">Staff</option>
-                        </select>
-                        <InputError message={detailsForm.errors.person_type} className="mt-2" />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="pf-panel">
+                    <div className="pf-panel-header">
                         <div>
-                            <InputLabel htmlFor="first_name" value="First name" />
-                            <TextInput
-                                id="first_name"
-                                value={detailsForm.data.first_name}
-                                onChange={(e) => detailsForm.setData('first_name', e.target.value)}
-                                className="mt-1 block w-full"
-                                disabled={!canManage}
-                                required
-                            />
-                            <InputError message={detailsForm.errors.first_name} className="mt-2" />
-                        </div>
-
-                        <div>
-                            <InputLabel htmlFor="middle_name" value="Middle name" />
-                            <TextInput
-                                id="middle_name"
-                                value={detailsForm.data.middle_name}
-                                onChange={(e) => detailsForm.setData('middle_name', e.target.value)}
-                                className="mt-1 block w-full"
-                                disabled={!canManage}
-                            />
-                        </div>
-
-                        <div>
-                            <InputLabel htmlFor="last_name" value="Last name" />
-                            <TextInput
-                                id="last_name"
-                                value={detailsForm.data.last_name}
-                                onChange={(e) => detailsForm.setData('last_name', e.target.value)}
-                                className="mt-1 block w-full"
-                                disabled={!canManage}
-                                required
-                            />
-                            <InputError message={detailsForm.errors.last_name} className="mt-2" />
+                            <h2 className="pf-panel-title">Details</h2>
+                            <p className="pf-panel-count">Personal and classification information</p>
                         </div>
                     </div>
 
-                    <div>
-                        <InputLabel htmlFor="display_name" value="Display name" />
-                        <TextInput
-                            id="display_name"
-                            value={detailsForm.data.display_name}
-                            onChange={(e) => detailsForm.setData('display_name', e.target.value)}
-                            className="mt-1 block w-full"
-                            disabled={!canManage}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <InputLabel htmlFor="grade_level" value="Grade level" />
-                            <TextInput
-                                id="grade_level"
-                                value={detailsForm.data.grade_level}
-                                onChange={(e) => detailsForm.setData('grade_level', e.target.value)}
-                                className="mt-1 block w-full"
-                                disabled={!canManage}
-                            />
-                        </div>
-
-                        <div>
-                            <InputLabel htmlFor="section" value="Section" />
-                            <TextInput
-                                id="section"
-                                value={detailsForm.data.section}
-                                onChange={(e) => detailsForm.setData('section', e.target.value)}
-                                className="mt-1 block w-full"
-                                disabled={!canManage}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <InputLabel htmlFor="external_id" value="External ID" />
-                            <TextInput
-                                id="external_id"
-                                value={detailsForm.data.external_id}
-                                onChange={(e) => detailsForm.setData('external_id', e.target.value)}
-                                className="mt-1 block w-full"
-                                disabled={!canManage}
-                            />
-                            <InputError message={detailsForm.errors.external_id} className="mt-2" />
-                        </div>
-
-                        <div>
-                            <InputLabel htmlFor="status" value="Status" />
-                            <select
-                                id="status"
-                                value={detailsForm.data.status}
-                                onChange={(e) => detailsForm.setData('status', e.target.value)}
-                                disabled={!canManage}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                            >
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                            <InputError message={detailsForm.errors.status} className="mt-2" />
-                        </div>
-                    </div>
-
-                    <div className="border-t border-gray-200 pt-6 dark:border-gray-700">
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Guardian</h4>
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Creates or reuses a parent/guardian account and links it to this person. Guardian phone
-                            number is where SMS tap alerts are sent, once the guardian enables SMS notifications
-                            after logging in. Clearing the email removes the link.
-                        </p>
-
-                        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            <div>
-                                <InputLabel htmlFor="guardian_name" value="Guardian name" />
-                                <TextInput
-                                    id="guardian_name"
-                                    value={detailsForm.data.guardian_name}
-                                    onChange={(e) => detailsForm.setData('guardian_name', e.target.value)}
-                                    className="mt-1 block w-full"
+                    <form onSubmit={submitDetails} className="pft-form-panel">
+                        <div className="pft-form-grid">
+                            <div className="pf-field" style={{ gridColumn: '1 / -1' }}>
+                                <label htmlFor="person_type">Type</label>
+                                <select
+                                    id="person_type"
+                                    value={detailsForm.data.person_type}
+                                    onChange={(e) =>
+                                        detailsForm.setData('person_type', e.target.value as 'student' | 'staff')
+                                    }
                                     disabled={!canManage}
-                                />
-                                <InputError message={detailsForm.errors.guardian_name} className="mt-2" />
+                                >
+                                    <option value="student">Student</option>
+                                    <option value="staff">Staff</option>
+                                </select>
+                                <InputError message={detailsForm.errors.person_type} className="mt-2" />
                             </div>
 
-                            <div>
-                                <InputLabel htmlFor="guardian_email" value="Guardian email" />
-                                <TextInput
-                                    id="guardian_email"
-                                    type="email"
-                                    value={detailsForm.data.guardian_email}
-                                    onChange={(e) => detailsForm.setData('guardian_email', e.target.value)}
-                                    className="mt-1 block w-full"
+                            <div className="pf-field">
+                                <label htmlFor="first_name">First name</label>
+                                <input
+                                    id="first_name"
+                                    type="text"
+                                    value={detailsForm.data.first_name}
+                                    onChange={(e) => detailsForm.setData('first_name', e.target.value)}
                                     disabled={!canManage}
+                                    required
                                 />
-                                <InputError message={detailsForm.errors.guardian_email} className="mt-2" />
+                                <InputError message={detailsForm.errors.first_name} className="mt-2" />
                             </div>
 
-                            <div>
-                                <InputLabel htmlFor="guardian_phone" value="Guardian phone" />
-                                <TextInput
-                                    id="guardian_phone"
-                                    value={detailsForm.data.guardian_phone}
-                                    onChange={(e) => detailsForm.setData('guardian_phone', e.target.value)}
-                                    className="mt-1 block w-full"
+                            <div className="pf-field">
+                                <label htmlFor="middle_name">Middle name</label>
+                                <input
+                                    id="middle_name"
+                                    type="text"
+                                    value={detailsForm.data.middle_name}
+                                    onChange={(e) => detailsForm.setData('middle_name', e.target.value)}
                                     disabled={!canManage}
                                 />
-                                <InputError message={detailsForm.errors.guardian_phone} className="mt-2" />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="last_name">Last name</label>
+                                <input
+                                    id="last_name"
+                                    type="text"
+                                    value={detailsForm.data.last_name}
+                                    onChange={(e) => detailsForm.setData('last_name', e.target.value)}
+                                    disabled={!canManage}
+                                    required
+                                />
+                                <InputError message={detailsForm.errors.last_name} className="mt-2" />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="display_name">Display name</label>
+                                <input
+                                    id="display_name"
+                                    type="text"
+                                    value={detailsForm.data.display_name}
+                                    onChange={(e) => detailsForm.setData('display_name', e.target.value)}
+                                    disabled={!canManage}
+                                />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="grade_level">Grade level</label>
+                                <input
+                                    id="grade_level"
+                                    type="text"
+                                    value={detailsForm.data.grade_level}
+                                    onChange={(e) => detailsForm.setData('grade_level', e.target.value)}
+                                    disabled={!canManage}
+                                />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="section">Section</label>
+                                <input
+                                    id="section"
+                                    type="text"
+                                    value={detailsForm.data.section}
+                                    onChange={(e) => detailsForm.setData('section', e.target.value)}
+                                    disabled={!canManage}
+                                />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="external_id">External ID</label>
+                                <input
+                                    id="external_id"
+                                    type="text"
+                                    value={detailsForm.data.external_id}
+                                    onChange={(e) => detailsForm.setData('external_id', e.target.value)}
+                                    disabled={!canManage}
+                                />
+                                <InputError message={detailsForm.errors.external_id} className="mt-2" />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="status">Status</label>
+                                <select
+                                    id="status"
+                                    value={detailsForm.data.status}
+                                    onChange={(e) => detailsForm.setData('status', e.target.value)}
+                                    disabled={!canManage}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                                <InputError message={detailsForm.errors.status} className="mt-2" />
+                            </div>
+
+                            <div className="pf-field" style={{ gridColumn: '1 / -1' }}>
+                                <label htmlFor="photo_url">Photo URL</label>
+                                <input
+                                    id="photo_url"
+                                    type="url"
+                                    value={detailsForm.data.photo_url}
+                                    onChange={(e) => detailsForm.setData('photo_url', e.target.value)}
+                                    disabled={!canManage}
+                                    placeholder="https://..."
+                                />
                             </div>
                         </div>
-                    </div>
 
-                    {canManage && (
-                        <button type="submit" className="pf-btn pf-btn-primary" disabled={detailsForm.processing}>
-                            Save Changes
-                        </button>
-                    )}
-                </form>
+                        <div style={{ borderTop: '1px solid var(--as-border)', margin: '24px 0 20px', paddingTop: 20 }}>
+                            <p className="pf-panel-title" style={{ margin: '0 0 4px', fontSize: 14 }}>Guardian</p>
+                            <p className="pf-panel-count" style={{ margin: '0 0 16px' }}>
+                                Creates or reuses a parent/guardian account linked to this person. The guardian's phone
+                                number receives SMS tap alerts once they enable notifications after logging in. Clearing
+                                the email removes the link.
+                            </p>
+
+                            <div className="pft-form-grid">
+                                <div className="pf-field">
+                                    <label htmlFor="guardian_name">Guardian name</label>
+                                    <input
+                                        id="guardian_name"
+                                        type="text"
+                                        value={detailsForm.data.guardian_name}
+                                        onChange={(e) => detailsForm.setData('guardian_name', e.target.value)}
+                                        disabled={!canManage}
+                                    />
+                                    <InputError message={detailsForm.errors.guardian_name} className="mt-2" />
+                                </div>
+
+                                <div className="pf-field">
+                                    <label htmlFor="guardian_email">Guardian email</label>
+                                    <input
+                                        id="guardian_email"
+                                        type="email"
+                                        value={detailsForm.data.guardian_email}
+                                        onChange={(e) => detailsForm.setData('guardian_email', e.target.value)}
+                                        disabled={!canManage}
+                                    />
+                                    <InputError message={detailsForm.errors.guardian_email} className="mt-2" />
+                                </div>
+
+                                <div className="pf-field">
+                                    <label htmlFor="guardian_phone">Guardian phone</label>
+                                    <input
+                                        id="guardian_phone"
+                                        type="text"
+                                        value={detailsForm.data.guardian_phone}
+                                        onChange={(e) => detailsForm.setData('guardian_phone', e.target.value)}
+                                        disabled={!canManage}
+                                    />
+                                    <InputError message={detailsForm.errors.guardian_phone} className="mt-2" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {canManage && (
+                            <div className="pft-form-actions">
+                                <button
+                                    type="submit"
+                                    className={'pf-btn pf-btn-primary' + (detailsForm.processing ? ' pf-btn--loading' : '')}
+                                    disabled={detailsForm.processing}
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        )}
+                    </form>
+                </div>
 
                 <div className="pf-panel">
                     <div className="pf-panel-header">
                         <div>
                             <h2 className="pf-panel-title">RFID Cards</h2>
                             <p className="pf-panel-count">
-                                {person.rfid_cards.length} shown
+                                {person.rfid_cards.length === 0
+                                    ? 'No cards assigned'
+                                    : `${person.rfid_cards.length} card${person.rfid_cards.length === 1 ? '' : 's'}`}
                             </p>
                         </div>
                         {canManage && (
@@ -334,7 +366,20 @@ export default function PeopleEditScreen({ person, guardian }: { person: PersonW
                                 {person.rfid_cards.length === 0 && (
                                     <tr>
                                         <td colSpan={4} className="pf-empty">
-                                            No cards assigned.
+                                            No cards assigned yet.
+                                            {canManage && (
+                                                <>
+                                                    {' '}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setAssignOpen(true)}
+                                                        className="pf-row-action"
+                                                        style={{ display: 'inline', marginLeft: 4 }}
+                                                    >
+                                                        Assign one →
+                                                    </button>
+                                                </>
+                                            )}
                                         </td>
                                     </tr>
                                 )}
@@ -367,14 +412,13 @@ export default function PeopleEditScreen({ person, guardian }: { person: PersonW
                                                     >
                                                         Replace
                                                     </button>
-                                                    <Link
-                                                        href={route('portal.rfid-cards.deactivate', card.id)}
-                                                        method="patch"
-                                                        as="button"
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDeactivatingCard(card.id)}
                                                         className="pf-row-action pf-row-action--danger"
                                                     >
                                                         Deactivate
-                                                    </Link>
+                                                    </button>
                                                 </>
                                             )}
                                         </td>
@@ -425,7 +469,7 @@ export default function PeopleEditScreen({ person, guardian }: { person: PersonW
                         </button>
                         <button
                             type="submit"
-                            className="pf-btn pf-btn-primary"
+                            className={'pf-btn pf-btn-primary' + (assignForm.processing ? ' pf-btn--loading' : '')}
                             disabled={assignForm.processing}
                         >
                             Assign
@@ -478,10 +522,51 @@ export default function PeopleEditScreen({ person, guardian }: { person: PersonW
                         </button>
                         <button
                             type="submit"
-                            className="pf-btn pf-btn-primary"
+                            className={'pf-btn pf-btn-primary' + (replaceForm.processing ? ' pf-btn--loading' : '')}
                             disabled={replaceForm.processing}
                         >
                             Replace
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            <Modal show={deactivatingCard !== null} onClose={() => setDeactivatingCard(null)}>
+                <form onSubmit={submitDeactivate} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <h3 className="pf-modal-title">Deactivate card</h3>
+                        <button
+                            type="button"
+                            className="pf-modal-close"
+                            onClick={() => setDeactivatingCard(null)}
+                            aria-label="Close"
+                        >
+                            <svg viewBox="0 0 24 24">
+                                <path d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <p className="pf-field-hint" style={{ marginBottom: '16px' }}>
+                        This card will be permanently deactivated and can no longer
+                        be used to tap in or out. This cannot be undone — assign a
+                        new card if the student needs access again.
+                    </p>
+
+                    <div className="pf-modal-footer">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={() => setDeactivatingCard(null)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className={'pf-btn pf-btn-danger' + (deactivateForm.processing ? ' pf-btn--loading' : '')}
+                            disabled={deactivateForm.processing}
+                        >
+                            Deactivate
                         </button>
                     </div>
                 </form>

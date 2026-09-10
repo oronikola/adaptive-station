@@ -1,6 +1,7 @@
 import AuthInput from '@/Components/AuthInput';
 import AuthLayout from '@/Layouts/AuthLayout';
 import { useForm } from '@inertiajs/react';
+import { useState } from 'react';
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -10,9 +11,17 @@ export default function Register() {
         password_confirmation: '',
     });
 
+    const [confirmError, setConfirmError] = useState('');
+
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (data.password !== data.password_confirmation) {
+            setConfirmError('Passwords do not match.');
+            return;
+        }
+
+        setConfirmError('');
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
         });
@@ -33,6 +42,7 @@ export default function Register() {
             <form onSubmit={submit} className="auth-login-form" noValidate>
                 <AuthInput
                     id="name"
+                    type="text"
                     label="Name"
                     name="name"
                     value={data.name}
@@ -70,6 +80,12 @@ export default function Register() {
                     required
                 />
 
+                {data.password.length > 0 && data.password.length < 8 && (
+                    <p style={{ margin: '-8px 0 8px', fontSize: 12, color: 'var(--as-warning)' }}>
+                        Use at least 8 characters for a strong password.
+                    </p>
+                )}
+
                 <AuthInput
                     id="password_confirmation"
                     type="password"
@@ -77,13 +93,20 @@ export default function Register() {
                     name="password_confirmation"
                     value={data.password_confirmation}
                     autoComplete="new-password"
-                    onChange={(e) => setData('password_confirmation', e.target.value)}
-                    error={errors.password_confirmation}
+                    onChange={(e) => {
+                        setData('password_confirmation', e.target.value);
+                        if (confirmError) setConfirmError('');
+                    }}
+                    error={errors.password_confirmation || confirmError}
                     placeholder="Re-enter your password"
                     required
                 />
 
-                <button type="submit" className="auth-submit" disabled={processing}>
+                <button
+                    type="submit"
+                    className={'auth-submit' + (processing ? ' auth-submit--loading' : '')}
+                    disabled={processing}
+                >
                     {processing ? 'Creating account…' : 'Create account'}
                 </button>
             </form>
