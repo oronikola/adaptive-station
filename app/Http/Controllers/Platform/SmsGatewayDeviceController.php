@@ -66,7 +66,12 @@ class SmsGatewayDeviceController extends Controller
         $data = $request->validate([
             'label' => ['required', 'string', 'max:100'],
             'username' => ['required', 'string', 'max:100', 'alpha_dash', 'unique:mysql.sms_gateway_devices,username'],
+            'password' => ['nullable', 'string', 'min:8', 'max:100'],
         ]);
+
+        if (blank($data['password'] ?? null)) {
+            unset($data['password']);
+        }
 
         ['device' => $device, 'temporary_password' => $password] = SmsGatewayDevice::provision($data, $request->user());
 
@@ -85,7 +90,11 @@ class SmsGatewayDeviceController extends Controller
     {
         Gate::authorize('update', $device);
 
-        $password = Str::password(16);
+        $data = $request->validate([
+            'password' => ['nullable', 'string', 'min:8', 'max:100'],
+        ]);
+
+        $password = $data['password'] ?? Str::password(16);
         $device->forceFill(['password' => $password, 'password_plaintext' => $password])->save();
 
         AuditLog::record('sms_gateway_device.password_reset', $request->user(), null, 'sms_gateway_device', $device->id);
