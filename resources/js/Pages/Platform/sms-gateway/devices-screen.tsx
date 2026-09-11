@@ -53,9 +53,9 @@ export default function SmsGatewayDevicesScreen({
     const [createOpen, setCreateOpen] = useState(false);
     const [revokingDevice, setRevokingDevice] = useState<DeviceRow | null>(null);
     const [resettingDevice, setResettingDevice] = useState<DeviceRow | null>(null);
-    const { data, setData, post, processing, errors, reset } = useForm({ label: '', username: '' });
+    const { data, setData, post, processing, errors, reset } = useForm({ label: '', username: '', password: '' });
     const revokeForm = useForm({});
-    const resetPasswordForm = useForm({});
+    const resetPasswordForm = useForm({ password: '' });
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -79,7 +79,10 @@ export default function SmsGatewayDevicesScreen({
         e.preventDefault();
         if (!resettingDevice) return;
         resetPasswordForm.patch(route('platform.sms-gateway.devices.reset-password', resettingDevice.id), {
-            onSuccess: () => setResettingDevice(null),
+            onSuccess: () => {
+                setResettingDevice(null);
+                resetPasswordForm.reset();
+            },
         });
     }
 
@@ -364,6 +367,21 @@ export default function SmsGatewayDevicesScreen({
                         <InputError message={errors.username} className="mt-2" />
                     </div>
 
+                    <div className="pf-field">
+                        <label htmlFor="password">Password (optional)</label>
+                        <input
+                            id="password"
+                            type="text"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            placeholder="Leave blank to auto-generate one"
+                            className="font-mono"
+                            minLength={8}
+                        />
+                        <p className="pf-field-hint">At least 8 characters. Leave blank and one will be generated for you.</p>
+                        <InputError message={errors.password} className="mt-2" />
+                    </div>
+
                     <div className="pf-modal-footer">
                         <button
                             type="button"
@@ -447,6 +465,21 @@ export default function SmsGatewayDevicesScreen({
                         Its current password will stop working immediately. You'll need to
                         log into the app again with the new credentials shown after this step.
                     </p>
+
+                    <div className="pf-field">
+                        <label htmlFor="reset_password">New password (optional)</label>
+                        <input
+                            id="reset_password"
+                            type="text"
+                            value={resetPasswordForm.data.password}
+                            onChange={(e) => resetPasswordForm.setData('password', e.target.value)}
+                            placeholder="Leave blank to auto-generate one"
+                            className="font-mono"
+                            minLength={8}
+                        />
+                        <p className="pf-field-hint">At least 8 characters. Leave blank and one will be generated for you.</p>
+                        <InputError message={resetPasswordForm.errors.password} className="mt-2" />
+                    </div>
 
                     <div className="pf-modal-footer">
                         <button

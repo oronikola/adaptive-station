@@ -34,6 +34,33 @@ class SmsGatewayDeviceProvisioningTest extends TestCase
         ])->assertOk()->assertJson(['role' => 'gateway_sender']);
     }
 
+    public function test_platform_super_admin_can_set_a_custom_password_when_creating_a_device(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+
+        $this->actingAs($platformAdmin)->post(route('platform.sms-gateway.devices.store'), [
+            'label' => 'Phone 01',
+            'username' => 'phone01',
+            'password' => 'my-custom-password',
+        ])->assertRedirect(route('platform.sms-gateway.devices.index'));
+
+        $this->postJson('/api/v1/auth/login', [
+            'identifier' => 'phone01',
+            'password' => 'my-custom-password',
+        ])->assertOk();
+    }
+
+    public function test_custom_password_must_meet_the_minimum_length(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+
+        $this->actingAs($platformAdmin)->post(route('platform.sms-gateway.devices.store'), [
+            'label' => 'Phone 01',
+            'username' => 'phone01',
+            'password' => 'short',
+        ])->assertSessionHasErrors('password');
+    }
+
     public function test_username_must_be_unique(): void
     {
         $platformAdmin = User::factory()->platformSuperAdmin()->create();
@@ -65,6 +92,23 @@ class SmsGatewayDeviceProvisioningTest extends TestCase
         $this->postJson('/api/v1/auth/login', [
             'identifier' => 'phone01',
             'password' => $newPassword,
+        ])->assertOk();
+    }
+
+    public function test_platform_super_admin_can_set_a_custom_password_when_resetting(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        ['device' => $device] = SmsGatewayDevice::provision(['label' => 'Phone 01', 'username' => 'phone01', 'password' => 'oldpassword']);
+
+        $this->actingAs($platformAdmin)
+            ->patch(route('platform.sms-gateway.devices.reset-password', $device->id), [
+                'password' => 'my-chosen-password',
+            ])
+            ->assertRedirect(route('platform.sms-gateway.devices.index'));
+
+        $this->postJson('/api/v1/auth/login', [
+            'identifier' => 'phone01',
+            'password' => 'my-chosen-password',
         ])->assertOk();
     }
 
