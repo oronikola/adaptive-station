@@ -1,4 +1,5 @@
 import Pagination from '@/Components/admin/Pagination';
+import { useToast } from '@/Components/toast/ToastProvider';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -21,6 +22,8 @@ interface SmsOutboxRow {
 interface Filters {
     status?: string;
     phone_number?: string;
+    date_from?: string;
+    date_to?: string;
 }
 
 interface Stats {
@@ -95,14 +98,43 @@ const ICON_FAILED = (
     </svg>
 );
 
+// hour12 explicit, not left to the browser locale default — some locales
+// (e.g. en-GB) render toLocaleString()'s time in 24-hour "military" format
+// otherwise.
+function formatDateTime(value: string | Date): string {
+    return new Date(value).toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
+}
+
 export default function SmsLogListScreen({ messages, filters, stats }: SmsLogListScreenProps) {
     const { tenant } = usePage<PageProps>().props;
+    const { showToast } = useToast();
     const [isFiltering, setIsFiltering] = useState(false);
-    const hasFilters = Boolean(filters.status || filters.phone_number);
+    const [phoneNumberError, setPhoneNumberError] = useState(false);
+    const hasFilters = Boolean(filters.status || filters.phone_number || filters.date_from || filters.date_to);
     const { data, setData } = useForm({
         status: filters.status ?? '',
         phone_number: filters.phone_number ?? '',
+        date_from: filters.date_from ?? '',
+        date_to: filters.date_to ?? '',
     });
+
+    // Guard: prevent date_to before date_from, same pattern as Audit Log.
+    const today = new Date().toISOString().slice(0, 10);
+
+    function handleDateFrom(value: string) {
+        setData((d) => ({
+            ...d,
+            date_from: value,
+            date_to: d.date_to && d.date_to < value ? '' : d.date_to,
+        }));
+    }
 
     function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -111,6 +143,33 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
             preserveState: true,
             onFinish: () => setIsFiltering(false),
         });
+    }
+
+    // Opens a standalone preview in a new tab (not window.print() on this
+    // page) so the admin can review the report first — printing/saving as
+    // PDF happens from a button on that page, not immediately on click.
+    // Always clickable (not disabled) so the validation message below
+    // actually gets a chance to show — a disabled button never fires
+    // onClick at all.
+    function handlePrint() {
+        const phoneNumber = data.phone_number.trim();
+        if (!phoneNumber) {
+            setPhoneNumberError(true);
+            showToast({
+                type: 'error',
+                message: 'Put a phone number first.',
+                description: 'Printing needs one specific number\'s log — enter it above, then try again.',
+            });
+            return;
+        }
+
+        setPhoneNumberError(false);
+        const params = new URLSearchParams();
+        params.set('phone_number', phoneNumber);
+        if (data.date_from) params.set('date_from', data.date_from);
+        if (data.date_to) params.set('date_to', data.date_to);
+
+        window.open(`${route('portal.sms-log.print')}?${params.toString()}`, '_blank');
     }
 
     return (
@@ -162,14 +221,41 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                         </select>
                     </div>
 
-                    <div className="pf-field">
+                    <div className={'pf-field' + (phoneNumberError ? ' pf-field--error' : '')}>
                         <label htmlFor="phone_number">Phone number</label>
                         <input
                             id="phone_number"
                             type="text"
                             value={data.phone_number}
-                            onChange={(e) => setData('phone_number', e.target.value)}
+                            onChange={(e) => {
+                                setData('phone_number', e.target.value);
+                                if (phoneNumberError) setPhoneNumberError(false);
+                            }}
                             placeholder="e.g. 0917..."
+                            aria-invalid={phoneNumberError}
+                        />
+                    </div>
+
+                    <div className="pf-field">
+                        <label htmlFor="date_from">From</label>
+                        <input
+                            id="date_from"
+                            type="date"
+                            value={data.date_from}
+                            max={today}
+                            onChange={(e) => handleDateFrom(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="pf-field">
+                        <label htmlFor="date_to">To</label>
+                        <input
+                            id="date_to"
+                            type="date"
+                            value={data.date_to}
+                            min={data.date_from || undefined}
+                            max={today}
+                            onChange={(e) => setData('date_to', e.target.value)}
                         />
                     </div>
 
@@ -200,6 +286,16 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                                 {messages.from !== null ? `${messages.from}–${messages.to} of ${messages.total}` : 'No results'}
                             </p>
                         </div>
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={handlePrint}
+                        >
+                            <svg viewBox="0 0 24 24">
+                                <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z" />
+                            </svg>
+                            Print
+                        </button>
                     </div>
 
                     <div className="pf-table-wrap">
@@ -228,7 +324,7 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
 
                                 {messages.data.map((row) => (
                                     <tr key={row.id}>
-                                        <td>{new Date(row.created_at).toLocaleString()}</td>
+                                        <td>{formatDateTime(row.created_at)}</td>
                                         <td className="font-mono">{row.phone_number}</td>
                                         <td>
                                             <span
@@ -241,8 +337,8 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                                             </span>
                                         </td>
                                         <td className="font-mono">{row.attempts}</td>
-                                        <td>{row.sent_at ? new Date(row.sent_at).toLocaleString() : '—'}</td>
-                                        <td>{row.delivered_at ? new Date(row.delivered_at).toLocaleString() : '—'}</td>
+                                        <td>{row.sent_at ? formatDateTime(row.sent_at) : '—'}</td>
+                                        <td>{row.delivered_at ? formatDateTime(row.delivered_at) : '—'}</td>
                                         <td style={{ color: row.last_error ? 'var(--as-danger)' : undefined, fontSize: 12.5 }}>
                                             {row.last_error ?? '—'}
                                         </td>

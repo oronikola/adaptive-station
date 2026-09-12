@@ -145,12 +145,144 @@ class AdaptivestationAdminPortalAccessTest extends TestCase
             ->where('stats.failed', 0));
     }
 
+    public function test_it_can_filter_the_sms_delivery_log_by_date_range(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = $this->actingForSchool($tenant);
+
+        $old = SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '+639170000001',
+            'message' => 'Old alert',
+            'status' => SmsOutboxStatus::Delivered,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+        $old->forceFill(['created_at' => Date::now()->subDays(10)])->save();
+
+        SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '+639170000002',
+            'message' => 'Recent alert',
+            'status' => SmsOutboxStatus::Delivered,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('portal.sms-log.index', [
+            'date_from' => Date::now()->subDay()->toDateString(),
+            'date_to' => Date::now()->toDateString(),
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('messages.total', 1)
+            ->where('messages.data.0.phone_number', '+639170000002'));
+    }
+
+    public function test_filtering_by_phone_number_returns_the_complete_history_for_printing(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = $this->actingForSchool($tenant);
+
+        for ($i = 0; $i < 60; $i++) {
+            SmsOutboxMessage::create([
+                'tenant_id' => $tenant->id,
+                'person_id' => (string) Str::uuid(),
+                'parent_account_id' => (string) Str::uuid(),
+                'phone_number' => '+639171111111',
+                'message' => "Alert {$i}",
+                'status' => SmsOutboxStatus::Delivered,
+                'expires_at' => Date::now()->addMinutes(30),
+            ]);
+        }
+
+        $response = $this->actingAs($admin)->get(route('portal.sms-log.index', [
+            'phone_number' => '+639171111111',
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('messages.total', 60)
+            // The point of the test: all 60 rows must actually be on this
+            // one page, not truncated to the default 50-per-page browsing
+            // size — a print report can't silently drop rows.
+            ->where('messages.data', fn ($data) => count($data) === 60));
+    }
+
     public function test_a_tenant_admin_does_not_see_the_sms_delivery_log_menu_route(): void
     {
         $tenant = Tenant::factory()->create();
         $tenantAdmin = User::factory()->tenantAdmin($tenant)->create();
 
         $this->actingAs($tenantAdmin)->get(route('portal.sms-log.index'))->assertForbidden();
+    }
+
+    public function test_it_can_preview_the_print_report_for_a_specific_number(): void
+    {
+        $schoolA = Tenant::factory()->create();
+        $schoolB = Tenant::factory()->create();
+
+        SmsOutboxMessage::create([
+            'tenant_id' => $schoolA->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '+639170000001',
+            'message' => "SCHOOL A\nAttendance Alert: Correct Student\nStatus: TAPPED IN\nTime: 8:00 AM (GMT+8)\nDate: Sep 10, 2026\nStation: Station 1",
+            'status' => SmsOutboxStatus::Delivered,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+        SmsOutboxMessage::create([
+            'tenant_id' => $schoolA->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '+639179999999',
+            'message' => "SCHOOL A\nAttendance Alert: Wrong Number Student\nStatus: TAPPED IN\nTime: 8:00 AM (GMT+8)\nDate: Sep 10, 2026\nStation: Station 1",
+            'status' => SmsOutboxStatus::Delivered,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+        SmsOutboxMessage::create([
+            'tenant_id' => $schoolB->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '+639170000001',
+            'message' => "SCHOOL B\nAttendance Alert: Wrong School Student\nStatus: TAPPED IN\nTime: 8:00 AM (GMT+8)\nDate: Sep 10, 2026\nStation: Station 1",
+            'status' => SmsOutboxStatus::Delivered,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+
+        $admin = $this->actingForSchool($schoolA);
+
+        $response = $this->actingAs($admin)->get(route('portal.sms-log.print', [
+            'phone_number' => '+639170000001',
+        ]));
+
+        $response->assertOk();
+        $response->assertViewIs('portal.sms-log-print');
+        $response->assertSee('Correct Student');
+        $response->assertDontSee('Wrong Number Student');
+        $response->assertDontSee('Wrong School Student');
+    }
+
+    public function test_the_print_report_requires_a_phone_number(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = $this->actingForSchool($tenant);
+
+        $this->actingAs($admin)->get(route('portal.sms-log.print'))
+            ->assertSessionHasErrors('phone_number');
+    }
+
+    public function test_a_tenant_admin_cannot_reach_the_print_report(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $tenantAdmin = User::factory()->tenantAdmin($tenant)->create();
+
+        $this->actingAs($tenantAdmin)->get(route('portal.sms-log.print', [
+            'phone_number' => '+639170000001',
+        ]))->assertForbidden();
     }
 
     public function test_it_gets_sent_to_the_school_picker_if_no_school_is_selected_yet(): void

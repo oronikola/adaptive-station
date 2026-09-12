@@ -84,4 +84,5 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
         Route::patch('imports/{batch}/exceptions/{exception}/resolve', [ImportExceptionController::class, 'resolve'])->name('imports.exceptions.resolve');
 
         Route::get('sms-log', [SmsDeliveryLogController::class, 'index'])->name('sms-log.index');
+        Route::get('sms-log/print', [SmsDeliveryLogController::class, 'print'])->name('sms-log.print');
     });
