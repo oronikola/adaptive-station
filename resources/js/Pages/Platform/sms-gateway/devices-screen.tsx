@@ -33,11 +33,48 @@ interface DeviceRow {
     sim_stats: SimStat[];
 }
 
-const CAP_STATUS_COLOR: Record<SimStat['cap_status'], string | undefined> = {
-    ok: undefined,
+const CAP_STATUS_COLOR: Record<SimStat['cap_status'], string> = {
+    ok: 'var(--as-brand-blue)',
     near: 'var(--as-warning, #c1791f)',
     at: 'var(--as-danger)',
 };
+
+interface StatCardProps {
+    label: string;
+    value: number | string;
+    icon: keyof typeof STAT_ICONS;
+    tone: 'blue' | 'green' | 'violet' | 'amber' | 'red';
+    meta?: string;
+}
+
+const STAT_ICONS = {
+    devices: (
+        <>
+            <rect x="7" y="2" width="10" height="20" rx="2.4" />
+            <rect x="10" y="17.6" width="4" height="1.6" rx="0.8" fill="#fff" opacity={0.9} />
+        </>
+    ),
+    sent: <path d="M2 21l21-9L2 3v7l15 2-15 2z" />,
+    delivered: <path d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.5-1.5z" />,
+    failed: <path d="M12 2L1 21h22L12 2zm0 6a1 1 0 011 1v6a1 1 0 01-2 0V9a1 1 0 011-1zm0 10a1.25 1.25 0 110 2.5 1.25 1.25 0 010-2.5z" />,
+    pending: <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 10.4l3.6 2.6-1 1.4-4.6-3.4V6h2v6.4z" />,
+    claimed: <path d="M12 3a1 1 0 011 1v9.6l3-3 1.4 1.4-5.4 5.4-5.4-5.4L8 10.6l3 3V4a1 1 0 011-1zM5 19h14v2H5z" />,
+} as const;
+
+function StatCard({ label, value, icon, tone, meta }: StatCardProps) {
+    return (
+        <div className="pft-stat-card">
+            <div className="pft-stat-card-top">
+                <p className="pft-stat-label">{label}</p>
+                <span className={`pft-stat-icon pft-stat-icon--${tone}`}>
+                    <svg viewBox="0 0 24 24">{STAT_ICONS[icon]}</svg>
+                </span>
+            </div>
+            <p className="pft-stat-value">{value}</p>
+            {meta && <p className="pft-stat-meta">{meta}</p>}
+        </div>
+    );
+}
 
 interface Backlog {
     pending: number;
@@ -123,6 +160,10 @@ export default function SmsGatewayDevicesScreen({
     }
 
     const backlogIsHigh = backlog.oldest_pending_age_seconds > 30 * 60;
+    const onlineCount = devices.filter((d) => d.is_active && !d.is_stale).length;
+    const sentToday = devices.reduce((sum, d) => sum + d.sent_today, 0);
+    const deliveredToday = devices.reduce((sum, d) => sum + d.delivered_today, 0);
+    const failedToday = devices.reduce((sum, d) => sum + d.failed_today, 0);
 
     return (
         <PlatformLayout>
@@ -203,42 +244,38 @@ export default function SmsGatewayDevicesScreen({
                     </div>
                 )}
 
-                <div className="pf-panel" style={{ marginBottom: 16 }}>
-                    <div className="pf-panel-header">
-                        <div>
-                            <h2 className="pf-panel-title">Backlog</h2>
-                            <p className="pf-panel-count">
-                                {backlogIsHigh ? 'Queue is backlogged.' : 'Queue is draining normally.'}
-                            </p>
-                        </div>
-                    </div>
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                            gap: 16,
-                            padding: '0 24px 20px',
-                        }}
-                    >
-                        <div>
-                            <div className="pf-panel-count">Pending</div>
-                            <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, marginTop: 4 }}>{backlog.pending}</div>
-                        </div>
-                        <div>
-                            <div className="pf-panel-count">Claimed</div>
-                            <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, marginTop: 4 }}>{backlog.claimed}</div>
-                        </div>
-                        <div>
-                            <div className="pf-panel-count">Failed (24h)</div>
-                            <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, marginTop: 4 }}>{backlog.failed_last_24h}</div>
-                        </div>
-                        <div>
-                            <div className="pf-panel-count">Oldest pending</div>
-                            <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, marginTop: 4, color: backlogIsHigh ? 'var(--as-warning, #c1791f)' : undefined }}>
-                                {formatAge(backlog.oldest_pending_age_seconds)}
-                            </div>
-                        </div>
-                    </div>
+                <h2 className="pft-section-title">Fleet health</h2>
+                <div className="pft-stat-grid">
+                    <StatCard
+                        label="Devices"
+                        value={devices.length}
+                        icon="devices"
+                        tone="blue"
+                        meta={`${onlineCount} online now`}
+                    />
+                    <StatCard label="Sent today" value={sentToday} icon="sent" tone="violet" />
+                    <StatCard label="Delivered" value={deliveredToday} icon="delivered" tone="green" />
+                    <StatCard
+                        label="Failed"
+                        value={failedToday}
+                        icon="failed"
+                        tone="red"
+                        meta={failedToday > 0 ? 'Needs attention' : undefined}
+                    />
+                </div>
+
+                <h2 className="pft-section-title">Queue</h2>
+                <div className="pft-stat-grid">
+                    <StatCard label="Pending" value={backlog.pending} icon="pending" tone="amber" />
+                    <StatCard label="Claimed" value={backlog.claimed} icon="claimed" tone="blue" />
+                    <StatCard label="Failed (24h)" value={backlog.failed_last_24h} icon="failed" tone="red" />
+                    <StatCard
+                        label="Oldest pending"
+                        value={formatAge(backlog.oldest_pending_age_seconds)}
+                        icon="pending"
+                        tone={backlogIsHigh ? 'red' : 'green'}
+                        meta={backlogIsHigh ? 'Queue is backlogged' : 'Draining normally'}
+                    />
                 </div>
 
                 <div className="pf-panel">
@@ -253,12 +290,11 @@ export default function SmsGatewayDevicesScreen({
                         <table className="pf-table">
                             <thead>
                                 <tr>
-                                    <th scope="col">Label</th>
-                                    <th scope="col">Username</th>
+                                    <th scope="col">Device</th>
                                     <th scope="col">Password</th>
                                     <th scope="col">Status</th>
                                     <th scope="col">Last seen</th>
-                                    <th scope="col">Sent (today)</th>
+                                    <th scope="col">Capacity (today)</th>
                                     <th scope="col">Delivered</th>
                                     <th scope="col">Failed</th>
                                     <th scope="col">
@@ -269,7 +305,10 @@ export default function SmsGatewayDevicesScreen({
                             <tbody>
                                 {devices.length === 0 && (
                                     <tr>
-                                        <td colSpan={9} className="pf-empty">
+                                        <td colSpan={8} className="pft-empty">
+                                            <svg viewBox="0 0 24 24">
+                                                <rect x="7" y="2" width="10" height="20" rx="2.4" />
+                                            </svg>
                                             No devices registered yet.
                                         </td>
                                     </tr>
@@ -280,10 +319,23 @@ export default function SmsGatewayDevicesScreen({
                                         flash?.deviceUsername &&
                                         flash.deviceUsername === device.username &&
                                         flash?.devicePassword;
+                                    const capPct = Math.min(100, Math.round((device.sent_today / device.daily_send_cap) * 100));
                                     return (
                                     <tr key={device.id}>
-                                        <td className="pf-tenant-name">{device.label}</td>
-                                        <td className="font-mono">{device.username ?? '—'}</td>
+                                        <td>
+                                            <div className="pft-device-cell">
+                                                <span className="pft-device-avatar">
+                                                    <svg viewBox="0 0 24 24">
+                                                        <rect x="7" y="2" width="10" height="20" rx="2.4" />
+                                                        <rect x="10" y="17.6" width="4" height="1.6" rx="0.8" fill="#fff" opacity={0.9} />
+                                                    </svg>
+                                                </span>
+                                                <div className="pft-device-info">
+                                                    <p className="pft-device-label">{device.label}</p>
+                                                    <p className="pft-device-username font-mono">{device.username ?? '—'}</p>
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td>
                                             {hasNewPassword ? (
                                                 <span
@@ -304,7 +356,7 @@ export default function SmsGatewayDevicesScreen({
                                                     (!device.is_active
                                                         ? 'pf-pill--inactive'
                                                         : device.is_stale
-                                                          ? 'pf-pill--inactive'
+                                                          ? 'pf-pill--warning'
                                                           : 'pf-pill--active')
                                                 }
                                             >
@@ -320,7 +372,7 @@ export default function SmsGatewayDevicesScreen({
                                                 ? formatDateTime(device.last_seen_at)
                                                 : 'Never'}
                                         </td>
-                                        <td>
+                                        <td style={{ minWidth: 150 }}>
                                             <div
                                                 className="font-mono"
                                                 style={{ color: CAP_STATUS_COLOR[device.cap_status], fontWeight: device.cap_status !== 'ok' ? 700 : undefined }}
@@ -329,16 +381,26 @@ export default function SmsGatewayDevicesScreen({
                                                 {device.cap_status === 'at' && ' ⚠ At Cap'}
                                                 {device.cap_status === 'near' && ' ⚠ Near Cap'}
                                             </div>
+                                            <div className="pft-cap-bar">
+                                                <div
+                                                    className="pft-cap-bar-fill"
+                                                    style={{ width: `${capPct}%`, background: CAP_STATUS_COLOR[device.cap_status] }}
+                                                />
+                                            </div>
                                             {device.sim_stats.length > 0 ? (
-                                                <div style={{ fontSize: 11, color: 'var(--as-text-muted)', marginTop: 2 }}>
+                                                <div className="pft-sim-badges">
                                                     {device.sim_stats.map((sim) => (
-                                                        <span key={sim.sim_slot} style={{ marginRight: 8, color: CAP_STATUS_COLOR[sim.cap_status] }}>
+                                                        <span
+                                                            key={sim.sim_slot}
+                                                            className="pft-sim-badge"
+                                                            style={{ color: CAP_STATUS_COLOR[sim.cap_status] }}
+                                                        >
                                                             SIM {sim.sim_slot + 1}: {sim.sent_today}/{device.daily_send_cap}
                                                         </span>
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <div style={{ fontSize: 11, color: 'var(--as-text-muted)', marginTop: 2 }}>
+                                                <div style={{ fontSize: 11, color: 'var(--as-text-muted)', marginTop: 6 }}>
                                                     Per-SIM not reported yet
                                                 </div>
                                             )}

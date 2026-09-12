@@ -373,7 +373,11 @@ export default function SmsLogListScreen({ messages, devices, filters, stats }: 
                             <tbody>
                                 {messages.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={10} className="pf-empty">
+                                        <td colSpan={10} className="pft-empty">
+                                            <svg viewBox="0 0 24 24">
+                                                <rect x="7" y="2" width="10" height="20" rx="2" />
+                                                <path d="M11 18h2" />
+                                            </svg>
                                             {hasFilters
                                                 ? 'No messages match these filters.'
                                                 : 'No SMS messages yet.'}

@@ -31,11 +31,20 @@ interface Filters {
     phone_number?: string;
 }
 
+interface Stats {
+    total: number;
+    pending: number;
+    sent: number;
+    delivered: number;
+    failed: number;
+}
+
 interface SmsLogListScreenProps {
     messages: PaginatedData<SmsOutboxRow>;
     tenants: { id: string; name: string }[];
     devices: { id: string; label: string }[];
     filters: Filters;
+    stats: Stats;
 }
 
 const STATUS_PILL_CLASS: Record<string, string> = {
@@ -46,6 +55,55 @@ const STATUS_PILL_CLASS: Record<string, string> = {
     failed: 'pf-pill--danger',
     expired: 'pf-pill--danger',
 };
+
+interface StatCardProps {
+    label: string;
+    value: number;
+    icon: React.ReactNode;
+    tone: 'blue' | 'amber' | 'violet' | 'green' | 'red';
+}
+
+function StatCard({ label, value, icon, tone }: StatCardProps) {
+    return (
+        <div className="pft-stat-card">
+            <div className="pft-stat-card-top">
+                <p className="pft-stat-label">{label}</p>
+                <span className={`pft-stat-icon pft-stat-icon--${tone}`}>{icon}</span>
+            </div>
+            <p className="pft-stat-value">{value}</p>
+        </div>
+    );
+}
+
+const ICON_TOTAL = (
+    <svg viewBox="0 0 24 24">
+        <rect x="7" y="2" width="10" height="20" rx="2" />
+        <path d="M11 18h2" />
+    </svg>
+);
+const ICON_PENDING = (
+    <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7.5V12l3 2" />
+    </svg>
+);
+const ICON_SENT = (
+    <svg viewBox="0 0 24 24">
+        <path d="M4 11l16-7-6 16-3-6-6-3z" />
+    </svg>
+);
+const ICON_DELIVERED = (
+    <svg viewBox="0 0 24 24">
+        <path d="M20 6L9 17l-5-5" />
+    </svg>
+);
+const ICON_FAILED = (
+    <svg viewBox="0 0 24 24">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+);
 
 // hour12 explicit, not left to the browser locale default — some locales
 // (e.g. en-GB) render toLocaleString()'s time in 24-hour "military" format
@@ -61,7 +119,7 @@ function formatDateTime(value: string): string {
     });
 }
 
-export default function SmsLogListScreen({ messages, tenants, devices, filters }: SmsLogListScreenProps) {
+export default function SmsLogListScreen({ messages, tenants, devices, filters, stats }: SmsLogListScreenProps) {
     const [isFiltering, setIsFiltering] = useState(false);
     const hasFilters = Boolean(filters.tenant_id || filters.device_id || filters.status || filters.phone_number);
     const { data, setData } = useForm({
@@ -102,6 +160,14 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters }
                             </p>
                         </div>
                     </div>
+                </div>
+
+                <div className="pft-stat-grid">
+                    <StatCard label="Total" value={stats.total} icon={ICON_TOTAL} tone="blue" />
+                    <StatCard label="Pending" value={stats.pending} icon={ICON_PENDING} tone="amber" />
+                    <StatCard label="Sent" value={stats.sent} icon={ICON_SENT} tone="violet" />
+                    <StatCard label="Delivered" value={stats.delivered} icon={ICON_DELIVERED} tone="green" />
+                    <StatCard label="Failed" value={stats.failed} icon={ICON_FAILED} tone="red" />
                 </div>
 
                 <form onSubmit={submit} className="pf-filter-bar" role="search">
@@ -209,7 +275,11 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters }
                             <tbody>
                                 {messages.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={10} className="pf-empty">
+                                        <td colSpan={10} className="pft-empty">
+                                            <svg viewBox="0 0 24 24">
+                                                <rect x="7" y="2" width="10" height="20" rx="2" />
+                                                <path d="M11 18h2" />
+                                            </svg>
                                             {hasFilters
                                                 ? 'No messages match these filters.'
                                                 : 'No SMS messages yet.'}

@@ -47,6 +47,34 @@ class SmsDeliveryLogController extends Controller
             'tenants' => Tenant::query()->orderBy('name')->get(['id', 'name']),
             'devices' => SmsGatewayDevice::query()->orderBy('label')->get(['id', 'label']),
             'filters' => $filters,
+            'stats' => $this->stats(),
         ]);
+    }
+
+    /**
+     * Always scoped to every message across every school, independent of the
+     * current filters — a permanent overview, not a filtered count. Claimed
+     * folds into "pending" (still in flight) and expired folds into "failed"
+     * (never reached the phone) so the stat grid stays at a glance-able 5
+     * cards instead of one per raw enum value. Mirrors Portal's own
+     * SmsDeliveryLogController::stats(), just without the tenant_id scope.
+     *
+     * @return array{total: int, pending: int, sent: int, delivered: int, failed: int}
+     */
+    private function stats(): array
+    {
+        $counts = SmsOutboxMessage::query()
+            ->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')
+            ->get()
+            ->mapWithKeys(fn ($row) => [$row->status->value => (int) $row->aggregate]);
+
+        return [
+            'total' => $counts->sum(),
+            'pending' => ($counts['pending'] ?? 0) + ($counts['claimed'] ?? 0),
+            'sent' => $counts['sent'] ?? 0,
+            'delivered' => $counts['delivered'] ?? 0,
+            'failed' => ($counts['failed'] ?? 0) + ($counts['expired'] ?? 0),
+        ];
     }
 }
