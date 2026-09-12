@@ -19,6 +19,10 @@ interface SmsOutboxRow {
     last_error: string | null;
     created_at: string;
     is_plausible_phone_number: boolean;
+    // Only ever set once a fleet phone has actually claimed the message
+    // (sent/delivered) — a failure clears it, so pending/failed/expired
+    // rows show "—" here, not a bug.
+    device: { id: string; label: string } | null;
 }
 
 interface Filters {
@@ -335,6 +339,7 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                                 <tr>
                                     <th scope="col">When</th>
                                     <th scope="col">Phone Number</th>
+                                    <th scope="col">Sent By</th>
                                     <th scope="col">Status</th>
                                     <th scope="col">Attempts</th>
                                     <th scope="col">Sent</th>
@@ -346,7 +351,7 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                             <tbody>
                                 {messages.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={8} className="pf-empty">
+                                        <td colSpan={9} className="pf-empty">
                                             {hasFilters
                                                 ? 'No messages match these filters.'
                                                 : 'No SMS messages yet.'}
@@ -358,6 +363,7 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                                     <tr key={row.id}>
                                         <td>{formatDateTime(row.created_at)}</td>
                                         <td className="font-mono">{row.phone_number}</td>
+                                        <td>{row.device?.label ?? '—'}</td>
                                         <td>
                                             <span
                                                 className={

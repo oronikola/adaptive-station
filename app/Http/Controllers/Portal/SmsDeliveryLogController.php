@@ -42,6 +42,7 @@ class SmsDeliveryLogController extends Controller
         $perPage = filled($filters['phone_number'] ?? null) ? 1000 : 50;
 
         $messages = SmsOutboxMessage::query()
+            ->with('device:id,label')
             ->where('tenant_id', $tenantId)
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', 'like', "%{$phone}%"))
@@ -86,6 +87,7 @@ class SmsDeliveryLogController extends Controller
         $tenantId = app(TenantContext::class)->get();
 
         $messages = SmsOutboxMessage::query()
+            ->with('device:id,label')
             ->where('tenant_id', $tenantId)
             ->where('phone_number', 'like', "%{$data['phone_number']}%")
             ->when($data['date_from'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))

@@ -66,6 +66,18 @@ class SmsOutboxMessage extends Model
     }
 
     /**
+     * The fleet phone that most recently claimed this message — only ever
+     * populated once a device has actually claimed it (sent/delivered), and
+     * markFailed() deliberately nulls it back out on failure (see its
+     * docblock), so this is null for pending/failed/expired rows, not a
+     * missing-data bug.
+     */
+    public function device(): BelongsTo
+    {
+        return $this->belongsTo(SmsGatewayDevice::class, 'claimed_by_device_id');
+    }
+
+    /**
      * Atomically reserves up to $batchSize pending rows for $device, across
      * every tenant. `->lock('for update skip locked')` is what lets 20-40
      * concurrent devices poll the same table without ever double-claiming a

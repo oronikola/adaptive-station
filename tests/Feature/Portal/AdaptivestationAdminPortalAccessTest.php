@@ -4,6 +4,7 @@ namespace Tests\Feature\Portal;
 
 use App\Enums\SmsOutboxStatus;
 use App\Models\Person;
+use App\Models\SmsGatewayDevice;
 use App\Models\SmsOutboxMessage;
 use App\Models\Tenant;
 use App\Models\User;
@@ -143,6 +144,44 @@ class AdaptivestationAdminPortalAccessTest extends TestCase
             ->where('stats.delivered', 1)
             ->where('stats.pending', 1)
             ->where('stats.failed', 0));
+    }
+
+    public function test_it_shows_which_device_sent_a_claimed_message_but_not_a_still_pending_one(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = $this->actingForSchool($tenant);
+        ['device' => $device] = SmsGatewayDevice::provision(['label' => 'Phone 3', 'username' => 'phone3']);
+
+        $sent = SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '09171234567',
+            'message' => 'Sent alert',
+            'status' => SmsOutboxStatus::Sent,
+            'claimed_by_device_id' => $device->id,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+        $pending = SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '09171234568',
+            'message' => 'Pending alert',
+            'status' => SmsOutboxStatus::Pending,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('portal.sms-log.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('messages.data', function ($rows) use ($sent, $pending) {
+                $byId = collect($rows)->keyBy('id');
+
+                return $byId[$sent->id]['device']['label'] === 'Phone 3'
+                    && $byId[$pending->id]['device'] === null;
+            }));
     }
 
     public function test_it_can_resend_a_failed_message_with_a_plausible_phone_number(): void
