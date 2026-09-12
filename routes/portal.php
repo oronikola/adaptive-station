@@ -9,8 +9,10 @@ use App\Http\Controllers\Portal\ParentAccountController;
 use App\Http\Controllers\Portal\PersonController;
 use App\Http\Controllers\Portal\RfidCardController;
 use App\Http\Controllers\Portal\SmsDeliveryLogController;
+use App\Http\Controllers\Portal\SmsGatewayFleetController;
 use App\Http\Controllers\Portal\StationController;
 use App\Http\Controllers\Portal\UserController;
+use App\Http\Middleware\EnsureOversightAccess;
 use App\Http\Middleware\EnsurePortalAccess;
 use Illuminate\Support\Facades\Route;
 
@@ -86,4 +88,16 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
         Route::get('sms-log', [SmsDeliveryLogController::class, 'index'])->name('sms-log.index');
         Route::get('sms-log/print', [SmsDeliveryLogController::class, 'print'])->name('sms-log.print');
         Route::patch('sms-log/{message}/resend', [SmsDeliveryLogController::class, 'resend'])->name('sms-log.resend');
+    });
+
+// Deliberately its own group, not inside the one above: EnsurePortalAccess
+// requires adaptivestation_admin to have already selected a school (see its
+// docblock), but the SMS gateway fleet is shared across every school (see
+// IP-007) and isn't scoped to any one of them — EnsureOversightAccess only
+// checks the role itself, no tenant/school required.
+Route::middleware(['auth', 'verified', EnsureOversightAccess::class])
+    ->prefix('portal')
+    ->name('portal.')
+    ->group(function () {
+        Route::get('sms-gateway', [SmsGatewayFleetController::class, 'index'])->name('sms-gateway.index');
     });

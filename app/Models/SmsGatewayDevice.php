@@ -83,6 +83,34 @@ class SmsGatewayDevice extends Model
         return $this->hasMany(SmsOutboxMessage::class, 'claimed_by_device_id');
     }
 
+    public function simStats(): HasMany
+    {
+        return $this->hasMany(SmsGatewayDeviceSimStat::class, 'device_id');
+    }
+
+    /**
+     * 'ok' / 'near' (>=80% of the researched daily cap) / 'at' (>=100%) —
+     * purely informational (see config('services.sms_gateway.
+     * daily_send_cap')'s docblock), computed from this device's own
+     * aggregate sent_today, not broken down per SIM. Use
+     * SmsGatewayDeviceSimStat::capStatus() for the per-SIM version.
+     */
+    public function dailySendCapStatus(): string
+    {
+        return static::capStatusFor($this->sent_today);
+    }
+
+    public static function capStatusFor(int $sentToday): string
+    {
+        $cap = config('services.sms_gateway.daily_send_cap');
+
+        return match (true) {
+            $sentToday >= $cap => 'at',
+            $sentToday >= $cap * 0.8 => 'near',
+            default => 'ok',
+        };
+    }
+
     /**
      * Rolls sent_today/delivered_today/failed_today over when the calendar
      * day changes, checked on every claim poll — avoids a separate

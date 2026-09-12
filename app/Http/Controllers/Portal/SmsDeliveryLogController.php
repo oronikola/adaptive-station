@@ -6,6 +6,7 @@ use App\Enums\SmsOutboxStatus;
 use App\Events\SmsGatewayWakeUp;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\SmsGatewayDevice;
 use App\Models\SmsOutboxMessage;
 use App\Models\Tenant;
 use App\Support\TenantContext;
@@ -32,7 +33,7 @@ class SmsDeliveryLogController extends Controller
 
         $tenantId = app(TenantContext::class)->get();
 
-        $filters = $request->only(['status', 'phone_number', 'date_from', 'date_to']);
+        $filters = $request->only(['status', 'device_id', 'phone_number', 'date_from', 'date_to']);
 
         // A phone-number search is inherently narrow (one person's own
         // messages, not the whole school) and is the case the print button
@@ -45,6 +46,12 @@ class SmsDeliveryLogController extends Controller
             ->with('device:id,label')
             ->where('tenant_id', $tenantId)
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            // A device is only ever attached to a message it actually
+            // claimed/sent (see SmsOutboxMessage::markFailed()'s docblock),
+            // so filtering by device_id here necessarily only surfaces its
+            // sent/delivered messages for this school, not ones it once
+            // attempted and failed.
+            ->when($filters['device_id'] ?? null, fn ($query, $deviceId) => $query->where('claimed_by_device_id', $deviceId))
             ->when($filters['phone_number'] ?? null, fn ($query, $phone) => $query->where('phone_number', 'like', "%{$phone}%"))
             ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
             ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date))
@@ -62,6 +69,11 @@ class SmsDeliveryLogController extends Controller
 
         return Inertia::render('Admin/sms-log/sms-log-list-screen', [
             'messages' => $messages,
+            // Every fleet phone, not just ones that have sent for this
+            // school — the phone pool is shared across every school (see
+            // IP-007), so any of them could pick up this school's next
+            // message.
+            'devices' => SmsGatewayDevice::query()->orderBy('label')->get(['id', 'label']),
             'filters' => $filters,
             'stats' => $this->stats($tenantId),
         ]);

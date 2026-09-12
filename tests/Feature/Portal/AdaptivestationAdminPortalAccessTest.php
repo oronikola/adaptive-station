@@ -100,6 +100,47 @@ class AdaptivestationAdminPortalAccessTest extends TestCase
         ]);
     }
 
+    public function test_it_can_filter_the_sms_delivery_log_by_phone(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = $this->actingForSchool($tenant);
+        $phoneA = SmsGatewayDevice::create(['label' => 'Phone A']);
+        $phoneB = SmsGatewayDevice::create(['label' => 'Phone B']);
+
+        SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '+639170000001',
+            'message' => 'Sent by Phone A',
+            'status' => SmsOutboxStatus::Sent,
+            'claimed_by_device_id' => $phoneA->id,
+            'sim_slot' => 0,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+        SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '+639170000002',
+            'message' => 'Sent by Phone B',
+            'status' => SmsOutboxStatus::Sent,
+            'claimed_by_device_id' => $phoneB->id,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('portal.sms-log.index', [
+            'device_id' => $phoneA->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('messages.total', 1)
+            ->where('messages.data.0.phone_number', '+639170000001')
+            ->where('messages.data.0.device.label', 'Phone A')
+            ->where('messages.data.0.sim_slot', 0));
+    }
+
     public function test_it_sees_only_the_selected_schools_sms_delivery_log(): void
     {
         $schoolA = Tenant::factory()->create();

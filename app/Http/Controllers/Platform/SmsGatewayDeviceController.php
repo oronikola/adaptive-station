@@ -2,23 +2,25 @@
 
 namespace App\Http\Controllers\Platform;
 
-use App\Enums\SmsOutboxStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\SmsGatewayDevice;
 use App\Models\SmsGatewayDeviceToken;
-use App\Models\SmsOutboxMessage;
+use App\Support\SmsGatewayFleetSnapshot;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Fleet roster + backlog visibility for the SMS gateway phones. Deliberately
- * lightweight (a glance, not a monitoring stack) — see IP-007.
+ * Fleet roster + backlog visibility for the SMS gateway phones, plus the
+ * only actions that manage a device (add/reset password/deactivate) — those
+ * stay exclusive to platform_super_admin. The read-only view itself is
+ * shared with Portal\SmsGatewayFleetController (adaptivestation_admin) via
+ * SmsGatewayFleetSnapshot. Deliberately lightweight (a glance, not a
+ * monitoring stack) — see IP-007.
  */
 class SmsGatewayDeviceController extends Controller
 {
@@ -26,37 +28,7 @@ class SmsGatewayDeviceController extends Controller
     {
         Gate::authorize('viewAny', SmsGatewayDevice::class);
 
-        $staleThreshold = Date::now()->subMinutes(3);
-
-        $devices = SmsGatewayDevice::query()
-            ->orderBy('label')
-            ->get()
-            ->map(fn (SmsGatewayDevice $device) => [
-                'id' => $device->id,
-                'label' => $device->label,
-                'username' => $device->username,
-                'is_active' => $device->is_active,
-                'last_seen_at' => $device->last_seen_at?->toIso8601String(),
-                'sent_today' => $device->sent_today,
-                'delivered_today' => $device->delivered_today,
-                'failed_today' => $device->failed_today,
-                'is_stale' => $device->last_seen_at === null || $device->last_seen_at->lt($staleThreshold),
-            ]);
-
-        $backlog = [
-            'pending' => SmsOutboxMessage::query()->where('status', SmsOutboxStatus::Pending->value)->count(),
-            'claimed' => SmsOutboxMessage::query()->where('status', SmsOutboxStatus::Claimed->value)->count(),
-            'failed_last_24h' => SmsOutboxMessage::query()
-                ->where('status', SmsOutboxStatus::Failed->value)
-                ->where('created_at', '>', Date::now()->subDay())
-                ->count(),
-            'oldest_pending_age_seconds' => $this->oldestPendingAgeSeconds(),
-        ];
-
-        return Inertia::render('Platform/sms-gateway/devices-screen', [
-            'devices' => $devices,
-            'backlog' => $backlog,
-        ]);
+        return Inertia::render('Platform/sms-gateway/devices-screen', SmsGatewayFleetSnapshot::build());
     }
 
     public function store(Request $request): RedirectResponse
@@ -118,14 +90,5 @@ class SmsGatewayDeviceController extends Controller
 
         return redirect()->route('platform.sms-gateway.devices.index')
             ->with('success', "Device \"{$device->label}\" deactivated.");
-    }
-
-    private function oldestPendingAgeSeconds(): int
-    {
-        $oldest = SmsOutboxMessage::query()
-            ->where('status', SmsOutboxStatus::Pending->value)
-            ->min('created_at');
-
-        return $oldest === null ? 0 : Date::now()->diffInSeconds(Date::parse($oldest));
     }
 }

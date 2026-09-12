@@ -112,6 +112,66 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->assertSame(1, $device->fresh()->sent_today);
     }
 
+    public function test_reporting_sent_with_a_sim_slot_records_it_on_the_message_and_the_per_sim_counter(): void
+    {
+        ['token' => $token, 'device' => $device] = $this->makeDevice();
+        $tenant = Tenant::factory()->create();
+        $this->makeOutboxRow($tenant);
+
+        $claim = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/device/sms/claim')->assertOk();
+        $messageId = $claim->json('messages.0.id');
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/device/sms/messages/{$messageId}/status", ['status' => 'sent', 'sim_slot' => 1])
+            ->assertOk();
+
+        $this->assertSame(1, SmsOutboxMessage::find($messageId)->sim_slot);
+        $this->assertDatabaseHas('sms_gateway_device_sim_stats', [
+            'device_id' => $device->id,
+            'sim_slot' => 1,
+            'sent_today' => 1,
+        ]);
+    }
+
+    public function test_reporting_sent_without_a_sim_slot_still_works_for_an_older_app_build(): void
+    {
+        ['token' => $token, 'device' => $device] = $this->makeDevice();
+        $tenant = Tenant::factory()->create();
+        $this->makeOutboxRow($tenant);
+
+        $claim = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/device/sms/claim')->assertOk();
+        $messageId = $claim->json('messages.0.id');
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/device/sms/messages/{$messageId}/status", ['status' => 'sent'])
+            ->assertOk();
+
+        $this->assertNull(SmsOutboxMessage::find($messageId)->sim_slot);
+        $this->assertSame(1, $device->fresh()->sent_today);
+        $this->assertDatabaseCount('sms_gateway_device_sim_stats', 0);
+    }
+
+    public function test_a_failed_report_keeps_the_sim_slot_but_clears_the_claiming_device(): void
+    {
+        ['token' => $token] = $this->makeDevice();
+        $tenant = Tenant::factory()->create();
+        $this->makeOutboxRow($tenant);
+
+        $claim = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/device/sms/claim')->assertOk();
+        $messageId = $claim->json('messages.0.id');
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/device/sms/messages/{$messageId}/status", ['status' => 'failed', 'sim_slot' => 0])
+            ->assertOk();
+
+        $fresh = SmsOutboxMessage::find($messageId);
+        $this->assertSame(0, $fresh->sim_slot);
+        $this->assertNull($fresh->claimed_by_device_id);
+    }
+
     public function test_reporting_delivered_after_sent_marks_the_row_delivered_and_updates_device_stats(): void
     {
         ['token' => $token, 'device' => $device] = $this->makeDevice();

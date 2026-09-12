@@ -6,6 +6,7 @@ use App\Enums\SmsOutboxStatus;
 use App\Http\Controllers\Api\Device\Concerns\ResolvesAuthenticatedSmsGatewayDevice;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\SmsGatewayDeviceSimStat;
 use App\Models\SmsGatewayDeviceToken;
 use App\Models\SmsOutboxMessage;
 use Illuminate\Http\JsonResponse;
@@ -52,9 +53,14 @@ class SmsGatewayController extends Controller
         $data = $request->validate([
             'status' => ['required', Rule::in(['sent', 'failed', 'delivered'])],
             'error' => ['nullable', 'string', 'max:255'],
+            // Which physical SIM (0 or 1) the device actually sent from —
+            // optional so an app build older than this feature keeps
+            // working unchanged, just without per-SIM cap tracking.
+            'sim_slot' => ['nullable', 'integer', 'min:0', 'max:1'],
         ]);
 
         $device = $this->smsGatewayDevice($request);
+        $simSlot = $data['sim_slot'] ?? null;
 
         // Scoped to this device's own claim — a device can never report
         // status on a row it didn't claim itself. markSent() never clears
@@ -75,12 +81,21 @@ class SmsGatewayController extends Controller
 
             $row->markDelivered();
             $device->increment('delivered_today');
+            if ($simSlot !== null) {
+                SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'delivered_today');
+            }
         } elseif ($data['status'] === 'sent') {
-            $row->markSent();
+            $row->markSent($simSlot);
             $device->increment('sent_today');
+            if ($simSlot !== null) {
+                SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'sent_today');
+            }
         } else {
-            $row->markFailed($data['error'] ?? null);
+            $row->markFailed($data['error'] ?? null, $simSlot);
             $device->increment('failed_today');
+            if ($simSlot !== null) {
+                SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'failed_today');
+            }
         }
 
         return response()->json(['status' => 'ok']);

@@ -8,6 +8,14 @@ import { PageProps } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
+interface SimStat {
+    sim_slot: number;
+    sent_today: number;
+    delivered_today: number;
+    failed_today: number;
+    cap_status: 'ok' | 'near' | 'at';
+}
+
 interface DeviceRow {
     id: string;
     label: string;
@@ -18,7 +26,18 @@ interface DeviceRow {
     delivered_today: number;
     failed_today: number;
     is_stale: boolean;
+    daily_send_cap: number;
+    cap_status: 'ok' | 'near' | 'at';
+    // Empty until this device's app build has reported at least one
+    // sim_slot-tagged send — an older, not-yet-updated phone has none yet.
+    sim_stats: SimStat[];
 }
+
+const CAP_STATUS_COLOR: Record<SimStat['cap_status'], string | undefined> = {
+    ok: undefined,
+    near: 'var(--as-warning, #c1791f)',
+    at: 'var(--as-danger)',
+};
 
 interface Backlog {
     pending: number;
@@ -225,7 +244,7 @@ export default function SmsGatewayDevicesScreen({
                                     <th scope="col">Password</th>
                                     <th scope="col">Status</th>
                                     <th scope="col">Last seen</th>
-                                    <th scope="col">Sent</th>
+                                    <th scope="col">Sent (today)</th>
                                     <th scope="col">Delivered</th>
                                     <th scope="col">Failed</th>
                                     <th scope="col">
@@ -287,7 +306,29 @@ export default function SmsGatewayDevicesScreen({
                                                 ? new Date(device.last_seen_at).toLocaleString()
                                                 : 'Never'}
                                         </td>
-                                        <td className="font-mono">{device.sent_today}</td>
+                                        <td>
+                                            <div
+                                                className="font-mono"
+                                                style={{ color: CAP_STATUS_COLOR[device.cap_status], fontWeight: device.cap_status !== 'ok' ? 700 : undefined }}
+                                            >
+                                                {device.sent_today} / {device.daily_send_cap}
+                                                {device.cap_status === 'at' && ' ⚠ At Cap'}
+                                                {device.cap_status === 'near' && ' ⚠ Near Cap'}
+                                            </div>
+                                            {device.sim_stats.length > 0 ? (
+                                                <div style={{ fontSize: 11, color: 'var(--as-text-muted)', marginTop: 2 }}>
+                                                    {device.sim_stats.map((sim) => (
+                                                        <span key={sim.sim_slot} style={{ marginRight: 8, color: CAP_STATUS_COLOR[sim.cap_status] }}>
+                                                            SIM {sim.sim_slot + 1}: {sim.sent_today}/{device.daily_send_cap}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div style={{ fontSize: 11, color: 'var(--as-text-muted)', marginTop: 2 }}>
+                                                    Per-SIM not reported yet
+                                                </div>
+                                            )}
+                                        </td>
                                         <td className="font-mono">{device.delivered_today}</td>
                                         <td className="font-mono" style={{ color: device.failed_today > 0 ? 'var(--as-danger)' : undefined }}>{device.failed_today}</td>
                                         <td>

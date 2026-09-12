@@ -9,6 +9,7 @@ import '../../../../css/platform-overview.css';
 interface SmsOutboxRow {
     id: string;
     tenant?: { name: string } | null;
+    device?: { id: string; label: string } | null;
     phone_number: string;
     message: string;
     status: string;
@@ -17,10 +18,15 @@ interface SmsOutboxRow {
     delivered_at: string | null;
     last_error: string | null;
     created_at: string;
+    // 0 or 1 (SIM 1 / SIM 2) — only present once the fleet phone's app
+    // build is new enough to report which SIM it sent from; null on an
+    // older build's message, not a data problem.
+    sim_slot: number | null;
 }
 
 interface Filters {
     tenant_id?: string;
+    device_id?: string;
     status?: string;
     phone_number?: string;
 }
@@ -28,6 +34,7 @@ interface Filters {
 interface SmsLogListScreenProps {
     messages: PaginatedData<SmsOutboxRow>;
     tenants: { id: string; name: string }[];
+    devices: { id: string; label: string }[];
     filters: Filters;
 }
 
@@ -40,11 +47,26 @@ const STATUS_PILL_CLASS: Record<string, string> = {
     expired: 'pf-pill--danger',
 };
 
-export default function SmsLogListScreen({ messages, tenants, filters }: SmsLogListScreenProps) {
+// hour12 explicit, not left to the browser locale default — some locales
+// (e.g. en-GB) render toLocaleString()'s time in 24-hour "military" format
+// otherwise.
+function formatDateTime(value: string): string {
+    return new Date(value).toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
+}
+
+export default function SmsLogListScreen({ messages, tenants, devices, filters }: SmsLogListScreenProps) {
     const [isFiltering, setIsFiltering] = useState(false);
-    const hasFilters = Boolean(filters.tenant_id || filters.status || filters.phone_number);
+    const hasFilters = Boolean(filters.tenant_id || filters.device_id || filters.status || filters.phone_number);
     const { data, setData } = useForm({
         tenant_id: filters.tenant_id ?? '',
+        device_id: filters.device_id ?? '',
         status: filters.status ?? '',
         phone_number: filters.phone_number ?? '',
     });
@@ -74,8 +96,9 @@ export default function SmsLogListScreen({ messages, tenants, filters }: SmsLogL
                         <div>
                             <h1 className="pft-hero-title">SMS Delivery Log</h1>
                             <p className="pft-hero-subtitle">
-                                Every tap-alert SMS attempted, across every school — which
-                                phone numbers were sent/delivered vs. still pending or failed.
+                                Every tap-alert SMS attempted, across every school and every
+                                fleet phone — which numbers were sent/delivered vs. still
+                                pending or failed.
                             </p>
                         </div>
                     </div>
@@ -92,6 +115,20 @@ export default function SmsLogListScreen({ messages, tenants, filters }: SmsLogL
                             <option value="">All schools</option>
                             {tenants.map((tenant) => (
                                 <option key={tenant.id} value={tenant.id}>{tenant.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="pf-field">
+                        <label htmlFor="device_id">Phone</label>
+                        <select
+                            id="device_id"
+                            value={data.device_id}
+                            onChange={(e) => setData('device_id', e.target.value)}
+                        >
+                            <option value="">All phones</option>
+                            {devices.map((device) => (
+                                <option key={device.id} value={device.id}>{device.label}</option>
                             ))}
                         </select>
                     </div>
@@ -160,6 +197,8 @@ export default function SmsLogListScreen({ messages, tenants, filters }: SmsLogL
                                     <th scope="col">When</th>
                                     <th scope="col">School</th>
                                     <th scope="col">Phone Number</th>
+                                    <th scope="col">Sent By</th>
+                                    <th scope="col">SIM</th>
                                     <th scope="col">Status</th>
                                     <th scope="col">Attempts</th>
                                     <th scope="col">Sent</th>
@@ -170,7 +209,7 @@ export default function SmsLogListScreen({ messages, tenants, filters }: SmsLogL
                             <tbody>
                                 {messages.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={8} className="pf-empty">
+                                        <td colSpan={10} className="pf-empty">
                                             {hasFilters
                                                 ? 'No messages match these filters.'
                                                 : 'No SMS messages yet.'}
@@ -180,9 +219,11 @@ export default function SmsLogListScreen({ messages, tenants, filters }: SmsLogL
 
                                 {messages.data.map((row) => (
                                     <tr key={row.id}>
-                                        <td>{new Date(row.created_at).toLocaleString()}</td>
+                                        <td>{formatDateTime(row.created_at)}</td>
                                         <td>{row.tenant?.name ?? '—'}</td>
                                         <td className="font-mono">{row.phone_number}</td>
+                                        <td>{row.device?.label ?? '—'}</td>
+                                        <td>{row.sim_slot !== null ? `SIM ${row.sim_slot + 1}` : '—'}</td>
                                         <td>
                                             <span
                                                 className={
@@ -194,8 +235,8 @@ export default function SmsLogListScreen({ messages, tenants, filters }: SmsLogL
                                             </span>
                                         </td>
                                         <td className="font-mono">{row.attempts}</td>
-                                        <td>{row.sent_at ? new Date(row.sent_at).toLocaleString() : '—'}</td>
-                                        <td>{row.delivered_at ? new Date(row.delivered_at).toLocaleString() : '—'}</td>
+                                        <td>{row.sent_at ? formatDateTime(row.sent_at) : '—'}</td>
+                                        <td>{row.delivered_at ? formatDateTime(row.delivered_at) : '—'}</td>
                                         <td style={{ color: row.last_error ? 'var(--as-danger)' : undefined, fontSize: 12.5 }}>
                                             {row.last_error ?? '—'}
                                         </td>

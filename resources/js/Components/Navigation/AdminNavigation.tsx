@@ -150,6 +150,22 @@ export const adminNavigationItems: NavItem[] = [
         ),
     },
     {
+        name: 'sms-gateway',
+        label: 'SMS Gateway Fleet',
+        route: 'portal.sms-gateway.index',
+        activePattern: 'portal.sms-gateway.*',
+        // Read-only mirror of the Platform fleet screen — the fleet is
+        // shared across every school, not owned by whichever one is
+        // currently selected, so this always shows the whole fleet.
+        oversightOnly: true,
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <rect x="6" y="3" width="12" height="18" rx="2" />
+                <path d="M10 18h4" />
+            </svg>
+        ),
+    },
+    {
         name: 'switch-school',
         label: 'Switch School',
         route: 'oversight.schools.index',

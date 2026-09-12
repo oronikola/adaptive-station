@@ -274,6 +274,7 @@
                             <th>Student</th>
                             <th>Station</th>
                             <th>Sent By</th>
+                            <th>SIM</th>
                             <th>Status</th>
                             <th>Sent</th>
                             <th>Delivered</th>
@@ -296,6 +297,7 @@
                                 <td>{{ $message->parsed['student'] ?? '—' }}</td>
                                 <td>{{ $message->parsed['station'] ?? '—' }}</td>
                                 <td>{{ $message->device?->label ?? '—' }}</td>
+                                <td>{{ $message->sim_slot !== null ? 'SIM '.($message->sim_slot + 1) : '—' }}</td>
                                 <td>
                                     @php
                                         $pillClass = match ($message->status->value) {

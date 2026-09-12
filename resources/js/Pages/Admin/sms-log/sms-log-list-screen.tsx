@@ -23,10 +23,15 @@ interface SmsOutboxRow {
     // (sent/delivered) — a failure clears it, so pending/failed/expired
     // rows show "—" here, not a bug.
     device: { id: string; label: string } | null;
+    // 0 or 1 (SIM 1 / SIM 2) — only present once the fleet phone's app
+    // build is new enough to report which SIM it sent from; null on an
+    // older build's message, not a data problem.
+    sim_slot: number | null;
 }
 
 interface Filters {
     status?: string;
+    device_id?: string;
     phone_number?: string;
     date_from?: string;
     date_to?: string;
@@ -42,6 +47,7 @@ interface Stats {
 
 interface SmsLogListScreenProps {
     messages: PaginatedData<SmsOutboxRow>;
+    devices: { id: string; label: string }[];
     filters: Filters;
     stats: Stats;
 }
@@ -118,16 +124,17 @@ function formatDateTime(value: string | Date): string {
     });
 }
 
-export default function SmsLogListScreen({ messages, filters, stats }: SmsLogListScreenProps) {
+export default function SmsLogListScreen({ messages, devices, filters, stats }: SmsLogListScreenProps) {
     const { tenant } = usePage<PageProps>().props;
     const { showToast } = useToast();
     const [isFiltering, setIsFiltering] = useState(false);
     const [phoneNumberError, setPhoneNumberError] = useState(false);
     const [resendingRow, setResendingRow] = useState<SmsOutboxRow | null>(null);
     const resendForm = useForm({});
-    const hasFilters = Boolean(filters.status || filters.phone_number || filters.date_from || filters.date_to);
+    const hasFilters = Boolean(filters.status || filters.device_id || filters.phone_number || filters.date_from || filters.date_to);
     const { data, setData } = useForm({
         status: filters.status ?? '',
+        device_id: filters.device_id ?? '',
         phone_number: filters.phone_number ?? '',
         date_from: filters.date_from ?? '',
         date_to: filters.date_to ?? '',
@@ -256,6 +263,20 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                         </select>
                     </div>
 
+                    <div className="pf-field">
+                        <label htmlFor="device_id">Phone</label>
+                        <select
+                            id="device_id"
+                            value={data.device_id}
+                            onChange={(e) => setData('device_id', e.target.value)}
+                        >
+                            <option value="">All phones</option>
+                            {devices.map((device) => (
+                                <option key={device.id} value={device.id}>{device.label}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     <div className={'pf-field' + (phoneNumberError ? ' pf-field--error' : '')}>
                         <label htmlFor="phone_number">Phone number</label>
                         <input
@@ -340,6 +361,7 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                                     <th scope="col">When</th>
                                     <th scope="col">Phone Number</th>
                                     <th scope="col">Sent By</th>
+                                    <th scope="col">SIM</th>
                                     <th scope="col">Status</th>
                                     <th scope="col">Attempts</th>
                                     <th scope="col">Sent</th>
@@ -351,7 +373,7 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                             <tbody>
                                 {messages.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={9} className="pf-empty">
+                                        <td colSpan={10} className="pf-empty">
                                             {hasFilters
                                                 ? 'No messages match these filters.'
                                                 : 'No SMS messages yet.'}
@@ -364,6 +386,7 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                                         <td>{formatDateTime(row.created_at)}</td>
                                         <td className="font-mono">{row.phone_number}</td>
                                         <td>{row.device?.label ?? '—'}</td>
+                                        <td>{row.sim_slot !== null ? `SIM ${row.sim_slot + 1}` : '—'}</td>
                                         <td>
                                             <span
                                                 className={

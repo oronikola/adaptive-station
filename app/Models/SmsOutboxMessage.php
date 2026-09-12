@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 #[Fillable([
     'tenant_id', 'person_id', 'parent_account_id', 'station_id', 'tap_event_id',
     'phone_number', 'message', 'status', 'expires_at',
-    'claimed_by_device_id', 'claimed_at', 'attempts',
+    'claimed_by_device_id', 'claimed_at', 'attempts', 'sim_slot',
 ])]
 class SmsOutboxMessage extends Model
 {
@@ -146,9 +146,20 @@ class SmsOutboxMessage extends Model
         });
     }
 
-    public function markSent(): void
+    /**
+     * $simSlot is the physical SIM (0 or 1) the device actually sent from —
+     * only present from an app build new enough to report it (see
+     * Api\Device\SmsGatewayController::reportStatus()); an older device
+     * omits it, so the existing value (if any) is left untouched rather
+     * than overwritten with null.
+     */
+    public function markSent(?int $simSlot = null): void
     {
-        $this->forceFill(['status' => SmsOutboxStatus::Sent, 'sent_at' => Date::now()])->save();
+        $this->forceFill([
+            'status' => SmsOutboxStatus::Sent,
+            'sent_at' => Date::now(),
+            'sim_slot' => $simSlot ?? $this->sim_slot,
+        ])->save();
     }
 
     /**
@@ -169,8 +180,12 @@ class SmsOutboxMessage extends Model
      * bad SIM/radio hiccup on one phone shouldn't kill a message when 20+
      * others could send it) until MAX_ATTEMPTS, then dead-letters — an
      * undeliverable number shouldn't loop forever and waste fleet capacity.
+     * claimed_by_device_id is cleared (see its own docblock reference to
+     * this), but sim_slot is deliberately kept — unlike device ownership,
+     * there's no security reason to erase which SIM attempted the send, and
+     * the fleet screen still wants to show it for a failed row.
      */
-    public function markFailed(?string $error = null): void
+    public function markFailed(?string $error = null, ?int $simSlot = null): void
     {
         $deadLetter = $this->attempts >= self::MAX_ATTEMPTS;
 
@@ -179,6 +194,7 @@ class SmsOutboxMessage extends Model
             'claimed_by_device_id' => null,
             'claimed_at' => null,
             'last_error' => $error,
+            'sim_slot' => $simSlot ?? $this->sim_slot,
         ])->save();
     }
 
