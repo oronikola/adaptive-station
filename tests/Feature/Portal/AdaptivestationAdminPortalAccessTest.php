@@ -145,6 +145,126 @@ class AdaptivestationAdminPortalAccessTest extends TestCase
             ->where('stats.failed', 0));
     }
 
+    public function test_it_can_resend_a_failed_message_with_a_plausible_phone_number(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = $this->actingForSchool($tenant);
+
+        $message = SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '09171234567',
+            'message' => 'Undeliverable alert',
+            'status' => SmsOutboxStatus::Failed,
+            'attempts' => 3,
+            'last_error' => 'Carrier rejected',
+            'expires_at' => Date::now()->subDay(),
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('portal.sms-log.resend', $message->id));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $message->refresh();
+        $this->assertSame(SmsOutboxStatus::Pending, $message->status);
+        $this->assertSame(0, $message->attempts);
+        $this->assertNull($message->last_error);
+        $this->assertTrue($message->expires_at->isFuture());
+        $this->assertDatabaseHas('audit_logs', [
+            'tenant_id' => $tenant->id,
+            'action' => 'sms_outbox_message.resent',
+            'entity_id' => $message->id,
+        ]);
+    }
+
+    public function test_it_blocks_resending_a_message_with_an_implausible_phone_number(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = $this->actingForSchool($tenant);
+
+        $message = SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '12345',
+            'message' => 'Bad number alert',
+            'status' => SmsOutboxStatus::Failed,
+            'attempts' => 3,
+            'expires_at' => Date::now()->subDay(),
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('portal.sms-log.resend', $message->id));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+
+        $message->refresh();
+        $this->assertSame(SmsOutboxStatus::Failed, $message->status);
+        $this->assertSame(3, $message->attempts);
+    }
+
+    public function test_it_cannot_resend_a_message_that_is_not_dead_lettered(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = $this->actingForSchool($tenant);
+
+        $message = SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '09171234567',
+            'message' => 'Already delivered',
+            'status' => SmsOutboxStatus::Delivered,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('portal.sms-log.resend', $message->id));
+
+        $response->assertSessionHas('error');
+        $this->assertSame(SmsOutboxStatus::Delivered, $message->fresh()->status);
+    }
+
+    public function test_it_cannot_resend_a_message_belonging_to_a_different_school(): void
+    {
+        $schoolA = Tenant::factory()->create();
+        $schoolB = Tenant::factory()->create();
+        $admin = $this->actingForSchool($schoolA);
+
+        $message = SmsOutboxMessage::create([
+            'tenant_id' => $schoolB->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '09171234567',
+            'message' => 'Other school alert',
+            'status' => SmsOutboxStatus::Failed,
+            'attempts' => 3,
+            'expires_at' => Date::now()->subDay(),
+        ]);
+
+        $this->actingAs($admin)->patch(route('portal.sms-log.resend', $message->id))->assertNotFound();
+    }
+
+    public function test_a_tenant_admin_cannot_resend_a_message(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $tenantAdmin = User::factory()->tenantAdmin($tenant)->create();
+
+        $message = SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '09171234567',
+            'message' => 'Alert',
+            'status' => SmsOutboxStatus::Failed,
+            'attempts' => 3,
+            'expires_at' => Date::now()->subDay(),
+        ]);
+
+        $this->actingAs($tenantAdmin)->patch(route('portal.sms-log.resend', $message->id))->assertForbidden();
+    }
+
     public function test_it_can_filter_the_sms_delivery_log_by_date_range(): void
     {
         $tenant = Tenant::factory()->create();

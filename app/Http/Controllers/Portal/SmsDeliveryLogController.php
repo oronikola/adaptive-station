@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Portal;
 
+use App\Enums\SmsOutboxStatus;
+use App\Events\SmsGatewayWakeUp;
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\SmsOutboxMessage;
 use App\Models\Tenant;
 use App\Support\TenantContext;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -45,7 +49,15 @@ class SmsDeliveryLogController extends Controller
             ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date))
             ->latest('created_at')
             ->paginate($perPage)
-            ->withQueryString();
+            ->withQueryString()
+            // Lets the Resend button on a failed/expired row know upfront
+            // whether it's even worth allowing, without duplicating the
+            // phone-number-shape regex in the frontend.
+            ->through(function (SmsOutboxMessage $message) {
+                $message->is_plausible_phone_number = $message->hasPlausiblePhoneNumber();
+
+                return $message;
+            });
 
         return Inertia::render('Admin/sms-log/sms-log-list-screen', [
             'messages' => $messages,
@@ -96,6 +108,42 @@ class SmsDeliveryLogController extends Controller
             'totalCount' => $messages->count(),
             'directionCounts' => $messages->countBy(fn (SmsOutboxMessage $message) => $message->parsed['direction'] ?? 'unknown'),
         ]);
+    }
+
+    /**
+     * Manually requeues a dead-lettered (failed/expired) message — never a
+     * pending/claimed/sent/delivered one, since those aren't stuck and
+     * resending would just create a duplicate. Blocked outright when the
+     * stored phone_number doesn't even look like a real PH mobile number
+     * (see SmsOutboxMessage::hasPlausiblePhoneNumber()) — retrying a
+     * fabricated/malformed number is guaranteed to fail again and just
+     * burns a fleet phone's SMS credit on it.
+     */
+    public function resend(Request $request, SmsOutboxMessage $message): RedirectResponse
+    {
+        abort_unless($request->user()->isAdaptivestationAdmin(), 403);
+
+        $tenantId = app(TenantContext::class)->get();
+        // sms_outbox has no TenantScope (see the model's docblock) — this
+        // ownership check is this action's own responsibility, the same
+        // reasoning as index()/print()'s explicit tenant_id filter.
+        abort_unless($message->tenant_id === $tenantId, 404);
+
+        if (! in_array($message->status, [SmsOutboxStatus::Failed, SmsOutboxStatus::Expired], true)) {
+            return back()->with('error', 'Only a failed or expired message can be resent.');
+        }
+
+        if (! $message->hasPlausiblePhoneNumber()) {
+            return back()->with('error', "\"{$message->phone_number}\" doesn't look like a valid phone number — resend blocked so it doesn't waste a message on it.");
+        }
+
+        $message->resend();
+
+        AuditLog::record('sms_outbox_message.resent', $request->user(), $tenantId, 'sms_outbox_message', $message->id);
+
+        broadcast(new SmsGatewayWakeUp);
+
+        return back()->with('success', 'Message queued for resend.');
     }
 
     /**

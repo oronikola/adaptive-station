@@ -169,4 +169,37 @@ class SmsOutboxMessage extends Model
             'last_error' => $error,
         ])->save();
     }
+
+    /**
+     * A quick shape check for a Philippine mobile number (09XXXXXXXXX, or
+     * +63/63 9XXXXXXXXX) — not a carrier-verified guarantee the number is
+     * real, but enough to block a manual resend on an obviously fake/
+     * malformed entry (test data, a typo) from wasting a fleet phone's SMS
+     * credit on a message that can never succeed.
+     */
+    public function hasPlausiblePhoneNumber(): bool
+    {
+        return (bool) preg_match('/^(\+?63|0)9\d{9}$/', $this->phone_number);
+    }
+
+    /**
+     * Manual admin-triggered retry for a dead-lettered (failed/expired) row
+     * — requeues it with a fresh attempts count and expiry window, exactly
+     * as if it had just been generated. Callers are expected to have
+     * already checked hasPlausiblePhoneNumber() themselves (see
+     * Portal\SmsDeliveryLogController::resend()); this method doesn't
+     * re-check, since a deliberately-confirmed resend of an implausible
+     * number is still the admin's call to make, not this method's to block.
+     */
+    public function resend(): void
+    {
+        $this->forceFill([
+            'status' => SmsOutboxStatus::Pending,
+            'attempts' => 0,
+            'claimed_by_device_id' => null,
+            'claimed_at' => null,
+            'last_error' => null,
+            'expires_at' => Date::now()->addMinutes(30),
+        ])->save();
+    }
 }

@@ -85,4 +85,5 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
 
         Route::get('sms-log', [SmsDeliveryLogController::class, 'index'])->name('sms-log.index');
         Route::get('sms-log/print', [SmsDeliveryLogController::class, 'print'])->name('sms-log.print');
+        Route::patch('sms-log/{message}/resend', [SmsDeliveryLogController::class, 'resend'])->name('sms-log.resend');
     });

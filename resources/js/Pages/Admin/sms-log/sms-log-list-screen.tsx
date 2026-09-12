@@ -1,4 +1,5 @@
 import Pagination from '@/Components/admin/Pagination';
+import Modal from '@/Components/Modal';
 import { useToast } from '@/Components/toast/ToastProvider';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
@@ -17,6 +18,7 @@ interface SmsOutboxRow {
     delivered_at: string | null;
     last_error: string | null;
     created_at: string;
+    is_plausible_phone_number: boolean;
 }
 
 interface Filters {
@@ -117,6 +119,8 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
     const { showToast } = useToast();
     const [isFiltering, setIsFiltering] = useState(false);
     const [phoneNumberError, setPhoneNumberError] = useState(false);
+    const [resendingRow, setResendingRow] = useState<SmsOutboxRow | null>(null);
+    const resendForm = useForm({});
     const hasFilters = Boolean(filters.status || filters.phone_number || filters.date_from || filters.date_to);
     const { data, setData } = useForm({
         status: filters.status ?? '',
@@ -170,6 +174,33 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
         if (data.date_to) params.set('date_to', data.date_to);
 
         window.open(`${route('portal.sms-log.print')}?${params.toString()}`, '_blank');
+    }
+
+    // Only a dead-lettered row is a candidate — pending/claimed/sent/
+    // delivered aren't stuck, so resending would just create a duplicate.
+    function canResend(row: SmsOutboxRow): boolean {
+        return row.status === 'failed' || row.status === 'expired';
+    }
+
+    function openResend(row: SmsOutboxRow) {
+        if (!row.is_plausible_phone_number) {
+            showToast({
+                type: 'error',
+                message: "That number doesn't look valid.",
+                description: `"${row.phone_number}" isn't shaped like a real phone number, so resending would just waste a message on it.`,
+            });
+            return;
+        }
+
+        setResendingRow(row);
+    }
+
+    function submitResend(e: React.FormEvent) {
+        e.preventDefault();
+        if (!resendingRow) return;
+        resendForm.patch(route('portal.sms-log.resend', resendingRow.id), {
+            onSuccess: () => setResendingRow(null),
+        });
     }
 
     return (
@@ -309,12 +340,13 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                                     <th scope="col">Sent</th>
                                     <th scope="col">Delivered</th>
                                     <th scope="col">Error</th>
+                                    <th scope="col"><span className="sr-only">Actions</span></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {messages.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="pf-empty">
+                                        <td colSpan={8} className="pf-empty">
                                             {hasFilters
                                                 ? 'No messages match these filters.'
                                                 : 'No SMS messages yet.'}
@@ -342,6 +374,17 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                                         <td style={{ color: row.last_error ? 'var(--as-danger)' : undefined, fontSize: 12.5 }}>
                                             {row.last_error ?? '—'}
                                         </td>
+                                        <td>
+                                            {canResend(row) && (
+                                                <button
+                                                    type="button"
+                                                    className="pf-row-action"
+                                                    onClick={() => openResend(row)}
+                                                >
+                                                    Resend
+                                                </button>
+                                            )}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -351,6 +394,50 @@ export default function SmsLogListScreen({ messages, filters, stats }: SmsLogLis
                     <Pagination links={messages.links} />
                 </div>
             </div>
+
+            {/* Resend confirmation modal */}
+            <Modal show={resendingRow !== null} onClose={() => setResendingRow(null)}>
+                <form onSubmit={submitResend} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <div>
+                            <h3 className="pf-modal-title">Resend Message</h3>
+                        </div>
+                        <button
+                            type="button"
+                            className="pf-modal-close"
+                            onClick={() => setResendingRow(null)}
+                            aria-label="Close"
+                        >
+                            <svg viewBox="0 0 24 24">
+                                <path d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <p style={{ padding: '0 0 8px' }}>
+                        Resend the tap alert to <strong className="font-mono">{resendingRow?.phone_number}</strong>?
+                        It goes back into the queue for the next available device to send, with a
+                        fresh attempt count.
+                    </p>
+
+                    <div className="pf-modal-footer">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={() => setResendingRow(null)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className={'pf-btn pf-btn-primary' + (resendForm.processing ? ' pf-btn--loading' : '')}
+                            disabled={resendForm.processing}
+                        >
+                            Resend
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </AdminLayout>
     );
 }
