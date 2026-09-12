@@ -6,6 +6,7 @@ use App\Enums\SmsOutboxStatus;
 use App\Models\Concerns\HasUuidV4;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +52,17 @@ class SmsOutboxMessage extends Model
             'delivered_at' => 'datetime',
             'created_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Same central `mysql` connection as Tenant, so this is a normal
+     * relation despite sms_outbox having no foreign key on tenant_id (see
+     * the migration's comment on why: it's a plain uuid column, validated
+     * at the app layer only).
+     */
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
     /**

@@ -25,7 +25,7 @@ class StoreRfidCardRequest extends FormRequest
      */
     public function rules(): array
     {
-        $tenantId = $this->user()->tenant_id;
+        $tenantId = $this->user()->actingTenantId();
 
         return [
             'person_id' => [

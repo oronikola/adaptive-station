@@ -52,7 +52,7 @@ class PersonController extends Controller
     public function store(StorePersonRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $tenantId = $request->user()->tenant_id;
+        $tenantId = $request->user()->actingTenantId();
         $actor = $request->user();
 
         $person = Person::registerForTenant($tenantId, collect($data)->only([
@@ -93,7 +93,7 @@ class PersonController extends Controller
     public function update(UpdatePersonRequest $request, Person $person): RedirectResponse
     {
         $data = $request->validated();
-        $tenantId = $request->user()->tenant_id;
+        $tenantId = $request->user()->actingTenantId();
         $actor = $request->user();
 
         Person::updateDetails($person, collect($data)->only([

@@ -4,6 +4,7 @@ import SecretOnceCallout from '@/Components/SecretOnceCallout';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { PageProps } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -50,6 +51,8 @@ export default function SmsGatewayDevicesScreen({
     backlog: Backlog;
 }) {
     const { flash } = usePage().props as PagePropsWithFlash;
+    const { auth } = usePage<PageProps>().props;
+    const canManage = auth.user.role === 'platform_super_admin';
     const [createOpen, setCreateOpen] = useState(false);
     const [revokingDevice, setRevokingDevice] = useState<DeviceRow | null>(null);
     const [resettingDevice, setResettingDevice] = useState<DeviceRow | null>(null);
@@ -109,18 +112,20 @@ export default function SmsGatewayDevicesScreen({
                             </p>
                         </div>
                     </div>
-                    <div className="pft-hero-actions">
-                        <button
-                            type="button"
-                            className="pf-btn pf-btn-primary"
-                            onClick={() => setCreateOpen(true)}
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
-                            Add Device
-                        </button>
-                    </div>
+                    {canManage && (
+                        <div className="pft-hero-actions">
+                            <button
+                                type="button"
+                                className="pf-btn pf-btn-primary"
+                                onClick={() => setCreateOpen(true)}
+                            >
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
+                                Add Device
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {flash?.devicePassword && (
@@ -286,7 +291,7 @@ export default function SmsGatewayDevicesScreen({
                                         <td className="font-mono">{device.delivered_today}</td>
                                         <td className="font-mono" style={{ color: device.failed_today > 0 ? 'var(--as-danger)' : undefined }}>{device.failed_today}</td>
                                         <td>
-                                            {device.is_active && (
+                                            {canManage && device.is_active && (
                                                 <div className="pft-row-actions">
                                                     <button
                                                         type="button"

@@ -67,9 +67,10 @@ class ImportBatchController extends Controller
         ]);
 
         $profile = IntegrationProfile::findOrFail($data['integration_profile_id']);
+        $tenantId = $request->user()->actingTenantId();
 
         $batch = ImportBatch::start(
-            $request->user()->tenant_id,
+            $tenantId,
             $profile->id,
             $profile->driver,
             $data['commit'] ? 'Import' : 'Preview',
@@ -77,7 +78,7 @@ class ImportBatchController extends Controller
         );
 
         RunLegacyImportJob::dispatchSync(
-            $request->user()->tenant_id,
+            $tenantId,
             $batch->id,
             $data['commit'],
             $data['date_from'],
@@ -120,10 +121,11 @@ class ImportBatchController extends Controller
             'commit' => ['required', 'boolean'],
         ]);
 
-        $storedPath = $data['file']->store('imports/'.$request->user()->tenant_id, 'local');
+        $tenantId = $request->user()->actingTenantId();
+        $storedPath = $data['file']->store('imports/'.$tenantId, 'local');
 
         $batch = ImportBatch::start(
-            $request->user()->tenant_id,
+            $tenantId,
             null,
             RosterCsvImporter::SOURCE_SYSTEM,
             $data['commit'] ? 'CSV upload' : 'CSV upload (preview)',
@@ -131,7 +133,7 @@ class ImportBatchController extends Controller
         );
 
         RunCsvRosterImportJob::dispatchSync(
-            $request->user()->tenant_id,
+            $tenantId,
             $batch->id,
             $storedPath,
             $data['commit'],

@@ -1,0 +1,163 @@
+<?php
+
+namespace Tests\Feature\Portal;
+
+use App\Enums\SmsOutboxStatus;
+use App\Models\Person;
+use App\Models\SmsOutboxMessage;
+use App\Models\Tenant;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+/**
+ * adaptivestation_admin has full tenant_admin-equivalent access inside
+ * whichever school it selected on the oversight picker (see
+ * SchoolSelectionController) — these tests prove that parity actually
+ * works end-to-end (not just that the picker redirect works), and that
+ * switching schools re-scopes every query, not just the ones that were
+ * updated to read session state directly.
+ */
+class AdaptivestationAdminPortalAccessTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function actingForSchool(Tenant $tenant): User
+    {
+        $admin = User::factory()->adaptivestationAdmin()->create();
+        $this->actingAs($admin)->post(route('oversight.schools.select', $tenant));
+
+        return $admin;
+    }
+
+    public function test_it_can_create_a_person_for_the_selected_school(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = $this->actingForSchool($tenant);
+
+        $response = $this->actingAs($admin)->post(route('portal.people.store'), [
+            'person_type' => 'student',
+            'first_name' => 'Jane',
+            'last_name' => 'Doe',
+            'grade_level' => '5',
+            'section' => 'A',
+        ]);
+
+        $person = Person::allTenants()->where('tenant_id', $tenant->id)->firstOrFail();
+        $response->assertRedirect(route('portal.people.edit', $person));
+        $this->assertSame('Jane Doe', $person->display_name);
+    }
+
+    public function test_switching_schools_scopes_the_people_list_to_the_newly_selected_school(): void
+    {
+        $schoolA = Tenant::factory()->create();
+        $schoolB = Tenant::factory()->create();
+        $personA = Person::factory()->for($schoolA)->create(['first_name' => 'Alice']);
+        $personB = Person::factory()->for($schoolB)->create(['first_name' => 'Bob']);
+
+        $admin = $this->actingForSchool($schoolA);
+        $this->actingAs($admin)->get(route('portal.people.index'))
+            ->assertInertia(fn ($page) => $page->where('people.data.0.id', $personA->id));
+
+        $this->actingAs($admin)->post(route('oversight.schools.select', $schoolB));
+        $this->actingAs($admin)->get(route('portal.people.index'))
+            ->assertInertia(fn ($page) => $page->where('people.data.0.id', $personB->id));
+    }
+
+    public function test_it_cannot_edit_a_person_belonging_to_a_school_it_has_not_selected(): void
+    {
+        $schoolA = Tenant::factory()->create();
+        $schoolB = Tenant::factory()->create();
+        $personB = Person::factory()->for($schoolB)->create();
+
+        $admin = $this->actingForSchool($schoolA);
+
+        // TenantScope fails closed at route-model binding itself (same as
+        // it would for a real tenant_admin given another school's id) — a
+        // 404, not a 403, since the record is invisible before any policy
+        // even runs.
+        $this->actingAs($admin)->get(route('portal.people.edit', $personB))->assertNotFound();
+    }
+
+    public function test_it_can_invite_a_portal_user_for_the_selected_school(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = $this->actingForSchool($tenant);
+
+        $response = $this->actingAs($admin)->post(route('portal.users.store'), [
+            'name' => 'New Operator',
+            'email' => 'operator@example.test',
+            'role' => 'tenant_operator',
+        ]);
+
+        $response->assertRedirect(route('portal.users.index'));
+        $this->assertDatabaseHas('users', [
+            'email' => 'operator@example.test',
+            'tenant_id' => $tenant->id,
+        ]);
+    }
+
+    public function test_it_sees_only_the_selected_schools_sms_delivery_log(): void
+    {
+        $schoolA = Tenant::factory()->create();
+        $schoolB = Tenant::factory()->create();
+
+        SmsOutboxMessage::create([
+            'tenant_id' => $schoolA->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '+639170000001',
+            'message' => 'School A alert',
+            'status' => SmsOutboxStatus::Delivered,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+        SmsOutboxMessage::create([
+            'tenant_id' => $schoolA->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '+639170000003',
+            'message' => 'School A pending alert',
+            'status' => SmsOutboxStatus::Pending,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+        SmsOutboxMessage::create([
+            'tenant_id' => $schoolB->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '+639170000002',
+            'message' => 'School B alert',
+            'status' => SmsOutboxStatus::Failed,
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
+
+        $admin = $this->actingForSchool($schoolA);
+
+        $response = $this->actingAs($admin)->get(route('portal.sms-log.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('messages.total', 2)
+            ->where('stats.total', 2)
+            ->where('stats.delivered', 1)
+            ->where('stats.pending', 1)
+            ->where('stats.failed', 0));
+    }
+
+    public function test_a_tenant_admin_does_not_see_the_sms_delivery_log_menu_route(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $tenantAdmin = User::factory()->tenantAdmin($tenant)->create();
+
+        $this->actingAs($tenantAdmin)->get(route('portal.sms-log.index'))->assertForbidden();
+    }
+
+    public function test_it_gets_sent_to_the_school_picker_if_no_school_is_selected_yet(): void
+    {
+        $admin = User::factory()->adaptivestationAdmin()->create();
+
+        $this->actingAs($admin)->get(route('portal.people.index'))
+            ->assertRedirect(route('oversight.schools.index'));
+    }
+}

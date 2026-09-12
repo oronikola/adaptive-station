@@ -21,7 +21,7 @@ class UserController extends Controller
         // User is deliberately not TenantScope'd (see its model docblock) —
         // tenant filtering is this controller's own responsibility.
         $users = User::query()
-            ->where('tenant_id', $request->user()->tenant_id)
+            ->where('tenant_id', $request->user()->actingTenantId())
             ->orderBy('name')
             ->paginate(25)
             ->withQueryString();
@@ -33,7 +33,7 @@ class UserController extends Controller
 
     public function create(Request $request): Response
     {
-        Gate::authorize('create', [User::class, $request->user()->tenant]);
+        Gate::authorize('create', [User::class, $request->user()->actingTenant()]);
 
         return Inertia::render('Admin/users/users-create-screen');
     }
@@ -43,7 +43,7 @@ class UserController extends Controller
         $data = $request->validated();
 
         ['temporary_password' => $temporaryPassword] = User::provisionForTenant(
-            $request->user()->tenant,
+            $request->user()->actingTenant(),
             UserRole::from($data['role']),
             ['name' => $data['name'], 'email' => $data['email']],
             $request->user(),

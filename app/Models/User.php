@@ -99,6 +99,57 @@ class User extends Authenticatable
         return $this->role === UserRole::TenantOperator;
     }
 
+    public function isAdaptivestationAdmin(): bool
+    {
+        return $this->role === UserRole::AdaptivestationAdmin;
+    }
+
+    /**
+     * True for a real tenant_admin as well as adaptivestation_admin — the
+     * platform-level read/write oversight role that acts on behalf of
+     * whichever school it selected on the oversight picker (see
+     * actingTenantId()), rather than owning a school of its own. Anywhere a
+     * policy gated a portal action on isTenantAdmin() alone, this is the
+     * replacement so that role gets the same "full admin of this school"
+     * access once it has one selected.
+     */
+    public function hasTenantAdminAccess(): bool
+    {
+        return $this->isTenantAdmin() || $this->isAdaptivestationAdmin();
+    }
+
+    /**
+     * The tenant this user is acting on behalf of: a real tenant_admin/
+     * tenant_operator's own tenant_id, or — since adaptivestation_admin
+     * always has a null tenant_id of its own (a platform-level role, see
+     * UserRole::requiresNullTenant()) — whichever school it chose on the
+     * oversight school-picker screen, stashed in the session by
+     * Oversight\SchoolSelectionController@select. Every Portal policy/
+     * controller/request that scopes a query or write to "this admin's
+     * school" must call this (or actingTenant() for the model itself)
+     * instead of reading tenant_id directly, or adaptivestation_admin
+     * silently reads/writes nothing everywhere.
+     */
+    public function actingTenantId(): ?string
+    {
+        if ($this->tenant_id !== null) {
+            return $this->tenant_id;
+        }
+
+        return $this->isAdaptivestationAdmin() ? session('oversight_tenant_id') : null;
+    }
+
+    public function actingTenant(): ?Tenant
+    {
+        if ($this->tenant_id !== null) {
+            return $this->tenant;
+        }
+
+        $tenantId = $this->actingTenantId();
+
+        return $tenantId !== null ? Tenant::find($tenantId) : null;
+    }
+
     public function belongsToTenant(?string $tenantId): bool
     {
         return $tenantId !== null && $this->tenant_id === $tenantId;
@@ -141,6 +192,40 @@ class User extends Authenticatable
             AuditLog::record(
                 'user.created', $actor, $tenant->id, 'user', $user->id,
                 ['role' => $role->value],
+            );
+
+            return ['user' => $user, 'temporary_password' => $password];
+        });
+    }
+
+    /**
+     * Provisions a null-tenant platform staff account — currently only
+     * UserRole::AdaptivestationAdmin, the read-only oversight role. Mirrors
+     * provisionForTenant()'s password-generation/recoverability pattern, but
+     * there's no Tenant to attach: requiresNullTenant() is what makes this
+     * a distinct method rather than an overload of provisionForTenant().
+     *
+     * @return array{user: self, temporary_password: string}
+     */
+    public static function provisionPlatformAdmin(array $attributes, ?self $actor = null): array
+    {
+        $password = $attributes['password'] ?? Str::password(16);
+        unset($attributes['password'], $attributes['password_confirmation']);
+
+        return DB::transaction(function () use ($attributes, $password, $actor) {
+            $user = static::create([
+                ...$attributes,
+                'tenant_id' => null,
+                'role' => UserRole::AdaptivestationAdmin,
+                'password' => $password,
+                'password_plaintext' => $password,
+                'is_active' => true,
+                'email_verified_at' => Date::now(),
+            ]);
+
+            AuditLog::record(
+                'user.created', $actor, null, 'user', $user->id,
+                ['role' => UserRole::AdaptivestationAdmin->value],
             );
 
             return ['user' => $user, 'temporary_password' => $password];

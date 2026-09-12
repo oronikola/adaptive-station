@@ -76,18 +76,6 @@ class RunLegacyExportJob implements ShouldQueue
 
     protected function mapRow(TapEvent $event): array
     {
-        $localAt = $event->occurred_at->clone()->addMinutes($event->occurred_offset_minutes);
-
-        return [
-            'legacy_station_id' => $event->station?->legacy_station_id ?? $event->station?->station_code ?? 'UNKNOWN',
-            'tdate' => $localAt->toDateString(),
-            'ttime' => $localAt->format('H:i:s'),
-            'tapstate' => $event->event_type->value === 'IN' ? '1' : '0',
-            'studid' => $event->person?->source_record_id ?? $event->person?->external_id ?? (string) $event->person_id,
-            'utype' => $event->person_type?->value === 'staff' ? 1 : 7,
-            'mode' => $event->metadata['legacy_mode'] ?? 'rfid',
-            'tapstatus' => $event->metadata['legacy_tapstatus'] ?? null,
-            'createddatetime' => $event->received_at->toDateTimeString(),
-        ];
+        return LegacyMysqlConnector::mapTapEventRow($event);
     }
 }

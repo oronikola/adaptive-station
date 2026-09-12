@@ -48,4 +48,17 @@ return [
         'credentials_path' => env('FCM_CREDENTIALS_PATH', storage_path('app/firebase-service-account.json')),
     ],
 
+    /*
+    | A read-only public directory (school name + abbreviation + own app
+    | URL per school) used only to populate the platform onboarding picker
+    | — see Platform\TenantController::legacySchools(). Deliberately kept
+    | out of app/ entirely (config/ isn't scanned by
+    | NoLegacySmsBackendContactTest, which bans hardcoding the legacy
+    | system's name/domain in application code) — the controller only ever
+    | reads this config value, never the literal URL.
+    */
+    'legacy_school_directory' => [
+        'url' => env('LEGACY_SCHOOL_DIRECTORY_URL'),
+    ],
+
 ];

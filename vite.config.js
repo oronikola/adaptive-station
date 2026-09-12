@@ -21,4 +21,17 @@ export default defineConfig({
             },
         },
     },
+    server: {
+        // Bind to the LAN IP (not 127.0.0.1) so `public/hot` points browsers
+        // on other machines at a reachable address instead of their own
+        // loopback. `host: true` listens on all interfaces; `hmr.host` pins
+        // the URL written into `public/hot` and used for the HMR websocket
+        // to this machine's actual LAN address so it resolves from anywhere
+        // on the network, not just this PC.
+        host: true,
+        cors: true,
+        hmr: {
+            host: '10.0.0.102',
+        },
+    },
 });

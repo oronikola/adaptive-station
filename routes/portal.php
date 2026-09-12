@@ -8,6 +8,7 @@ use App\Http\Controllers\Portal\IntegrationProfileController;
 use App\Http\Controllers\Portal\ParentAccountController;
 use App\Http\Controllers\Portal\PersonController;
 use App\Http\Controllers\Portal\RfidCardController;
+use App\Http\Controllers\Portal\SmsDeliveryLogController;
 use App\Http\Controllers\Portal\StationController;
 use App\Http\Controllers\Portal\UserController;
 use App\Http\Middleware\EnsurePortalAccess;
@@ -70,6 +71,7 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
         Route::get('integrations/{profile}/edit', [IntegrationProfileController::class, 'edit'])->name('integrations.edit');
         Route::put('integrations/{profile}', [IntegrationProfileController::class, 'update'])->name('integrations.update');
         Route::post('integrations/{profile}/export', [IntegrationProfileController::class, 'export'])->name('integrations.export');
+        Route::get('integrations/{profile}/export-csv', [IntegrationProfileController::class, 'exportCsv'])->name('integrations.export-csv');
 
         Route::get('imports', [ImportBatchController::class, 'index'])->name('imports.index');
         Route::get('imports/create', [ImportBatchController::class, 'create'])->name('imports.create');
@@ -80,4 +82,6 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
         Route::get('imports/{batch}/credentials', [ImportBatchController::class, 'downloadCredentials'])->name('imports.credentials');
         Route::get('imports/{batch}/exceptions', [ImportExceptionController::class, 'index'])->name('imports.exceptions.index');
         Route::patch('imports/{batch}/exceptions/{exception}/resolve', [ImportExceptionController::class, 'resolve'])->name('imports.exceptions.resolve');
+
+        Route::get('sms-log', [SmsDeliveryLogController::class, 'index'])->name('sms-log.index');
     });

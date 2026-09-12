@@ -126,6 +126,11 @@ export interface NavItem {
     activePattern: string;
     icon: React.ReactNode;
     adminOnly?: boolean;
+    /** Shown only to adaptivestation_admin — the platform-level oversight
+     * role that acts on whichever school it selected, additive to the
+     * shared portal sidebar (see AdminNavigation's sms-log/switch-school
+     * items). Never shown to a real tenant_admin/tenant_operator. */
+    oversightOnly?: boolean;
     /** Opens in a new tab via a plain <a> instead of an Inertia visit —
      * for links to a page outside this app's own layout/session flow
      * (e.g. the kiosk screen), so navigating there doesn't stow the

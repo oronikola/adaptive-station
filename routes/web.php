@@ -26,6 +26,9 @@ Route::get('/dashboard', function () {
         return redirect()->route('platform.dashboard');
     }
 
+    // adaptivestation_admin falls through to the same portal.dashboard as a
+    // real tenant_admin — EnsurePortalAccess sends it to the oversight
+    // school-picker first if it hasn't chosen a school yet this session.
     return redirect()->route('portal.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -37,4 +40,5 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/portal.php';
 require __DIR__.'/platform.php';
+require __DIR__.'/oversight.php';
 require __DIR__.'/auth.php';

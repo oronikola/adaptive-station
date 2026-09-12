@@ -30,7 +30,7 @@ class SaveParentAccountRequest extends FormRequest
     {
         $parent = $this->route('parent');
         $uniqueEmail = Rule::unique('mysql.parent_accounts', 'email')
-            ->where('tenant_id', $this->user()->tenant_id);
+            ->where('tenant_id', $this->user()->actingTenantId());
 
         if ($parent instanceof ParentAccount) {
             $uniqueEmail->ignore($parent->id);
@@ -44,7 +44,7 @@ class SaveParentAccountRequest extends FormRequest
             'student_ids.*' => [
                 'required', 'uuid', 'distinct',
                 Rule::exists('tenant.people', 'id')->where(fn (Builder $query) => $query
-                    ->where('tenant_id', $this->user()->tenant_id)
+                    ->where('tenant_id', $this->user()->actingTenantId())
                     ->where('person_type', 'student')
                     ->whereNull('deleted_at')),
             ],

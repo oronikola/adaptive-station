@@ -7,11 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Jobs\RunLegacyExportJob;
 use App\Models\IntegrationProfile;
 use App\Models\IntegrationRun;
+use App\Models\TapEvent;
+use App\Services\Integrations\LegacyMysqlConnector;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class IntegrationProfileController extends Controller
 {
@@ -51,7 +54,7 @@ class IntegrationProfileController extends Controller
             return back()->withErrors(['config' => 'Must be valid JSON.'])->withInput();
         }
 
-        IntegrationProfile::createForTenant($request->user()->tenant_id, [
+        IntegrationProfile::createForTenant($request->user()->actingTenantId(), [
             'name' => $data['name'],
             'driver' => $data['driver'],
             'direction' => $data['direction'],
@@ -120,5 +123,45 @@ class IntegrationProfileController extends Controller
         RunLegacyExportJob::dispatchSync($run->id, $profile->tenant_id, $data['date_from'], $data['date_to']);
 
         return redirect()->route('portal.integrations.edit', $profile)->with('success', 'Export run completed.');
+    }
+
+    /**
+     * A handoff file, not a live sync: writes essentiel's own taphistory
+     * column shape (not the human-readable attendance report at
+     * portal.attendance.export) to a CSV someone downloads and gives to
+     * essentiel directly, for their own team to import on their side — the
+     * fallback for when there's no live database connection or write API to
+     * push into (see the export() action above for when there is one).
+     * Reuses LegacyMysqlConnector::mapTapEventRow() so this can never drift
+     * from what the live export path would have written for the same tap.
+     */
+    public function exportCsv(Request $request, IntegrationProfile $profile): StreamedResponse
+    {
+        Gate::authorize('update', $profile);
+
+        $data = $request->validate([
+            'date_from' => ['required', 'date'],
+            'date_to' => ['required', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $columns = ['tdate', 'ttime', 'tapstate', 'studid', 'utype', 'mode', 'tapstatus', 'station_id', 'createddatetime'];
+
+        return response()->streamDownload(function () use ($data, $columns) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, $columns);
+
+            TapEvent::search(['date_from' => $data['date_from'], 'date_to' => $data['date_to']])
+                ->with(['station', 'person'])
+                ->cursor()
+                ->each(function (TapEvent $event) use ($handle) {
+                    $row = LegacyMysqlConnector::mapTapEventRow($event);
+                    fputcsv($handle, [
+                        $row['tdate'], $row['ttime'], $row['tapstate'], $row['studid'], $row['utype'],
+                        $row['mode'], $row['tapstatus'], $row['legacy_station_id'], $row['createddatetime'],
+                    ]);
+                });
+
+            fclose($handle);
+        }, "legacy-taphistory-{$profile->id}-{$data['date_from']}-to-{$data['date_to']}.csv", ['Content-Type' => 'text/csv']);
     }
 }

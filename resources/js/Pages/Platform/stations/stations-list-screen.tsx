@@ -5,7 +5,7 @@ import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import Pagination from '@/Components/admin/Pagination';
-import { PaginatedData, Tenant } from '@/types';
+import { PageProps, PaginatedData, Tenant } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -40,6 +40,8 @@ function slugifyStation(value: string): string {
 
 export default function StationsListScreen({ stations, tenants }: StationsListScreenProps) {
     const { flash } = usePage().props as PagePropsWithFlash;
+    const { auth } = usePage<PageProps>().props;
+    const canManage = auth.user.role === 'platform_super_admin';
 
     const [createOpen, setCreateOpen] = useState(false);
     const [stationCodeTouched, setStationCodeTouched] = useState(false);
@@ -96,18 +98,20 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                             </p>
                         </div>
                     </div>
-                    <div className="pft-hero-actions">
-                        <button
-                            type="button"
-                            className="pf-btn pf-btn-primary"
-                            onClick={() => setCreateOpen(true)}
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
-                            Add Station
-                        </button>
-                    </div>
+                    {canManage && (
+                        <div className="pft-hero-actions">
+                            <button
+                                type="button"
+                                className="pf-btn pf-btn-primary"
+                                onClick={() => setCreateOpen(true)}
+                            >
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
+                                Add Station
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <SecretOnceCallout label="Activation code" value={flash?.activationCode} />
@@ -165,7 +169,7 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                                             </span>
                                         </td>
                                         <td>
-                                            {station.status === 'pending_activation' && (
+                                            {canManage && station.status === 'pending_activation' && (
                                                 <button
                                                     type="button"
                                                     onClick={() => issueCode(station)}

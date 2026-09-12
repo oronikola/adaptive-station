@@ -1,9 +1,9 @@
 import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
 import PlatformLayout from '@/Layouts/PlatformLayout';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Tenant } from '@/types';
+import { PageProps, Tenant } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -42,6 +42,8 @@ const STATION_STATUS_PILL: Record<string, string> = {
 };
 
 export default function TenantDetailScreen({ tenant, admins, stations }: TenantDetailScreenProps) {
+    const { auth } = usePage<PageProps>().props;
+    const canManage = auth.user.role === 'platform_super_admin';
     const [revealedPasswords, setRevealedPasswords] = useState<Record<number, boolean>>({});
 
     function togglePasswordReveal(adminId: number) {
@@ -161,7 +163,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                         <span className={'pf-pill ' + STATUS_PILL_CLASS[tenant.status]}>
                             {tenant.status}
                         </span>
-                        {tenant.status === 'active' ? (
+                        {canManage && (tenant.status === 'active' ? (
                             <button
                                 type="button"
                                 className={'pf-btn pf-btn-danger' + (statusProcessing ? ' pf-btn--loading' : '')}
@@ -179,7 +181,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                             >
                                 Reactivate Client
                             </button>
-                        )}
+                        ))}
                     </div>
                 </div>
 
@@ -192,14 +194,16 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                                     {admins.length} admin{admins.length === 1 ? '' : 's'}
                                 </p>
                             </div>
-                            <button
-                                type="button"
-                                className="pf-btn pf-btn-primary"
-                                onClick={() => setCreateAdminOpen(true)}
-                            >
-                                <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
-                                Add Admin
-                            </button>
+                            {canManage && (
+                                <button
+                                    type="button"
+                                    className="pf-btn pf-btn-primary"
+                                    onClick={() => setCreateAdminOpen(true)}
+                                >
+                                    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+                                    Add Admin
+                                </button>
+                            )}
                         </div>
 
                         <div className="pf-table-wrap">
@@ -278,35 +282,39 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <div className="pft-row-actions">
-                                                        <button
-                                                            type="button"
-                                                            className="pf-row-action"
-                                                            onClick={() => openEditAdmin(admin)}
-                                                        >
-                                                            <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-                                                            Edit
-                                                        </button>
-                                                        {admin.is_active ? (
-                                                            <button
-                                                                type="button"
-                                                                className="pf-row-action pf-row-action--danger"
-                                                                onClick={() => setRemoveAdminTarget(admin)}
-                                                            >
-                                                                <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-7 0v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7" /></svg>
-                                                                Remove
-                                                            </button>
-                                                        ) : (
+                                                    {canManage ? (
+                                                        <div className="pft-row-actions">
                                                             <button
                                                                 type="button"
                                                                 className="pf-row-action"
-                                                                onClick={() => reactivateAdmin(admin)}
+                                                                onClick={() => openEditAdmin(admin)}
                                                             >
-                                                                <svg viewBox="0 0 24 24"><path d="M4 4v6h6M20 20v-6h-6M5 15a7 7 0 0 0 12.6 3M19 9A7 7 0 0 0 6.4 6" /></svg>
-                                                                Reactivate
+                                                                <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                                                                Edit
                                                             </button>
-                                                        )}
-                                                    </div>
+                                                            {admin.is_active ? (
+                                                                <button
+                                                                    type="button"
+                                                                    className="pf-row-action pf-row-action--danger"
+                                                                    onClick={() => setRemoveAdminTarget(admin)}
+                                                                >
+                                                                    <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-7 0v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7" /></svg>
+                                                                    Remove
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    type="button"
+                                                                    className="pf-row-action"
+                                                                    onClick={() => reactivateAdmin(admin)}
+                                                                >
+                                                                    <svg viewBox="0 0 24 24"><path d="M4 4v6h6M20 20v-6h-6M5 15a7 7 0 0 0 12.6 3M19 9A7 7 0 0 0 6.4 6" /></svg>
+                                                                    Reactivate
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span style={{ color: '#94a3b8', fontSize: 12.5 }}>—</span>
+                                                    )}
                                                 </td>
                                             </tr>
                                         );
@@ -362,27 +370,29 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                     </div>
                 </div>
 
-                <div className="pf-panel pft-tab-panel" style={{ marginTop: 16, borderColor: 'var(--as-danger-bg-alt)', background: 'linear-gradient(180deg, var(--as-danger-bg) 0%, var(--as-surface) 60%)' }}>
-                    <div className="pf-panel-header" style={{ borderBottomColor: 'var(--as-danger-bg-alt)' }}>
-                        <div>
-                            <h2 className="pf-panel-title" style={{ color: 'var(--as-danger-dark)' }}>
-                                Danger Zone
-                            </h2>
-                            <p className="pf-panel-count">
-                                Permanently deletes this client and every row it owns —
-                                admins, people, cards, stations, attendance history, and
-                                integrations. This cannot be undone.
-                            </p>
+                {canManage && (
+                    <div className="pf-panel pft-tab-panel" style={{ marginTop: 16, borderColor: 'var(--as-danger-bg-alt)', background: 'linear-gradient(180deg, var(--as-danger-bg) 0%, var(--as-surface) 60%)' }}>
+                        <div className="pf-panel-header" style={{ borderBottomColor: 'var(--as-danger-bg-alt)' }}>
+                            <div>
+                                <h2 className="pf-panel-title" style={{ color: 'var(--as-danger-dark)' }}>
+                                    Danger Zone
+                                </h2>
+                                <p className="pf-panel-count">
+                                    Permanently deletes this client and every row it owns —
+                                    admins, people, cards, stations, attendance history, and
+                                    integrations. This cannot be undone.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                className="pf-btn pf-btn-danger"
+                                onClick={() => setDeleteOpen(true)}
+                            >
+                                Delete Client
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            className="pf-btn pf-btn-danger"
-                            onClick={() => setDeleteOpen(true)}
-                        >
-                            Delete Client
-                        </button>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Suspend Client modal */}

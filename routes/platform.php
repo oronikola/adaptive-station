@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Platform\AuditLogController;
 use App\Http\Controllers\Platform\DashboardController;
+use App\Http\Controllers\Platform\PlatformAdminController;
+use App\Http\Controllers\Platform\SmsDeliveryLogController;
 use App\Http\Controllers\Platform\SmsGatewayDeviceController;
 use App\Http\Controllers\Platform\StationController;
 use App\Http\Controllers\Platform\TenantController;
@@ -16,6 +18,9 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
 
         Route::get('tenants', [TenantController::class, 'index'])->name('tenants.index');
         Route::post('tenants', [TenantController::class, 'store'])->name('tenants.store');
+        // Static segment must be registered before the {tenant:code} wildcard
+        // below, or Laravel tries to resolve "legacy-schools" as a tenant code.
+        Route::get('tenants/legacy-schools', [TenantController::class, 'legacySchools'])->name('tenants.legacy-schools');
         Route::get('tenants/{tenant:code}', [TenantController::class, 'show'])->name('tenants.show');
         Route::patch('tenants/{tenant:code}/status', [TenantController::class, 'updateStatus'])->name('tenants.status');
         Route::post('tenants/{tenant:code}/admins', [TenantController::class, 'storeAdmin'])->name('tenants.admins.store');
@@ -35,4 +40,11 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
         Route::patch('sms-gateway/devices/{device}/reset-password', [SmsGatewayDeviceController::class, 'resetPassword'])->name('sms-gateway.devices.reset-password');
 
         Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+
+        Route::get('sms-log', [SmsDeliveryLogController::class, 'index'])->name('sms-log.index');
+
+        Route::get('platform-admins', [PlatformAdminController::class, 'index'])->name('platform-admins.index');
+        Route::post('platform-admins', [PlatformAdminController::class, 'store'])->name('platform-admins.store');
+        Route::patch('platform-admins/{admin}/deactivate', [PlatformAdminController::class, 'deactivate'])->name('platform-admins.deactivate');
+        Route::patch('platform-admins/{admin}/reactivate', [PlatformAdminController::class, 'reactivate'])->name('platform-admins.reactivate');
     });

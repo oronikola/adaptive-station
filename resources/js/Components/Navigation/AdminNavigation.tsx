@@ -133,4 +133,33 @@ export const adminNavigationItems: NavItem[] = [
             </svg>
         ),
     },
+    {
+        name: 'sms-log',
+        label: 'SMS Delivery Log',
+        route: 'portal.sms-log.index',
+        activePattern: 'portal.sms-log.*',
+        // Additive to the shared portal sidebar only for adaptivestation_admin
+        // (the platform-wide oversight role) — a real tenant_admin/
+        // tenant_operator never sees this item.
+        oversightOnly: true,
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <rect x="7" y="2" width="10" height="20" rx="2" />
+                <path d="M11 18h2" />
+            </svg>
+        ),
+    },
+    {
+        name: 'switch-school',
+        label: 'Switch School',
+        route: 'oversight.schools.index',
+        activePattern: 'oversight.schools.*',
+        oversightOnly: true,
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
+                <path d="M15 3.5l4 2v2" opacity="0.6" />
+            </svg>
+        ),
+    },
 ];

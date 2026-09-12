@@ -25,7 +25,7 @@ class UserPolicy
             return true;
         }
 
-        return $user->isTenantAdmin() && $tenant !== null && $user->tenant_id === $tenant->id;
+        return $user->hasTenantAdminAccess() && $tenant !== null && $user->actingTenantId() === $tenant->id;
     }
 
     public function view(User $user, User $target): bool
@@ -34,8 +34,8 @@ class UserPolicy
             return true;
         }
 
-        if ($user->isTenantAdmin()) {
-            return $user->tenant_id === $target->tenant_id;
+        if ($user->hasTenantAdminAccess()) {
+            return $user->actingTenantId() === $target->tenant_id;
         }
 
         return $user->id === $target->id;
@@ -52,7 +52,7 @@ class UserPolicy
             return true;
         }
 
-        if (! $user->isTenantAdmin() || $user->tenant_id !== $target->tenant_id) {
+        if (! $user->hasTenantAdminAccess() || $user->actingTenantId() !== $target->tenant_id) {
             return false;
         }
 
@@ -74,6 +74,6 @@ class UserPolicy
         }
 
         return $user->isPlatformSuperAdmin()
-            || ($user->isTenantAdmin() && $user->tenant_id === $target->tenant_id);
+            || ($user->hasTenantAdminAccess() && $user->actingTenantId() === $target->tenant_id);
     }
 }

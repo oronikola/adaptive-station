@@ -30,7 +30,7 @@ class StorePersonRequest extends FormRequest
      */
     public function rules(): array
     {
-        $tenantId = $this->user()->tenant_id;
+        $tenantId = $this->user()->actingTenantId();
 
         return [
             'person_type' => ['required', Rule::enum(PersonType::class)],

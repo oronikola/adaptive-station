@@ -8,7 +8,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Gates the platform-wide super admin portal. Mirrors EnsurePortalAccess's
- * shape exactly, restricted to the opposite role.
+ * shape exactly, restricted to the opposite role. adaptivestation_admin does
+ * NOT belong here — it's a school-scoped oversight role that lives in the
+ * tenant portal instead (see EnsurePortalAccess/EnsureOversightAccess),
+ * never the platform area.
  */
 class EnsurePlatformAccess
 {

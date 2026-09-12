@@ -10,7 +10,7 @@ class StoreTenantUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create', [User::class, $this->user()->tenant]);
+        return $this->user()->can('create', [User::class, $this->user()->actingTenant()]);
     }
 
     /**

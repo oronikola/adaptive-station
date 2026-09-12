@@ -30,7 +30,13 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $tenantId = $request->user()?->tenant_id;
+        // actingTenantId(), not tenant_id directly: this middleware runs
+        // before SetTenantContext in the pipeline (see bootstrap/app.php),
+        // so it can't rely on TenantContext being resolved yet, and
+        // adaptivestation_admin's own tenant_id is always null (a
+        // platform-level role — see UserRole::requiresNullTenant()); its
+        // acting school instead lives in the session.
+        $tenantId = $request->user()?->actingTenantId();
 
         return [
             ...parent::share($request),

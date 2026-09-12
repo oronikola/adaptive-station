@@ -9,7 +9,7 @@ class ImportBatchPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isPlatformSuperAdmin() || $user->isTenantAdmin();
+        return $user->isPlatformSuperAdmin() || $user->hasTenantAdminAccess();
     }
 
     public function view(User $user, ImportBatch $batch): bool
@@ -19,7 +19,7 @@ class ImportBatchPolicy
 
     public function create(User $user): bool
     {
-        return $user->isPlatformSuperAdmin() || $user->isTenantAdmin();
+        return $user->isPlatformSuperAdmin() || $user->hasTenantAdminAccess();
     }
 
     public function resolveException(User $user, ImportBatch $batch): bool
@@ -29,6 +29,6 @@ class ImportBatchPolicy
 
     protected function belongsToTenant(User $user, string $tenantId): bool
     {
-        return $user->isPlatformSuperAdmin() || $user->tenant_id === $tenantId;
+        return $user->isPlatformSuperAdmin() || $user->actingTenantId() === $tenantId;
     }
 }

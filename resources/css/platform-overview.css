@@ -171,6 +171,7 @@
 .pft-stat-icon--green  { background: var(--as-success); }
 .pft-stat-icon--violet { background: #6c47c9; }
 .pft-stat-icon--amber  { background: var(--as-warning); }
+.pft-stat-icon--red    { background: var(--as-danger); }
 
 .pft-stat-label {
     margin: 0;
@@ -743,6 +744,121 @@
     .pft-recent-item,
     .pf-panel,
     .pf-table tbody tr {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* ── School picker card grid (Oversight) ─────────────────────────────── */
+
+.pft-school-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.pft-school-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    border: 1px solid var(--as-border);
+    border-radius: 22px;
+    background: var(--as-surface);
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    animation: pft-fade-in 320ms ease both;
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.pft-school-card:hover:not(:disabled) {
+    transform: translateY(-3px);
+    border-color: var(--as-border-active);
+    box-shadow: 0 18px 34px -22px rgba(15, 23, 42, 0.3);
+}
+
+.pft-school-card:disabled {
+    cursor: default;
+    opacity: 0.65;
+}
+
+.pft-school-card--current {
+    border-color: var(--as-success);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--as-success) 22%, transparent);
+}
+
+.pft-school-card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pft-school-avatar {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    border-radius: 16px;
+    font-size: 17px;
+}
+
+.pft-school-name {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--as-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pft-school-code {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--as-text-secondary);
+}
+
+.pft-school-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.pft-school-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--as-brand-blue);
+    white-space: nowrap;
+}
+
+.pft-school-cta svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pft-school-card--current .pft-school-cta {
+    color: var(--as-success);
+}
+
+.pft-school-card:nth-child(2)  { animation-delay: 30ms; }
+.pft-school-card:nth-child(3)  { animation-delay: 60ms; }
+.pft-school-card:nth-child(4)  { animation-delay: 90ms; }
+.pft-school-card:nth-child(5)  { animation-delay: 120ms; }
+.pft-school-card:nth-child(6)  { animation-delay: 150ms; }
+
+@media (prefers-reduced-motion: reduce) {
+    .pft-school-card {
         animation: none !important;
         transition: none !important;
     }

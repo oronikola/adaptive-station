@@ -25,7 +25,7 @@ class UpdatePersonRequest extends FormRequest
      */
     public function rules(): array
     {
-        $tenantId = $this->user()->tenant_id;
+        $tenantId = $this->user()->actingTenantId();
         $personId = $this->route('person')->id;
 
         return [

@@ -51,6 +51,17 @@ export const platformNavigationItems: NavItem[] = [
         ),
     },
     {
+        name: 'sms-log',
+        label: 'SMS Delivery Log',
+        route: 'platform.sms-log.index',
+        activePattern: 'platform.sms-log.*',
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+        ),
+    },
+    {
         name: 'audit-log',
         label: 'Audit Log',
         route: 'platform.audit-log.index',
@@ -59,6 +70,22 @@ export const platformNavigationItems: NavItem[] = [
             <svg viewBox="0 0 24 24">
                 <rect x="6" y="4" width="12" height="17" rx="2" />
                 <path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1M9 11h6M9 15h6" />
+            </svg>
+        ),
+    },
+    {
+        name: 'platform-admins',
+        label: 'Platform Admins',
+        route: 'platform.platform-admins.index',
+        activePattern: 'platform.platform-admins.*',
+        // Provisions adaptivestation_admin accounts — every visitor to
+        // PlatformLayout is already guaranteed platform_super_admin (see
+        // EnsurePlatformAccess), so no further gating is needed here.
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="3.5" />
+                <path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7" />
+                <path d="M17 6l1.5 1.5L21.5 4.5" />
             </svg>
         ),
     },

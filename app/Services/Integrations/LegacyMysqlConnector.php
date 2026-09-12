@@ -3,6 +3,7 @@
 namespace App\Services\Integrations;
 
 use App\Models\IntegrationProfile;
+use App\Models\TapEvent;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -242,5 +243,29 @@ class LegacyMysqlConnector
         ]);
 
         return true;
+    }
+
+    /**
+     * Converts one Adaptive Station tap event into the row shape
+     * insertTapHistoryIfMissing() expects — shared by RunLegacyExportJob
+     * (batch, operator-triggered) and PushTapEventToLegacyJob (one row,
+     * fired immediately after the tap is accepted) so the two paths can
+     * never drift out of sync with each other.
+     */
+    public static function mapTapEventRow(TapEvent $event): array
+    {
+        $localAt = $event->occurred_at->clone()->addMinutes($event->occurred_offset_minutes);
+
+        return [
+            'legacy_station_id' => $event->station?->legacy_station_id ?? $event->station?->station_code ?? 'UNKNOWN',
+            'tdate' => $localAt->toDateString(),
+            'ttime' => $localAt->format('H:i:s'),
+            'tapstate' => $event->event_type->value === 'IN' ? '1' : '0',
+            'studid' => $event->person?->source_record_id ?? $event->person?->external_id ?? (string) $event->person_id,
+            'utype' => $event->person_type?->value === 'staff' ? 1 : 7,
+            'mode' => $event->metadata['legacy_mode'] ?? 'rfid',
+            'tapstatus' => $event->metadata['legacy_tapstatus'] ?? null,
+            'createddatetime' => $event->received_at->toDateTimeString(),
+        ];
     }
 }

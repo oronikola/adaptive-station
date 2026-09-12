@@ -38,7 +38,7 @@ class RfidCardController extends Controller
     {
         $data = $request->validated();
 
-        $card = RfidCard::assign($request->user()->tenant_id, $data['person_id'], $data['card_uid'], $request->user());
+        $card = RfidCard::assign($request->user()->actingTenantId(), $data['person_id'], $data['card_uid'], $request->user());
 
         return redirect()->route('portal.people.edit', $card->person_id)->with('success', 'Card assigned.');
     }

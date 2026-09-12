@@ -2,11 +2,44 @@ import InputError from '@/Components/InputError';
 import Pagination from '@/Components/admin/Pagination';
 import { useToast } from '@/Components/toast/ToastProvider';
 import PlatformLayout from '@/Layouts/PlatformLayout';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useRef, useState } from 'react';
-import { PaginatedData, Tenant } from '@/types';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import axios from 'axios';
+import { useEffect, useRef, useState } from 'react';
+import { PageProps, PaginatedData, PaginationLink, Tenant } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
+
+interface LegacySchool {
+    id: number | null;
+    schoolabrv: string;
+    schoolname: string;
+    eslink: string;
+}
+
+/** Essentiel's own school names come through as e.g. "PILGRIM CHRISTIAN
+ * COLLEGE" — title-cased here purely so the auto-filled School name field
+ * looks like a normal name instead of shouting; still freely editable
+ * afterward if this guesses wrong (e.g. "Of", acronyms). */
+function titleCase(value: string): string {
+    return value
+        .toLowerCase()
+        .split(' ')
+        .map((word) => (word.length > 0 ? word[0].toUpperCase() + word.slice(1) : word))
+        .join(' ');
+}
+
+// Mirrors server-side slugification for tenant codes
+function slugify(value: string): string {
+    return value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+interface PaginationBarProps {
+    links: PaginationLink[];
+}
 
 const STATUS_PILL_CLASS: Record<Tenant['status'], string> = {
     active: 'pf-pill--active',
@@ -65,6 +98,8 @@ type ClientTab = 'all' | 'add';
 
 export default function TenantsListScreen({ tenants, filters }: TenantsListScreenProps) {
     const { showToast } = useToast();
+    const { auth } = usePage<PageProps>().props;
+    const canManage = auth.user.role === 'platform_super_admin';
     const [tab, setTab] = useState<ClientTab>('all');
     const [codeTouched, setCodeTouched] = useState(false);
     const [codeEditing, setCodeEditing] = useState(false);
@@ -73,7 +108,70 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
         name: '',
         code: '',
         timezone: 'Asia/Manila',
+        connect_legacy_system: false,
+        legacy_connection: {
+            host: '',
+            port: '',
+            database: '',
+            username: '',
+            password: '',
+            // Reference-only, filled in by the school picker below — never
+            // used to connect to anything, just kept for traceability.
+            legacy_school_id: null as number | null,
+            legacy_schoolabrv: '',
+            eslink: '',
+        },
     });
+
+    function setLegacyField(field: keyof typeof data.legacy_connection, value: string) {
+        setData('legacy_connection', { ...data.legacy_connection, [field]: value });
+    }
+
+    // Fetched lazily (only once the legacy checkbox is actually checked) so
+    // a superadmin who never touches this section never pays for the call.
+    const [legacySchools, setLegacySchools] = useState<LegacySchool[]>([]);
+    const [legacySchoolsLoading, setLegacySchoolsLoading] = useState(false);
+    const [legacySchoolsError, setLegacySchoolsError] = useState(false);
+    const [schoolQuery, setSchoolQuery] = useState('');
+    const [schoolPickerOpen, setSchoolPickerOpen] = useState(false);
+
+    useEffect(() => {
+        if (!data.connect_legacy_system || legacySchools.length > 0 || legacySchoolsLoading) {
+            return;
+        }
+
+        setLegacySchoolsLoading(true);
+        setLegacySchoolsError(false);
+        axios.get<{ schools: LegacySchool[] }>(route('platform.tenants.legacy-schools'))
+            .then(({ data }) => setLegacySchools(data.schools))
+            .catch(() => setLegacySchoolsError(true))
+            .finally(() => setLegacySchoolsLoading(false));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.connect_legacy_system]);
+
+    const filteredLegacySchools = schoolQuery.trim() === ''
+        ? legacySchools
+        : legacySchools.filter((school) => {
+            const q = schoolQuery.trim().toLowerCase();
+            return school.schoolname.toLowerCase().includes(q) || school.schoolabrv.toLowerCase().includes(q);
+        });
+
+    function selectLegacySchool(school: LegacySchool) {
+        setData((current) => ({
+            ...current,
+            name: titleCase(school.schoolname),
+            code: slugify(school.schoolabrv),
+            legacy_connection: {
+                ...current.legacy_connection,
+                legacy_school_id: school.id,
+                legacy_schoolabrv: school.schoolabrv,
+                eslink: school.eslink,
+            },
+        }));
+        setCodeTouched(true);
+        setSchoolQuery(`${school.schoolabrv} — ${titleCase(school.schoolname)}`);
+        setSchoolPickerOpen(false);
+    }
 
     // Debounce timer for search
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -179,18 +277,20 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                         </svg>
                         All Clients
                     </button>
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={tab === 'add'}
-                        className={'pft-tab' + (tab === 'add' ? ' pft-tab--active' : '')}
-                        onClick={() => setTab('add')}
-                    >
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14" />
-                        </svg>
-                        Add Client
-                    </button>
+                    {canManage && (
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={tab === 'add'}
+                            className={'pft-tab' + (tab === 'add' ? ' pft-tab--active' : '')}
+                            onClick={() => setTab('add')}
+                        >
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            Add Client
+                        </button>
+                    )}
                 </div>
 
                 {tab === 'all' && (
@@ -344,7 +444,7 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                     </div>
                 )}
 
-                {tab === 'add' && (
+                {tab === 'add' && canManage && (
                     <div className="pf-panel pft-tab-panel">
                         <div className="pf-panel-header">
                             <div>
@@ -417,6 +517,151 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                     <InputError message={errors.timezone} className="mt-2" />
                                 </div>
                             </div>
+
+                            <div className="pf-field" style={{ marginTop: 8 }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={data.connect_legacy_system}
+                                        onChange={(e) => setData('connect_legacy_system', e.target.checked)}
+                                        // .pf-field input's global width:100%/height:44px rule
+                                        // (meant for text inputs) applies to every <input> in
+                                        // a .pf-field, checkboxes included, unless overridden —
+                                        // without this it renders as a huge stretched block.
+                                        style={{ width: 18, height: 18, flexShrink: 0 }}
+                                    />
+                                    <span>This school already uses a legacy attendance system</span>
+                                </label>
+                                <p className="pf-field-hint">
+                                    Connects this school's own legacy database so its historical
+                                    students and attendance import once now, and every new tap on
+                                    this school's kiosk keeps syncing to it live going forward.
+                                </p>
+                            </div>
+
+                            {data.connect_legacy_system && (
+                                <div className="pf-field" style={{ marginBottom: 18, position: 'relative' }}>
+                                    <label htmlFor="legacy-school-search">Find the school in essentiel</label>
+                                    <input
+                                        id="legacy-school-search"
+                                        type="text"
+                                        placeholder={legacySchoolsLoading ? 'Loading school list…' : 'Search by name or abbreviation…'}
+                                        value={schoolQuery}
+                                        disabled={legacySchoolsLoading}
+                                        onChange={(e) => {
+                                            setSchoolQuery(e.target.value);
+                                            setSchoolPickerOpen(true);
+                                        }}
+                                        onFocus={() => setSchoolPickerOpen(true)}
+                                        onBlur={() => setTimeout(() => setSchoolPickerOpen(false), 150)}
+                                        autoComplete="off"
+                                    />
+                                    <p className="pf-field-hint">
+                                        Picking a school fills in its name/code automatically below —
+                                        the actual database connection still needs to be entered
+                                        manually, since the directory only carries identity, not
+                                        credentials.
+                                    </p>
+                                    {legacySchoolsError && (
+                                        <p className="pf-field-hint" role="alert" style={{ color: '#b91c1c' }}>
+                                            Couldn't load the school list — you can still type the
+                                            name/code above by hand.
+                                        </p>
+                                    )}
+                                    {schoolPickerOpen && !legacySchoolsLoading && filteredLegacySchools.length > 0 && (
+                                        <ul
+                                            style={{
+                                                position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0,
+                                                maxHeight: 260, overflowY: 'auto', margin: 0, padding: 4,
+                                                listStyle: 'none', background: '#fff', border: '1px solid #d7dde7',
+                                                borderRadius: 12, boxShadow: '0 12px 28px -12px rgba(15,23,42,.25)',
+                                            }}
+                                        >
+                                            {filteredLegacySchools.slice(0, 50).map((school) => (
+                                                <li key={`${school.id}-${school.schoolabrv}`}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => selectLegacySchool(school)}
+                                                        style={{
+                                                            width: '100%', textAlign: 'left', padding: '8px 10px',
+                                                            border: 'none', background: 'transparent', cursor: 'pointer',
+                                                            borderRadius: 8, fontSize: 13,
+                                                        }}
+                                                    >
+                                                        <strong className="font-mono">{school.schoolabrv}</strong>{' '}
+                                                        <span style={{ color: '#64748b' }}>{titleCase(school.schoolname)}</span>
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            )}
+
+                            {data.connect_legacy_system && (
+                                <div className="pft-form-grid">
+                                    <div className="pf-field">
+                                        <label htmlFor="legacy-host">Legacy database host</label>
+                                        <input
+                                            id="legacy-host"
+                                            type="text"
+                                            value={data.legacy_connection.host}
+                                            onChange={(e) => setLegacyField('host', e.target.value)}
+                                            required={data.connect_legacy_system}
+                                        />
+                                        <InputError message={errors['legacy_connection.host']} className="mt-2" />
+                                    </div>
+
+                                    <div className="pf-field">
+                                        <label htmlFor="legacy-port">Port (optional, defaults to 3306)</label>
+                                        <input
+                                            id="legacy-port"
+                                            type="text"
+                                            inputMode="numeric"
+                                            value={data.legacy_connection.port}
+                                            onChange={(e) => setLegacyField('port', e.target.value)}
+                                        />
+                                        <InputError message={errors['legacy_connection.port']} className="mt-2" />
+                                    </div>
+
+                                    <div className="pf-field">
+                                        <label htmlFor="legacy-database">Database name</label>
+                                        <input
+                                            id="legacy-database"
+                                            type="text"
+                                            value={data.legacy_connection.database}
+                                            onChange={(e) => setLegacyField('database', e.target.value)}
+                                            required={data.connect_legacy_system}
+                                        />
+                                        <InputError message={errors['legacy_connection.database']} className="mt-2" />
+                                    </div>
+
+                                    <div className="pf-field">
+                                        <label htmlFor="legacy-username">Username</label>
+                                        <input
+                                            id="legacy-username"
+                                            type="text"
+                                            value={data.legacy_connection.username}
+                                            onChange={(e) => setLegacyField('username', e.target.value)}
+                                            required={data.connect_legacy_system}
+                                        />
+                                        <InputError message={errors['legacy_connection.username']} className="mt-2" />
+                                    </div>
+
+                                    <div className="pf-field">
+                                        <label htmlFor="legacy-password">Password</label>
+                                        <input
+                                            id="legacy-password"
+                                            type="password"
+                                            value={data.legacy_connection.password}
+                                            onChange={(e) => setLegacyField('password', e.target.value)}
+                                            required={data.connect_legacy_system}
+                                            autoComplete="new-password"
+                                        />
+                                        <InputError message={errors['legacy_connection.password']} className="mt-2" />
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="pft-form-actions">
                                 <button

@@ -25,13 +25,13 @@ class StationPolicy
 
     public function create(User $user): bool
     {
-        return $user->isPlatformSuperAdmin() || $user->isTenantAdmin();
+        return $user->isPlatformSuperAdmin() || $user->hasTenantAdminAccess();
     }
 
     public function update(User $user, Station $station): bool
     {
         return $this->belongsToTenant($user, $station->tenant_id)
-            && ($user->isPlatformSuperAdmin() || $user->isTenantAdmin());
+            && ($user->isPlatformSuperAdmin() || $user->hasTenantAdminAccess());
     }
 
     public function delete(User $user, Station $station): bool
@@ -41,6 +41,6 @@ class StationPolicy
 
     protected function belongsToTenant(User $user, string $tenantId): bool
     {
-        return $user->isPlatformSuperAdmin() || $user->tenant_id === $tenantId;
+        return $user->isPlatformSuperAdmin() || $user->actingTenantId() === $tenantId;
     }
 }

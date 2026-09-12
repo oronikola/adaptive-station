@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\PersonType;
 use App\Enums\TapEventType;
 use App\Jobs\DispatchParentTapNotification;
+use App\Jobs\PushTapEventToLegacyJob;
 use App\Models\Concerns\HasTenantScope;
 use App\Models\Concerns\HasUuidV4;
 use App\Models\Contracts\TenantScoped;
@@ -155,6 +156,15 @@ class TapEvent extends Model implements TenantScoped
                 // retry of an already-accepted tap would spam parents.
                 if ($tapEvent->person_type === PersonType::Student && $tapEvent->person_id !== null) {
                     DispatchParentTapNotification::dispatch($tapEvent->tenant_id, $tapEvent->id);
+                }
+
+                // Real-time legacy sync, for a school that opted into it at
+                // onboarding — see PushTapEventToLegacyJob's docblock for why
+                // this is a silent no-op for every other tenant. Staff taps
+                // are included too (unlike the student-only notification
+                // above), since the legacy taphistory table tracks both.
+                if ($tapEvent->person_id !== null) {
+                    PushTapEventToLegacyJob::dispatch($tapEvent->tenant_id, $tapEvent->id);
                 }
             } catch (QueryException $e) {
                 if ((int) ($e->errorInfo[1] ?? 0) === 1062) {

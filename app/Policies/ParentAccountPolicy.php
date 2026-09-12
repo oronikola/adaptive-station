@@ -9,7 +9,7 @@ class ParentAccountPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->is_active && $user->isTenantAdmin();
+        return $user->is_active && $user->hasTenantAdminAccess();
     }
 
     public function create(User $user): bool
@@ -19,6 +19,6 @@ class ParentAccountPolicy
 
     public function update(User $user, ParentAccount $parent): bool
     {
-        return $this->viewAny($user) && $user->tenant_id === $parent->tenant_id;
+        return $this->viewAny($user) && $user->actingTenantId() === $parent->tenant_id;
     }
 }

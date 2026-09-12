@@ -14,12 +14,12 @@ class StationCredentialPolicy
 
     public function create(User $user): bool
     {
-        return $user->isPlatformSuperAdmin() || $user->isTenantAdmin();
+        return $user->isPlatformSuperAdmin() || $user->hasTenantAdminAccess();
     }
 
     public function update(User $user, StationCredential $credential): bool
     {
-        return $this->view($user, $credential) && ($user->isPlatformSuperAdmin() || $user->isTenantAdmin());
+        return $this->view($user, $credential) && ($user->isPlatformSuperAdmin() || $user->hasTenantAdminAccess());
     }
 
     public function delete(User $user, StationCredential $credential): bool
@@ -29,6 +29,6 @@ class StationCredentialPolicy
 
     protected function belongsToTenant(User $user, string $tenantId): bool
     {
-        return $user->isPlatformSuperAdmin() || $user->tenant_id === $tenantId;
+        return $user->isPlatformSuperAdmin() || $user->actingTenantId() === $tenantId;
     }
 }

@@ -68,6 +68,14 @@ export default function IntegrationsEditScreen({ profile, runs }: { profile: Int
         exportForm.post(route('portal.integrations.export', profile.id));
     }
 
+    // A handoff file, not a live push — no live connection or write access
+    // to the legacy system is needed for this one, so it's built as a plain
+    // link (browser download) rather than a form submission.
+    const csvExportForm = useForm({ date_from: '', date_to: '' });
+    const csvExportUrl = csvExportForm.data.date_from && csvExportForm.data.date_to
+        ? `${route('portal.integrations.export-csv', profile.id)}?${new URLSearchParams(csvExportForm.data).toString()}`
+        : null;
+
     return (
         <AdminLayout>
             <Head title={profile.name} />
@@ -217,6 +225,59 @@ export default function IntegrationsEditScreen({ profile, runs }: { profile: Int
                                 </button>
                             </div>
                         </form>
+                    </div>
+                )}
+
+                {profile.direction !== 'import_only' && (
+                    <div className="pf-panel" style={{ marginBottom: 16 }}>
+                        <div className="pf-panel-header">
+                            <div>
+                                <h2 className="pf-panel-title">Download Legacy CSV</h2>
+                                <p className="pf-panel-count">
+                                    For when there's no live connection to the legacy system yet —
+                                    downloads a CSV in its own taphistory column shape
+                                    (tdate/ttime/tapstate/studid/...) to hand off manually, for
+                                    their own team to import on their side.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="pf-modal">
+                            <div className="pft-form-grid">
+                                <div className="pf-field">
+                                    <label htmlFor="csv_date_from">From</label>
+                                    <input
+                                        id="csv_date_from"
+                                        type="date"
+                                        value={csvExportForm.data.date_from}
+                                        onChange={(e) => csvExportForm.setData('date_from', e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="pf-field">
+                                    <label htmlFor="csv_date_to">To</label>
+                                    <input
+                                        id="csv_date_to"
+                                        type="date"
+                                        value={csvExportForm.data.date_to}
+                                        onChange={(e) => csvExportForm.setData('date_to', e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="pf-modal-footer" style={{ justifyContent: 'flex-start' }}>
+                                {csvExportUrl ? (
+                                    <a href={csvExportUrl} className="pf-btn pf-btn-secondary">
+                                        Download CSV
+                                    </a>
+                                ) : (
+                                    <button type="button" className="pf-btn pf-btn-secondary" disabled>
+                                        Download CSV
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 )}
 

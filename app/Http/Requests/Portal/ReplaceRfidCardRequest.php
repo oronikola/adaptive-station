@@ -25,7 +25,7 @@ class ReplaceRfidCardRequest extends FormRequest
      */
     public function rules(): array
     {
-        $tenantId = $this->user()->tenant_id;
+        $tenantId = $this->user()->actingTenantId();
 
         return [
             'card_uid' => [

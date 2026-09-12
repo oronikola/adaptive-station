@@ -14,7 +14,7 @@ class IntegrationProfilePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isPlatformSuperAdmin() || $user->isTenantAdmin();
+        return $user->isPlatformSuperAdmin() || $user->hasTenantAdminAccess();
     }
 
     public function view(User $user, IntegrationProfile $profile): bool
@@ -24,7 +24,7 @@ class IntegrationProfilePolicy
 
     public function create(User $user): bool
     {
-        return $user->isPlatformSuperAdmin() || $user->isTenantAdmin();
+        return $user->isPlatformSuperAdmin() || $user->hasTenantAdminAccess();
     }
 
     public function update(User $user, IntegrationProfile $profile): bool
@@ -39,6 +39,6 @@ class IntegrationProfilePolicy
 
     protected function belongsToTenant(User $user, string $tenantId): bool
     {
-        return $user->isPlatformSuperAdmin() || $user->tenant_id === $tenantId;
+        return $user->isPlatformSuperAdmin() || $user->actingTenantId() === $tenantId;
     }
 }

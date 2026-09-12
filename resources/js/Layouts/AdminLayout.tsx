@@ -12,7 +12,9 @@ export default function AdminLayout({ header, children }: AdminLayoutProps) {
     const user = props.auth.user;
 
     const visibleNavigationItems = adminNavigationItems.filter(
-        (item) => !item.adminOnly || user.role !== 'tenant_operator',
+        (item) =>
+            (!item.adminOnly || user.role !== 'tenant_operator') &&
+            (!item.oversightOnly || user.role === 'adaptivestation_admin'),
     );
 
     return (

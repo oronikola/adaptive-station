@@ -67,6 +67,14 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function adaptivestationAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::AdaptivestationAdmin,
+            'tenant_id' => null,
+        ]);
+    }
+
     public function tenantAdmin(?Tenant $tenant = null): static
     {
         return $this->state(fn (array $attributes) => [
