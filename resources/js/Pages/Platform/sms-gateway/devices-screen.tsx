@@ -62,6 +62,20 @@ function formatAge(seconds: number): string {
     return `${h}h ${m}m`;
 }
 
+// hour12 explicit, not left to the browser locale default — some locales
+// (e.g. en-GB) render toLocaleString()'s time in 24-hour "military" format
+// otherwise.
+function formatDateTime(value: string): string {
+    return new Date(value).toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
+}
+
 export default function SmsGatewayDevicesScreen({
     devices,
     backlog,
@@ -303,7 +317,7 @@ export default function SmsGatewayDevicesScreen({
                                         </td>
                                         <td>
                                             {device.last_seen_at
-                                                ? new Date(device.last_seen_at).toLocaleString()
+                                                ? formatDateTime(device.last_seen_at)
                                                 : 'Never'}
                                         </td>
                                         <td>
