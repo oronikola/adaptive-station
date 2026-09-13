@@ -563,7 +563,7 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                         credentials.
                                     </p>
                                     {legacySchoolsError && (
-                                        <p className="pf-field-hint" role="alert" style={{ color: '#b91c1c' }}>
+                                        <p className="pf-field-hint" role="alert" style={{ color: 'var(--as-danger-dark)' }}>
                                             Couldn't load the school list — you can still type the
                                             name/code above by hand.
                                         </p>
@@ -573,8 +573,8 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                             style={{
                                                 position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0,
                                                 maxHeight: 260, overflowY: 'auto', margin: 0, padding: 4,
-                                                listStyle: 'none', background: '#fff', border: '1px solid #d7dde7',
-                                                borderRadius: 12, boxShadow: '0 12px 28px -12px rgba(15,23,42,.25)',
+                                                listStyle: 'none', background: 'var(--as-surface)', border: '1px solid var(--as-border)',
+                                                borderRadius: 12, boxShadow: 'var(--as-shadow-overlay)',
                                             }}
                                         >
                                             {filteredLegacySchools.slice(0, 50).map((school) => (
@@ -589,7 +589,7 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                                         }}
                                                     >
                                                         <strong className="font-mono">{school.schoolabrv}</strong>{' '}
-                                                        <span style={{ color: '#64748b' }}>{titleCase(school.schoolname)}</span>
+                                                        <span style={{ color: 'var(--as-brand-blue-light)' }}>{titleCase(school.schoolname)}</span>
                                                     </button>
                                                 </li>
                                             ))}

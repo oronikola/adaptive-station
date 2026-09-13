@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import { useTheme } from '@/Components/Theme/ThemeProvider';
 
 interface HeaderProps {
     user: {
@@ -33,6 +34,7 @@ export default function Header({
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const roleLabel = ROLE_LABELS[user.role] ?? user.role;
+    const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
         if (!menuOpen) {
@@ -80,13 +82,40 @@ export default function Header({
                 <button
                     type="button"
                     className="pf-topbar-icon-btn"
-                    title="Theme switching coming soon"
-                    aria-label="Toggle theme (coming soon)"
+                    onClick={toggleTheme}
+                    title={
+                        theme === 'dark'
+                            ? 'Switch to light mode'
+                            : 'Switch to dark mode'
+                    }
+                    aria-label={
+                        theme === 'dark'
+                            ? 'Switch to light mode'
+                            : 'Switch to dark mode'
+                    }
+                    aria-pressed={theme === 'dark'}
                 >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <circle cx="12" cy="12" r="4.2" />
-                        <path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.55 1.55M17.55 17.55l1.55 1.55M3 12h2.2M18.8 12H21M4.9 19.1l1.55-1.55M17.55 6.45l1.55-1.55" />
-                    </svg>
+                    <span className="pf-theme-icon" aria-hidden="true">
+                        <svg
+                            className={
+                                'pf-theme-icon-sun' +
+                                (theme === 'dark' ? '' : ' pf-theme-icon--visible')
+                            }
+                            viewBox="0 0 24 24"
+                        >
+                            <circle cx="12" cy="12" r="4.2" />
+                            <path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.55 1.55M17.55 17.55l1.55 1.55M3 12h2.2M18.8 12H21M4.9 19.1l1.55-1.55M17.55 6.45l1.55-1.55" />
+                        </svg>
+                        <svg
+                            className={
+                                'pf-theme-icon-moon' +
+                                (theme === 'dark' ? ' pf-theme-icon--visible' : '')
+                            }
+                            viewBox="0 0 24 24"
+                        >
+                            <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z" />
+                        </svg>
+                    </span>
                 </button>
 
                 <button
