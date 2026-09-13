@@ -2,11 +2,10 @@
    Colors are lifted from platform-dashboard.css's stat-icon tones so toasts
    read as part of the same design system, not a bolted-on widget.
 
-   Dark mode: this app has no manual theme toggle — the redesigned screens
-   (e.g. tenant-detail-screen.jsx) already rely on Tailwind's default
-   `dark:` strategy, which is `@media (prefers-color-scheme: dark)`. These
-   rules follow the same mechanism so the toast matches whichever mode the
-   rest of the app resolves to. */
+   Dark mode: driven by the explicit `.dark` class the user sets via the
+   header's theme toggle (see Components/Theme/ThemeProvider.tsx), not raw
+   OS preference — kept in sync with the rest of the app's --as-* token
+   system in resources/css/app.css. */
 
 .pf-toast-viewport {
     position: fixed;
@@ -37,7 +36,7 @@
     border: 1px solid var(--as-border);
     border-left: 4px solid var(--pf-toast-accent, var(--as-text-muted));
     border-radius: 14px;
-    background: #ffffff;
+    background: var(--as-surface);
     box-shadow: 0 20px 44px -22px rgba(15, 35, 70, 0.45);
     pointer-events: auto;
     opacity: 0;
@@ -166,52 +165,36 @@
     --pf-toast-icon-fg: #475569;
 }
 
-@media (prefers-color-scheme: dark) {
-    .pf-toast {
-        border-color: #263244;
-        background: #131c2e;
-        box-shadow: 0 20px 44px -20px rgba(0, 0, 0, 0.6);
-    }
+:root.dark .pf-toast {
+    box-shadow: 0 20px 44px -20px rgba(0, 0, 0, 0.6);
+}
 
-    .pf-toast-message {
-        color: #f1f5f9;
-    }
+:root.dark .pf-toast-close:hover {
+    background: var(--as-surface-active);
+    color: var(--as-text-slate);
+}
 
-    .pf-toast-description {
-        color: var(--as-text-muted);
-    }
+:root.dark .pf-toast--success {
+    --pf-toast-icon-bg: rgba(26, 138, 76, 0.18);
+    --pf-toast-icon-fg: #4ade80;
+}
 
-    .pf-toast-close {
-        color: var(--as-text-secondary);
-    }
+:root.dark .pf-toast--update {
+    --pf-toast-icon-bg: rgba(40, 99, 189, 0.22);
+    --pf-toast-icon-fg: #7fb0f5;
+}
 
-    .pf-toast-close:hover {
-        background: #1c2740;
-        color: #e2e8f0;
-    }
+:root.dark .pf-toast--delete {
+    --pf-toast-icon-bg: rgba(193, 121, 31, 0.2);
+    --pf-toast-icon-fg: #f0b25f;
+}
 
-    .pf-toast--success {
-        --pf-toast-icon-bg: rgba(26, 138, 76, 0.18);
-        --pf-toast-icon-fg: #4ade80;
-    }
+:root.dark .pf-toast--error {
+    --pf-toast-icon-bg: rgba(220, 38, 38, 0.2);
+    --pf-toast-icon-fg: #f87171;
+}
 
-    .pf-toast--update {
-        --pf-toast-icon-bg: rgba(40, 99, 189, 0.22);
-        --pf-toast-icon-fg: #7fb0f5;
-    }
-
-    .pf-toast--delete {
-        --pf-toast-icon-bg: rgba(193, 121, 31, 0.2);
-        --pf-toast-icon-fg: #f0b25f;
-    }
-
-    .pf-toast--error {
-        --pf-toast-icon-bg: rgba(220, 38, 38, 0.2);
-        --pf-toast-icon-fg: #f87171;
-    }
-
-    .pf-toast--info {
-        --pf-toast-icon-bg: rgba(100, 116, 139, 0.25);
-        --pf-toast-icon-fg: #cbd5e1;
-    }
+:root.dark .pf-toast--info {
+    --pf-toast-icon-bg: rgba(100, 116, 139, 0.25);
+    --pf-toast-icon-fg: #cbd5e1;
 }
