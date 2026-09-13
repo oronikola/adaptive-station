@@ -4,6 +4,26 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        {{-- Anti-FOUC: set .dark on <html> synchronously before first paint,
+             so there's no flash of the wrong theme. Mirrors the logic in
+             resources/js/Components/Theme/ThemeProvider.tsx — keep both in
+             sync if the storage key or fallback ever changes. --}}
+        <script>
+            (function () {
+                try {
+                    var stored = localStorage.getItem('as-theme');
+                    var isDark = stored
+                        ? stored === 'dark'
+                        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (isDark) {
+                        document.documentElement.classList.add('dark');
+                    }
+                } catch (e) {
+                    // Storage/matchMedia unavailable — default to light.
+                }
+            })();
+        </script>
+
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
