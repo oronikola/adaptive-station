@@ -1,3 +1,4 @@
+import AttendanceAnalytics, { type AttendanceAnalyticsData } from './attendance-analytics';
 import AdminLayout from '@/Layouts/AdminLayout';
 import Pagination from '@/Components/admin/Pagination';
 import { Head, Link, router, useForm } from '@inertiajs/react';
@@ -238,12 +239,14 @@ export default function AttendanceSearchScreen({
     selectedPerson,
     stations,
     stats,
+    analytics,
 }: {
     events: PaginatedData<AttendanceEvent>;
     filters: AttendanceFilters;
     selectedPerson: PersonOption | null;
     stations: Station[];
     stats: Stats;
+    analytics: AttendanceAnalyticsData;
 }) {
     const { data, setData } = useForm({
         date_from: filters.date_from ?? '',
@@ -340,6 +343,8 @@ export default function AttendanceSearchScreen({
                     <StatCard label="Tapped in" value={stats.in} icon={ICON_IN} tone="green" />
                     <StatCard label="Tapped out" value={stats.out} icon={ICON_OUT} tone="amber" />
                 </div>
+
+                <AttendanceAnalytics analytics={analytics} totalTaps={stats.total} isUpdating={isFiltering} />
 
                 <form onSubmit={submit} className="pf-filter-bar">
                     <div className="pf-field">

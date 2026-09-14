@@ -8,6 +8,7 @@ use App\Models\Station;
 use App\Models\TapEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -41,7 +42,82 @@ class AttendanceController extends Controller
             'selectedPerson' => $selectedPerson,
             'stations' => Station::query()->orderBy('name')->get(['id', 'name']),
             'stats' => $this->stats($filters),
+            'analytics' => $this->analytics($filters),
         ]);
+    }
+
+    /**
+     * Aggregate the complete filtered result, independently of pagination.
+     * Calendar buckets use the stored school-local attendance date.
+     *
+     * @return array<string, mixed>
+     */
+    private function analytics(array $filters): array
+    {
+        $query = TapEvent::search($filters)->reorder();
+        $bounds = (clone $query)->toBase()
+            ->selectRaw('MIN(attendance_date_local) as first_date, MAX(attendance_date_local) as last_date, COUNT(DISTINCT attendance_date_local) as recorded_days, COUNT(*) as total')
+            ->first();
+
+        if ((int) $bounds->recorded_days === 0) {
+            return ['recorded_days' => 0, 'average_taps' => 0, 'busiest_day' => null, 'granularity' => 'day', 'date_from' => null, 'date_to' => null, 'trend' => [], 'stations' => []];
+        }
+
+        $first = Date::parse($bounds->first_date);
+        $last = Date::parse($bounds->last_date);
+        $granularity = 'day';
+        $format = '%Y-%m-%d';
+        if ($first->diffInDays($last) >= 31) {
+            $granularity = 'month';
+            $format = '%Y-%m-01';
+            if ($first->copy()->startOfMonth()->diffInMonths($last->copy()->startOfMonth()) >= 24) {
+                $granularity = 'year';
+                $format = '%Y-01-01';
+            }
+        }
+
+        $counts = (clone $query)->toBase()
+            ->selectRaw("DATE_FORMAT(attendance_date_local, ?) as period_start, COUNT(*) as total, COUNT(DISTINCT person_id) as unique_people, SUM(CASE WHEN event_type = 'IN' THEN 1 ELSE 0 END) as taps_in, SUM(CASE WHEN event_type = 'OUT' THEN 1 ELSE 0 END) as taps_out", [$format])
+            ->groupBy('period_start')->orderBy('period_start')->get()->keyBy('period_start');
+
+        $trend = [];
+        $cursor = $first->copy()->startOf($granularity);
+        while ($cursor->lte($last)) {
+            $key = $cursor->toDateString();
+            $row = $counts->get($key);
+            $trend[] = [
+                'date' => $key,
+                'total' => (int) ($row?->total ?? 0),
+                'unique_people' => (int) ($row?->unique_people ?? 0),
+                'in' => (int) ($row?->taps_in ?? 0),
+                'out' => (int) ($row?->taps_out ?? 0),
+            ];
+            $cursor->addUnit($granularity);
+        }
+
+        $busiest = (clone $query)->toBase()
+            ->selectRaw('attendance_date_local as date, COUNT(*) as total')
+            ->groupBy('attendance_date_local')->orderByDesc('total')->orderByDesc('attendance_date_local')->first();
+
+        $stations = (clone $query)->selectRaw('station_id, COUNT(*) as total')
+            ->groupBy('station_id')->orderByDesc('total')->orderBy('station_id')
+            ->with('station:id,name')->limit(5)->get()
+            ->map(fn (TapEvent $row): array => [
+                'id' => $row->station_id,
+                'name' => $row->station?->name ?? 'Unknown station',
+                'total' => (int) $row->total,
+            ]);
+
+        return [
+            'recorded_days' => (int) $bounds->recorded_days,
+            'average_taps' => round((int) $bounds->total / (int) $bounds->recorded_days, 1),
+            'busiest_day' => ['date' => $busiest->date, 'total' => (int) $busiest->total],
+            'granularity' => $granularity,
+            'date_from' => $first->toDateString(),
+            'date_to' => $last->toDateString(),
+            'trend' => $trend,
+            'stations' => $stations,
+        ];
     }
 
     /**

@@ -1,4 +1,5 @@
 .pf-dashboard {
+    font-size: 14px;
     padding: 28px clamp(16px, 4vw, 40px) 56px;
 }
 
@@ -10,19 +11,19 @@
     height: 42px;
     padding: 0 20px;
     border-radius: 999px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     overflow: hidden;
     isolation: isolate;
     transition:
-        transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
+        background-color 160ms ease,
         border-color 160ms ease,
         opacity 160ms ease;
 }
 
-.pf-btn:active {
-    transform: scale(0.97);
+.pf-btn:active:not(:disabled) {
+    opacity: 0.85;
 }
 
 .pf-btn:focus-visible {
@@ -47,124 +48,35 @@
     z-index: 2;
 }
 
-/* Primary — slate gradient with glass shimmer */
+/* Solid actions retain the shared pill shape and loading states. */
 .pf-btn-primary {
-    background: linear-gradient(180deg, #64748b 0%, #475569 50%, #334155 100%);
+    background: var(--as-brand-solid);
     color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.24);
-    box-shadow:
-        inset 0 1px 1px 0 rgba(255, 255, 255, 0.42),
-        inset 0 -1px 1px 0 rgba(0, 0, 0, 0.14);
+    border: 1px solid var(--as-brand-solid);
 }
 
-.pf-btn-primary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.28) 0%,
-        rgba(255, 255, 255, 0.06) 45%,
-        rgba(255, 255, 255, 0) 100%
-    );
-    pointer-events: none;
-    z-index: 1;
-    transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1);
-}
+.pf-btn-primary:hover:not(:disabled) { background: var(--as-brand-mid-solid); }
 
-.pf-btn-primary:hover {
-    transform: translateY(-2px);
-}
-
-.pf-btn-primary:hover::before {
-    background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.38) 0%,
-        rgba(255, 255, 255, 0.10) 45%,
-        rgba(255, 255, 255, 0) 100%
-    );
-}
-
-.pf-btn-primary:disabled {
-    cursor: not-allowed;
-    opacity: 0.55;
-}
-
-/* Secondary — white gradient with light shimmer */
 .pf-btn-secondary {
-    background: linear-gradient(180deg, var(--as-surface) 0%, var(--as-surface-hover) 100%);
-    color: var(--as-text-slate);
-    border: 1px solid var(--as-border);
-    box-shadow:
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
-        inset 0 -1px 0 0 rgba(0, 0, 0, 0.04);
-}
-
-.pf-btn-secondary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.75) 0%,
-        rgba(255, 255, 255, 0.15) 50%,
-        rgba(0, 0, 0, 0.02) 100%
-    );
-    pointer-events: none;
-    z-index: 1;
-    transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.pf-btn-secondary:hover {
-    border-color: var(--as-border-mid);
+    background: var(--as-surface);
     color: var(--as-text);
-    transform: translateY(-2px);
+    border: 1px solid var(--as-border);
 }
 
-.pf-btn-secondary:hover::before {
-    background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.95) 0%,
-        rgba(255, 255, 255, 0.25) 50%,
-        rgba(0, 0, 0, 0.02) 100%
-    );
+.pf-btn-secondary:hover:not(:disabled) {
+    background: var(--as-surface-hover);
+    border-color: var(--as-border-mid);
 }
 
-/* Danger — red gradient with glass shimmer */
 .pf-btn-danger {
-    background: linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+    background: var(--as-danger);
     color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow:
-        inset 0 1px 1px 0 rgba(255, 255, 255, 0.42),
-        inset 0 -1px 1px 0 rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--as-danger);
 }
 
-.pf-btn-danger::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.32) 0%,
-        rgba(255, 255, 255, 0.08) 45%,
-        rgba(255, 255, 255, 0) 100%
-    );
-    pointer-events: none;
-    z-index: 1;
-}
+.pf-btn-danger:hover:not(:disabled) { background: var(--as-danger-dark); }
 
-.pf-btn-danger:hover {
-    transform: translateY(-2px);
-}
-
-.pf-btn-danger:disabled {
-    cursor: not-allowed;
-    opacity: 0.55;
-}
+.pf-btn:disabled { cursor: not-allowed; opacity: 0.55; }
 
 /* Stat cards */
 
@@ -289,7 +201,7 @@
     padding: 12px 24px;
     border-bottom: 1px solid var(--as-border-light);
     color: var(--as-text-secondary);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-align: left;
@@ -312,7 +224,7 @@
 .pf-table td {
     padding: 14px 24px;
     color: var(--as-text-body);
-    font-size: 13px;
+    font-size: 14px;
     white-space: nowrap;
 }
 
@@ -331,7 +243,7 @@
     border-radius: 14px;
     background: linear-gradient(145deg, var(--as-avatar-grad-1), var(--as-avatar-grad-2));
     color: var(--as-brand-mid);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
 }
 
@@ -346,7 +258,7 @@
     margin-top: 1px;
     color: var(--as-text-secondary);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .pf-pill {
@@ -355,7 +267,7 @@
     gap: 6px;
     padding: 4px 12px;
     border-radius: 999px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.02em;
     text-transform: capitalize;
@@ -410,7 +322,7 @@
     align-items: center;
     gap: 4px;
     color: var(--as-brand-mid);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     text-decoration: none;
 }
@@ -448,7 +360,7 @@
 .pf-empty {
     padding: 48px 24px;
     color: var(--as-text-secondary);
-    font-size: 13px;
+    font-size: 14px;
     text-align: center;
 }
 
@@ -571,7 +483,7 @@
     outline: none;
     background: var(--as-surface);
     color: var(--as-text);
-    font-size: 13px;
+    font-size: 14px;
     transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
@@ -610,7 +522,7 @@
 .pf-field-hint {
     margin: 6px 0 0;
     color: var(--as-text-secondary);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .pf-modal-footer {
@@ -628,7 +540,7 @@
     border-radius: 20px;
     background: var(--as-warning-bg);
     color: var(--as-warning);
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.5;
 }
 
@@ -689,14 +601,14 @@
 .pf-field-error-msg {
     margin: 5px 0 0;
     color: var(--as-danger);
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 600;
 }
 
 .pf-field-char-hint {
     margin: 5px 0 0;
     color: var(--as-text-muted);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 /* ── Panel entrance animation ─────────────────────────────────────────── */

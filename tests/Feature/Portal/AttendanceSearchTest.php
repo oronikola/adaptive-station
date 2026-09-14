@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 class AttendanceSearchTest extends TestCase
@@ -38,16 +39,16 @@ class AttendanceSearchTest extends TestCase
         ]);
 
         $this->actingAs($admin)->get(route('portal.attendance.index', ['person_id' => $personA->id]))
-            ->assertInertia(fn ($page) => $page->has('events.data', 1)->where('events.data.0.id', $target->id));
+            ->assertInertia(fn ($page) => $page->has('events.data', 1)->where('events.data.0.id', $target->id)->where('analytics.busiest_day.total', 1)->has('analytics.stations', 1));
 
         $this->actingAs($admin)->get(route('portal.attendance.index', ['card_uid' => 'target01']))
-            ->assertInertia(fn ($page) => $page->has('events.data', 1)->where('events.data.0.id', $target->id));
+            ->assertInertia(fn ($page) => $page->has('events.data', 1)->where('events.data.0.id', $target->id)->where('analytics.busiest_day.total', 1)->has('analytics.stations', 1));
 
         $this->actingAs($admin)->get(route('portal.attendance.index', ['station_id' => $stationA->id]))
-            ->assertInertia(fn ($page) => $page->has('events.data', 1)->where('events.data.0.id', $target->id));
+            ->assertInertia(fn ($page) => $page->has('events.data', 1)->where('events.data.0.id', $target->id)->where('analytics.busiest_day.total', 1)->has('analytics.stations', 1));
 
         $this->actingAs($admin)->get(route('portal.attendance.index', ['event_type' => 'IN']))
-            ->assertInertia(fn ($page) => $page->has('events.data', 1)->where('events.data.0.id', $target->id));
+            ->assertInertia(fn ($page) => $page->has('events.data', 1)->where('events.data.0.id', $target->id)->where('analytics.busiest_day.total', 1)->has('analytics.stations', 1));
     }
 
     public function test_attendance_date_local_uses_the_tenant_timezone_across_utc_midnight(): void
@@ -69,7 +70,7 @@ class AttendanceSearchTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('portal.attendance.index', ['date_from' => '2026-01-01', 'date_to' => '2026-01-01']))
-            ->assertInertia(fn ($page) => $page->has('events.data', 0));
+            ->assertInertia(fn ($page) => $page->has('events.data', 0)->where('analytics.recorded_days', 0)->where('analytics.busiest_day', null)->has('analytics.trend', 0)->has('analytics.stations', 0));
     }
 
     public function test_a_tenant_admin_never_sees_another_tenants_attendance(): void
@@ -153,5 +154,81 @@ class AttendanceSearchTest extends TestCase
                 ->where('stats.unique_people', 2)
                 ->where('stats.in', 2)
                 ->where('stats.out', 1));
+    }
+
+    public function test_analytics_include_every_page_and_exclude_other_schools_and_dates(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-14 12:00:00', 'UTC'));
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $station = Station::factory()->for($tenant)->create();
+        $otherStation = Station::factory()->create();
+        $person = Person::factory()->for($tenant)->create();
+        TapEvent::factory()->for($station)->count(51)->create([
+            'person_id' => $person->id, 'event_type' => TapEventType::In,
+            'attendance_date_local' => '2026-09-12',
+        ]);
+        TapEvent::factory()->for($station)->create([
+            'person_id' => $person->id, 'event_type' => TapEventType::Out,
+            'attendance_date_local' => '2026-09-14',
+        ]);
+        TapEvent::factory()->for($station)->create(['attendance_date_local' => '2026-09-11']);
+        TapEvent::factory()->for($otherStation)->create(['attendance_date_local' => '2026-09-12']);
+
+        $this->actingAs($admin)->get(route('portal.attendance.index', ['date_from' => '2026-09-12', 'date_to' => '2026-09-14', 'page' => 2]))
+            ->assertInertia(fn ($page) => $page
+                ->has('events.data', 2)->where('stats.total', 52)
+                ->where('analytics.recorded_days', 2)->where('analytics.average_taps', 26)
+                ->where('analytics.granularity', 'day')->has('analytics.trend', 3)
+                ->where('analytics.trend.0.in', 51)->where('analytics.trend.0.out', 0)
+                ->where('analytics.trend.0.unique_people', 1)
+                ->where('analytics.trend.1.total', 0)
+                ->where('analytics.trend.2.in', 0)->where('analytics.trend.2.out', 1)
+                ->where('analytics.busiest_day.date', '2026-09-12')->where('analytics.busiest_day.total', 51)
+                ->has('analytics.stations', 1)->where('analytics.stations.0.id', $station->id)
+                ->where('analytics.stations.0.total', 52));
+    }
+
+    #[TestWith(['2026-01-31', 'day', 31])]
+    #[TestWith(['2026-02-01', 'month', 2])]
+    #[TestWith(['2027-12-31', 'month', 24])]
+    #[TestWith(['2028-01-01', 'year', 3])]
+    public function test_analytics_adapt_calendar_buckets_and_count_distinct_people(string $lastDate, string $granularity, int $periods): void
+    {
+        $this->travelTo(Carbon::parse('2028-01-02 12:00:00', 'UTC'));
+        $tenant = Tenant::factory()->create();
+        $operator = User::factory()->tenantOperator($tenant)->create();
+        $station = Station::factory()->for($tenant)->create();
+        $person = Person::factory()->for($tenant)->create();
+        TapEvent::factory()->for($station)->count(2)->create([
+            'person_id' => $person->id, 'attendance_date_local' => '2026-01-01', 'event_type' => TapEventType::In,
+        ]);
+        TapEvent::factory()->for($station)->create(['attendance_date_local' => $lastDate, 'event_type' => TapEventType::Out]);
+
+        $this->actingAs($operator)->get(route('portal.attendance.index'))->assertInertia(fn ($page) => $page
+            ->where('analytics.granularity', $granularity)->has('analytics.trend', $periods)
+            ->where('analytics.trend.0.total', 2)->where('analytics.trend.0.unique_people', 1)
+            ->where('analytics.date_from', '2026-01-01')->where('analytics.date_to', $lastDate)
+            ->where('analytics.average_taps', 1.5)
+            ->where('analytics.trend', fn ($trend) => collect($trend)->sum('total') === 3));
+    }
+
+    public function test_station_analytics_are_ranked_and_capped_and_busiest_day_ties_use_the_latest_date(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-14 12:00:00', 'UTC'));
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $topStation = Station::factory()->for($tenant)->create(['name' => 'Main gate']);
+        TapEvent::factory()->for($topStation)->count(3)->create(['attendance_date_local' => '2026-09-12']);
+        TapEvent::factory()->for($topStation)->count(3)->create(['attendance_date_local' => '2026-09-14']);
+        foreach (range(1, 5) as $index) {
+            $station = Station::factory()->for($tenant)->create();
+            TapEvent::factory()->for($station)->create(['attendance_date_local' => '2026-09-0'.$index]);
+        }
+
+        $this->actingAs($admin)->get(route('portal.attendance.index'))->assertInertia(fn ($page) => $page
+            ->has('analytics.stations', 5)->where('analytics.stations.0.name', 'Main gate')
+            ->where('analytics.stations.0.total', 6)
+            ->where('analytics.busiest_day.date', '2026-09-14')->where('analytics.busiest_day.total', 3));
     }
 }
