@@ -181,7 +181,48 @@
     }
 }
 
+/* ── Global theme transition ───────────────────────────────────────────
+   Smooths every color-driven property when the .dark class flips, without
+   requiring per-component transition classes. Components/Theme/ThemeProvider.tsx
+   adds `.theme-transition` to <html> for ~260ms around each toggle and then
+   removes it, so this rule stays out of the way of hover/route transitions,
+   transform-based effects (tactile-press, btn-glass-*, Sidebar's motion/react
+   springs), and keyframe animations (capability-marquee, signal-pulse,
+   pft-fade-in) the rest of the time.
+
+   Scoped to background-color/color/border-color only — box-shadow and
+   pseudo-elements are deliberately excluded. box-shadow repaints don't
+   composite on the GPU the way color does, so animating it on dozens of
+   cards/panels at once was the actual source of the stutter/flicker (it
+   steps rather than interpolates); shadows are static ambient tokens here
+   anyway (see DESIGN.md "State-Responsive Shadow Rule" — they only react
+   to hover/modal state). Excluding ::before/::after skips the shimmer
+   overlays on pf-btn-primary/-danger and other decorative pseudo-elements,
+   which never carry a themed color and were adding pure recalculation cost
+   to every toggle. */
+html.theme-transition,
+html.theme-transition * {
+    transition:
+        background-color 220ms ease-in-out,
+        color 220ms ease-in-out,
+        border-color 220ms ease-in-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.theme-transition,
+    html.theme-transition * {
+        transition: none !important;
+    }
+}
+
 :root {
+    /* Tells the browser which palette native, undrawn surfaces belong to —
+       form control chrome, the default scrollbar, text selection — so they
+       switch in step with .dark instead of trailing a frame behind (the
+       custom scrollbar above already themes color-scheme-aware; this covers
+       everything that scrollbar rule doesn't reach). */
+    color-scheme: light;
+
     /* Brand */
     --as-brand-dark:       #0f172a;
     --as-brand:            #1e293b;
@@ -233,4 +274,158 @@
     --as-shadow-sm:         0 4px 12px -8px rgba(23, 74, 150, 0.75);
     --as-shadow-overlay:    0 20px 44px -20px rgba(15, 35, 70, 0.55);
     --as-shadow-deep:       0 18px 30px -22px rgba(7, 28, 68, 0.82);
+
+    /* Glass surfaces (shell/sidebar/topbar — see components/navigation.css) */
+    --as-shell-canvas:            linear-gradient(145deg, #0f172a 0%, #1e293b 42%, #334155 100%);
+    --as-panel-glass-bg:          rgba(255, 255, 255, 0.92);
+    --as-topbar-bg:               rgba(255, 255, 255, 0.80);
+    --as-topbar-border:           rgba(0, 0, 0, 0.06);
+    --as-topbar-icon-bg:          rgba(255, 255, 255, 0.70);
+    --as-topbar-icon-bg-hover:    rgba(255, 255, 255, 0.95);
+    --as-topbar-icon-border:      rgba(0, 0, 0, 0.07);
+    --as-topbar-icon-border-hover: rgba(0, 0, 0, 0.12);
+    --as-topbar-divider:          rgba(0, 0, 0, 0.08);
+    --as-topbar-trigger-hover:    rgba(0, 0, 0, 0.04);
+    --as-dropdown-bg:             rgba(255, 255, 255, 0.88);
+    --as-dropdown-border:         rgba(255, 255, 255, 0.60);
+    --as-dropdown-item-hover:     rgba(241, 245, 251, 0.80);
+    --as-dropdown-danger-hover:   rgba(254, 242, 242, 0.80);
+    --as-mobile-topbar-bg:        rgba(255, 255, 255, 0.88);
+    --as-mobile-toggle-bg:        rgba(255, 255, 255, 0.70);
+    --as-mobile-toggle-bg-hover:  rgba(255, 255, 255, 0.90);
+    --as-mobile-toggle-border:    rgba(0, 0, 0, 0.10);
+    --as-sidebar-glass-bg:        rgba(255, 255, 255, 0.10);
+    --as-sidebar-mobile-bg:       rgba(15, 23, 42, 0.88);
+    --as-sidebar-link-hover:      rgba(255, 255, 255, 0.14);
+    --as-sidebar-link-active-bg:  rgba(255, 255, 255, 0.88);
+    --as-sidebar-link-active-fg:  #1e293b;
+    --as-sidebar-logo-text:       #ffffff;
+
+    /* Solid brand badges (icon chips paired with hardcoded white icons/text
+       — e.g. .pft-hero-icon, .pf-page-link--active, .auth-school-mark).
+       These intentionally do NOT flip in dark mode: they're a fixed navy
+       chip the white foreground always contrasts against, unlike
+       --as-brand/--as-brand-blue which flip for use as accent text. */
+    --as-brand-solid:      #1e293b;
+    --as-brand-blue-solid: #475569;
+    --as-success-solid:    #1a8a4c;
+    --as-warning-solid:    #c1791f;
+    --as-danger-solid:     #dc2626;
+    --as-violet-solid:     #6c47c9;
+    --as-brand-blue-light-solid: #64748b;
+    --as-brand-mid-solid:  #334155;
+
+    /* Panel glass edge highlight + sidebar active-badge (flip together with
+       --as-panel-glass-bg / --as-sidebar-link-active-bg so contrast holds) */
+    --as-panel-glass-border:      rgba(255, 255, 255, 0.60);
+    --as-sidebar-badge-active-bg: rgba(15, 23, 42, 0.10);
+    --as-sidebar-badge-active-fg: #1e293b;
+
+    /* Pastel avatar/icon-chip tints (flip to subdued dark-mode tints) */
+    --as-avatar-grad-1: #eaf2fd;
+    --as-avatar-grad-2: #d6e5f9;
+    --as-icon-blue-bg:  #e7effc;
+    --as-icon-violet-bg: #eee9fb;
+    --as-icon-violet-fg: #6c47c9;
+}
+
+/* ── Dark mode overrides ───────────────────────────────────────────────
+   Activated by the `.dark` class on <html> (see darkMode: 'class' in
+   tailwind.config.js, the anti-FOUC script in resources/views/app.blade.php,
+   and Components/Theme/ThemeProvider.tsx). Every --as-* token gets a dark
+   equivalent here so pf-, pft-, and auth- prefixed screens re-theme automatically
+   without per-component dark: classes. */
+:root.dark {
+    color-scheme: dark;
+
+    /* Brand — --as-brand-dark is predominantly used as heading/title text
+       (modal titles, form headings, gauge percentage, profile names), so
+       it flips to a bright value here rather than getting darker. */
+    --as-brand-dark:       #f8fafc;
+    --as-brand:            #e2e8f0;
+    --as-brand-mid:        #93b4e6;
+    --as-brand-blue:       #7fa6e0;
+    --as-brand-blue-light: #a8c3ec;
+
+    /* Surfaces */
+    --as-bg:               #0b1220;
+    --as-surface:          #131c2e;
+    --as-surface-hover:    #182338;
+    --as-surface-active:   #1c2740;
+
+    /* Borders */
+    --as-border:           #263244;
+    --as-border-light:     #1c2740;
+    --as-border-mid:       #334155;
+    --as-border-active:    #3b4a63;
+
+    /* Text */
+    --as-text:             #f1f5f9;
+    --as-text-body:        #cbd5e1;
+    --as-text-secondary:   #94a3b8;
+    --as-text-muted:       #64748b;
+    --as-text-slate:       #e2e8f0;
+    --as-text-brand:       #cbd5e1;
+    --as-text-navy:        #e2e8f0;
+
+    /* Status */
+    --as-success:          #4ade80;
+    --as-success-bg:       rgba(26, 138, 76, 0.18);
+    --as-warning:          #f0b25f;
+    --as-warning-bg:       rgba(193, 121, 31, 0.20);
+    --as-danger:           #f87171;
+    --as-danger-dark:      #fca5a5;
+    --as-danger-bg:        rgba(220, 38, 38, 0.16);
+    --as-danger-bg-alt:    rgba(220, 38, 38, 0.20);
+    --as-danger-border:    rgba(220, 38, 38, 0.35);
+    --as-info:             #94a3b8;
+    --as-info-bg:          rgba(100, 116, 139, 0.20);
+
+    /* Neutral status */
+    --as-neutral:          #94a3b8;
+    --as-neutral-bg:       rgba(100, 116, 139, 0.18);
+
+    /* Shadows */
+    --as-shadow-card:       0 8px 24px rgba(0, 0, 0, 0.45);
+    --as-shadow-card-hover: 0 12px 30px rgba(0, 0, 0, 0.55);
+    --as-shadow-sm:         0 4px 12px -8px rgba(0, 0, 0, 0.6);
+    --as-shadow-overlay:    0 20px 44px -20px rgba(0, 0, 0, 0.7);
+    --as-shadow-deep:       0 18px 30px -22px rgba(0, 0, 0, 0.8);
+
+    /* Glass surfaces */
+    --as-shell-canvas:            linear-gradient(145deg, #05070d 0%, #0b1220 42%, #131c2e 100%);
+    --as-panel-glass-bg:          rgba(11, 18, 32, 0.92);
+    --as-topbar-bg:               rgba(11, 18, 32, 0.80);
+    --as-topbar-border:           rgba(255, 255, 255, 0.06);
+    --as-topbar-icon-bg:          rgba(255, 255, 255, 0.06);
+    --as-topbar-icon-bg-hover:    rgba(255, 255, 255, 0.12);
+    --as-topbar-icon-border:      rgba(255, 255, 255, 0.10);
+    --as-topbar-icon-border-hover: rgba(255, 255, 255, 0.18);
+    --as-topbar-divider:          rgba(255, 255, 255, 0.10);
+    --as-topbar-trigger-hover:    rgba(255, 255, 255, 0.08);
+    --as-dropdown-bg:             rgba(19, 28, 46, 0.92);
+    --as-dropdown-border:         rgba(255, 255, 255, 0.10);
+    --as-dropdown-item-hover:     rgba(255, 255, 255, 0.06);
+    --as-dropdown-danger-hover:   rgba(220, 38, 38, 0.16);
+    --as-mobile-topbar-bg:        rgba(11, 18, 32, 0.90);
+    --as-mobile-toggle-bg:        rgba(255, 255, 255, 0.08);
+    --as-mobile-toggle-bg-hover:  rgba(255, 255, 255, 0.14);
+    --as-mobile-toggle-border:    rgba(255, 255, 255, 0.10);
+    --as-sidebar-glass-bg:        rgba(255, 255, 255, 0.04);
+    --as-sidebar-mobile-bg:       rgba(5, 7, 13, 0.92);
+    --as-sidebar-link-hover:      rgba(255, 255, 255, 0.08);
+    --as-sidebar-link-active-bg:  rgba(255, 255, 255, 0.12);
+    --as-sidebar-link-active-fg:  #f1f5f9;
+    --as-sidebar-logo-text:       #f1f5f9;
+
+    --as-panel-glass-border:      rgba(255, 255, 255, 0.08);
+    --as-sidebar-badge-active-bg: rgba(255, 255, 255, 0.14);
+    --as-sidebar-badge-active-fg: #f1f5f9;
+
+    /* Pastel avatar/icon-chip tints — subdued dark-mode equivalents */
+    --as-avatar-grad-1: #1c2740;
+    --as-avatar-grad-2: #223252;
+    --as-icon-blue-bg:  rgba(40, 99, 189, 0.22);
+    --as-icon-violet-bg: rgba(108, 71, 201, 0.24);
+    --as-icon-violet-fg: #b79ae3;
 }

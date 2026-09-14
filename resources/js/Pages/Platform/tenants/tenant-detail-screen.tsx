@@ -250,10 +250,10 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                                                                     width: 26,
                                                                     height: 26,
                                                                     flex: '0 0 26px',
-                                                                    border: '1px solid #e2e8f0',
+                                                                    border: '1px solid var(--as-border)',
                                                                     borderRadius: 8,
-                                                                    background: '#fff',
-                                                                    color: '#64748b',
+                                                                    background: 'var(--as-surface)',
+                                                                    color: 'var(--as-brand-blue-light)',
                                                                     cursor: 'pointer',
                                                                     transition: 'border-color 150ms ease, background 150ms ease',
                                                                 }}
@@ -273,7 +273,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                                                             </button>
                                                         </div>
                                                     ) : (
-                                                        <span style={{ color: '#94a3b8', fontSize: 12.5 }}>—</span>
+                                                        <span style={{ color: 'var(--as-text-muted)', fontSize: 12.5 }}>—</span>
                                                     )}
                                                 </td>
                                                 <td>
@@ -313,7 +313,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                                                             )}
                                                         </div>
                                                     ) : (
-                                                        <span style={{ color: '#94a3b8', fontSize: 12.5 }}>—</span>
+                                                        <span style={{ color: 'var(--as-text-muted)', fontSize: 12.5 }}>—</span>
                                                     )}
                                                 </td>
                                             </tr>
