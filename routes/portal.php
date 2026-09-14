@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
             ->name('stations.activation-code');
 
         Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('attendance/people-search', [AttendanceController::class, 'peopleSearch'])->name('attendance.people-search');
         Route::get('attendance/summary', [AttendanceController::class, 'summary'])->name('attendance.summary');
         Route::get('attendance/students/{person}', [AttendanceController::class, 'studentSummary'])->name('attendance.students.show');
         Route::get('attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');

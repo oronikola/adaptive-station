@@ -11,9 +11,7 @@ use App\Http\Requests\Platform\DestroyTenantRequest;
 use App\Http\Requests\Platform\StoreTenantAdminRequest;
 use App\Http\Requests\Platform\StoreTenantRequest;
 use App\Http\Requests\Platform\UpdateTenantAdminRequest;
-use App\Jobs\RunLegacyImportJob;
 use App\Models\AuditLog;
-use App\Models\ImportBatch;
 use App\Models\IntegrationProfile;
 use App\Models\Station;
 use App\Models\Tenant;
@@ -23,7 +21,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -116,7 +113,7 @@ class TenantController extends Controller
             return $redirect;
         }
 
-        $legacyError = $this->connectLegacySystem($tenant, $data['legacy_connection'] ?? [], $request->user());
+        $legacyError = $this->connectEssentielSystem($tenant, $data['legacy_connection'] ?? [], $request->user());
 
         return $legacyError !== null
             ? $redirect->with('error', $legacyError)
@@ -124,51 +121,36 @@ class TenantController extends Controller
     }
 
     /**
-     * Sets up this school's legacy connection at onboarding time and runs
-     * its one-time historical import immediately — the tenant itself is
-     * already created and committed by this point, so a failure here (e.g.
-     * unreachable/misconfigured legacy credentials) must not roll back or
-     * fail the whole request; it's surfaced as a flash error instead, and
-     * the profile/import can be retried later from the integrations screen.
+     * Onboarding-time-only — a school can no longer be connected to a raw
+     * legacy_mysql database from this form (essentiel_api is the sole
+     * onboarding driver; see the 2026-09-14 update to
+     * DATA_OWNERSHIP_AND_TENANT_MODEL.md). legacy_mysql profiles for an
+     * already-onboarded tenant are still fully supported, just no longer
+     * through this endpoint — see Portal\IntegrationProfileController.
      *
-     * @return string|null An error message if the import failed, else null.
+     * Unlike a legacy_mysql connection, there is no historical import to run
+     * EssentielApiConnector/PushTapEventToEssentielJob), so onboarding just
+     * needs the profile to exist and be active. Still returns a string error
+     * rather than throwing, for the same reason as connectLegacySystem():
+     * the tenant is already created by this point and must not be rolled
+     * back over a config mistake here.
+     *
+     * @return string|null An error message if the profile could not be saved, else null.
      */
-    protected function connectLegacySystem(Tenant $tenant, array $connectionConfig, User $actor): ?string
+    protected function connectEssentielSystem(Tenant $tenant, array $connectionConfig, User $actor): ?string
     {
-        // integration_profiles/import_batches live on the per-tenant
-        // connection — must point it at this specific tenant's database
-        // before creating either, since a platform request has no tenant
-        // context of its own to have already switched it.
         TenantDatabase::use($tenant);
 
-        $profile = IntegrationProfile::createForTenant($tenant->id, [
-            'name' => 'Legacy attendance system',
-            'driver' => 'legacy_mysql',
-            'direction' => IntegrationDirection::Bidirectional,
-            'status' => IntegrationProfileStatus::Active,
-            'config_encrypted' => $connectionConfig,
-        ], $actor);
-
-        $batch = ImportBatch::start($tenant->id, $profile->id, $profile->driver, 'Initial onboarding import', $actor);
-
         try {
-            // Roster import isn't date-bound; this range only bounds the
-            // attendance-history pull. Ten years comfortably covers
-            // "everything that plausibly exists" without requiring whoever
-            // is onboarding this school to know or guess its actual legacy
-            // history length.
-            RunLegacyImportJob::dispatchSync(
-                $tenant->id,
-                $batch->id,
-                true,
-                Date::now()->subYears(10)->toDateString(),
-                Date::now()->toDateString(),
-                $actor->id,
-            );
+            IntegrationProfile::createForTenant($tenant->id, [
+                'name' => 'essentiel API',
+                'driver' => 'essentiel_api',
+                'direction' => IntegrationDirection::Bidirectional,
+                'status' => IntegrationProfileStatus::Active,
+                'config_encrypted' => $connectionConfig,
+            ], $actor);
         } catch (\Throwable $e) {
-            $batch->fail($e->getMessage());
-
-            return "Tenant created, but the legacy system import failed: {$e->getMessage()}. Fix the connection details and retry the import from the integrations screen.";
+            return "Tenant created, but the essentiel connection could not be saved: {$e->getMessage()}. Add it later from the integrations screen.";
         }
 
         return null;

@@ -37,26 +37,33 @@ class StoreTenantRequest extends FormRequest
             'code' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/', Rule::unique('tenants', 'code')],
             'timezone' => ['required', 'string', Rule::in(timezone_identifiers_list())],
 
-            // Only asked here, not in the tenant's own portal: this is a
-            // legacy database credential, and the school's own admin should
-            // never be the one supplying (or seeing) essentiel's connection
-            // details — that's this platform-level onboarding step's job.
-            // required_if_accepted (not required_if:field,1) — the field
-            // arrives as a genuine boolean (Inertia posts JSON), and
-            // required_if's value-list comparison does not treat `true` as
-            // matching the string '1'; required_if_accepted is the rule
-            // built specifically for a checkbox-shaped boolean like this.
+            // Only asked here, not in the tenant's own portal: this is
+            // essentiel's own connection credential, and the school's own
+            // admin should never be the one supplying (or seeing) it —
+            // that's this platform-level onboarding step's job.
+            // essentiel_api is the sole onboarding-time driver — a
+            // legacy_mysql connection can still be added later, but only
+            // from an already-onboarded tenant's own Portal integrations
+            // screen, never from here. required_if_accepted (not
+            // required_if:field,1) — the field arrives as a genuine
+            // boolean (Inertia posts JSON), and required_if's value-list
+            // comparison does not treat `true` as matching the string '1';
+            // required_if_accepted is the rule built specifically for a
+            // checkbox-shaped boolean like this.
             'connect_legacy_system' => ['nullable', 'boolean'],
             'legacy_connection' => ['required_if_accepted:connect_legacy_system', 'array'],
-            'legacy_connection.host' => ['required_if_accepted:connect_legacy_system', 'string', 'max:255'],
-            'legacy_connection.port' => ['nullable', 'integer'],
-            'legacy_connection.database' => ['required_if_accepted:connect_legacy_system', 'string', 'max:255'],
-            'legacy_connection.username' => ['required_if_accepted:connect_legacy_system', 'string', 'max:255'],
-            'legacy_connection.password' => ['required_if_accepted:connect_legacy_system', 'string', 'max:255'],
+
+            // essentiel scopes each school by its own base URL/subdomain —
+            // api_key stays optional for now, while essentiel's test
+            // endpoint has no auth yet (see the 2026-09 conversation this
+            // driver came out of); it will need to become required once
+            // essentiel's side adds authentication back.
+            'legacy_connection.base_url' => ['required_if_accepted:connect_legacy_system', 'string', 'max:255'],
+            'legacy_connection.api_key' => ['nullable', 'string', 'max:255'],
 
             // Reference-only, from the school picker (legacySchools()) —
             // never used to actually connect to anything, just stored
-            // alongside the real connection details so "which legacy
+            // alongside the real connection details so "which essentiel
             // school is this" stays traceable later. All optional: the
             // picker is a convenience, typing the fields above by hand
             // without ever using it is still fully supported.

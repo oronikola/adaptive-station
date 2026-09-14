@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Platform;
 
-use App\Enums\ImportBatchStatus;
 use App\Enums\IntegrationDirection;
 use App\Enums\IntegrationProfileStatus;
 use App\Models\ImportBatch;
@@ -142,61 +141,84 @@ class TenantProvisioningTest extends TestCase
     }
 
     /**
-     * A school's own portal admin should never supply or see essentiel's raw
-     * database credentials — connecting a school to its legacy system is a
-     * platform-onboarding step, not something exposed in the portal. This
-     * also proves the tenant itself is still created even when the legacy
-     * connection is unreachable: onboarding must not fail wholesale just
-     * because the legacy credentials given turn out to be wrong.
+     * essentiel_api is the sole onboarding-time driver (see the 2026-09-14
+     * update to DATA_OWNERSHIP_AND_TENANT_MODEL.md) — a school's own portal
+     * admin should never supply or see essentiel's connection credentials,
+     * so this is a platform-onboarding step, not something exposed in the
+     * portal. Unlike legacy_mysql (still supported, just only from an
+     * already-onboarded tenant's own Portal integrations screen), there is
+     * no historical import to run — essentiel resolves identity/guardian
+     * data live, per tap — so onboarding just creates the active profile.
      */
-    public function test_platform_super_admin_can_connect_a_new_tenant_to_its_legacy_system(): void
+    public function test_platform_super_admin_can_connect_a_new_tenant_to_essentiel(): void
     {
         $platformAdmin = User::factory()->platformSuperAdmin()->create();
 
         $response = $this->actingAs($platformAdmin)->post(route('platform.tenants.store'), [
-            'name' => 'Legacy Linked School',
-            'code' => 'legacy-linked-school',
+            'name' => 'Essentiel Linked School',
+            'code' => 'essentiel-linked-school',
             'timezone' => 'Asia/Manila',
             'connect_legacy_system' => true,
             'legacy_connection' => [
-                // Loopback + a port nothing listens on: refuses the
-                // connection immediately rather than hanging on a DNS/
-                // network timeout, so this stays a fast test.
-                'host' => '127.0.0.1',
-                'port' => 1,
-                'database' => 'nonexistent_db',
-                'username' => 'nobody',
-                'password' => 'wrong',
+                'base_url' => 'https://app-els.essentiel.test',
+                'api_key' => 'test-key',
             ],
         ]);
 
-        $tenant = Tenant::where('code', 'legacy-linked-school')->firstOrFail();
+        $tenant = Tenant::where('code', 'essentiel-linked-school')->firstOrFail();
         $response->assertRedirect(route('platform.tenants.show', $tenant));
-        $response->assertSessionHas('error');
+        $response->assertSessionDoesntHaveErrors();
+        $response->assertSessionMissing('error');
 
         $profile = IntegrationProfile::allTenants()->where('tenant_id', $tenant->id)->first();
         $this->assertNotNull($profile);
-        $this->assertSame('legacy_mysql', $profile->driver);
+        $this->assertSame('essentiel_api', $profile->driver);
         $this->assertSame(IntegrationDirection::Bidirectional, $profile->direction);
         $this->assertSame(IntegrationProfileStatus::Active, $profile->status);
 
-        $batch = ImportBatch::allTenants()->where('tenant_id', $tenant->id)->first();
-        $this->assertNotNull($batch);
-        $this->assertSame(ImportBatchStatus::Failed, $batch->status);
+        $this->assertSame(0, ImportBatch::allTenants()->where('tenant_id', $tenant->id)->count());
     }
 
-    public function test_connect_legacy_system_requires_the_connection_details(): void
+    public function test_connect_essentiel_requires_a_base_url(): void
     {
         $platformAdmin = User::factory()->platformSuperAdmin()->create();
 
         $this->actingAs($platformAdmin)->post(route('platform.tenants.store'), [
-            'name' => 'Incomplete School',
-            'code' => 'incomplete-school',
+            'name' => 'Incomplete Essentiel School',
+            'code' => 'incomplete-essentiel-school',
             'timezone' => 'Asia/Manila',
             'connect_legacy_system' => true,
-        ])->assertSessionHasErrors(['legacy_connection.host', 'legacy_connection.database', 'legacy_connection.username', 'legacy_connection.password']);
+        ])->assertSessionHasErrors(['legacy_connection.base_url']);
 
-        $this->assertDatabaseMissing('tenants', ['code' => 'incomplete-school']);
+        $this->assertDatabaseMissing('tenants', ['code' => 'incomplete-essentiel-school']);
+    }
+
+    /**
+     * A legacy_mysql-shaped payload (host/database/username/password, no
+     * base_url) is no longer a valid way to connect a school at onboarding
+     * time — those fields simply aren't validated fields on this request
+     * anymore, so posting them accomplishes nothing and the missing
+     * base_url still fails as usual.
+     */
+    public function test_a_legacy_mysql_shaped_payload_is_rejected_for_missing_a_base_url(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+
+        $this->actingAs($platformAdmin)->post(route('platform.tenants.store'), [
+            'name' => 'Old Style School',
+            'code' => 'old-style-school',
+            'timezone' => 'Asia/Manila',
+            'connect_legacy_system' => true,
+            'legacy_connection' => [
+                'host' => '127.0.0.1',
+                'port' => 3306,
+                'database' => 'legacy_db',
+                'username' => 'nobody',
+                'password' => 'wrong',
+            ],
+        ])->assertSessionHasErrors(['legacy_connection.base_url']);
+
+        $this->assertDatabaseMissing('tenants', ['code' => 'old-style-school']);
     }
 
     public function test_platform_super_admin_can_suspend_and_reactivate_a_tenant(): void

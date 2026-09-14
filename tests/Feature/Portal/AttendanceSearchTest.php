@@ -88,4 +88,70 @@ class AttendanceSearchTest extends TestCase
                 ->has('events.data', 1)
                 ->where('events.data.0.card_uid', 'A0001'));
     }
+
+    /**
+     * The full roster is never sent as a page prop (a tenant can have
+     * thousands of people) — instead the Person filter searches on demand
+     * via this endpoint, and only the currently-selected person (if any) is
+     * resolved up front for display.
+     */
+    public function test_the_full_roster_is_not_shipped_as_a_page_prop(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        Person::factory()->for($tenant)->count(3)->create();
+
+        $this->actingAs($admin)->get(route('portal.attendance.index'))
+            ->assertInertia(fn ($page) => $page->missing('people')->where('selectedPerson', null));
+    }
+
+    public function test_selecting_a_person_filter_resolves_that_one_person_for_display(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $person = Person::factory()->for($tenant)->create(['display_name' => 'Jane Doe']);
+
+        $this->actingAs($admin)->get(route('portal.attendance.index', ['person_id' => $person->id]))
+            ->assertInertia(fn ($page) => $page
+                ->where('selectedPerson.id', $person->id)
+                ->where('selectedPerson.display_name', 'Jane Doe'));
+    }
+
+    public function test_people_search_finds_matches_by_name_and_is_scoped_to_the_tenant(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $otherTenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        Person::factory()->for($tenant)->create(['display_name' => 'Alice Rivera']);
+        Person::factory()->for($tenant)->create(['display_name' => 'Bob Santos']);
+        Person::factory()->for($otherTenant)->create(['display_name' => 'Alice Cruz']);
+
+        $response = $this->actingAs($admin)->getJson(route('portal.attendance.people-search', ['search' => 'alice']));
+
+        $response->assertOk();
+        $names = collect($response->json('people'))->pluck('display_name');
+        $this->assertTrue($names->contains('Alice Rivera'));
+        $this->assertFalse($names->contains('Bob Santos'));
+        $this->assertFalse($names->contains('Alice Cruz'));
+    }
+
+    public function test_stats_reflect_the_current_filter_set(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $station = Station::factory()->for($tenant)->create();
+        $personA = Person::factory()->for($tenant)->create();
+        $personB = Person::factory()->for($tenant)->create();
+
+        TapEvent::factory()->for($station)->create(['person_id' => $personA->id, 'event_type' => TapEventType::In]);
+        TapEvent::factory()->for($station)->create(['person_id' => $personA->id, 'event_type' => TapEventType::Out]);
+        TapEvent::factory()->for($station)->create(['person_id' => $personB->id, 'event_type' => TapEventType::In]);
+
+        $this->actingAs($admin)->get(route('portal.attendance.index'))
+            ->assertInertia(fn ($page) => $page
+                ->where('stats.total', 3)
+                ->where('stats.unique_people', 2)
+                ->where('stats.in', 2)
+                ->where('stats.out', 1));
+    }
 }

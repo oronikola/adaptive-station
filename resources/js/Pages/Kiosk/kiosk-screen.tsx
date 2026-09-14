@@ -9,9 +9,11 @@ import {
     setLastTap,
     addPendingEvent,
     clearCredential,
+    upsertPerson,
+    upsertCard,
     type TapEventType,
 } from '@/kiosk/db';
-import { activate, DeviceUnauthorizedError } from '@/kiosk/api';
+import { activate, resolveTap, DeviceUnauthorizedError, type ResolveTapResponse } from '@/kiosk/api';
 import { syncMasterData, flushPendingEvents, heartbeat } from '@/kiosk/sync';
 
 /**
@@ -70,7 +72,7 @@ function requestKioskLockdown() {
 type Phase = 'booting' | 'activation' | 'ready';
 
 interface TapResult {
-    kind: 'success' | 'duplicate' | 'error';
+    kind: 'success' | 'duplicate' | 'error' | 'checking';
     title: string;
     subtitle?: string;
     photoUrl?: string | null;
@@ -128,6 +130,10 @@ const RESULT_THEME = {
     success: { fg: '#6ee7b7', bg: 'rgba(16,185,129,.14)', border: 'rgba(16,185,129,.4)', glow: 'rgba(16,185,129,.35)' },
     duplicate: { fg: '#fcd34d', bg: 'rgba(245,158,11,.14)', border: 'rgba(245,158,11,.4)', glow: 'rgba(245,158,11,.3)' },
     error: { fg: '#fca5a5', bg: 'rgba(239,68,68,.14)', border: 'rgba(239,68,68,.4)', glow: 'rgba(239,68,68,.3)' },
+    // Shown only while waiting on resolveTap() — a card unknown to the
+    // kiosk's own local cache, being checked with the server instead of
+    // rejected outright. See handleTapSubmit's local-cache-miss branch.
+    checking: { fg: '#93c5fd', bg: 'rgba(59,130,246,.14)', border: 'rgba(59,130,246,.4)', glow: 'rgba(59,130,246,.3)' },
 } as const;
 
 export default function KioskScreen() {
@@ -331,6 +337,76 @@ export default function KioskScreen() {
         }
     }
 
+    /**
+     * The fallback for a card the kiosk's own local cache doesn't have —
+     * asks the server directly and waits, instead of rejecting outright.
+     * For an essentiel-configured school this is what actually lets a
+     * brand-new student's very first tap work (see EssentielTapResolver);
+     * for any other school it's effectively the same "not recognized"
+     * outcome, just confirmed with the server rather than assumed from a
+     * possibly-stale local cache. Requires a live connection — a genuinely
+     * offline kiosk cannot verify a card it has never cached.
+     */
+    async function handleUnrecognizedCardFallback(cardUid: string) {
+        showResult({ kind: 'checking', title: 'Checking…', subtitle: 'Verifying this card, please wait.' });
+
+        const now = new Date();
+        // No local tap history exists for a card the kiosk has never seen,
+        // so there is nothing to toggle from — this is necessarily its
+        // first-ever local IN.
+        const eventType: TapEventType = 'IN';
+
+        let response: ResolveTapResponse;
+        try {
+            response = await resolveTap({
+                id: generateEventId(),
+                card_uid: cardUid,
+                event_type: eventType,
+                occurred_at: now.toISOString(),
+                occurred_offset_minutes: -now.getTimezoneOffset(),
+            });
+        } catch {
+            speak('Cannot verify this card right now.');
+            showResult({
+                kind: 'error',
+                title: 'Cannot verify this card',
+                subtitle: 'Check your connection and try again.',
+            });
+            return;
+        }
+
+        if (!response.found || !response.person_id) {
+            speak('Card not recognized.');
+            showResult({ kind: 'error', title: 'Card not recognized', subtitle: 'Please go to the office or try another card.' });
+            return;
+        }
+
+        const displayName =
+            response.person?.name?.full ||
+            [response.person?.name?.first, response.person?.name?.last].filter(Boolean).join(' ') ||
+            'Student';
+
+        // Cache it locally now, so this same card's *next* tap resolves the
+        // ordinary instant, offline-capable way — see @/kiosk/db.
+        await upsertPerson({
+            id: response.person_id,
+            external_id: null,
+            person_type: response.person?.type ?? 'student',
+            display_name: displayName,
+            grade_level: response.person?.level?.name ?? null,
+            section: null,
+            photo_url: null,
+            is_active: true,
+            metadata: null,
+            updated_at: now.toISOString(),
+        });
+        await upsertCard({ card_uid: cardUid, id: cardUid, person_id: response.person_id, is_active: true });
+        await setLastTap({ person_id: response.person_id, event_type: eventType, at: now.toISOString() });
+
+        speak(`${displayName}, checked in.`);
+        showResult({ kind: 'success', title: displayName, subtitle: 'Checked In' });
+    }
+
     async function handleTapSubmit(e: React.KeyboardEvent<HTMLInputElement>) {
         if (e.key !== 'Enter') return;
         e.preventDefault();
@@ -343,8 +419,12 @@ export default function KioskScreen() {
 
         const card = await getCardByUid(cardUid);
         if (!card || !card.is_active) {
-            speak('Card not recognized.');
-            showResult({ kind: 'error', title: 'Card not recognized', subtitle: 'Please go to the office or try another card.' });
+            // Not in the kiosk's own locally-synced cache — rather than
+            // rejecting outright, ask the server directly (it may still
+            // resolve this via essentiel, or simply have a fresher copy
+            // than this kiosk has synced down yet). See resolveTap()'s
+            // docblock and TapEventResolveController.
+            await handleUnrecognizedCardFallback(cardUid);
             return;
         }
 
@@ -681,7 +761,7 @@ export default function KioskScreen() {
                                     }}
                                 >
                                     {result.kind === 'success' && <CheckIcon />}
-                                    {result.kind === 'duplicate' && <ClockIcon />}
+                                    {(result.kind === 'duplicate' || result.kind === 'checking') && <ClockIcon />}
                                     {result.kind === 'error' && <ErrorIcon />}
                                 </div>
 

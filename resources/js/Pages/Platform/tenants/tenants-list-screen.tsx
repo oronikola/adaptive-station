@@ -110,11 +110,10 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
         timezone: 'Asia/Manila',
         connect_legacy_system: false,
         legacy_connection: {
-            host: '',
-            port: '',
-            database: '',
-            username: '',
-            password: '',
+            // essentiel scopes each school by its own subdomain, e.g.
+            // https://app-hcb.essentiel.ph — no trailing slash.
+            base_url: '',
+            api_key: '',
             // Reference-only, filled in by the school picker below — never
             // used to connect to anything, just kept for traceability.
             legacy_school_id: null as number | null,
@@ -530,12 +529,12 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                         // without this it renders as a huge stretched block.
                                         style={{ width: 18, height: 18, flexShrink: 0 }}
                                     />
-                                    <span>This school already uses a legacy attendance system</span>
+                                    <span>This school is an essentiel client</span>
                                 </label>
                                 <p className="pf-field-hint">
-                                    Connects this school's own legacy database so its historical
-                                    students and attendance import once now, and every new tap on
-                                    this school's kiosk keeps syncing to it live going forward.
+                                    Connects this school to essentiel's API — every tap resolves the
+                                    student and guardian live through essentiel instead of a local
+                                    roster import, and essentiel keeps its own attendance record too.
                                 </p>
                             </div>
 
@@ -558,9 +557,8 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                     />
                                     <p className="pf-field-hint">
                                         Picking a school fills in its name/code automatically below —
-                                        the actual database connection still needs to be entered
-                                        manually, since the directory only carries identity, not
-                                        credentials.
+                                        the base URL/API key still need to be entered manually, since
+                                        the directory only carries identity, not credentials.
                                     </p>
                                     {legacySchoolsError && (
                                         <p className="pf-field-hint" role="alert" style={{ color: '#b91c1c' }}>
@@ -601,64 +599,31 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                             {data.connect_legacy_system && (
                                 <div className="pft-form-grid">
                                     <div className="pf-field">
-                                        <label htmlFor="legacy-host">Legacy database host</label>
+                                        <label htmlFor="essentiel-base-url">Base URL</label>
                                         <input
-                                            id="legacy-host"
+                                            id="essentiel-base-url"
                                             type="text"
-                                            value={data.legacy_connection.host}
-                                            onChange={(e) => setLegacyField('host', e.target.value)}
+                                            placeholder="https://app-XXX.essentiel.ph"
+                                            value={data.legacy_connection.base_url}
+                                            onChange={(e) => setLegacyField('base_url', e.target.value)}
                                             required={data.connect_legacy_system}
+                                            className="font-mono"
                                         />
-                                        <InputError message={errors['legacy_connection.host']} className="mt-2" />
+                                        <p className="pf-field-hint">essentiel scopes each school by its own subdomain — no trailing slash.</p>
+                                        <InputError message={errors['legacy_connection.base_url']} className="mt-2" />
                                     </div>
 
                                     <div className="pf-field">
-                                        <label htmlFor="legacy-port">Port (optional, defaults to 3306)</label>
+                                        <label htmlFor="essentiel-api-key">API key</label>
                                         <input
-                                            id="legacy-port"
-                                            type="text"
-                                            inputMode="numeric"
-                                            value={data.legacy_connection.port}
-                                            onChange={(e) => setLegacyField('port', e.target.value)}
-                                        />
-                                        <InputError message={errors['legacy_connection.port']} className="mt-2" />
-                                    </div>
-
-                                    <div className="pf-field">
-                                        <label htmlFor="legacy-database">Database name</label>
-                                        <input
-                                            id="legacy-database"
-                                            type="text"
-                                            value={data.legacy_connection.database}
-                                            onChange={(e) => setLegacyField('database', e.target.value)}
-                                            required={data.connect_legacy_system}
-                                        />
-                                        <InputError message={errors['legacy_connection.database']} className="mt-2" />
-                                    </div>
-
-                                    <div className="pf-field">
-                                        <label htmlFor="legacy-username">Username</label>
-                                        <input
-                                            id="legacy-username"
-                                            type="text"
-                                            value={data.legacy_connection.username}
-                                            onChange={(e) => setLegacyField('username', e.target.value)}
-                                            required={data.connect_legacy_system}
-                                        />
-                                        <InputError message={errors['legacy_connection.username']} className="mt-2" />
-                                    </div>
-
-                                    <div className="pf-field">
-                                        <label htmlFor="legacy-password">Password</label>
-                                        <input
-                                            id="legacy-password"
+                                            id="essentiel-api-key"
                                             type="password"
-                                            value={data.legacy_connection.password}
-                                            onChange={(e) => setLegacyField('password', e.target.value)}
-                                            required={data.connect_legacy_system}
+                                            value={data.legacy_connection.api_key}
+                                            onChange={(e) => setLegacyField('api_key', e.target.value)}
                                             autoComplete="new-password"
                                         />
-                                        <InputError message={errors['legacy_connection.password']} className="mt-2" />
+                                        <p className="pf-field-hint">Optional for now while essentiel's test endpoint has no auth — required once it does.</p>
+                                        <InputError message={errors['legacy_connection.api_key']} className="mt-2" />
                                     </div>
                                 </div>
                             )}

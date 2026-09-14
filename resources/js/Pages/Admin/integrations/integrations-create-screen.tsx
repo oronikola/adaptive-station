@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
-const DEFAULT_CONFIG = JSON.stringify(
+const LEGACY_MYSQL_DEFAULT_CONFIG = JSON.stringify(
     {
         host: '',
         port: 3306,
@@ -23,19 +23,35 @@ const DEFAULT_CONFIG = JSON.stringify(
     2,
 );
 
+// essentiel scopes by subdomain (e.g. https://app-hcb.essentiel.ph) — no
+// trailing slash, POST /api/v1/tapping/record is appended by the connector.
+const ESSENTIEL_API_DEFAULT_CONFIG = JSON.stringify(
+    {
+        base_url: 'https://app-XXX.essentiel.ph',
+        api_key: '',
+    },
+    null,
+    2,
+);
+
+const DEFAULT_CONFIG_BY_DRIVER: Record<string, string> = {
+    legacy_mysql: LEGACY_MYSQL_DEFAULT_CONFIG,
+    essentiel_api: ESSENTIEL_API_DEFAULT_CONFIG,
+};
+
 export default function IntegrationsCreateScreen() {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         driver: 'legacy_mysql',
         direction: 'import_only',
-        config: DEFAULT_CONFIG,
+        config: LEGACY_MYSQL_DEFAULT_CONFIG,
     });
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const pendingCursorRef = useRef<number | null>(null);
     const [jsonError, setJsonError] = useState('');
     const [jsonValid, setJsonValid] = useState(true);
-    const [lineCount, setLineCount] = useState(DEFAULT_CONFIG.split('\n').length);
+    const [lineCount, setLineCount] = useState(LEGACY_MYSQL_DEFAULT_CONFIG.split('\n').length);
     const lineCountRef = useRef<HTMLDivElement>(null);
 
     // Restore cursor after controlled update
@@ -143,6 +159,16 @@ export default function IntegrationsCreateScreen() {
         post(route('portal.integrations.store'));
     }
 
+    // Only swaps the config template if it still matches some driver's
+    // untouched default — leaves it alone if the operator already edited it,
+    // so switching the dropdown never silently discards typed-in credentials.
+    function handleDriverChange(driver: string) {
+        setData('driver', driver);
+        if (Object.values(DEFAULT_CONFIG_BY_DRIVER).includes(data.config)) {
+            handleConfigChange(DEFAULT_CONFIG_BY_DRIVER[driver] ?? data.config);
+        }
+    }
+
     const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1);
 
     return (
@@ -162,10 +188,10 @@ export default function IntegrationsCreateScreen() {
                         <div>
                             <h1 className="pft-hero-title">New Integration Profile</h1>
                             <p className="pft-hero-subtitle">
-                                Connects to a school's existing legacy tapping database
-                                (read-only for roster/attendance import; write access
-                                only if you enable export). Credentials are encrypted
-                                and never shown again after saving.
+                                Connects to a school's existing legacy tapping system —
+                                a direct database connection, or the essentiel API.
+                                Credentials are encrypted and never shown again after
+                                saving.
                             </p>
                         </div>
                     </div>
@@ -192,6 +218,19 @@ export default function IntegrationsCreateScreen() {
                                 />
                                 <p className="pf-field-hint">Identifies this profile in imports and history.</p>
                                 <InputError message={errors.name} className="mt-2" />
+                            </div>
+
+                            <div className="pf-field">
+                                <label htmlFor="driver">Driver</label>
+                                <select
+                                    id="driver"
+                                    value={data.driver}
+                                    onChange={(e) => handleDriverChange(e.target.value)}
+                                >
+                                    <option value="legacy_mysql">Legacy MySQL database</option>
+                                    <option value="essentiel_api">essentiel API</option>
+                                </select>
+                                <InputError message={errors.driver} className="mt-2" />
                             </div>
 
                             <div className="pf-field">

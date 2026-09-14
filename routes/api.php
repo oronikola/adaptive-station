@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Device\DeviceSessionController;
 use App\Http\Controllers\Api\Device\MasterDataFeedController;
 use App\Http\Controllers\Api\Device\SmsGatewayController;
 use App\Http\Controllers\Api\Device\TapEventBatchController;
+use App\Http\Controllers\Api\Device\TapEventResolveController;
 use App\Http\Controllers\Api\ParentPortal\AttendanceController as ParentAttendanceController;
 use App\Http\Controllers\Api\ParentPortal\AuthController as ParentAuthController;
 use App\Http\Controllers\Api\ParentPortal\ChildrenController as ParentChildrenController;
@@ -32,6 +33,11 @@ Route::prefix('v1/device')->name('api.device.')->group(function () {
     Route::middleware(AuthenticateStation::class)->group(function () {
         Route::post('session', [DeviceSessionController::class, 'store'])->name('session');
         Route::post('events/batch', [TapEventBatchController::class, 'store'])->name('events.batch');
+        // The kiosk's "this card isn't in my local cache" fallback — see
+        // TapEventResolveController's docblock. Distinct from events.batch:
+        // this one waits for and returns essentiel's resolution instead of
+        // uploading fire-and-forget.
+        Route::post('taps/resolve', [TapEventResolveController::class, 'store'])->name('taps.resolve');
         Route::get('master-data', [MasterDataFeedController::class, 'index'])->name('master-data');
         Route::post('heartbeat', [DeviceHeartbeatController::class, 'store'])->name('heartbeat');
         Route::get('config', [DeviceConfigController::class, 'show'])->name('config');

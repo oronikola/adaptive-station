@@ -44,7 +44,7 @@ class IntegrationProfileController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
-            'driver' => ['required', 'string', 'in:legacy_mysql'],
+            'driver' => ['required', 'string', 'in:legacy_mysql,essentiel_api'],
             'direction' => ['required', 'string', 'in:import_only,export_only,bidirectional'],
             'config' => ['required', 'string'],
         ]);

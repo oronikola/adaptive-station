@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Enums\IntegrationDirection;
+use App\Enums\IntegrationProfileStatus;
 use App\Enums\PersonType;
 use App\Enums\TapEventType;
 use App\Jobs\DispatchParentTapNotification;
+use App\Jobs\PushTapEventToEssentielJob;
 use App\Jobs\PushTapEventToLegacyJob;
 use App\Models\Concerns\HasTenantScope;
 use App\Models\Concerns\HasUuidV4;
 use App\Models\Contracts\TenantScoped;
 use App\Models\Scopes\TenantScope;
+use App\Services\Integrations\EssentielTapResolver;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Builder;
@@ -97,12 +101,34 @@ class TapEvent extends Model implements TenantScoped
      * than a select-then-insert, which would race under concurrent duplicate
      * submission (e.g. overlapping kiosk retry timers).
      *
-     * @return array{accepted: array<int, string>, rejected: array<int, array{id: mixed, errors: array}>}
+     * @param  bool  $resolveEssentielSynchronously  Set only by
+     *                                               TapEventResolveController — the kiosk's "this card isn't in my local
+     *                                               cache, ask now and wait" fallback for an essentiel_api tenant. The
+     *                                               ordinary batch-upload path leaves this false, so an essentiel tenant
+     *                                               gets its resolution queued (PushTapEventToEssentielJob) instead,
+     *                                               never blocking the batch upload response on an external HTTP call.
+     * @return array{accepted: array<int, string>, rejected: array<int, array{id: mixed, errors: array}>, resolutions: array<string, array>}
      */
-    public static function acceptBatch(Station $station, array $events): array
+    public static function acceptBatch(Station $station, array $events, bool $resolveEssentielSynchronously = false): array
     {
         $accepted = [];
         $rejected = [];
+        $resolutions = [];
+
+        // Hoisted out of the loop — same tenant for the whole batch, and
+        // this is a local table lookup (not the essentiel call itself), so
+        // checking it per-event would just repeat the same query needlessly.
+        // A tenant on essentiel_api gets its identity/guardian data and tap
+        // history push from essentiel instead of the local-ParentAccount
+        // notification + direct-database legacy push below — never both,
+        // see PushTapEventToEssentielJob's docblock for why.
+        $essentielProfile = IntegrationProfile::allTenants()
+            ->where('tenant_id', $station->tenant_id)
+            ->where('driver', 'essentiel_api')
+            ->where('status', IntegrationProfileStatus::Active)
+            ->whereIn('direction', [IntegrationDirection::ExportOnly, IntegrationDirection::Bidirectional])
+            ->first();
+        $usesEssentiel = $essentielProfile !== null;
 
         foreach ($events as $event) {
             $event = is_array($event) ? $event : [];
@@ -154,16 +180,33 @@ class TapEvent extends Model implements TenantScoped
                 // below means this tap already triggered a notification on
                 // its first submission, and re-notifying on every kiosk
                 // retry of an already-accepted tap would spam parents.
-                if ($tapEvent->person_type === PersonType::Student && $tapEvent->person_id !== null) {
-                    DispatchParentTapNotification::dispatch($tapEvent->tenant_id, $tapEvent->id);
-                }
+                if ($usesEssentiel) {
+                    // Resolved regardless of local person_id — unlike the
+                    // local-only path below, essentiel may still resolve a
+                    // card this tenant's own roster has never seen, and
+                    // auto-provisions it locally the first time that
+                    // happens (see EssentielTapResolver). essentiel also
+                    // sends the SMS from its own response, so resolving the
+                    // local notification job too would text the guardian
+                    // twice for one tap — this path instead of, never
+                    // alongside, the two below.
+                    if ($resolveEssentielSynchronously) {
+                        $resolutions[$tapEvent->id] = app(EssentielTapResolver::class)
+                            ->resolve($station->tenant, $essentielProfile, $tapEvent);
+                    } else {
+                        PushTapEventToEssentielJob::dispatch($tapEvent->tenant_id, $tapEvent->id);
+                    }
+                } elseif ($tapEvent->person_id !== null) {
+                    if ($tapEvent->person_type === PersonType::Student) {
+                        DispatchParentTapNotification::dispatch($tapEvent->tenant_id, $tapEvent->id);
+                    }
 
-                // Real-time legacy sync, for a school that opted into it at
-                // onboarding — see PushTapEventToLegacyJob's docblock for why
-                // this is a silent no-op for every other tenant. Staff taps
-                // are included too (unlike the student-only notification
-                // above), since the legacy taphistory table tracks both.
-                if ($tapEvent->person_id !== null) {
+                    // Real-time legacy sync, for a school that opted
+                    // into it at onboarding — see PushTapEventToLegacyJob's
+                    // docblock for why this is a silent no-op for every
+                    // other tenant. Staff taps are included too (unlike
+                    // the student-only notification above), since the
+                    // legacy taphistory table tracks both.
                     PushTapEventToLegacyJob::dispatch($tapEvent->tenant_id, $tapEvent->id);
                 }
             } catch (QueryException $e) {
@@ -175,7 +218,7 @@ class TapEvent extends Model implements TenantScoped
             }
         }
 
-        return ['accepted' => $accepted, 'rejected' => $rejected];
+        return ['accepted' => $accepted, 'rejected' => $rejected, 'resolutions' => $resolutions];
     }
 
     /**

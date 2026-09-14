@@ -86,6 +86,43 @@ export interface BatchResponse {
     rejected_events: Array<{ id: unknown; errors: Record<string, unknown> }>;
 }
 
+export interface ResolveTapPersonName {
+    first?: string | null;
+    middle?: string | null;
+    last?: string | null;
+    full?: string | null;
+}
+
+export interface ResolveTapPerson {
+    type?: string;
+    name?: ResolveTapPersonName;
+    level?: { id?: number; name?: string | null } | null;
+}
+
+export interface ResolveTapResponse {
+    found: boolean;
+    reason?: string | null;
+    person_id?: string | null;
+    person?: ResolveTapPerson | null;
+    tapstate?: string | null;
+}
+
+/**
+ * The kiosk's "this card isn't in my local cache" fallback — waits for and
+ * returns the server's (and, for an essentiel-configured school, essentiel's)
+ * resolution, unlike uploadEventBatch() below which is fire-and-forget and
+ * never waits for a per-tap answer. Only used when getCardByUid() misses in
+ * kiosk-screen.tsx — a recognized card never needs this round trip.
+ */
+export async function resolveTap(event: BatchEvent): Promise<ResolveTapResponse> {
+    const response = await deviceFetch('api.device.taps.resolve', {
+        method: 'POST',
+        body: JSON.stringify(event),
+    });
+    if (!response.ok) throw new Error('Failed to resolve tap.');
+    return response.json();
+}
+
 export async function uploadEventBatch(events: BatchEvent[]): Promise<BatchResponse> {
     const response = await deviceFetch('api.device.events.batch', {
         method: 'POST',
