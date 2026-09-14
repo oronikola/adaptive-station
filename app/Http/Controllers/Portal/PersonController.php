@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StorePersonRequest;
 use App\Http\Requests\Portal\UpdatePersonRequest;
 use App\Models\Person;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -45,13 +46,20 @@ class PersonController extends Controller
         return Inertia::render('admin/people/people-create-screen');
     }
 
-    public function store(StorePersonRequest $request): RedirectResponse
+    public function store(StorePersonRequest $request): RedirectResponse|JsonResponse
     {
         $person = Person::registerForTenant(
             $request->user()->tenant_id,
             $request->validated(),
             $request->user(),
         );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Person created successfully.',
+                'person' => $person,
+            ]);
+        }
 
         return redirect()->route('portal.people.edit', $person)->with('success', 'Person created.');
     }
@@ -67,27 +75,48 @@ class PersonController extends Controller
         ]);
     }
 
-    public function update(UpdatePersonRequest $request, Person $person): RedirectResponse
+    public function update(UpdatePersonRequest $request, Person $person): JsonResponse|RedirectResponse
     {
         Person::updateDetails($person, $request->validated(), $request->user());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Person updated successfully.',
+                'person' => $person->fresh(),
+            ]);
+        }
 
         return redirect()->route('portal.people.edit', $person)->with('success', 'Person updated.');
     }
 
-    public function deactivate(Request $request, Person $person): RedirectResponse
+    public function deactivate(Request $request, Person $person): JsonResponse|RedirectResponse
     {
         Gate::authorize('update', $person);
 
         Person::deactivate($person, $request->user());
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Person deactivated.',
+                'person' => $person->fresh(),
+            ]);
+        }
+
         return redirect()->route('portal.people.edit', $person)->with('success', 'Person deactivated.');
     }
 
-    public function reactivate(Request $request, Person $person): RedirectResponse
+    public function reactivate(Request $request, Person $person): JsonResponse|RedirectResponse
     {
         Gate::authorize('update', $person);
 
         Person::reactivate($person, $request->user());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Person reactivated.',
+                'person' => $person->fresh(),
+            ]);
+        }
 
         return redirect()->route('portal.people.edit', $person)->with('success', 'Person reactivated.');
     }

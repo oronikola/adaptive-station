@@ -1,5 +1,6 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
+import PremiumSelect from '@/Components/PremiumSelect';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -69,16 +70,18 @@ export default function IntegrationsCreateScreen() {
 
                     <div>
                         <InputLabel htmlFor="direction" value="Direction" />
-                        <select
+                        <PremiumSelect
                             id="direction"
                             value={data.direction}
-                            onChange={(e) => setData('direction', e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="import_only">Import only</option>
-                            <option value="export_only">Export only</option>
-                            <option value="bidirectional">Import + Export</option>
-                        </select>
+                            onChange={(direction) => setData('direction', direction)}
+                            options={[
+                                { value: 'import_only', label: 'Import only' },
+                                { value: 'export_only', label: 'Export only' },
+                                { value: 'bidirectional', label: 'Import + Export' },
+                            ]}
+                            invalid={Boolean(errors.direction)}
+                            className="mt-1 block w-full"
+                        />
                         <InputError message={errors.direction} className="mt-2" />
                     </div>
 

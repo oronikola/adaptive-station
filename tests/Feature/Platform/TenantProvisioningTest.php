@@ -111,4 +111,61 @@ class TenantProvisioningTest extends TestCase
 
         $this->assertSame('active', $tenant->fresh()->status->value);
     }
+
+    public function test_platform_super_admin_can_update_tenant_details(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create(['name' => 'Old School Name', 'timezone' => 'Asia/Manila']);
+
+        $response = $this->actingAs($platformAdmin)->patch(route('platform.tenants.update', $tenant), [
+            'name' => 'Updated School Name',
+            'timezone' => 'Asia/Tokyo',
+        ]);
+
+        $response->assertRedirect(route('platform.tenants.show', $tenant));
+        $this->assertSame('Updated School Name', $tenant->fresh()->name);
+        $this->assertSame('Asia/Tokyo', $tenant->fresh()->timezone);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'tenant.updated',
+            'entity_id' => $tenant->id,
+        ]);
+    }
+
+    public function test_tenant_controller_supports_json_requests(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create(['name' => 'Json School', 'code' => 'json-school', 'timezone' => 'Asia/Manila']);
+
+        // JSON show
+        $showResponse = $this->actingAs($platformAdmin)->getJson(route('platform.tenants.show', $tenant));
+        $showResponse->assertOk()
+            ->assertJsonStructure(['tenant', 'admins', 'stations'])
+            ->assertJsonPath('tenant.id', $tenant->id);
+
+        // JSON update
+        $updateResponse = $this->actingAs($platformAdmin)->patchJson(route('platform.tenants.update', $tenant), [
+            'name' => 'Renamed Json School',
+            'timezone' => 'America/New_York',
+        ]);
+        $updateResponse->assertOk()
+            ->assertJsonPath('tenant.name', 'Renamed Json School')
+            ->assertJsonPath('tenant.timezone', 'America/New_York');
+
+        // JSON store admin
+        $adminResponse = $this->actingAs($platformAdmin)->postJson(route('platform.tenants.admins.store', $tenant), [
+            'name' => 'Json Admin',
+            'email' => 'json-admin@example.test',
+        ]);
+        $adminResponse->assertOk()
+            ->assertJsonStructure(['message', 'temporaryPassword', 'admin'])
+            ->assertJsonPath('admin.email', 'json-admin@example.test');
+
+        // JSON status update
+        $statusResponse = $this->actingAs($platformAdmin)->patchJson(route('platform.tenants.status', $tenant), [
+            'status' => 'suspended',
+        ]);
+        $statusResponse->assertOk()
+            ->assertJsonPath('status', 'suspended');
+    }
 }

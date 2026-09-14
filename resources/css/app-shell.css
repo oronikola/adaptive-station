@@ -1,26 +1,172 @@
-/* Shared app shell + sidebar (used by both the superadmin/platform layout
-   and the tenant admin portal layout). */
+/* Shared app shell + sidebar — White, light mode for all portals
+   Sticky viewport-height, no page-extending scroll. */
 
 .pf-shell {
     display: flex;
     min-height: 100vh;
-    background: #f4f7fd;
+    min-height: 100dvh;
+    background: #f1f5fb;
+    align-items: stretch;
 }
 
 .pf-sidebar {
+    position: sticky;
+    top: 14px;
     display: flex;
-    flex: 0 0 264px;
+    flex: 0 0 260px;
     flex-direction: column;
-    width: 264px;
-    padding: 28px 20px;
-    border-right: 1px solid #e7ecf4;
-    background: #ffffff;
+    width: 260px;
+    height: calc(100vh - 28px);
+    height: calc(100dvh - 28px);
+    max-height: calc(100dvh - 28px);
+    margin: 14px 0 14px 16px;
+    padding: 24px 16px;
+    border-radius: 24px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 8px 24px -6px rgba(15, 23, 42, 0.06),
+        0 24px 44px -16px rgba(15, 23, 42, 0.08);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+    align-self: flex-start;
+    flex-shrink: 0;
+    isolation: isolate;
+    transition:
+        width 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        flex-basis 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        padding 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        margin 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pf-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.pf-sidebar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+
+.pf-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.pf-sidebar > * {
+    position: relative;
+    z-index: 1;
 }
 
 @media (max-width: 1023px) {
     .pf-sidebar:not(.pf-sidebar--mobile) {
         display: none;
     }
+}
+
+.pf-sidebar--collapsed {
+    flex-basis: 76px;
+    width: 76px;
+    padding: 24px 12px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-logo-text,
+.pf-sidebar--collapsed .pf-sidebar-tenant,
+.pf-sidebar--collapsed .pf-sidebar-label,
+.pf-sidebar--collapsed .pf-sidebar-user-info {
+    display: none !important;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-logo {
+    justify-content: center;
+    width: 100%;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-logo-badge {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    margin: 0 auto;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-logo-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-collapse-toggle {
+    margin: 0 auto;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-nav {
+    align-items: center;
+    gap: 6px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-link {
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    margin: 0 auto;
+    border-radius: 12px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-link:hover {
+    transform: scale(1.06);
+}
+
+.pf-sidebar--collapsed .pf-sidebar-user {
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 12px;
+    background: transparent;
+    border: none;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-avatar {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-footer {
+    padding-top: 16px;
+    align-items: center;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-footer-links {
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-footer-link {
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    margin: 0 auto;
+    border-radius: 12px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-footer-link:hover {
+    transform: scale(1.06);
 }
 
 .pf-sidebar--mobile {
@@ -30,47 +176,166 @@
     left: 0;
     z-index: 50;
     width: 280px;
-    box-shadow: 0 20px 44px -20px rgba(15, 35, 70, 0.55);
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border-radius: 0 24px 24px 0;
+    background: #ffffff;
+    border-right: 1px solid #e7ecf4;
+    box-shadow: 0 20px 44px -20px rgba(15, 35, 70, 0.2);
+    animation: pf-sidebar-slide-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pf-sidebar-overlay {
     position: fixed;
     inset: 0;
     z-index: 40;
-    background: rgba(15, 23, 42, 0.45);
+    background: rgba(15, 23, 42, 0.32);
+    backdrop-filter: blur(6px);
+    animation: pf-overlay-fade-in 200ms ease;
+}
+
+@keyframes pf-sidebar-slide-in {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes pf-overlay-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .pf-sidebar-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
     margin-bottom: 28px;
 }
 
 .pf-sidebar-logo {
     display: flex;
+    flex: 1 1 auto;
     align-items: center;
-    gap: 10px;
+    gap: 11px;
+    min-width: 0;
     text-decoration: none;
 }
 
-.pf-sidebar-logo-mark {
-    width: 30px;
-    height: 30px;
-    flex: 0 0 30px;
-    fill: #0b2a5b;
+.pf-sidebar-logo-badge {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3e66ea 0%, #234ef4 50%, #1b36c8 100%);
+    color: #ffffff;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 4px 12px -2px rgba(35, 78, 244, 0.35);
+    transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pf-sidebar-logo:hover .pf-sidebar-logo-badge {
+    transform: scale(1.06);
+}
+
+.pf-sidebar-logo-icon {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
 }
 
 .pf-sidebar-logo-text {
+    overflow: hidden;
     color: #071c44;
     font-size: 15px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-sidebar-collapse-toggle {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e7ecf4;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #64748b;
+    cursor: pointer;
+    transition:
+        background-color 160ms ease,
+        color 160ms ease,
+        border-color 160ms ease,
+        transform 160ms ease;
+}
+
+.pf-sidebar-collapse-toggle:hover {
+    border-color: #b9c9df;
+    background: #f8faff;
+    color: #174a96;
+}
+
+.pf-sidebar-collapse-toggle:active {
+    transform: scale(0.92);
+}
+
+.pf-sidebar-collapse-toggle:focus-visible {
+    outline: 2px solid #234ef4;
+    outline-offset: 2px;
+}
+
+.pf-sidebar-collapse-toggle svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pf-sidebar-collapse-icon {
+    display: inline-flex;
+    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-sidebar-collapse-icon--flipped {
+    transform: rotate(180deg);
+}
+
+@media (max-width: 1023px) {
+    .pf-sidebar-collapse-toggle {
+        display: none;
+    }
 }
 
 .pf-sidebar-tenant {
-    margin: 6px 0 0;
+    flex-basis: 100%;
+    margin: 2px 0 0;
     color: #94a3b8;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
@@ -85,24 +350,52 @@
     align-items: center;
     gap: 12px;
     padding: 10px 14px;
-    border-radius: 12px;
+    border-radius: 14px;
     color: #64748b;
     font-size: 13px;
     font-weight: 600;
     text-decoration: none;
-    transition: background-color 150ms ease, color 150ms ease;
+    transition:
+        background 180ms ease,
+        color 180ms ease,
+        transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 180ms ease,
+        width 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        padding 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .pf-sidebar-link:hover {
-    background: #f8faff;
-    color: #174a96;
+    background: #edf3fc;
+    color: #234ef4;
+    transform: translateX(2px);
+}
+
+.pf-sidebar-link:active {
+    transform: scale(0.98);
+}
+
+.pf-sidebar-link:focus-visible {
+    outline: 2px solid #234ef4;
+    outline-offset: 2px;
 }
 
 .pf-sidebar-link--active,
 .pf-sidebar-link--active:hover {
-    background: #0b2a5b;
+    background: linear-gradient(135deg, #3e66ea 0%, #234ef4 50%, #1b36c8 100%);
     color: #ffffff;
-    box-shadow: 0 10px 22px -15px rgba(7, 28, 68, 0.9);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 8px 20px -4px rgba(35, 78, 244, 0.45),
+        0 2px 6px -1px rgba(35, 78, 244, 0.3);
+}
+
+.pf-sidebar-link--active .pf-sidebar-icon {
+    color: #ffffff;
+}
+
+.pf-sidebar-link--active .pf-sidebar-label {
+    color: #ffffff;
+    font-weight: 700;
 }
 
 .pf-sidebar-icon {
@@ -111,6 +404,11 @@
     height: 20px;
     flex: 0 0 20px;
     place-items: center;
+    transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.pf-sidebar-link:hover .pf-sidebar-icon {
+    transform: scale(1.08);
 }
 
 .pf-sidebar-icon svg {
@@ -121,6 +419,12 @@
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
+}
+
+.pf-sidebar-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .pf-sidebar-footer {
@@ -134,6 +438,11 @@
     align-items: center;
     gap: 10px;
     margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 14px;
+    background: #f8faff;
+    border: 1px solid #eef1f6;
+    transition: background 180ms ease, border-color 180ms ease;
 }
 
 .pf-sidebar-avatar {
@@ -147,6 +456,11 @@
     color: #174a96;
     font-size: 14px;
     font-weight: 700;
+    transition: transform 200ms ease;
+}
+
+.pf-sidebar-user:hover .pf-sidebar-avatar {
+    transform: scale(1.06);
 }
 
 .pf-sidebar-user-info {
@@ -174,22 +488,175 @@
 
 .pf-sidebar-footer-links {
     display: flex;
-    gap: 14px;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .pf-sidebar-footer-link {
-    padding: 0;
-    border: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
     background: none;
-    color: #174a96;
-    font-size: 11px;
+    color: #64748b;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
+    transition:
+        background 160ms ease,
+        color 160ms ease,
+        border-color 160ms ease,
+        transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .pf-sidebar-footer-link:hover {
-    text-decoration: underline;
+    background: #f8faff;
+    color: #174a96;
+    transform: translateX(2px);
+}
+
+.pf-sidebar-footer-link:active {
+    transform: scale(0.98);
+}
+
+.pf-sidebar-footer-link:focus-visible {
+    outline: 2px solid #234ef4;
+    outline-offset: 2px;
+}
+
+.pf-sidebar-footer-link--active,
+.pf-sidebar-footer-link--active:hover {
+    background: #edf3fc;
+    color: #234ef4;
+}
+
+.pf-sidebar-footer-link--active .pf-sidebar-footer-icon {
+    color: #234ef4;
+}
+
+/* Logout button — Opacity Red styling */
+.pf-sidebar-footer-link--logout {
+    color: #dc2626;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.14);
+}
+
+.pf-sidebar-footer-link--logout .pf-sidebar-footer-icon {
+    color: #ef4444;
+    transition: transform 180ms ease;
+}
+
+.pf-sidebar-footer-link--logout:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #b91c1c;
+    border-color: rgba(239, 68, 68, 0.28);
+    box-shadow: 0 4px 14px -2px rgba(239, 68, 68, 0.18);
+    transform: translateX(2px);
+}
+
+.pf-sidebar-footer-link--logout:hover .pf-sidebar-footer-icon {
+    transform: scale(1.1);
+}
+
+.pf-sidebar--collapsed .pf-sidebar-footer-link--logout:hover {
+    transform: scale(1.06);
+}
+
+.pf-sidebar-footer-link--logout:active,
+.pf-sidebar-footer-link--logout.is-logging-out {
+    background: rgba(239, 68, 68, 0.24);
+    color: #991b1b;
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow:
+        inset 0 1px 2px rgba(153, 27, 27, 0.15),
+        0 4px 14px -2px rgba(239, 68, 68, 0.25);
+    transform: scale(0.97);
+}
+
+.pf-sidebar-footer-link--logout.is-logging-out .pf-sidebar-footer-icon {
+    animation: signal-pulse 1.4s ease-in-out infinite;
+}
+
+.pf-sidebar-footer-icon {
+    display: grid;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    place-items: center;
+}
+
+.pf-sidebar-footer-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ── Global Floating Tooltip ── */
+.pf-global-tooltip {
+    position: fixed;
+    z-index: 10000;
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 13px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    white-space: nowrap;
+    color: #ffffff;
+    background: #071c44;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow:
+        0 4px 6px -1px rgba(7, 28, 68, 0.1),
+        0 14px 28px -4px rgba(7, 28, 68, 0.38);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    opacity: 0;
+    transform: translateY(-50%) translateX(-6px) scale(0.95);
+    transform-origin: left center;
+    transition:
+        opacity 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pf-global-tooltip--visible {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0) scale(1);
+}
+
+.pf-global-tooltip-arrow {
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    background: #071c44;
+    border-left: 1px solid rgba(255, 255, 255, 0.16);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    transform: translateY(-50%) rotate(45deg);
+    border-radius: 0 0 0 2px;
+}
+
+.pf-global-tooltip--danger {
+    background: #dc2626;
+    border-color: rgba(254, 202, 202, 0.3);
+    box-shadow:
+        0 4px 6px -1px rgba(220, 38, 38, 0.12),
+        0 14px 28px -4px rgba(220, 38, 38, 0.45);
+}
+
+.pf-global-tooltip--danger .pf-global-tooltip-arrow {
+    background: #dc2626;
+    border-color: rgba(254, 202, 202, 0.3);
 }
 
 .pf-mobile-topbar {
@@ -199,6 +666,17 @@
     padding: 14px 20px;
     border-bottom: 1px solid #e7ecf4;
     background: #ffffff;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.pf-mobile-topbar .pf-sidebar-logo-text {
+    color: #071c44;
+}
+
+.pf-mobile-topbar .pf-sidebar-logo-mark {
+    fill: #0b2a5b;
 }
 
 @media (max-width: 1023px) {
@@ -219,6 +697,19 @@
     background: #ffffff;
     color: #223047;
     cursor: pointer;
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        transform 150ms ease;
+}
+
+.pf-mobile-toggle:hover {
+    background: #f8faff;
+    border-color: #b9c9df;
+}
+
+.pf-mobile-toggle:active {
+    transform: scale(0.96);
 }
 
 .pf-mobile-toggle svg {
@@ -235,6 +726,7 @@
     display: flex;
     flex: 1 1 auto;
     min-width: 0;
+    min-height: 0;
     flex-direction: column;
 }
 
@@ -244,4 +736,40 @@
 
 .pf-shell-content {
     flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* ── Content cards · elevate Tailwind rounded-lg whites to landing style ── */
+.pf-shell-content .rounded-lg.bg-white:not(.shadow-xl) {
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px -4px rgba(10, 27, 115, 0.1);
+}
+
+.pf-shell-content .rounded-lg.bg-white.shadow-sm {
+    border-color: #e2e8f0;
+}
+
+.pf-shell-header h2 {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-sidebar,
+    .pf-sidebar-link,
+    .pf-sidebar-icon,
+    .pf-sidebar-footer-link,
+    .pf-sidebar-avatar,
+    .pf-sidebar-collapse-toggle,
+    .pf-sidebar-collapse-icon,
+    .pf-global-tooltip {
+        transition: none !important;
+    }
+
+    .pf-sidebar--mobile,
+    .pf-sidebar-overlay {
+        animation: none !important;
+    }
 }

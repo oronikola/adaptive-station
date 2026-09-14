@@ -120,4 +120,29 @@ class PersonManagementTest extends TestCase
             'person_type' => 'student', 'first_name' => 'A', 'last_name' => 'B', 'external_id' => 'SIS-100',
         ])->assertSessionHasErrors('external_id');
     }
+
+    public function test_tenant_admin_can_create_a_person_via_json(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+
+        $response = $this->actingAs($admin)->postJson(route('portal.people.store'), [
+            'person_type' => 'student',
+            'first_name' => 'Michael',
+            'last_name' => 'Scott',
+            'grade_level' => '10',
+            'section' => 'Emerald',
+            'external_id' => 'STUDENT-999',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonStructure(['message', 'person'])
+            ->assertJsonPath('person.display_name', 'Michael Scott');
+
+        $this->assertDatabaseHas('people', [
+            'tenant_id' => $tenant->id,
+            'external_id' => 'STUDENT-999',
+            'display_name' => 'Michael Scott',
+        ], 'tenant');
+    }
 }

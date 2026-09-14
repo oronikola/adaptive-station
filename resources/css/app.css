@@ -1,3 +1,407 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    /* Token ease-out: default easing for nearly all transitions. */
+    --ease-emil-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@layer utilities {
+    /* Small dot texture for royal-blue surfaces. */
+    .bg-dot-grid {
+        background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1.4px);
+        background-size: 14px 14px;
+    }
+}
+
+@layer components {
+    /*
+     * Emil-style interaction system for the landing page.
+     * Exact transitioned properties (never `all`), sub-300ms timings,
+     * press feedback on pressables, hover lift gated to fine pointers.
+     */
+    .pressable {
+        transition:
+            transform 160ms var(--ease-emil-out),
+            background-color 160ms ease,
+            border-color 160ms ease,
+            box-shadow 200ms var(--ease-emil-out),
+            color 160ms ease;
+    }
+
+    .card-hover {
+        transition:
+            transform 200ms var(--ease-emil-out),
+            box-shadow 250ms var(--ease-emil-out),
+            background-color 200ms ease;
+    }
+
+    .card-hover-dark {
+        transition:
+            transform 200ms var(--ease-emil-out),
+            box-shadow 250ms var(--ease-emil-out);
+    }
+
+    .glass-hover {
+        transition:
+            transform 200ms var(--ease-emil-out),
+            box-shadow 250ms var(--ease-emil-out),
+            background-color 200ms ease;
+    }
+
+    .faq-hover {
+        transition: background-color 160ms ease;
+    }
+
+    .icon-nudge {
+        transition: transform 200ms var(--ease-emil-out);
+    }
+
+    /*
+     * Token: Hero CTA Button — full-pill marketing CTA, vibrant gradient
+     * with convex top highlight + ambient blue shadow. Matches design reference.
+     */
+    .ds-btn-hero {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border-radius: 9999px;
+        padding: 14px 28px;
+        min-height: 52px;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: #fff;
+        background: linear-gradient(180deg, #5b7cee 0%, #3e66ea 50%, #2247cc 100%);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow:
+            inset 0 1px 1px rgba(255, 255, 255, 0.45),
+            0 10px 24px -4px rgba(35, 78, 225, 0.42),
+            0 4px 10px -2px rgba(35, 78, 225, 0.25);
+        transition:
+            transform 200ms var(--ease-emil-out),
+            filter 200ms var(--ease-emil-out),
+            box-shadow 200ms var(--ease-emil-out);
+        cursor: pointer;
+    }
+
+    .ds-btn-hero:active {
+        transform: scale(0.97);
+    }
+
+    /*
+     * Token: Secondary CTA / Glass Pill Button (.btn-glass-secondary, .ds-btn-ghost)
+     * Layered convex glass pill border + inner highlight with top gradient sheen.
+     */
+    .btn-glass-secondary {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid rgba(226, 232, 240, 0.9) !important;
+        box-shadow:
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+            inset 0 -1px 0 0 rgba(0, 0, 0, 0.04),
+            0 1px 2px 0 rgba(0, 0, 0, 0.05),
+            0 2px 6px 0 rgba(0, 0, 0, 0.02);
+    }
+
+    .btn-glass-secondary::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.75) 0%,
+            rgba(255, 255, 255, 0.15) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+        pointer-events: none;
+        z-index: 1;
+        transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .btn-glass-secondary:hover::before {
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(255, 255, 255, 0.25) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+    }
+
+    /*
+     * Token: Tactile press feedback
+     */
+    .tactile-press {
+        transition:
+            transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+            box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1),
+            opacity 160ms cubic-bezier(0.23, 1, 0.32, 1),
+            filter 160ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .tactile-press:active {
+        transform: scale(0.97);
+    }
+
+    .ds-btn-ghost {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 9999px;
+        padding: 16px 32px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(226, 232, 240, 0.9) !important;
+        box-shadow:
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+            inset 0 -1px 0 0 rgba(0, 0, 0, 0.04),
+            0 1px 2px 0 rgba(0, 0, 0, 0.05),
+            0 2px 6px 0 rgba(0, 0, 0, 0.02);
+        transition:
+            transform 200ms cubic-bezier(0.23, 1, 0.32, 1),
+            background-color 200ms cubic-bezier(0.23, 1, 0.32, 1),
+            color 200ms cubic-bezier(0.23, 1, 0.32, 1),
+            box-shadow 200ms cubic-bezier(0.23, 1, 0.32, 1);
+        cursor: pointer;
+    }
+
+    .ds-btn-ghost::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.75) 0%,
+            rgba(255, 255, 255, 0.15) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+        pointer-events: none;
+        z-index: 1;
+        transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .ds-btn-ghost span,
+    .ds-btn-ghost svg {
+        position: relative;
+        z-index: 10;
+    }
+
+    .ds-btn-ghost:hover {
+        transform: translateY(-2px);
+        background-color: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .ds-btn-ghost:hover::before {
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(255, 255, 255, 0.25) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+    }
+
+    .ds-btn-ghost:active {
+        transform: scale(0.97);
+    }
+
+    /*
+     * Token: two-tone pill badge with leading dot, tuned for blue canvas.
+     */
+    .eyebrow-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 9999px;
+        padding: 6px 14px 6px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .eyebrow-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: #8ff0c6;
+    }
+
+    /*
+     * Token: scroll-triggered fade + lift entrance. Always
+     * translateY(14px) -> 0 over 600ms, stagger via transition-delay.
+     */
+    .reveal {
+        opacity: 0;
+        transform: translateY(14px);
+        transition:
+            opacity 600ms ease,
+            transform 600ms var(--ease-emil-out);
+    }
+
+    .reveal-visible {
+        opacity: 1;
+        transform: none;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        .hover-lift:hover {
+            transform: translateY(-1px);
+        }
+
+        .ds-btn-hero:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+            box-shadow:
+                inset 0 1px 1.5px rgba(255, 255, 255, 0.5),
+                0 14px 30px -4px rgba(35, 78, 225, 0.52),
+                0 6px 14px -2px rgba(35, 78, 225, 0.3);
+        }
+
+        .ds-btn-ghost:hover {
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+            background-color: #ffffff;
+            box-shadow:
+                0 4px 12px -2px rgba(0, 0, 0, 0.06),
+                0 2px 4px -1px rgba(0, 0, 0, 0.04);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+                inset 0 -1px 0 0 rgba(15, 23, 42, 0.03),
+                0 20px 44px -20px rgba(7, 28, 68, 0.32),
+                0 8px 20px -12px rgba(7, 28, 68, 0.22);
+        }
+
+        .card-hover-dark:hover {
+            transform: translateY(-3px);
+            box-shadow:
+                0 22px 46px -20px rgba(3, 10, 35, 0.55),
+                0 10px 24px -14px rgba(3, 10, 35, 0.4);
+        }
+
+        .glass-hover:hover {
+            transform: translateY(-3px);
+            background-color: rgba(255, 255, 255, 0.14);
+            box-shadow: 0 18px 38px -18px rgba(10, 27, 115, 0.4);
+        }
+
+        .faq-hover:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .group:hover .icon-nudge {
+            transform: translateY(-2px);
+        }
+    }
+
+    /* Press must win over hover: snappy 120ms confirmation. */
+    .pressable:active {
+        transform: translateY(-1px) scale(0.97);
+        transition-duration: 120ms;
+    }
+
+    /*
+     * Token: tactile press + glass secondary (shared with the Help Center
+     * system). Gives pasted glass buttons their press and gloss behavior.
+     */
+    .tactile-press {
+        position: relative;
+        transition:
+            transform 160ms var(--ease-emil-out),
+            box-shadow 160ms var(--ease-emil-out),
+            opacity 160ms var(--ease-emil-out),
+            filter 160ms var(--ease-emil-out);
+    }
+
+    .tactile-press:active {
+        transform: scale(0.97);
+    }
+
+    .btn-glass-secondary {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        box-shadow:
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+            inset 0 -1px 0 0 rgba(0, 0, 0, 0.04),
+            0 1px 2px 0 rgba(0, 0, 0, 0.05),
+            0 2px 6px 0 rgba(0, 0, 0, 0.02);
+    }
+
+    .btn-glass-secondary::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.75) 0%,
+            rgba(255, 255, 255, 0.15) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+        pointer-events: none;
+        z-index: 1;
+        transition: opacity 180ms var(--ease-emil-out);
+    }
+
+    .btn-glass-secondary:hover::before {
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(255, 255, 255, 0.25) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .pressable,
+        .tactile-press,
+        .hover-lift,
+        .card-hover,
+        .card-hover-dark,
+        .glass-hover,
+        .faq-hover,
+        .icon-nudge,
+        .ds-btn-hero,
+        .ds-btn-ghost,
+        .reveal {
+            transition: none;
+        }
+
+        .reveal {
+            opacity: 1;
+            transform: none;
+        }
+
+        .pressable:active,
+        .hover-lift:hover,
+        .card-hover:hover,
+        .card-hover-dark:hover,
+        .glass-hover:hover,
+        .group:hover .icon-nudge {
+            transform: none;
+        }
+    }
+}

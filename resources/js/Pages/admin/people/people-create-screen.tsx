@@ -1,5 +1,6 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
+import PremiumSelect from '@/Components/PremiumSelect';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
@@ -41,17 +42,17 @@ export default function PeopleCreateScreen() {
                 >
                     <div>
                         <InputLabel htmlFor="person_type" value="Type" />
-                        <select
+                        <PremiumSelect
                             id="person_type"
                             value={data.person_type}
-                            onChange={(e) =>
-                                setData('person_type', e.target.value)
-                            }
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="student">Student</option>
-                            <option value="staff">Staff</option>
-                        </select>
+                            onChange={(personType) => setData('person_type', personType)}
+                            options={[
+                                { value: 'student', label: 'Student' },
+                                { value: 'staff', label: 'Staff' },
+                            ]}
+                            invalid={Boolean(errors.person_type)}
+                            className="mt-1 block w-full"
+                        />
                         <InputError message={errors.person_type} className="mt-2" />
                     </div>
 

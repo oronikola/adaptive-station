@@ -4,13 +4,13 @@ namespace Tests\Feature\Security;
 
 use App\Enums\ImportExceptionResolution;
 use App\Enums\ImportExceptionType;
+use App\Enums\IntegrationProfileStatus;
 use App\Enums\StationStatus;
 use App\Enums\TenantStatus;
 use App\Enums\UserRole;
 use App\Models\AuditLog;
 use App\Models\ImportBatch;
 use App\Models\ImportException;
-use App\Enums\IntegrationProfileStatus;
 use App\Models\IntegrationProfile;
 use App\Models\Person;
 use App\Models\RfidCard;

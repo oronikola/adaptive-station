@@ -25,8 +25,7 @@ class RosterImporter
         protected ImportBatch $batch,
         protected bool $commit,
         protected ?User $actor = null,
-    ) {
-    }
+    ) {}
 
     public function run(): array
     {

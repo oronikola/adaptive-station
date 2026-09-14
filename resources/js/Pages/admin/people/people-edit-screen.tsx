@@ -1,6 +1,7 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
+import PremiumSelect from '@/Components/PremiumSelect';
 import TextInput from '@/Components/TextInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
@@ -21,7 +22,7 @@ interface PersonWithCards extends Person {
 
 export default function PeopleEditScreen({ person }: { person: PersonWithCards }) {
     const { props } = usePage<import('@/types').PageProps>();
-    const canManage = props.auth.user.role === 'tenant_admin';
+    const canManage = props.auth?.user?.role === 'tenant_admin';
 
     const detailsForm = useForm({
         person_type: person.person_type,
@@ -126,18 +127,20 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
 
                     <div>
                         <InputLabel htmlFor="person_type" value="Type" />
-                        <select
+                        <PremiumSelect
                             id="person_type"
                             value={detailsForm.data.person_type}
-                            onChange={(e) =>
-                                detailsForm.setData('person_type', e.target.value as 'student' | 'staff')
+                            onChange={(personType: 'student' | 'staff') =>
+                                detailsForm.setData('person_type', personType)
                             }
+                            options={[
+                                { value: 'student' as const, label: 'Student' },
+                                { value: 'staff' as const, label: 'Staff' },
+                            ]}
                             disabled={!canManage}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="student">Student</option>
-                            <option value="staff">Staff</option>
-                        </select>
+                            invalid={Boolean(detailsForm.errors.person_type)}
+                            className="mt-1 block w-full"
+                        />
                         <InputError message={detailsForm.errors.person_type} className="mt-2" />
                     </div>
 
@@ -327,7 +330,19 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
             <Modal show={assignOpen} onClose={() => setAssignOpen(false)}>
                 <form onSubmit={submitAssign} className="pf-modal">
                     <div className="pf-modal-header">
-                        <h3 className="pf-modal-title">Assign a card</h3>
+                        <div className="pf-modal-hero">
+                            <span className="pf-modal-hero-icon pf-modal-hero-icon--blue" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="3" y="6" width="18" height="12" rx="2" />
+                                    <path d="M3 10h18" />
+                                    <rect x="6" y="13" width="4" height="2.4" rx="0.5" />
+                                </svg>
+                            </span>
+                            <div className="pf-modal-hero-text">
+                                <h3 className="pf-modal-title">Assign a Card</h3>
+                                <p className="pf-modal-subtitle">Link an RFID card to this person for tap access.</p>
+                            </div>
+                        </div>
                         <button
                             type="button"
                             className="pf-modal-close"
@@ -375,7 +390,19 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
             <Modal show={replacingCard !== null} onClose={() => setReplacingCard(null)}>
                 <form onSubmit={submitReplace} className="pf-modal">
                     <div className="pf-modal-header">
-                        <h3 className="pf-modal-title">Replace card</h3>
+                        <div className="pf-modal-hero">
+                            <span className="pf-modal-hero-icon pf-modal-hero-icon--amber" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="3" y="6" width="18" height="12" rx="2" />
+                                    <path d="M3 10h18" />
+                                    <path d="M14 14l3 3M17 14l-3 3" />
+                                </svg>
+                            </span>
+                            <div className="pf-modal-hero-text">
+                                <h3 className="pf-modal-title">Replace Card</h3>
+                                <p className="pf-modal-subtitle">Deactivate current card and link a replacement.</p>
+                            </div>
+                        </div>
                         <button
                             type="button"
                             className="pf-modal-close"
@@ -387,11 +414,6 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
                             </svg>
                         </button>
                     </div>
-
-                    <p className="pf-field-hint" style={{ marginBottom: '16px' }}>
-                        The current card will be deactivated and can no longer be
-                        used to tap in or out.
-                    </p>
 
                     <div className="pf-field">
                         <label htmlFor="replace_card_uid">New card UID</label>

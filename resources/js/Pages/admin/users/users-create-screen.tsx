@@ -1,5 +1,6 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
+import PremiumSelect from '@/Components/PremiumSelect';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
@@ -67,15 +68,17 @@ export default function UsersCreateScreen() {
 
                     <div>
                         <InputLabel htmlFor="role" value="Role" />
-                        <select
+                        <PremiumSelect
                             id="role"
                             value={data.role}
-                            onChange={(e) => setData('role', e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="tenant_operator">Operator (view-only)</option>
-                            <option value="tenant_admin">Admin (full access)</option>
-                        </select>
+                            onChange={(role) => setData('role', role)}
+                            options={[
+                                { value: 'tenant_operator', label: 'Operator (view-only)' },
+                                { value: 'tenant_admin', label: 'Admin (full access)' },
+                            ]}
+                            invalid={Boolean(errors.role)}
+                            className="mt-1 block w-full"
+                        />
                         <InputError message={errors.role} className="mt-2" />
                     </div>
 

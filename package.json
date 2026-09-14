@@ -27,5 +27,10 @@
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
+    },
+    "dependencies": {
+        "framer-motion": "^13.2.0",
+        "recharts": "^3.10.1",
+        "reicon-react": "^1.2.5"
     }
 }

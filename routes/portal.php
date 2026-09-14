@@ -4,6 +4,7 @@ use App\Http\Controllers\Portal\AttendanceController;
 use App\Http\Controllers\Portal\ImportBatchController;
 use App\Http\Controllers\Portal\ImportExceptionController;
 use App\Http\Controllers\Portal\IntegrationProfileController;
+use App\Http\Controllers\Portal\OverviewController;
 use App\Http\Controllers\Portal\PersonController;
 use App\Http\Controllers\Portal\RfidCardController;
 use App\Http\Controllers\Portal\StationController;
@@ -15,6 +16,8 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
     ->prefix('portal')
     ->name('portal.')
     ->group(function () {
+        Route::get('overview', [OverviewController::class, 'index'])->name('overview.index');
+
         Route::get('people', [PersonController::class, 'index'])->name('people.index');
         Route::get('people/create', [PersonController::class, 'create'])->name('people.create');
         Route::post('people', [PersonController::class, 'store'])->name('people.store');

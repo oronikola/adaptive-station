@@ -1,5 +1,6 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
+import PremiumSelect from '@/Components/PremiumSelect';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
@@ -45,18 +46,18 @@ export default function ImportsCreateScreen({ profiles }: { profiles: Integratio
 
                     <div>
                         <InputLabel htmlFor="integration_profile_id" value="Integration Profile" />
-                        <select
+                        <PremiumSelect
                             id="integration_profile_id"
                             value={data.integration_profile_id}
-                            onChange={(e) => setData('integration_profile_id', e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            {profiles.map((profile: IntegrationProfile) => (
-                                <option key={profile.id} value={profile.id}>
-                                    {profile.name}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(profileId) => setData('integration_profile_id', profileId)}
+                            options={profiles.map((profile: IntegrationProfile) => ({
+                                value: profile.id,
+                                label: profile.name,
+                            }))}
+                            placeholder="Select a profile"
+                            invalid={Boolean(errors.integration_profile_id)}
+                            className="mt-1 block w-full"
+                        />
                         <InputError message={errors.integration_profile_id} className="mt-2" />
                     </div>
 

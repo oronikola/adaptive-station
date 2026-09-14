@@ -16,10 +16,10 @@ Route::get('/dashboard', function () {
     $user = request()->user();
 
     if ($user->isPlatformSuperAdmin()) {
-        return redirect()->route('platform.tenants.index');
+        return redirect()->route('platform.overview.index');
     }
 
-    return redirect()->route('portal.people.index');
+    return redirect()->route('portal.overview.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

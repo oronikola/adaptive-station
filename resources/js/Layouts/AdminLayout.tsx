@@ -4,6 +4,20 @@ import { NavItem } from '@/types';
 
 const navItems: NavItem[] = [
     {
+        name: 'overview',
+        label: 'Overview',
+        route: 'portal.overview.index',
+        activePattern: 'portal.overview.*',
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <rect x="4" y="4" width="7" height="7" rx="1.5" />
+                <rect x="13" y="4" width="7" height="7" rx="1.5" />
+                <rect x="4" y="13" width="7" height="7" rx="1.5" />
+                <rect x="13" y="13" width="7" height="7" rx="1.5" />
+            </svg>
+        ),
+    },
+    {
         name: 'people',
         label: 'People',
         route: 'portal.people.index',
@@ -101,15 +115,15 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ header, children }: AdminLayoutProps) {
     const { props } = usePage<import('@/types').PageProps>();
-    const user = props.auth.user;
+    const user = props.auth?.user;
 
     const visibleNavItems = navItems.filter(
-        (item) => !item.adminOnly || user.role !== 'tenant_operator',
+        (item) => !item.adminOnly || user?.role !== 'tenant_operator',
     );
 
     return (
         <AppShell
-            brandHref={route('portal.people.index')}
+            brandHref={route('portal.overview.index')}
             items={visibleNavItems}
             header={header}
         >

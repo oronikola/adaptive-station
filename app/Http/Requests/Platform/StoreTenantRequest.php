@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Platform;
 
+use App\Models\Tenant;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -10,7 +11,7 @@ class StoreTenantRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create', \App\Models\Tenant::class);
+        return $this->user()->can('create', Tenant::class);
     }
 
     /**

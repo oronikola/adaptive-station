@@ -192,14 +192,25 @@ export default function StationDetailScreen({ station, credentials }: { station:
             </div>
 
             <Modal show={issueCredentialOpen} onClose={() => setIssueCredentialOpen(false)}>
-                <form onSubmit={submitIssueCredential} className="p-6">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        Issue New Credential
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        The device token is shown only once — enter it into
-                        the kiosk's configuration immediately.
-                    </p>
+                <form onSubmit={submitIssueCredential} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <div className="pf-modal-hero">
+                            <span className="pf-modal-hero-icon pf-modal-hero-icon--amber" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="3" y="11" width="10" height="8" rx="1.5" />
+                                    <path d="M7 11V8a4 4 0 0 1 8 0v3" />
+                                    <circle cx="8" cy="15" r="1" />
+                                </svg>
+                            </span>
+                            <div className="pf-modal-hero-text">
+                                <h3 className="pf-modal-title">Issue New Credential</h3>
+                                <p className="pf-modal-subtitle">Token shown once — enter it on the kiosk immediately.</p>
+                            </div>
+                        </div>
+                        <button type="button" className="pf-modal-close" onClick={() => setIssueCredentialOpen(false)} aria-label="Close">
+                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
                     <div className="mt-4">
                         <InputLabel htmlFor="label" value="Label (optional)" />
                         <TextInput

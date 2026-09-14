@@ -1,9 +1,14 @@
 <?php
 
+use App\Http\Middleware\EnsurePasswordIsCurrent;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SetTenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,13 +27,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // 'web' group appends SubstituteBindings before any custom middleware,
         // so it is removed here and re-appended after SetTenantContext.
         $middleware->web(
-            remove: [\Illuminate\Routing\Middleware\SubstituteBindings::class],
+            remove: [SubstituteBindings::class],
             append: [
-                \App\Http\Middleware\HandleInertiaRequests::class,
-                \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-                \App\Http\Middleware\SetTenantContext::class,
-                \Illuminate\Routing\Middleware\SubstituteBindings::class,
-                \App\Http\Middleware\EnsurePasswordIsCurrent::class,
+                HandleInertiaRequests::class,
+                AddLinkHeadersForPreloadedAssets::class,
+                SetTenantContext::class,
+                SubstituteBindings::class,
+                EnsurePasswordIsCurrent::class,
             ],
         );
 

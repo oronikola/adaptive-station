@@ -214,14 +214,25 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
             </div>
 
             <Modal show={deleteOpen} onClose={() => setDeleteOpen(false)}>
-                <form onSubmit={submitDelete} className="p-6">
-                    <h3 className="text-lg font-medium text-red-700 dark:text-red-400">
-                        Delete "{tenant.name}"?
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        This permanently deletes all of this school's people, cards,
-                        stations, attendance history, users, and integrations. This
-                        cannot be undone.
+                <form onSubmit={submitDelete} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <div className="pf-modal-hero">
+                            <span className="pf-modal-hero-icon pf-modal-hero-icon--red" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 8v6M12 16h.01M10.8 4.2L4.2 15.6a1.5 1.5 0 0 0 1.3 2.2h13a1.5 1.5 0 0 0 1.3-2.2L13.2 4.2a1.5 1.5 0 0 0-2.4 0Z" />
+                                </svg>
+                            </span>
+                            <div className="pf-modal-hero-text">
+                                <h3 className="pf-modal-title">Delete “{tenant.name}”?</h3>
+                                <p className="pf-modal-subtitle">This permanently deletes all people, cards, stations and history — no undo.</p>
+                            </div>
+                        </div>
+                        <button type="button" className="pf-modal-close" onClick={() => setDeleteOpen(false)} aria-label="Close">
+                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                    <p className="pf-modal-subtitle" style={{ marginBottom: '16px', animationDelay: '160ms' }}>
+                        This permanently deletes all of this school's people, cards, stations, attendance history, users, and integrations. This cannot be undone.
                     </p>
 
                     <div className="mt-4">
@@ -258,14 +269,25 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
             </Modal>
 
             <Modal show={createAdminOpen} onClose={() => setCreateAdminOpen(false)}>
-                <form onSubmit={submitAdmin} className="p-6">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        Add Admin User
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        A temporary password will be generated and shown once. Relay
-                        it to the school administrator directly.
-                    </p>
+                <form onSubmit={submitAdmin} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <div className="pf-modal-hero">
+                            <span className="pf-modal-hero-icon pf-modal-hero-icon--violet" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <circle cx="12" cy="8" r="3.2" />
+                                    <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
+                                    <path d="M19 8v2M16 11l3-3" />
+                                </svg>
+                            </span>
+                            <div className="pf-modal-hero-text">
+                                <h3 className="pf-modal-title">Add Admin User</h3>
+                                <p className="pf-modal-subtitle">Create a school admin — temporary password shown once.</p>
+                            </div>
+                        </div>
+                        <button type="button" className="pf-modal-close" onClick={() => setCreateAdminOpen(false)} aria-label="Close">
+                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
 
                     <div className="mt-4">
                         <InputLabel htmlFor="admin_name" value="Name" />

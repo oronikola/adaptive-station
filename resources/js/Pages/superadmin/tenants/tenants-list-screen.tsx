@@ -5,6 +5,7 @@ import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { PaginatedData, PaginationLink, Tenant } from '@/types';
+import ManageSchoolModal from './ManageSchoolModal';
 import '../../../../css/platform-dashboard.css';
 
 interface StatCardProps {
@@ -119,6 +120,7 @@ interface TenantsListScreenProps {
 export default function TenantsListScreen({ tenants, stats }: TenantsListScreenProps) {
     const { showToast } = useToast();
     const [createOpen, setCreateOpen] = useState(false);
+    const [manageTenant, setManageTenant] = useState<Tenant | null>(null);
     const [codeTouched, setCodeTouched] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -170,7 +172,6 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
             <div className="pf-dashboard">
                 <div className="pf-dashboard-header">
                     <div>
-                        <p className="pf-dashboard-kicker">Platform overview</p>
                         <h1 className="pf-dashboard-title">Schools</h1>
                         <p className="pf-dashboard-subtitle">
                             Manage every school on Adaptive Station and keep tabs on
@@ -278,18 +279,16 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
                                             </span>
                                         </td>
                                         <td>
-                                            <Link
-                                                href={route(
-                                                    'platform.tenants.show',
-                                                    tenant.id,
-                                                )}
+                                            <button
+                                                type="button"
+                                                onClick={() => setManageTenant(tenant)}
                                                 className="pf-row-action"
                                             >
                                                 Manage
                                                 <svg viewBox="0 0 24 24">
                                                     <path d="M9 6l6 6-6 6" />
                                                 </svg>
-                                            </Link>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -304,7 +303,17 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
             <Modal show={createOpen} onClose={() => setCreateOpen(false)}>
                 <form onSubmit={submit} className="pf-modal">
                     <div className="pf-modal-header">
-                        <h3 className="pf-modal-title">Provision a School</h3>
+                        <div className="pf-modal-hero">
+                            <span className="pf-modal-hero-icon pf-modal-hero-icon--blue" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
+                                </svg>
+                            </span>
+                            <div className="pf-modal-hero-text">
+                                <h3 className="pf-modal-title">Provision a School</h3>
+                                <p className="pf-modal-subtitle">Create a new school workspace with its own data and access.</p>
+                            </div>
+                        </div>
                         <button
                             type="button"
                             className="pf-modal-close"
@@ -318,13 +327,13 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
                     </div>
 
                     <div className="pf-field">
-                        <label htmlFor="name">School name</label>
+                        <label htmlFor="name">School Name</label>
                         <input
                             id="name"
                             type="text"
                             value={data.name}
                             onChange={(e) => handleNameChange(e.target.value)}
-                            autoFocus
+                            placeholder="e.g. Rizal Elementary School"
                             required
                         />
                         <InputError message={errors.name} className="mt-2" />
@@ -337,6 +346,7 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
                             type="text"
                             value={data.code}
                             onChange={(e) => handleCodeChange(e.target.value)}
+                            placeholder="e.g. rizal-elementary-school"
                             className="font-mono"
                             required
                         />
@@ -353,6 +363,7 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
                             type="text"
                             value={data.timezone}
                             onChange={(e) => setData('timezone', e.target.value)}
+                            placeholder="e.g. Asia/Manila"
                             required
                         />
                         <InputError message={errors.timezone} className="mt-2" />
@@ -376,6 +387,13 @@ export default function TenantsListScreen({ tenants, stats }: TenantsListScreenP
                     </div>
                 </form>
             </Modal>
+
+            <ManageSchoolModal
+                tenant={manageTenant}
+                show={manageTenant !== null}
+                onClose={() => setManageTenant(null)}
+                onUpdated={(updated) => setManageTenant(updated)}
+            />
         </PlatformLayout>
     );
 }

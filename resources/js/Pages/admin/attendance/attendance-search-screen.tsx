@@ -3,6 +3,7 @@ import Pagination from '@/Components/admin/Pagination';
 import StatusBadge from '@/Components/admin/StatusBadge';
 import Table from '@/Components/admin/Table';
 import InputLabel from '@/Components/InputLabel';
+import PremiumSelect from '@/Components/PremiumSelect';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -100,19 +101,19 @@ export default function AttendanceSearchScreen({ events, filters, people, statio
 
                     <div>
                         <InputLabel htmlFor="person_id" value="Person" />
-                        <select
+                        <PremiumSelect
                             id="person_id"
                             value={data.person_id}
-                            onChange={(e) => setData('person_id', e.target.value)}
-                            className="mt-1 block w-44 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="">All</option>
-                            {people.map((person: Person) => (
-                                <option key={person.id} value={person.id}>
-                                    {person.display_name}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(personId) => setData('person_id', personId)}
+                            options={[
+                                { value: '', label: 'All' },
+                                ...people.map((person: Person) => ({
+                                    value: String(person.id),
+                                    label: person.display_name,
+                                })),
+                            ]}
+                            className="mt-1 block w-44"
+                        />
                     </div>
 
                     <div>
@@ -127,33 +128,34 @@ export default function AttendanceSearchScreen({ events, filters, people, statio
 
                     <div>
                         <InputLabel htmlFor="station_id" value="Station" />
-                        <select
+                        <PremiumSelect
                             id="station_id"
                             value={data.station_id}
-                            onChange={(e) => setData('station_id', e.target.value)}
-                            className="mt-1 block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="">All</option>
-                            {stations.map((station: Station) => (
-                                <option key={station.id} value={station.id}>
-                                    {station.name}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(stationId) => setData('station_id', stationId)}
+                            options={[
+                                { value: '', label: 'All' },
+                                ...stations.map((station: Station) => ({
+                                    value: String(station.id),
+                                    label: station.name,
+                                })),
+                            ]}
+                            className="mt-1 block w-40"
+                        />
                     </div>
 
                     <div>
                         <InputLabel htmlFor="event_type" value="Event" />
-                        <select
+                        <PremiumSelect
                             id="event_type"
                             value={data.event_type}
-                            onChange={(e) => setData('event_type', e.target.value)}
-                            className="mt-1 block w-28 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="">All</option>
-                            <option value="IN">IN</option>
-                            <option value="OUT">OUT</option>
-                        </select>
+                            onChange={(eventType) => setData('event_type', eventType)}
+                            options={[
+                                { value: '', label: 'All' },
+                                { value: 'IN', label: 'IN' },
+                                { value: 'OUT', label: 'OUT' },
+                            ]}
+                            className="mt-1 block w-28"
+                        />
                     </div>
                 </FilterBar>
 

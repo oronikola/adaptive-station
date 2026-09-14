@@ -2,6 +2,7 @@ import FilterBar from '@/Components/admin/FilterBar';
 import Pagination from '@/Components/admin/Pagination';
 import Table from '@/Components/admin/Table';
 import InputLabel from '@/Components/InputLabel';
+import PremiumSelect from '@/Components/PremiumSelect';
 import TextInput from '@/Components/TextInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
@@ -77,33 +78,34 @@ export default function AttendanceSummaryScreen({ summary, filters, stations }: 
 
                     <div>
                         <InputLabel htmlFor="station_id" value="Station" />
-                        <select
+                        <PremiumSelect
                             id="station_id"
                             value={data.station_id}
-                            onChange={(e) => setData('station_id', e.target.value)}
-                            className="mt-1 block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="">All</option>
-                            {stations.map((station: Station) => (
-                                <option key={station.id} value={station.id}>
-                                    {station.name}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(stationId) => setData('station_id', stationId)}
+                            options={[
+                                { value: '', label: 'All' },
+                                ...stations.map((station: Station) => ({
+                                    value: String(station.id),
+                                    label: station.name,
+                                })),
+                            ]}
+                            className="mt-1 block w-40"
+                        />
                     </div>
 
                     <div>
                         <InputLabel htmlFor="event_type" value="Event" />
-                        <select
+                        <PremiumSelect
                             id="event_type"
                             value={data.event_type}
-                            onChange={(e) => setData('event_type', e.target.value)}
-                            className="mt-1 block w-28 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                        >
-                            <option value="">All</option>
-                            <option value="IN">IN</option>
-                            <option value="OUT">OUT</option>
-                        </select>
+                            onChange={(eventType) => setData('event_type', eventType)}
+                            options={[
+                                { value: '', label: 'All' },
+                                { value: 'IN', label: 'IN' },
+                                { value: 'OUT', label: 'OUT' },
+                            ]}
+                            className="mt-1 block w-28"
+                        />
                     </div>
                 </FilterBar>
 
