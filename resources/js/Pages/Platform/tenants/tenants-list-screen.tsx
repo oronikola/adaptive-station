@@ -1,6 +1,7 @@
 import InputError from '@/Components/InputError';
 import Modal, { ModalHero } from '@/Components/Modal';
 import Pagination from '@/Components/admin/Pagination';
+import PremiumSelect from '@/Components/PremiumSelect';
 import { CalendarDaysIcon } from '@/Components/icons/calendar-days';
 import { ChevronRightIcon } from '@/Components/icons/chevron-right';
 import { ClockIcon } from '@/Components/icons/clock';
@@ -309,16 +310,18 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
 
                             <div className="pf-field">
                                 <label htmlFor="status">Status</label>
-                                <select
+                                <PremiumSelect
                                     id="status"
                                     value={statusValue}
-                                    onChange={(e) => setStatusValue(e.target.value)}
-                                >
-                                    <option value="">All</option>
-                                    <option value="active">Active</option>
-                                    <option value="suspended">Suspended</option>
-                                    <option value="archived">Archived</option>
-                                </select>
+                                    onChange={(value) => setStatusValue(value)}
+                                    options={[
+                                        { value: '', label: 'All' },
+                                        { value: 'active', label: 'Active' },
+                                        { value: 'suspended', label: 'Suspended' },
+                                        { value: 'archived', label: 'Archived' },
+                                    ]}
+                                    placeholder="All"
+                                />
                             </div>
 
                             <div className="pf-filter-bar-actions">
