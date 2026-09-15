@@ -49,6 +49,22 @@ class EssentielTapResolver
         }
 
         $personId = $event->person_id ?? $this->resolveOrCreateLocalPerson($tenant->id, $event->card_uid, $response);
+
+        // The tap is initially stored before Essentiel resolves a card that
+        // is missing from the kiosk's local cache. Backfill the resolved
+        // identity so portal attendance can recognize the very first tap,
+        // just like subsequent taps that use the local RFID lookup.
+        if ($event->person_id === null && $personId !== null) {
+            $person = Person::allTenants()->find($personId);
+
+            if ($person !== null) {
+                $event->forceFill([
+                    'person_id' => $person->id,
+                    'person_type' => $person->person_type,
+                ])->save();
+            }
+        }
+
         $smsRecipient = $response['sms_recipient'] ?? null;
 
         if (($response['status'] ?? null) === 'recorded' && filled($smsRecipient)) {

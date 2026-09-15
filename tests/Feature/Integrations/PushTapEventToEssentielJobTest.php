@@ -134,10 +134,9 @@ class PushTapEventToEssentielJobTest extends TestCase
         $card = RfidCard::allTenants()->where('tenant_id', $tenant->id)->where('card_uid', '0006711996')->sole();
         $this->assertSame($person->id, $card->person_id);
 
-        // The original TapEvent stays exactly as recorded (immutable) — its
-        // person_id is never backfilled — but the SMS still uses the
-        // newly-resolved person for its own record.
-        $this->assertNull($event->fresh()->person_id);
+        // The original tap is backfilled after Essentiel resolves the card so
+        // portal attendance recognizes this first tap immediately.
+        $this->assertSame($person->id, $event->fresh()->person_id);
         $sms = SmsOutboxMessage::query()->where('tap_event_id', $event->id)->sole();
         $this->assertSame($person->id, $sms->person_id);
     }

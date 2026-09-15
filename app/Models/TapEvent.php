@@ -27,8 +27,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 /**
- * Immutable — no updated_at column, and rows are never modified after
- * insertion (adjustments are represented as new events, not overwrites).
+ * Tap records have no updated_at column. Their attendance details are fixed
+ * at insertion; an Essentiel first-tap lookup may backfill only the person
+ * identity once the external system resolves an uncached card.
  */
 #[Fillable([
     'id', 'tenant_id', 'station_id', 'person_id', 'card_uid', 'person_type', 'event_type',
