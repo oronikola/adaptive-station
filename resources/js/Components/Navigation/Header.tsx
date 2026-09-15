@@ -1,4 +1,5 @@
-import { Link } from '@inertiajs/react';
+import { PageProps } from '@/types';
+import { Link, usePage, usePoll } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@/Components/Theme/ThemeProvider';
 
@@ -13,46 +14,61 @@ interface HeaderProps {
      * "current school" to show — a static Platform label fills the slot
      * instead. */
     isPlatform: boolean;
-    /** TODO: wire to a real notifications source once one exists; for now
-     * this always renders the bell with no unread indicator. */
-    hasUnreadNotifications?: boolean;
 }
 
 const ROLE_LABELS: Record<string, string> = {
     platform_super_admin: 'Super Admin',
     tenant_admin: 'Admin',
     tenant_operator: 'Operator',
+    adaptivestation_admin: 'Adaptive Station Admin',
 };
+
+function formatRelativeTime(value: string): string {
+    const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+
+    return `${Math.floor(seconds / 86400)}d ago`;
+}
 
 /** Shared global top bar rendered alongside the sidebar in AppShell. */
 export default function Header({
     user,
     schoolLabel,
     isPlatform,
-    hasUnreadNotifications = false,
 }: HeaderProps) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const notificationsRef = useRef<HTMLDivElement>(null);
     const roleLabel = ROLE_LABELS[user.role] ?? user.role;
     const { theme, toggleTheme } = useTheme();
+    const { webNotifications } = usePage<PageProps>().props;
+    const unreadCount = webNotifications?.unread_count ?? 0;
+
+    usePoll(30000, { only: ['webNotifications'] });
 
     useEffect(() => {
-        if (!menuOpen) {
+        if (!menuOpen && !notificationsOpen) {
             return;
         }
 
         function handleClickOutside(event: MouseEvent) {
-            if (
-                menuRef.current &&
-                !menuRef.current.contains(event.target as Node)
-            ) {
+            const target = event.target as Node;
+            if (menuRef.current && !menuRef.current.contains(target)) {
                 setMenuOpen(false);
+            }
+            if (notificationsRef.current && !notificationsRef.current.contains(target)) {
+                setNotificationsOpen(false);
             }
         }
 
         function handleEscape(event: KeyboardEvent) {
             if (event.key === 'Escape') {
                 setMenuOpen(false);
+                setNotificationsOpen(false);
             }
         }
 
@@ -62,7 +78,7 @@ export default function Header({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscape);
         };
-    }, [menuOpen]);
+    }, [menuOpen, notificationsOpen]);
 
     return (
         <header className="pf-topbar">
@@ -118,26 +134,79 @@ export default function Header({
                     </span>
                 </button>
 
-                <button
-                    type="button"
-                    className="pf-topbar-icon-btn"
-                    aria-label={
-                        hasUnreadNotifications
-                            ? 'Notifications (unread)'
-                            : 'Notifications'
-                    }
-                >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.2H4c.6-.6 2-2.2 2-6.2Z" />
-                        <path d="M9.6 19a2.4 2.4 0 0 0 4.8 0" />
-                    </svg>
-                    {hasUnreadNotifications && (
-                        <span
-                            className="pf-topbar-badge-dot"
-                            aria-hidden="true"
-                        />
+                <div className="pf-topbar-menu" ref={notificationsRef}>
+                    <button
+                        type="button"
+                        className="pf-topbar-icon-btn"
+                        aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications'}
+                        aria-haspopup="menu"
+                        aria-expanded={notificationsOpen}
+                        onClick={() => {
+                            setNotificationsOpen((open) => !open);
+                            setMenuOpen(false);
+                        }}
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.2H4c.6-.6 2-2.2 2-6.2Z" />
+                            <path d="M9.6 19a2.4 2.4 0 0 0 4.8 0" />
+                        </svg>
+                        {unreadCount > 0 && (
+                            <span className="pf-topbar-notification-count" aria-hidden="true">
+                                {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                        )}
+                    </button>
+
+                    {notificationsOpen && (
+                        <div className="pf-notification-dropdown" role="menu">
+                            <div className="pf-notification-dropdown-header">
+                                <div>
+                                    <strong>Notifications</strong>
+                                    <span>{unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}</span>
+                                </div>
+                                {unreadCount > 0 && (
+                                    <Link href={route('notifications.read-all')} method="patch" as="button" preserveScroll>
+                                        Mark all read
+                                    </Link>
+                                )}
+                            </div>
+
+                            <div className="pf-notification-list">
+                                {(webNotifications?.recent.length ?? 0) === 0 ? (
+                                    <p className="pf-notification-empty">No notifications yet.</p>
+                                ) : webNotifications?.recent.map((notification) => (
+                                    <Link
+                                        key={notification.id}
+                                        href={notification.read_at ? notification.action_url : route('notifications.read', notification.id)}
+                                        method={notification.read_at ? 'get' : 'patch'}
+                                        as={notification.read_at ? 'a' : 'button'}
+                                        className={`pf-notification-item pf-notification-item--${notification.severity}${notification.read_at ? '' : ' pf-notification-item--unread'}`}
+                                        role="menuitem"
+                                        onClick={() => setNotificationsOpen(false)}
+                                    >
+                                        <span className="pf-notification-severity" aria-hidden="true" />
+                                        <span className="pf-notification-content">
+                                            <strong>{notification.title}</strong>
+                                            <span>{notification.message}</span>
+                                            <small>
+                                                {notification.tenant_name && `${notification.tenant_name} · `}
+                                                {formatRelativeTime(notification.created_at)}
+                                            </small>
+                                        </span>
+                                    </Link>
+                                ))}
+                            </div>
+
+                            <Link
+                                href={route('notifications.index')}
+                                className="pf-notification-view-all"
+                                onClick={() => setNotificationsOpen(false)}
+                            >
+                                View all notifications
+                            </Link>
+                        </div>
                     )}
-                </button>
+                </div>
 
                 <div className="pf-topbar-divider" aria-hidden="true" />
 

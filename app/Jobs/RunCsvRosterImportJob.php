@@ -7,6 +7,7 @@ use App\Models\ImportBatch;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Integrations\RosterCsvImporter;
+use App\Services\WebNotificationService;
 use App\Support\TenantDatabase;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -42,7 +43,7 @@ class RunCsvRosterImportJob implements ShouldQueue
         protected ?string $actorUserId = null,
     ) {}
 
-    public function handle(): void
+    public function handle(WebNotificationService $notifications = new WebNotificationService): void
     {
         // ImportBatch lives on the per-tenant connection — must point it at
         // this tenant's database before the very first query below.
@@ -55,6 +56,7 @@ class RunCsvRosterImportJob implements ShouldQueue
             $rows = $this->parseCsv();
         } catch (RuntimeException $e) {
             $batch->fail($e->getMessage());
+            $notifications->notifyImportResult($batch->refresh());
             Storage::disk('local')->delete($this->storagePath);
 
             return;
@@ -68,6 +70,7 @@ class RunCsvRosterImportJob implements ShouldQueue
 
         if ($this->commit) {
             $batch->complete($summary);
+            $notifications->notifyImportResult($batch->refresh());
         } else {
             $batch->forceFill(['status' => ImportBatchStatus::Validating, 'summary' => $summary])->save();
         }

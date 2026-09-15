@@ -13,3 +13,7 @@ Schedule::command('queue:prune-failed')->daily();
 Schedule::command('queue:prune-batches --hours=48')->daily();
 Schedule::command('sms:reclaim-stale-claims')->everyMinute();
 Schedule::command('sms:expire-stale-outbox')->everyFiveMinutes();
+Schedule::command('notifications:check-operational')
+    ->everyMinute()
+    ->withoutOverlapping(5)
+    ->onOneServer();

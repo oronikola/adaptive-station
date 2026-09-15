@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\KioskController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WebNotificationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -36,6 +37,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/notifications', [WebNotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/read-all', [WebNotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::patch('/notifications/preferences', [WebNotificationController::class, 'updatePreferences'])->name('notifications.preferences.update');
+    Route::patch('/notifications/{notification}/read', [WebNotificationController::class, 'update'])->name('notifications.read');
 });
 
 require __DIR__.'/portal.php';

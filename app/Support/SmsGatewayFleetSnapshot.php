@@ -22,7 +22,7 @@ class SmsGatewayFleetSnapshot
      */
     public static function build(): array
     {
-        $staleThreshold = Date::now()->subMinutes(3);
+        $staleThreshold = Date::now()->subMinutes((int) config('device.sms_gateway_offline_threshold_minutes'));
 
         // Yesterday's (or older) row isn't rolled over until this device's
         // next write to it (see SmsGatewayDeviceSimStat::incrementFor()) —

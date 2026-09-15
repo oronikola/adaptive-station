@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Tenant;
+use App\Support\WebNotificationData;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -49,6 +50,14 @@ class HandleInertiaRequests extends Middleware
             'tenant' => $tenantId !== null
                 ? Tenant::select(['id', 'name', 'code', 'timezone'])->find($tenantId)
                 : null,
+            'webNotifications' => fn () => $request->user() === null ? null : [
+                'unread_count' => $request->user()->unreadNotifications()->count(),
+                'recent' => $request->user()->notifications()
+                    ->latest()
+                    ->limit(8)
+                    ->get()
+                    ->map(fn ($notification): array => WebNotificationData::from($notification)),
+            ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 // Read by the global toast system (ToastProvider) so any

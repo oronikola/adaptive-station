@@ -172,6 +172,11 @@ class CsvRosterImportTest extends TestCase
         $this->assertSame(1, $batch->summary['manual_review']);
         $this->assertSame(1, RfidCard::allTenants()->where('tenant_id', $tenant->id)->where('card_uid', 'SHARED-CARD')->count());
         $this->assertSame(1, ImportException::allTenants()->where('import_batch_id', $batch->id)->where('entity_type', 'rfid_card')->count());
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_id' => $admin->id,
+            'read_at' => null,
+        ]);
+        $this->assertSame('import_needs_review', $admin->notifications()->sole()->data['category']);
     }
 
     public function test_tenant_operator_cannot_upload_a_csv_import(): void
@@ -198,5 +203,6 @@ class CsvRosterImportTest extends TestCase
         $batch = ImportBatch::allTenants()->where('tenant_id', $tenant->id)->sole();
         $this->assertSame(ImportBatchStatus::Failed, $batch->status);
         $this->assertStringContainsString('Missing required column', $batch->summary['failure_reason']);
+        $this->assertSame('import_failed', $admin->notifications()->sole()->data['category']);
     }
 }

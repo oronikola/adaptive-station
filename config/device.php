@@ -41,4 +41,8 @@ return [
 
     'station_offline_threshold_minutes' => env('DEVICE_STATION_OFFLINE_THRESHOLD_MINUTES', 5),
 
+    'sms_gateway_offline_threshold_minutes' => env('DEVICE_SMS_GATEWAY_OFFLINE_THRESHOLD_MINUTES', 3),
+
+    'sms_backlog_alert_threshold_minutes' => env('DEVICE_SMS_BACKLOG_ALERT_THRESHOLD_MINUTES', 30),
+
 ];

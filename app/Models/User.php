@@ -26,7 +26,7 @@ use RuntimeException;
  * App\Policies\UserPolicy and explicit tenant_id filters in tenant-portal
  * controllers.
  */
-#[Fillable(['name', 'email', 'password', 'password_plaintext', 'tenant_id', 'role', 'is_active', 'last_login_at', 'must_reset_password'])]
+#[Fillable(['name', 'email', 'password', 'password_plaintext', 'tenant_id', 'role', 'is_active', 'last_login_at', 'must_reset_password', 'web_notification_preferences'])]
 #[Hidden(['password', 'password_plaintext', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -59,6 +59,7 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
             'must_reset_password' => 'boolean',
+            'web_notification_preferences' => 'array',
         ];
     }
 

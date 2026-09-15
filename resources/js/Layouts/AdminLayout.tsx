@@ -11,11 +11,15 @@ export default function AdminLayout({ header, children }: AdminLayoutProps) {
     const { props } = usePage<import('@/types').PageProps>();
     const user = props.auth.user;
 
-    const visibleNavigationItems = adminNavigationItems.filter(
-        (item) =>
-            (!item.adminOnly || user.role !== 'tenant_operator') &&
-            (!item.oversightOnly || user.role === 'adaptivestation_admin'),
-    );
+    const visibleNavigationItems = adminNavigationItems
+        .filter(
+            (item) =>
+                (!item.adminOnly || user.role !== 'tenant_operator') &&
+                (!item.oversightOnly || user.role === 'adaptivestation_admin'),
+        )
+        .map((item) => item.name === 'notifications'
+            ? { ...item, badge: props.webNotifications?.unread_count || undefined }
+            : item);
 
     return (
         <AppShell

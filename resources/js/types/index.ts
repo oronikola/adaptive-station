@@ -101,6 +101,7 @@ export interface PageProps {
         user: User;
     };
     tenant?: Tenant;
+    webNotifications?: WebNotificationSummary | null;
     flash?: {
         success?: string;
         error?: string;
@@ -108,6 +109,23 @@ export interface PageProps {
         activationCode?: string;
     };
     [key: string]: unknown;
+}
+
+export interface WebNotification {
+    id: string;
+    category: string;
+    title: string;
+    message: string;
+    severity: 'error' | 'warning' | 'success' | 'info';
+    action_url: string;
+    tenant_name: string | null;
+    read_at: string | null;
+    created_at: string;
+}
+
+export interface WebNotificationSummary {
+    unread_count: number;
+    recent: WebNotification[];
 }
 
 export type ToastType = 'success' | 'update' | 'delete' | 'error' | 'info';

@@ -588,6 +588,112 @@
     border: 2px solid var(--as-surface);
 }
 
+.pf-topbar-notification-count {
+    position: absolute;
+    top: -5px;
+    right: -6px;
+    display: grid;
+    min-width: 19px;
+    height: 19px;
+    place-items: center;
+    padding: 0 5px;
+    border: 2px solid var(--as-surface);
+    border-radius: 999px;
+    background: var(--as-danger-solid);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.pf-notification-dropdown {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 10px);
+    right: 0;
+    width: min(390px, calc(100vw - 24px));
+    overflow: hidden;
+    border: 1px solid var(--as-dropdown-border);
+    border-radius: 16px;
+    background: var(--as-dropdown-bg);
+    box-shadow: var(--as-shadow-overlay);
+    backdrop-filter: blur(18px);
+    animation: pf-topbar-dropdown-in 150ms ease;
+}
+
+.pf-notification-dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--as-topbar-divider);
+}
+
+.pf-notification-dropdown-header > div {
+    display: grid;
+    gap: 2px;
+}
+
+.pf-notification-dropdown-header strong { color: var(--as-text); font-size: 14px; }
+.pf-notification-dropdown-header span { color: var(--as-text-secondary); font-size: 11px; }
+.pf-notification-dropdown-header button {
+    color: var(--as-brand-blue);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.pf-notification-list { max-height: 430px; overflow-y: auto; }
+.pf-notification-empty { padding: 36px 18px; color: var(--as-text-secondary); text-align: center; font-size: 13px; }
+
+.pf-notification-item {
+    position: relative;
+    display: flex;
+    width: 100%;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--as-border-light);
+    color: inherit;
+    text-align: left;
+    transition: background-color 150ms ease;
+}
+
+.pf-notification-item:hover,
+.pf-notification-item:focus-visible { background: var(--as-dropdown-item-hover); }
+.pf-notification-item:focus-visible { outline: 2px solid var(--as-brand-blue); outline-offset: -2px; }
+.pf-notification-item--unread { background: var(--as-surface-active); }
+
+.pf-notification-severity {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    margin-top: 5px;
+    border-radius: 999px;
+    background: var(--as-info);
+}
+
+.pf-notification-item--error .pf-notification-severity { background: var(--as-danger); }
+.pf-notification-item--warning .pf-notification-severity { background: var(--as-warning); }
+.pf-notification-item--success .pf-notification-severity { background: var(--as-success); }
+.pf-notification-content { display: grid; min-width: 0; gap: 4px; }
+.pf-notification-content strong { color: var(--as-text); font-size: 12px; }
+.pf-notification-content > span { color: var(--as-text-secondary); font-size: 11px; line-height: 1.5; }
+.pf-notification-content small { color: var(--as-text-muted); font-size: 10px; }
+.pf-notification-view-all {
+    display: block;
+    padding: 12px 18px;
+    color: var(--as-brand-blue);
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+.pf-notification-view-all:hover { background: var(--as-dropdown-item-hover); }
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-notification-dropdown { animation: none; }
+}
+
 .pf-topbar-divider {
     width: 1px;
     height: 24px;

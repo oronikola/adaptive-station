@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Integrations\LegacyMysqlConnector;
 use App\Services\Integrations\RosterImporter;
 use App\Services\Integrations\TapHistoryImporter;
+use App\Services\WebNotificationService;
 use App\Support\TenantDatabase;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -53,7 +54,7 @@ class RunLegacyImportJob implements ShouldQueue
         protected ?string $actorUserId = null,
     ) {}
 
-    public function handle(): void
+    public function handle(WebNotificationService $notifications = new WebNotificationService): void
     {
         // ImportBatch lives on the per-tenant connection — must point it at
         // this tenant's database before the very first query below.
@@ -67,6 +68,7 @@ class RunLegacyImportJob implements ShouldQueue
 
         if ($profile === null) {
             $batch->fail('Integration profile not found.');
+            $notifications->notifyImportResult($batch->refresh());
 
             return;
         }
@@ -88,6 +90,7 @@ class RunLegacyImportJob implements ShouldQueue
 
         if ($this->commit) {
             $batch->complete($summary);
+            $notifications->notifyImportResult($batch->refresh());
         } else {
             $batch->forceFill(['status' => ImportBatchStatus::Validating, 'summary' => $summary])->save();
         }
