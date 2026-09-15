@@ -9,6 +9,7 @@ use App\Models\RfidCard;
 use App\Models\SmsOutboxMessage;
 use App\Models\Station;
 use App\Models\StationCredential;
+use App\Models\TapEvent;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -71,14 +72,16 @@ class TapEventResolveTest extends TestCase
             ], 200),
         ]);
 
+        $payload = $this->payload('0006711996');
         $response = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/taps/resolve', $this->payload('0006711996'));
+            ->postJson('/api/v1/device/taps/resolve', $payload);
 
         $response->assertOk()->assertJson(['found' => true]);
         $this->assertNotNull($response->json('person_id'));
 
         $person = Person::allTenants()->where('tenant_id', $tenant->id)->sole();
         $this->assertSame($person->id, $response->json('person_id'));
+        $this->assertSame($person->id, TapEvent::allTenants()->find($payload['id'])?->person_id);
 
         $this->assertSame(1, SmsOutboxMessage::query()->where('phone_number', '+639101603448')->count());
     }

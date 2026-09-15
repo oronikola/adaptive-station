@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Person;
+use App\Models\RfidCard;
 use App\Models\Station;
 use App\Models\TapEvent;
 use Illuminate\Http\JsonResponse;
@@ -26,6 +27,32 @@ class AttendanceController extends Controller
             ->with(['person', 'station'])
             ->paginate(50)
             ->withQueryString();
+
+        // A first tap from an Essentiel card can predate local card
+        // provisioning, leaving person_id null on the immutable event. Once
+        // the resolver has provisioned the card, use that current assignment
+        // as a read-time fallback so existing attendance rows are recognized.
+        $unresolvedCardUids = $events->getCollection()
+            ->filter(fn (TapEvent $event): bool => $event->person === null)
+            ->pluck('card_uid')
+            ->unique()
+            ->values();
+
+        if ($unresolvedCardUids->isNotEmpty()) {
+            $peopleByCardUid = RfidCard::query()
+                ->whereIn('card_uid', $unresolvedCardUids)
+                ->where('is_active', true)
+                ->with('person')
+                ->get()
+                ->mapWithKeys(fn (RfidCard $card): array => [$card->card_uid => $card->person])
+                ->filter();
+
+            $events->getCollection()->each(function (TapEvent $event) use ($peopleByCardUid): void {
+                if ($event->person === null && $peopleByCardUid->has($event->card_uid)) {
+                    $event->setRelation('person', $peopleByCardUid->get($event->card_uid));
+                }
+            });
+        }
 
         // A tenant can have thousands of people — shipping the whole roster
         // as a page prop (the old behavior) doesn't scale. Only the one
