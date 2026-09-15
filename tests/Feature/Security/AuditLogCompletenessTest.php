@@ -4,19 +4,20 @@ namespace Tests\Feature\Security;
 
 use App\Enums\ImportExceptionResolution;
 use App\Enums\ImportExceptionType;
+use App\Enums\IntegrationProfileStatus;
 use App\Enums\StationStatus;
 use App\Enums\TenantStatus;
 use App\Enums\UserRole;
 use App\Models\AuditLog;
 use App\Models\ImportBatch;
 use App\Models\ImportException;
-use App\Enums\IntegrationProfileStatus;
 use App\Models\IntegrationProfile;
 use App\Models\Person;
 use App\Models\RfidCard;
 use App\Models\Station;
 use App\Models\StationActivationCode;
 use App\Models\StationCredential;
+use App\Models\StationPairingToken;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantContext;
@@ -77,6 +78,11 @@ class AuditLogCompletenessTest extends TestCase
         ['code' => $code] = StationActivationCode::issueFor($pendingStation, $admin);
         $this->postJson('/api/v1/device/activate', ['activation_code' => $code])->assertCreated();
 
+        $linkedStation = Station::provision(['tenant_id' => $tenant->id, 'name' => 'Back Gate', 'station_code' => 'AUDIT-3'], $admin);
+        ['pairingToken' => $pairingToken, 'token' => $pairingLinkToken] = StationPairingToken::issueFor($linkedStation, $admin);
+        $this->postJson('/api/v1/device/pair', ['pairing_token' => $pairingLinkToken])->assertCreated();
+        StationPairingToken::revoke($pairingToken, $admin);
+
         $profile = IntegrationProfile::createForTenant($tenant->id, [
             'name' => 'Legacy', 'driver' => 'legacy_mysql', 'direction' => 'import_only',
             'config_encrypted' => ['host' => 'unused'],
@@ -96,6 +102,7 @@ class AuditLogCompletenessTest extends TestCase
             'station.created', 'station.configuration_updated', 'station.legacy_placeholder_created',
             'station_credential.issued', 'station_credential.revoked',
             'station.activated',
+            'station_pairing_token.issued', 'station_pairing_token.revoked', 'station.activated_via_link',
             'integration_profile.created', 'integration_profile.config_updated', 'integration_profile.status_updated',
             'import_exception.resolved',
         ];

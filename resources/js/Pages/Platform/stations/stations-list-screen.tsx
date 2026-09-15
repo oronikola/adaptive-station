@@ -25,7 +25,7 @@ interface StationsListScreenProps {
 
 interface PagePropsWithFlash {
     flash?: {
-        activationCode?: string;
+        pairingLink?: string;
     };
 }
 
@@ -70,9 +70,29 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
         });
     }
 
-    function issueCode(station: StationRow) {
-        router.post(route('platform.stations.activation-code', station.id), {
+    function resetLink(station: StationRow) {
+        router.post(route('platform.stations.pairing-link', station.id), {
             tenant_id: station.tenant_id,
+        });
+    }
+
+    const [deletingStation, setDeletingStation] = useState<StationRow | null>(null);
+    const deleteForm = useForm({ confirm_code: '', tenant_id: '' });
+    const deleteConfirmed = deletingStation !== null && deleteForm.data.confirm_code === deletingStation.station_code;
+
+    function openDeleteModal(station: StationRow) {
+        setDeletingStation(station);
+        deleteForm.setData({ confirm_code: '', tenant_id: String(station.tenant_id) });
+    }
+
+    function submitDeleteStation(e: React.FormEvent) {
+        e.preventDefault();
+        if (!deletingStation || !deleteConfirmed) return;
+        deleteForm.delete(route('platform.stations.destroy', deletingStation.id), {
+            onSuccess: () => {
+                setDeletingStation(null);
+                deleteForm.reset();
+            },
         });
     }
 
@@ -114,7 +134,7 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                     )}
                 </div>
 
-                <SecretOnceCallout label="Activation code" value={flash?.activationCode} />
+                <SecretOnceCallout label="Station link" value={flash?.pairingLink} />
 
                 <div className="pf-panel">
                     <div className="pf-panel-header">
@@ -169,16 +189,28 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                                             </span>
                                         </td>
                                         <td>
-                                            {canManage && station.status === 'pending_activation' && (
+                                            {canManage && (
                                                 <button
                                                     type="button"
-                                                    onClick={() => issueCode(station)}
+                                                    onClick={() => resetLink(station)}
                                                     className="pf-row-action"
                                                 >
-                                                    Issue Activation Code
+                                                    Reset Link
                                                     <svg viewBox="0 0 24 24">
                                                         <path d="M9 6l6 6-6 6" />
                                                     </svg>
+                                                </button>
+                                            )}
+                                            {canManage && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openDeleteModal(station)}
+                                                    className="pf-row-action pf-row-action--danger"
+                                                >
+                                                    <svg viewBox="0 0 24 24">
+                                                        <path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-7 0v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7" />
+                                                    </svg>
+                                                    Delete
                                                 </button>
                                             )}
                                         </td>
@@ -265,6 +297,61 @@ export default function StationsListScreen({ stations, tenants }: StationsListSc
                             disabled={processing}
                         >
                             Create
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            <Modal
+                show={deletingStation !== null}
+                onClose={() => {
+                    setDeletingStation(null);
+                    deleteForm.reset();
+                }}
+            >
+                <form onSubmit={submitDeleteStation} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <h2 className="pf-modal-title">Delete station?</h2>
+                        <p className="pf-modal-desc">
+                            <strong>{deletingStation?.name}</strong> will be permanently deleted, along with its
+                            device credentials and station link. This only works for a station that has never
+                            recorded an attendance tap — one with real attendance history must be kept.
+                        </p>
+                    </div>
+
+                    <div className="pf-field">
+                        <label htmlFor="confirm_code">
+                            Type "{deletingStation?.station_code}" to confirm
+                        </label>
+                        <input
+                            id="confirm_code"
+                            type="text"
+                            className="font-mono"
+                            value={deleteForm.data.confirm_code}
+                            onChange={(e) => deleteForm.setData('confirm_code', e.target.value)}
+                            autoFocus
+                        />
+                        <InputError message={deleteForm.errors.confirm_code} className="mt-2" />
+                    </div>
+
+                    <div className="pf-modal-footer">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={() => {
+                                setDeletingStation(null);
+                                deleteForm.reset();
+                            }}
+                            disabled={deleteForm.processing}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className={'pf-btn pf-btn-danger' + (deleteForm.processing ? ' pf-btn--loading' : '')}
+                            disabled={deleteForm.processing || !deleteConfirmed}
+                        >
+                            Delete station
                         </button>
                     </div>
                 </form>

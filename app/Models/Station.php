@@ -63,6 +63,11 @@ class Station extends Model implements TenantScoped
         return $this->hasMany(StationActivationCode::class);
     }
 
+    public function pairingTokens(): HasMany
+    {
+        return $this->hasMany(StationPairingToken::class);
+    }
+
     /**
      * Creates a station and records the mandatory master-data change + audit
      * log as one atomic unit, per ADR-004 ("every mutation to a ... station
@@ -129,6 +134,49 @@ class Station extends Model implements TenantScoped
             AuditLog::record('station.configuration_updated', $actor, $station->tenant_id, 'station', $station->id);
 
             return $station;
+        });
+    }
+
+    /**
+     * Permanently removes a station — only possible when it has never
+     * recorded real attendance (tap_events, which carries a real FK to
+     * stations and is the actual history worth protecting). device_heartbeats
+     * and device_sync_cursors also FK to stations, but they're disposable
+     * operational telemetry (last-seen pings, sync progress) with no
+     * historical value once the station is gone, so they're deleted here
+     * rather than treated as a reason to block deletion — a kiosk that's
+     * merely been paired and left idle (heartbeats/sync only, no taps yet)
+     * must still be deletable.
+     *
+     * Mirrors Tenant::purge()'s two-phase shape: the tenant-connection delete
+     * happens first (its own statement, not part of the transaction below —
+     * a different physical database can't share one), then the central-DB
+     * cleanup + audit log commit together.
+     */
+    public static function remove(self $station, ?User $actor = null): void
+    {
+        $tenantId = $station->tenant_id;
+        $stationId = $station->id;
+        $snapshot = ['id' => $stationId, 'name' => $station->name, 'station_code' => $station->station_code];
+
+        $hasAttendanceHistory = TapEvent::allTenants()->where('station_id', $stationId)->exists();
+
+        abort_if($hasAttendanceHistory, 409, 'This station has recorded attendance taps and cannot be deleted — that history must be preserved. Revoke its credentials instead to take it offline.');
+
+        DeviceHeartbeat::allTenants()->where('station_id', $stationId)->delete();
+        DeviceSyncCursor::allTenants()->where('station_id', $stationId)->delete();
+        $station->delete();
+
+        DB::transaction(function () use ($stationId, $tenantId, $actor, $snapshot) {
+            StationCredential::allTenants()->where('station_id', $stationId)->delete();
+            StationActivationCode::allTenants()->where('station_id', $stationId)->delete();
+            StationPairingToken::allTenants()->where('station_id', $stationId)->delete();
+
+            MasterDataChange::record(
+                $tenantId, MasterDataEntityType::StationConfig, $stationId,
+                MasterDataOperation::Delete, ['id' => $stationId],
+            );
+            AuditLog::record('station.deleted', $actor, $tenantId, 'station', $stationId, $snapshot);
         });
     }
 

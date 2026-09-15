@@ -47,6 +47,8 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
             ->name('stations.credentials.revoke');
         Route::post('stations/{station}/activation-code', [StationController::class, 'issueActivationCode'])
             ->name('stations.activation-code');
+        Route::post('stations/{station}/pairing-link', [StationController::class, 'issuePairingLink'])
+            ->name('stations.pairing-link');
 
         Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::get('attendance/people-search', [AttendanceController::class, 'peopleSearch'])->name('attendance.people-search');

@@ -69,6 +69,7 @@ class HandleInertiaRequests extends Middleware
                 // the flashed session value itself.
                 'temporaryPassword' => fn () => $request->session()->get('temporaryPassword'),
                 'activationCode' => fn () => $request->session()->get('activationCode'),
+                'pairingLink' => fn () => $request->session()->get('pairingLink'),
                 'deviceToken' => fn () => $request->session()->get('deviceToken'),
                 'deviceUsername' => fn () => $request->session()->get('deviceUsername'),
                 'devicePassword' => fn () => $request->session()->get('devicePassword'),

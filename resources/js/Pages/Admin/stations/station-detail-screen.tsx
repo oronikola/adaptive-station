@@ -1,8 +1,7 @@
-import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
 import SecretOnceCallout from '@/Components/SecretOnceCallout';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { Station, StationCredential } from '@/types';
 import '../../../../css/platform-dashboard.css';
@@ -36,14 +35,21 @@ function formatDateTime(value: string): string {
     });
 }
 
-export default function StationDetailScreen({ station, credentials }: { station: Station; credentials: StationCredential[] }) {
+export default function StationDetailScreen({
+    station,
+    credentials,
+    hasPairingLink,
+}: {
+    station: Station;
+    credentials: StationCredential[];
+    hasPairingLink: boolean;
+}) {
     const { props } = usePage<import('@/types').PageProps>();
     const flash = props.flash;
 
-    const configForm = useForm({
-        configuration: JSON.stringify(station.configuration ?? {}, null, 2),
-    });
+    const [configValue, setConfigValue] = useState(JSON.stringify(station.configuration ?? {}, null, 2));
     const [configError, setConfigError] = useState<string | null>(null);
+    const [configProcessing, setConfigProcessing] = useState(false);
 
     function submitConfiguration(e: React.FormEvent) {
         e.preventDefault();
@@ -51,28 +57,18 @@ export default function StationDetailScreen({ station, credentials }: { station:
 
         let parsed: Record<string, unknown>;
         try {
-            parsed = JSON.parse(configForm.data.configuration || '{}');
+            parsed = JSON.parse(configValue || '{}');
         } catch {
             setConfigError('Must be valid JSON.');
             return;
         }
 
-        router.patch(route('portal.stations.configuration', station.station_code), {
-            configuration: parsed as unknown as string,
-        });
-    }
-
-    const [issueCredentialOpen, setIssueCredentialOpen] = useState(false);
-    const credentialForm = useForm({ label: '' });
-
-    function submitIssueCredential(e: React.FormEvent) {
-        e.preventDefault();
-        credentialForm.post(route('portal.stations.credentials.store', station.station_code), {
-            onSuccess: () => {
-                setIssueCredentialOpen(false);
-                credentialForm.reset();
-            },
-        });
+        setConfigProcessing(true);
+        router.patch(
+            route('portal.stations.configuration', station.station_code),
+            { configuration: parsed as unknown as string },
+            { onFinish: () => setConfigProcessing(false) },
+        );
     }
 
     const [revokingCredential, setRevokingCredential] = useState<StationCredential | null>(null);
@@ -94,21 +90,13 @@ export default function StationDetailScreen({ station, credentials }: { station:
         );
     }
 
-    const [resetModalOpen, setResetModalOpen] = useState(false);
-    const [isResetting, setIsResetting] = useState(false);
+    const [isResettingLink, setIsResettingLink] = useState(false);
 
-    function submitResetActivation() {
-        setIsResetting(true);
-        router.patch(route('portal.stations.reset-activation', station.station_code), {}, {
-            onFinish: () => {
-                setIsResetting(false);
-                setResetModalOpen(false);
-            },
+    function resetLink() {
+        setIsResettingLink(true);
+        router.post(route('portal.stations.pairing-link', station.station_code), {}, {
+            onFinish: () => setIsResettingLink(false),
         });
-    }
-
-    function issueActivationCode() {
-        router.post(route('portal.stations.activation-code', station.station_code));
     }
 
     return (
@@ -147,21 +135,18 @@ export default function StationDetailScreen({ station, credentials }: { station:
                         >
                             {STATUS_LABELS[station.status] ?? station.status}
                         </span>
-                        {station.status === 'pending_activation' && (
-                            <button type="button" className="pf-btn pf-btn-primary" onClick={issueActivationCode}>
-                                Issue Activation Code
-                            </button>
-                        )}
-                        {station.status === 'active' && (
-                            <button type="button" className="pf-btn pf-btn-secondary" onClick={() => setResetModalOpen(true)}>
-                                Reset to Pending Activation
-                            </button>
-                        )}
+                        <button
+                            type="button"
+                            className={'pf-btn pf-btn-primary' + (isResettingLink ? ' pf-btn--loading' : '')}
+                            onClick={resetLink}
+                            disabled={isResettingLink}
+                        >
+                            {hasPairingLink ? 'Reset Link' : 'Create Link'}
+                        </button>
                     </div>
                 </div>
 
-                <SecretOnceCallout label="Device credential token" value={flash?.deviceToken} />
-                <SecretOnceCallout label="Activation code" value={flash?.activationCode} />
+                <SecretOnceCallout label="Station link" value={flash?.pairingLink} />
 
                 <div className="pf-panel" style={{ marginBottom: 16 }}>
                     <div className="pf-panel-header">
@@ -180,8 +165,8 @@ export default function StationDetailScreen({ station, credentials }: { station:
                             <textarea
                                 id="configuration"
                                 rows={8}
-                                value={configForm.data.configuration}
-                                onChange={(e) => configForm.setData('configuration', e.target.value)}
+                                value={configValue}
+                                onChange={(e) => setConfigValue(e.target.value)}
                                 className="font-mono"
                                 style={{
                                     width: '100%',
@@ -193,13 +178,15 @@ export default function StationDetailScreen({ station, credentials }: { station:
                                     color: 'var(--as-brand-dark)',
                                 }}
                             />
-                            <InputError message={configError ?? configForm.errors.configuration} className="mt-2" />
+                            {configError && (
+                                <p style={{ color: '#dc2626', fontSize: 13, marginTop: 8 }}>{configError}</p>
+                            )}
                         </div>
 
                         <button
                             type="submit"
-                            className={'pf-btn pf-btn-primary' + (configForm.processing ? ' pf-btn--loading' : '')}
-                            disabled={configForm.processing}
+                            className={'pf-btn pf-btn-primary' + (configProcessing ? ' pf-btn--loading' : '')}
+                            disabled={configProcessing}
                         >
                             Save Configuration
                         </button>
@@ -209,21 +196,11 @@ export default function StationDetailScreen({ station, credentials }: { station:
                 <div className="pf-panel">
                     <div className="pf-panel-header">
                         <div>
-                            <h2 className="pf-panel-title">Device Credentials</h2>
+                            <h2 className="pf-panel-title">Paired Devices</h2>
                             <p className="pf-panel-count">
-                                {credentials.length} credential{credentials.length === 1 ? '' : 's'}
+                                {credentials.length} device{credentials.length === 1 ? '' : 's'} paired to this station via its link
                             </p>
                         </div>
-                        <button
-                            type="button"
-                            className="pf-btn pf-btn-primary"
-                            onClick={() => setIssueCredentialOpen(true)}
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
-                            Issue New Credential
-                        </button>
                     </div>
 
                     <div className="pf-table-wrap">
@@ -242,7 +219,7 @@ export default function StationDetailScreen({ station, credentials }: { station:
                                 {credentials.length === 0 && (
                                     <tr>
                                         <td colSpan={4} className="pf-empty">
-                                            No credentials issued yet.
+                                            No device has paired yet.
                                         </td>
                                     </tr>
                                 )}
@@ -289,77 +266,12 @@ export default function StationDetailScreen({ station, credentials }: { station:
                 </div>
             </div>
 
-            <Modal
-                show={issueCredentialOpen}
-                onClose={() => {
-                    setIssueCredentialOpen(false);
-                    credentialForm.reset();
-                }}
-            >
-                <form onSubmit={submitIssueCredential} className="pf-modal">
-                    <div className="pf-modal-header">
-                        <div>
-                            <h3 className="pf-modal-title">Issue New Credential</h3>
-                            <p className="pf-field-hint">
-                                The device token is shown only once — enter it into
-                                the kiosk's configuration immediately.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            className="pf-modal-close"
-                            onClick={() => {
-                                setIssueCredentialOpen(false);
-                                credentialForm.reset();
-                            }}
-                            aria-label="Close"
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div className="pf-field">
-                        <label htmlFor="label">Label (optional)</label>
-                        <input
-                            id="label"
-                            type="text"
-                            value={credentialForm.data.label}
-                            onChange={(e) => credentialForm.setData('label', e.target.value)}
-                            autoFocus
-                        />
-                        <InputError message={credentialForm.errors.label} className="mt-2" />
-                    </div>
-
-                    <div className="pf-modal-footer">
-                        <button
-                            type="button"
-                            className="pf-btn pf-btn-secondary"
-                            onClick={() => {
-                                setIssueCredentialOpen(false);
-                                credentialForm.reset();
-                            }}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className={'pf-btn pf-btn-primary' + (credentialForm.processing ? ' pf-btn--loading' : '')}
-                            disabled={credentialForm.processing}
-                        >
-                            {credentialForm.processing ? 'Issuing…' : 'Issue'}
-                        </button>
-                    </div>
-                </form>
-            </Modal>
-
             <Modal show={revokingCredential !== null} onClose={() => setRevokingCredential(null)}>
                 <div className="pf-modal">
                     <div className="pf-modal-header">
-                        <h2 className="pf-modal-title">Revoke credential?</h2>
+                        <h2 className="pf-modal-title">Revoke this device?</h2>
                         <p className="pf-modal-desc">
-                            <strong>{revokingCredential?.label ?? 'Untitled'}</strong> — the kiosk using this credential will lose access immediately.
+                            <strong>{revokingCredential?.label ?? 'Untitled'}</strong> — this device will lose access immediately. It can re-pair using the station link again.
                         </p>
                     </div>
                     <div className="pf-modal-footer">
@@ -378,35 +290,6 @@ export default function StationDetailScreen({ station, credentials }: { station:
                             disabled={isRevoking}
                         >
                             Revoke
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
-            <Modal show={resetModalOpen} onClose={() => setResetModalOpen(false)}>
-                <div className="pf-modal">
-                    <div className="pf-modal-header">
-                        <h2 className="pf-modal-title">Reset to Pending Activation?</h2>
-                        <p className="pf-modal-desc">
-                            All existing device credentials will be revoked immediately. The station will need a new activation code before it can go back online.
-                        </p>
-                    </div>
-                    <div className="pf-modal-footer">
-                        <button
-                            type="button"
-                            className="pf-btn pf-btn-secondary"
-                            onClick={() => setResetModalOpen(false)}
-                            disabled={isResetting}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            className={'pf-btn pf-btn-danger' + (isResetting ? ' pf-btn--loading' : '')}
-                            onClick={submitResetActivation}
-                            disabled={isResetting}
-                        >
-                            Reset station
                         </button>
                     </div>
                 </div>

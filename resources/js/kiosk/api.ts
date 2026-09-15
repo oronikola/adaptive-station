@@ -51,6 +51,28 @@ export async function activate(activationCode: string): Promise<ActivateResponse
     return response.json();
 }
 
+/**
+ * The pairing-link/QR equivalent of activate() above — exchanges the token
+ * embedded in the kiosk's opening URL for a device credential instead of a
+ * typed code. See DevicePairingController: unlike activate(), this can
+ * succeed repeatedly for the same link (a kiosk re-scanning after its local
+ * credential was cleared just gets issued a fresh one).
+ */
+export async function pairViaLink(pairingToken: string): Promise<ActivateResponse> {
+    const response = await fetch(route('api.device.pair'), {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pairing_token: pairingToken }),
+    });
+
+    if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.message ?? 'Pairing failed.');
+    }
+
+    return response.json();
+}
+
 export interface MasterDataChangeRow {
     version: number;
     entity_type: 'person' | 'rfid_card' | 'tenant_config' | 'station_config';

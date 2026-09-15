@@ -107,6 +107,7 @@ export interface PageProps {
         error?: string;
         deviceToken?: string;
         activationCode?: string;
+        pairingLink?: string;
     };
     [key: string]: unknown;
 }

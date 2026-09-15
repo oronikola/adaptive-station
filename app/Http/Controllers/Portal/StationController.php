@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Station;
 use App\Models\StationActivationCode;
 use App\Models\StationCredential;
+use App\Models\StationPairingToken;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -51,6 +52,7 @@ class StationController extends Controller
         return Inertia::render('Admin/stations/station-detail-screen', [
             'station' => $station,
             'credentials' => $station->credentials()->orderByDesc('created_at')->get(),
+            'hasPairingLink' => $station->pairingTokens()->whereNull('revoked_at')->exists(),
         ]);
     }
 
@@ -112,5 +114,23 @@ class StationController extends Controller
         return redirect()->route('portal.stations.show', $station)
             ->with('success', 'Activation code issued.')
             ->with('activationCode', $code);
+    }
+
+    /**
+     * The station's single "Reset Link" action — also used the first time a
+     * station (created before this table existed) has never had one. Always
+     * revokes whatever link preceded it (see StationPairingToken::issueFor),
+     * so there is no separate "revoke" action to reason about: resetting is
+     * how you invalidate a leaked link too.
+     */
+    public function issuePairingLink(Request $request, Station $station): RedirectResponse
+    {
+        Gate::authorize('create', StationPairingToken::class);
+
+        ['token' => $token] = StationPairingToken::issueFor($station, $request->user());
+
+        return redirect()->route('portal.stations.show', $station)
+            ->with('success', 'Station link reset. Any previous link stopped working.')
+            ->with('pairingLink', route('kiosk.pair', $token));
     }
 }

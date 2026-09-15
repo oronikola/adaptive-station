@@ -25,6 +25,29 @@ class StationManagementTest extends TestCase
             ->assertInertia(fn ($page) => $page->where('station.id', $station->id));
     }
 
+    /**
+     * Regression test for the missing wiring bug: a controller can flash
+     * ->with('pairingLink', ...) all it wants, but unless that key is also
+     * listed in HandleInertiaRequests::share()'s 'flash' array, the frontend
+     * never actually receives it — assertSessionHas() alone doesn't catch
+     * this, since the session key exists regardless.
+     */
+    public function test_resetting_the_station_link_flashes_it_to_the_next_inertia_page(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $station = Station::factory()->for($tenant)->create();
+
+        $response = $this->actingAs($admin)
+            ->followingRedirects()
+            ->post(route('portal.stations.pairing-link', $station));
+
+        $response->assertInertia(fn ($page) => $page->where(
+            'flash.pairingLink',
+            fn ($link) => is_string($link) && str_contains($link, url('/kiosk/pair/')),
+        ));
+    }
+
     public function test_tenant_admin_can_update_station_configuration(): void
     {
         $tenant = Tenant::factory()->create();

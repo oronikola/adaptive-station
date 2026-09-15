@@ -16,6 +16,12 @@ Route::get('/landing', function () {
 
 Route::get('/kiosk', [KioskController::class, 'show'])->name('kiosk');
 
+// The pairing-link/QR flow: opening this URL auto-pairs the kiosk to a
+// specific station without typing an activation code — see
+// App\Http\Controllers\Api\Device\DevicePairingController and
+// resources/js/Pages/Kiosk/kiosk-screen.tsx's 'pairing' phase.
+Route::get('/kiosk/pair/{pairingToken}', [KioskController::class, 'show'])->name('kiosk.pair');
+
 // A gateway, not a page: every login/verification/password-confirmation flow
 // redirects here (route('dashboard')), so this is the single place that
 // routes a freshly authenticated user to their actual portal by role,

@@ -13,7 +13,7 @@ import {
     upsertCard,
     type TapEventType,
 } from '@/kiosk/db';
-import { activate, resolveTap, DeviceUnauthorizedError, type ResolveTapResponse } from '@/kiosk/api';
+import { activate, pairViaLink, resolveTap, DeviceUnauthorizedError, type ResolveTapResponse } from '@/kiosk/api';
 import { syncMasterData, flushPendingEvents, heartbeat } from '@/kiosk/sync';
 
 /**
@@ -69,7 +69,7 @@ function requestKioskLockdown() {
     nav.keyboard?.lock?.().catch(() => {});
 }
 
-type Phase = 'booting' | 'activation' | 'ready';
+type Phase = 'booting' | 'pairing' | 'activation' | 'ready';
 
 interface TapResult {
     kind: 'success' | 'duplicate' | 'error' | 'checking';
@@ -136,9 +136,16 @@ const RESULT_THEME = {
     checking: { fg: '#93c5fd', bg: 'rgba(59,130,246,.14)', border: 'rgba(59,130,246,.4)', glow: 'rgba(59,130,246,.3)' },
 } as const;
 
-export default function KioskScreen() {
+export default function KioskScreen({
+    pairingToken,
+    stationName: linkedStationName,
+}: {
+    pairingToken?: string | null;
+    /** Resolved server-side from the pairing link itself, before any device/pair exchange — see KioskController::resolveStationName(). Lets this tab identify which station it is even while still on the "Pairing…" screen. */
+    stationName?: string | null;
+}) {
     const [phase, setPhase] = useState<Phase>('booting');
-    const [stationName, setStationName] = useState<string>('');
+    const [stationName, setStationName] = useState<string>(linkedStationName ?? '');
 
     const [activationCode, setActivationCode] = useState('');
     const [activationError, setActivationError] = useState<string | null>(null);
@@ -188,17 +195,41 @@ export default function KioskScreen() {
         return () => clearInterval(clockInterval);
     }, []);
 
-    // ── Boot: is this device already activated? ────────────────────────
+    // ── Boot: is this device already activated? If not, and it was opened
+    // via a station's pairing link, redeem that instead of asking someone to
+    // type an activation code — see DevicePairingController's docblock. A
+    // failed redemption (revoked/invalid link) falls back to the manual
+    // activation form rather than dead-ending the kiosk.
     useEffect(() => {
-        getMeta().then((meta) => {
+        getMeta().then(async (meta) => {
             if (meta.credentialToken) {
                 setStationName(meta.stationName ?? '');
                 setPhase('ready');
-            } else {
+                return;
+            }
+
+            if (!pairingToken) {
+                setPhase('activation');
+                return;
+            }
+
+            setPhase('pairing');
+            try {
+                const response = await pairViaLink(pairingToken);
+                await setMeta({
+                    credentialToken: response.credential_token,
+                    stationId: response.station.id,
+                    stationName: response.station.name,
+                    masterDataCursor: 0,
+                });
+                setStationName(response.station.name);
+                setPhase('ready');
+            } catch {
+                setActivationError('This pairing link is invalid or has been revoked. Enter an activation code instead.');
                 setPhase('activation');
             }
         });
-    }, []);
+    }, [pairingToken]);
 
     // ── Background sync loops, only once activated ─────────────────────
     useEffect(() => {
@@ -477,7 +508,10 @@ export default function KioskScreen() {
 
     return (
         <>
-            <Head title="Kiosk">
+            {/* Tab title reflects the paired station once known — the main way
+                to tell apart several kiosk tabs/windows open at once (e.g.
+                while testing multiple stations side by side). */}
+            <Head title={stationName ? `${stationName} — Kiosk` : 'Kiosk'}>
                 {/* Overrides app.blade.php's default viewport for this page only —
                     a physical touch kiosk shouldn't let a stray two-finger
                     gesture zoom the layout or trigger a pull-to-refresh reload. */}
@@ -575,32 +609,54 @@ export default function KioskScreen() {
                             onClick={handleBadgeTap}
                             title=""
                             style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 9,
-                                fontWeight: 700,
-                                padding: '7px 16px 7px 12px',
-                                borderRadius: 999,
-                                background: 'rgba(255,255,255,.06)',
-                                border: '1px solid rgba(255,255,255,.1)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'flex-start',
+                                gap: 2,
                                 cursor: 'default',
                             }}
                         >
-                            <span style={{ position: 'relative', width: 8, height: 8 }}>
-                                <span
-                                    style={{
-                                        position: 'absolute',
-                                        inset: 0,
-                                        borderRadius: 999,
-                                        background: '#34d399',
-                                    }}
-                                />
-                                <span
-                                    className="kiosk-pulse-ring"
-                                    style={{ color: '#34d399', animationDuration: '1.8s' }}
-                                />
+                            <span
+                                style={{
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    letterSpacing: '.08em',
+                                    textTransform: 'uppercase',
+                                    color: 'rgba(255,255,255,.4)',
+                                    paddingLeft: 13,
+                                }}
+                            >
+                                Station
                             </span>
-                            {stationName}
+                            <span
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 9,
+                                    fontWeight: 700,
+                                    fontSize: 15,
+                                    padding: '7px 16px 7px 12px',
+                                    borderRadius: 999,
+                                    background: 'rgba(255,255,255,.06)',
+                                    border: '1px solid rgba(255,255,255,.1)',
+                                }}
+                            >
+                                <span style={{ position: 'relative', width: 8, height: 8 }}>
+                                    <span
+                                        style={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            borderRadius: 999,
+                                            background: '#34d399',
+                                        }}
+                                    />
+                                    <span
+                                        className="kiosk-pulse-ring"
+                                        style={{ color: '#34d399', animationDuration: '1.8s' }}
+                                    />
+                                </span>
+                                {stationName}
+                            </span>
                         </span>
                         <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
                             {now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Manila' })}
@@ -636,6 +692,13 @@ export default function KioskScreen() {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
                         <span className="kiosk-spinner" />
                         <p style={{ opacity: 0.5, fontSize: 13.5 }}>Starting kiosk…</p>
+                    </div>
+                )}
+
+                {phase === 'pairing' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+                        <span className="kiosk-spinner" />
+                        <p style={{ opacity: 0.5, fontSize: 13.5 }}>Pairing this kiosk…</p>
                     </div>
                 )}
 

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Device\DeviceActivationController;
 use App\Http\Controllers\Api\Device\DeviceConfigController;
 use App\Http\Controllers\Api\Device\DeviceHeartbeatController;
+use App\Http\Controllers\Api\Device\DevicePairingController;
 use App\Http\Controllers\Api\Device\DeviceSessionController;
 use App\Http\Controllers\Api\Device\MasterDataFeedController;
 use App\Http\Controllers\Api\Device\SmsGatewayController;
@@ -29,6 +30,9 @@ Route::post('v1/auth/login', [LoginController::class, 'login'])->name('api.auth.
 Route::prefix('v1/device')->name('api.device.')->group(function () {
     // No credential exists yet at activation time — not behind AuthenticateStation.
     Route::post('activate', [DeviceActivationController::class, 'store'])->name('activate');
+    // Same reasoning as activate — the pairing-link/QR equivalent, see
+    // DevicePairingController's docblock.
+    Route::post('pair', [DevicePairingController::class, 'store'])->name('pair');
 
     Route::middleware(AuthenticateStation::class)->group(function () {
         Route::post('session', [DeviceSessionController::class, 'store'])->name('session');
