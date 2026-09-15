@@ -1,5 +1,9 @@
 import InputError from '@/Components/InputError';
-import Modal from '@/Components/Modal';
+import { PlusIcon } from '@/Components/icons/plus';
+import { UserIcon } from '@/Components/icons/user';
+import { UserPlusIcon } from '@/Components/icons/user-plus';
+import { XIcon } from '@/Components/icons/x';
+import Modal, { ModalHero } from '@/Components/Modal';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -63,10 +67,7 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="12" cy="8" r="3.5" />
-                                <path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7" />
-                            </svg>
+                            <UserIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Platform Admins</h1>
@@ -83,9 +84,7 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
                             className="pf-btn pf-btn-primary"
                             onClick={() => setCreateOpen(true)}
                         >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
+                            <PlusIcon size={16} />
                             Add Admin
                         </button>
                     </div>
@@ -190,25 +189,14 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
             {/* Add Admin modal */}
             <Modal show={createOpen} onClose={() => setCreateOpen(false)}>
                 <form onSubmit={submit} className="pf-modal">
-                    <div className="pf-modal-header">
-                        <div>
-                            <h3 className="pf-modal-title">Add Platform Admin</h3>
-                            <p className="pf-field-hint">
-                                A read-only oversight account — the password shown next
-                                works immediately, no forced reset.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            className="pf-modal-close"
-                            onClick={() => setCreateOpen(false)}
-                            aria-label="Close"
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                    <ModalHero
+                        tone="blue"
+                        title="Add Platform Admin"
+                        subtitle="A read-only oversight account — the password shown next works immediately, no forced reset."
+                        onClose={() => setCreateOpen(false)}
+                    >
+                        <UserPlusIcon size={22} />
+                    </ModalHero>
 
                     <div className="pf-field">
                         <label htmlFor="name">Name</label>
@@ -253,21 +241,14 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
             {/* Deactivate modal */}
             <Modal show={deactivatingAdmin !== null} onClose={() => setDeactivatingAdmin(null)}>
                 <form onSubmit={submitDeactivate} className="pf-modal">
-                    <div className="pf-modal-header">
-                        <div>
-                            <h3 className="pf-modal-title">Deactivate Account</h3>
-                        </div>
-                        <button
-                            type="button"
-                            className="pf-modal-close"
-                            onClick={() => setDeactivatingAdmin(null)}
-                            aria-label="Close"
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                    <ModalHero
+                        tone="red"
+                        title="Deactivate Account"
+                        subtitle="They immediately lose access to the platform area."
+                        onClose={() => setDeactivatingAdmin(null)}
+                    >
+                        <XIcon size={22} />
+                    </ModalHero>
 
                     <p style={{ padding: '0 0 8px' }}>
                         Deactivate <strong>{deactivatingAdmin?.name}</strong>? They will

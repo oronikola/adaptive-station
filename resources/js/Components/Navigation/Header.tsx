@@ -1,7 +1,14 @@
+import { BellIcon } from '@/Components/icons/bell';
+import { ChevronDownIcon } from '@/Components/icons/chevron-down';
+import { LogoutIcon } from '@/Components/icons/logout';
+import { MoonIcon } from '@/Components/icons/moon';
+import { SettingsIcon } from '@/Components/icons/settings';
+import { SunIcon } from '@/Components/icons/sun';
+import { UserIcon } from '@/Components/icons/user';
+import { useTheme } from '@/Components/Theme/ThemeProvider';
 import { PageProps } from '@/types';
 import { Link, usePage, usePoll } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { useTheme } from '@/Components/Theme/ThemeProvider';
 
 interface HeaderProps {
     user: {
@@ -112,25 +119,7 @@ export default function Header({
                     aria-pressed={theme === 'dark'}
                 >
                     <span className="pf-theme-icon" aria-hidden="true">
-                        <svg
-                            className={
-                                'pf-theme-icon-sun' +
-                                (theme === 'dark' ? '' : ' pf-theme-icon--visible')
-                            }
-                            viewBox="0 0 24 24"
-                        >
-                            <circle cx="12" cy="12" r="4.2" />
-                            <path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.55 1.55M17.55 17.55l1.55 1.55M3 12h2.2M18.8 12H21M4.9 19.1l1.55-1.55M17.55 6.45l1.55-1.55" />
-                        </svg>
-                        <svg
-                            className={
-                                'pf-theme-icon-moon' +
-                                (theme === 'dark' ? ' pf-theme-icon--visible' : '')
-                            }
-                            viewBox="0 0 24 24"
-                        >
-                            <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z" />
-                        </svg>
+                        {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
                     </span>
                 </button>
 
@@ -146,10 +135,7 @@ export default function Header({
                             setMenuOpen(false);
                         }}
                     >
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.2H4c.6-.6 2-2.2 2-6.2Z" />
-                            <path d="M9.6 19a2.4 2.4 0 0 0 4.8 0" />
-                        </svg>
+                        <BellIcon size={18} aria-hidden="true" />
                         {unreadCount > 0 && (
                             <span className="pf-topbar-notification-count" aria-hidden="true">
                                 {unreadCount > 9 ? '9+' : unreadCount}
@@ -230,16 +216,14 @@ export default function Header({
                                 {roleLabel}
                             </span>
                         </span>
-                        <svg
+                        <ChevronDownIcon
+                            size={16}
                             className={
                                 'pf-topbar-chevron' +
                                 (menuOpen ? ' pf-topbar-chevron--open' : '')
                             }
-                            viewBox="0 0 24 24"
                             aria-hidden="true"
-                        >
-                            <path d="m6 9 6 6 6-6" />
-                        </svg>
+                        />
                     </button>
 
                     {menuOpen && (
@@ -250,10 +234,7 @@ export default function Header({
                                 role="menuitem"
                                 onClick={() => setMenuOpen(false)}
                             >
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <circle cx="12" cy="8" r="3.2" />
-                                    <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
-                                </svg>
+                                <UserIcon size={16} aria-hidden="true" />
                                 My Profile
                             </Link>
                             {/* TODO: point at a dedicated settings page once
@@ -264,10 +245,7 @@ export default function Header({
                                 role="menuitem"
                                 onClick={() => setMenuOpen(false)}
                             >
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="2.6" />
-                                    <path d="M12 4.5v1.6M12 17.9v1.6M19.5 12h-1.6M6.1 12H4.5M17.1 6.9l-1.1 1.1M8 15l-1.1 1.1M17.1 17.1 16 16M8 9 6.9 7.9" />
-                                </svg>
+                                <SettingsIcon size={16} aria-hidden="true" />
                                 Settings
                             </Link>
                             <div
@@ -281,10 +259,7 @@ export default function Header({
                                 className="pf-topbar-dropdown-item pf-topbar-dropdown-item--danger"
                                 role="menuitem"
                             >
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7" />
-                                    <path d="M10 12h11m0 0-3.5-3.5M21 12l-3.5 3.5" />
-                                </svg>
+                                <LogoutIcon size={16} aria-hidden="true" />
                                 Logout
                             </Link>
                         </div>

@@ -1,3 +1,6 @@
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { ConnectIcon } from '@/Components/icons/connect';
+import { PlusIcon } from '@/Components/icons/plus';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
 import '../../../../css/platform-dashboard.css';
@@ -40,11 +43,7 @@ export default function IntegrationsListScreen({ profiles }: { profiles: Integra
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="7" cy="12" r="3.4" />
-                                <rect x="9" y="10.3" width="6" height="3.4" rx="1.2" />
-                                <circle cx="17" cy="12" r="3.4" />
-                            </svg>
+                            <ConnectIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Integrations</h1>
@@ -55,9 +54,7 @@ export default function IntegrationsListScreen({ profiles }: { profiles: Integra
                     </div>
                     <div className="pft-hero-actions">
                         <Link href={route('portal.integrations.create')} className="pf-btn pf-btn-primary">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
+                            <PlusIcon size={16} />
                             New Integration Profile
                         </Link>
                     </div>
@@ -129,9 +126,7 @@ export default function IntegrationsListScreen({ profiles }: { profiles: Integra
                                                 className="pf-row-action"
                                             >
                                                 Manage
-                                                <svg viewBox="0 0 24 24">
-                                                    <path d="M9 6l6 6-6 6" />
-                                                </svg>
+                                                <ChevronRightIcon size={14} />
                                             </Link>
                                         </td>
                                     </tr>

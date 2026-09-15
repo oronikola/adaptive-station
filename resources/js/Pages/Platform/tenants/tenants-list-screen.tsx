@@ -1,7 +1,16 @@
 import InputError from '@/Components/InputError';
+import Modal, { ModalHero } from '@/Components/Modal';
 import Pagination from '@/Components/admin/Pagination';
+import { CalendarDaysIcon } from '@/Components/icons/calendar-days';
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { ClockIcon } from '@/Components/icons/clock';
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
+import { MenuIcon } from '@/Components/icons/menu';
+import { PlusIcon } from '@/Components/icons/plus';
+import { SearchIcon } from '@/Components/icons/search';
 import { useToast } from '@/Components/toast/ToastProvider';
 import PlatformLayout from '@/Layouts/PlatformLayout';
+import ManageSchoolModal from './ManageSchoolModal';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
@@ -94,13 +103,12 @@ interface TenantsListScreenProps {
     };
 }
 
-type ClientTab = 'all' | 'add';
-
 export default function TenantsListScreen({ tenants, filters }: TenantsListScreenProps) {
     const { showToast } = useToast();
     const { auth } = usePage<PageProps>().props;
     const canManage = auth.user.role === 'platform_super_admin';
-    const [tab, setTab] = useState<ClientTab>('all');
+    const [createOpen, setCreateOpen] = useState(false);
+    const [manageTenant, setManageTenant] = useState<Tenant | null>(null);
     const [codeTouched, setCodeTouched] = useState(false);
     const [codeEditing, setCodeEditing] = useState(false);
     const [codeFormatError, setCodeFormatError] = useState('');
@@ -229,6 +237,31 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
         });
     }
 
+    function openCreateModal() {
+        setCreateOpen(true);
+    }
+
+    function closeCreateModal() {
+        setCreateOpen(false);
+        setCodeTouched(false);
+        setCodeEditing(false);
+        setCodeFormatError('');
+        setSchoolQuery('');
+        setSchoolPickerOpen(false);
+        reset();
+    }
+
+    useEffect(() => {
+        if (!canManage) {
+            return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('add') === '1') {
+            setCreateOpen(true);
+        }
+    }, [canManage]);
+
     const hasFilters = Boolean(filters.search || filters.status);
 
     return (
@@ -239,10 +272,7 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <polygon points="12,3 19,9 5,9" />
-                                <rect x="4" y="9" width="16" height="12" rx="1.6" />
-                            </svg>
+                            <GraduationCapIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Client Management</h1>
@@ -254,53 +284,20 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                     </div>
                     <div className="pft-hero-actions">
                         <span className="pft-hero-updated">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 7v5l3.2 2" />
-                            </svg>
+                            <ClockIcon size={14} />
                             Live directory
                         </span>
                     </div>
                 </div>
 
-                <div className="pft-tabs" role="tablist">
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={tab === 'all'}
-                        className={'pft-tab' + (tab === 'all' ? ' pft-tab--active' : '')}
-                        onClick={() => setTab('all')}
-                    >
-                        <svg viewBox="0 0 24 24">
-                            <path d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                        All Clients
-                    </button>
-                    {canManage && (
-                        <button
-                            type="button"
-                            role="tab"
-                            aria-selected={tab === 'add'}
-                            className={'pft-tab' + (tab === 'add' ? ' pft-tab--active' : '')}
-                            onClick={() => setTab('add')}
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
-                            Add Client
-                        </button>
-                    )}
-                </div>
-
-                {tab === 'all' && (
-                    <div className="pft-tab-panel">
-                        <form onSubmit={submitFilters} className="pf-filter-bar" role="search">
+                <form onSubmit={submitFilters} className="pf-filter-bar" role="search">
                             <div className="pf-field pft-search-field">
                                 <label htmlFor="search">Search</label>
-                                <svg viewBox="0 0 24 24">
-                                    <circle cx="11" cy="11" r="7" />
-                                    <path d="m20 20-3.5-3.5" />
-                                </svg>
+                                <SearchIcon
+                                    size={14}
+                                    className="pointer-events-none"
+                                    style={{ position: 'absolute', bottom: 11, left: 14, color: 'var(--as-text-muted)' }}
+                                />
                                 <input
                                     id="search"
                                     type="text"
@@ -339,7 +336,7 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                             </div>
                         </form>
 
-                        <div className="pf-panel">
+                        <div className="pf-panel pft-client-directory">
                             <div className="pf-panel-header">
                                 <div>
                                     <h2 className="pf-panel-title">All Clients</h2>
@@ -347,10 +344,34 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                         {tenants.from !== null ? `${tenants.from}–${tenants.to} of ${tenants.total}` : 'No results'}
                                     </p>
                                 </div>
+                                <div className="pft-tabs" role="tablist" aria-label="Client directory">
+                                    <button
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={!createOpen}
+                                        className={'pft-tab' + (!createOpen ? ' pft-tab--active' : '')}
+                                        onClick={closeCreateModal}
+                                    >
+                                        <MenuIcon size={14} />
+                                        All Clients
+                                    </button>
+                                    {canManage && (
+                                        <button
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={createOpen}
+                                            className={'pft-tab' + (createOpen ? ' pft-tab--active' : '')}
+                                            onClick={openCreateModal}
+                                        >
+                                            <PlusIcon size={14} />
+                                            Add Client
+                                        </button>
+                                    )}
+                                </div>
                             </div>
 
-                            <div className="pf-table-wrap">
-                                <table className="pf-table">
+                            <div className="pf-table-wrap pft-client-table-wrap">
+                                <table className="pf-table pft-client-table">
                                     <thead>
                                         <tr>
                                             <th scope="col">Name</th>
@@ -366,22 +387,22 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                         {tenants.data.length === 0 && (
                                             <tr>
                                                 <td colSpan={5} className="pf-empty pft-empty">
-                                                    <svg viewBox="0 0 24 24">
-                                                        <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
-                                                    </svg>
+                                                    <GraduationCapIcon size={22} />
                                                     {hasFilters ? (
                                                             'No clients match these filters.'
                                                         ) : (
                                                             <>
                                                                 No clients yet.{' '}
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setTab('add')}
-                                                                    className="pf-row-action"
-                                                                    style={{ display: 'inline', marginLeft: 4 }}
-                                                                >
-                                                                    Provision your first client →
-                                                                </button>
+                                                                {canManage && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={openCreateModal}
+                                                                        className="pf-row-action"
+                                                                        style={{ display: 'inline', marginLeft: 4 }}
+                                                                    >
+                                                                        Provision your first client →
+                                                                    </button>
+                                                                )}
                                                             </>
                                                         )}
                                                 </td>
@@ -405,9 +426,17 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td>{tenant.timezone}</td>
-                                                <td className="pft-created">
-                                                    {formatDate(tenant.created_at)}
+                                                <td>
+                                                    <span className="pft-meta-pill pft-meta-pill--timezone">
+                                                        <ClockIcon size={13} aria-hidden="true" />
+                                                        {tenant.timezone}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span className="pft-meta-pill pft-meta-pill--created">
+                                                        <CalendarDaysIcon size={13} aria-hidden="true" />
+                                                        {formatDate(tenant.created_at)}
+                                                    </span>
                                                 </td>
                                                 <td>
                                                     <span
@@ -418,19 +447,15 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                                         {tenant.status}
                                                     </span>
                                                 </td>
-                                                <td>
-                                                    <Link
-                                                        href={route(
-                                                            'platform.tenants.show',
-                                                            tenant.code,
-                                                        )}
+                                                <td className="pft-client-action-cell">
+                                                    <button
+                                                        type="button"
                                                         className="pf-row-action"
+                                                        onClick={() => setManageTenant(tenant)}
                                                     >
                                                         Manage
-                                                        <svg viewBox="0 0 24 24">
-                                                            <path d="M9 6l6 6-6 6" />
-                                                        </svg>
-                                                    </Link>
+                                                        <ChevronRightIcon size={14} />
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -440,21 +465,18 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
 
                             <Pagination links={tenants.links} />
                         </div>
-                    </div>
-                )}
 
-                {tab === 'add' && canManage && (
-                    <div className="pf-panel pft-tab-panel">
-                        <div className="pf-panel-header">
-                            <div>
-                                <h2 className="pf-panel-title">Add Client</h2>
-                                <p className="pf-panel-count">
-                                    Provisions a new school workspace with its own database.
-                                </p>
-                            </div>
-                        </div>
-
-                        <form onSubmit={submit} className="pft-form-panel">
+            {canManage && (
+            <Modal show={createOpen} onClose={closeCreateModal} maxWidth="3xl">
+                <form onSubmit={submit} className="pf-modal">
+                    <ModalHero
+                        tone="blue"
+                        title="Add Client"
+                        subtitle="Provisions a new school workspace with its own database."
+                        onClose={closeCreateModal}
+                    >
+                        <GraduationCapIcon size={22} />
+                    </ModalHero>
                             <div className="pft-form-grid">
                                 <div className="pf-field">
                                     <label htmlFor="name">School name</label>
@@ -463,6 +485,8 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                         type="text"
                                         value={data.name}
                                         onChange={(e) => handleNameChange(e.target.value)}
+                                        placeholder="e.g. Pilgrim Christian College"
+                                        autoFocus
                                         required
                                     />
                                     <InputError message={errors.name} className="mt-2" />
@@ -477,6 +501,7 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                             value={data.code}
                                             onChange={(e) => handleCodeChange(e.target.value)}
                                             className="font-mono"
+                                            placeholder="e.g. pcc"
                                             readOnly={!codeEditing}
                                             style={!codeEditing ? { background: 'var(--as-surface-active)', color: 'var(--as-text-muted)', cursor: 'default' } : undefined}
                                             required
@@ -517,29 +542,27 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                 </div>
                             </div>
 
-                            <div className="pf-field" style={{ marginTop: 8 }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <label className="pf-switch-row">
+                                <span className="pf-switch-copy">
+                                    <strong>This school is an essentiel client</strong>
+                                    <small>
+                                        Connects this school to essentiel's API — every tap resolves
+                                        the student and guardian live through essentiel instead of a
+                                        local roster import, and essentiel keeps its own attendance record too.
+                                    </small>
+                                </span>
+                                <span className="pf-switch">
                                     <input
                                         type="checkbox"
                                         checked={data.connect_legacy_system}
                                         onChange={(e) => setData('connect_legacy_system', e.target.checked)}
-                                        // .pf-field input's global width:100%/height:44px rule
-                                        // (meant for text inputs) applies to every <input> in
-                                        // a .pf-field, checkboxes included, unless overridden —
-                                        // without this it renders as a huge stretched block.
-                                        style={{ width: 18, height: 18, flexShrink: 0 }}
                                     />
-                                    <span>This school is an essentiel client</span>
-                                </label>
-                                <p className="pf-field-hint">
-                                    Connects this school to essentiel's API — every tap resolves the
-                                    student and guardian live through essentiel instead of a local
-                                    roster import, and essentiel keeps its own attendance record too.
-                                </p>
-                            </div>
+                                    <span aria-hidden="true" />
+                                </span>
+                            </label>
 
                             {data.connect_legacy_system && (
-                                <div className="pf-field" style={{ marginBottom: 18, position: 'relative' }}>
+                                <div className="pf-field" style={{ marginBottom: 18 }}>
                                     <label htmlFor="legacy-school-search">Find the school in essentiel</label>
                                     <input
                                         id="legacy-school-search"
@@ -567,25 +590,10 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                         </p>
                                     )}
                                     {schoolPickerOpen && !legacySchoolsLoading && filteredLegacySchools.length > 0 && (
-                                        <ul
-                                            style={{
-                                                position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0,
-                                                maxHeight: 260, overflowY: 'auto', margin: 0, padding: 4,
-                                                listStyle: 'none', background: 'var(--as-surface)', border: '1px solid var(--as-border)',
-                                                borderRadius: 12, boxShadow: 'var(--as-shadow-overlay)',
-                                            }}
-                                        >
+                                        <ul className="pft-school-picker">
                                             {filteredLegacySchools.slice(0, 50).map((school) => (
                                                 <li key={`${school.id}-${school.schoolabrv}`}>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => selectLegacySchool(school)}
-                                                        style={{
-                                                            width: '100%', textAlign: 'left', padding: '8px 10px',
-                                                            border: 'none', background: 'transparent', cursor: 'pointer',
-                                                            borderRadius: 8, fontSize: 13,
-                                                        }}
-                                                    >
+                                                    <button type="button" onClick={() => selectLegacySchool(school)}>
                                                         <strong className="font-mono">{school.schoolabrv}</strong>{' '}
                                                         <span style={{ color: 'var(--as-brand-blue-light)' }}>{titleCase(school.schoolname)}</span>
                                                     </button>
@@ -620,6 +628,7 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                             type="password"
                                             value={data.legacy_connection.api_key}
                                             onChange={(e) => setLegacyField('api_key', e.target.value)}
+                                            placeholder="Paste the essentiel API key"
                                             autoComplete="new-password"
                                         />
                                         <p className="pf-field-hint">Optional for now while essentiel's test endpoint has no auth — required once it does.</p>
@@ -628,11 +637,11 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                 </div>
                             )}
 
-                            <div className="pft-form-actions">
+                            <div className="pf-modal-footer">
                                 <button
                                     type="button"
                                     className="pf-btn pf-btn-secondary"
-                                    onClick={() => setTab('all')}
+                                    onClick={closeCreateModal}
                                 >
                                     Cancel
                                 </button>
@@ -641,16 +650,21 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                     className={'pf-btn pf-btn-primary' + (processing ? ' pf-btn--loading' : '')}
                                     disabled={processing || Boolean(codeFormatError)}
                                 >
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M12 5v14M5 12h14" />
-                                    </svg>
+                                    <PlusIcon size={16} />
                                     Create Client
                                 </button>
                             </div>
-                        </form>
-                    </div>
-                )}
+                </form>
+            </Modal>
+            )}
             </div>
+
+            <ManageSchoolModal
+                tenant={manageTenant}
+                show={manageTenant !== null}
+                onClose={() => setManageTenant(null)}
+                onUpdated={(updated) => setManageTenant(updated)}
+            />
         </PlatformLayout>
     );
 }

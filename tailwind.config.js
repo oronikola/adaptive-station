@@ -20,15 +20,15 @@ export default {
         extend: {
             colors: {
                 station: {
-                    canvas: '#f4f6f9',
-                    panel: '#f1f5f9',
-                    line: '#e2e8f0',
+                    canvas: '#f4f7fd',
+                    panel: '#edf3fc',
+                    line: '#dbe3ef',
                     muted: '#64748b',
                     ink: '#0f172a',
-                    navy: '#1e293b',
-                    'navy-soft': '#334155',
-                    blue: '#475569',
-                    'blue-bright': '#64748b',
+                    navy: '#071c44',
+                    'navy-soft': '#0b2a5b',
+                    blue: '#174a96',
+                    'blue-bright': '#2863bd',
                     success: '#188352',
                     'success-soft': '#e3f6ea',
                     warning: '#c1791f',
@@ -44,12 +44,12 @@ export default {
                 },
             },
             fontFamily: {
-                sans: ['Plus Jakarta Sans', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
                 display: ['Plus Jakarta Sans', 'Inter', ...defaultTheme.fontFamily.sans],
                 mono: ['JetBrains Mono', ...defaultTheme.fontFamily.mono],
             },
             boxShadow: {
-                'station-float': '0 30px 70px -42px rgba(15, 23, 42, 0.45)',
+                'station-float': '0 24px 50px -30px rgba(7, 28, 68, 0.45)',
                 'card-blue':
                     'inset 0 1px 0 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 0 rgba(15, 23, 42, 0.03), 0 6px 18px -6px rgba(10, 27, 115, 0.22)',
                 'station-header':

@@ -1,5 +1,12 @@
 import Pagination from '@/Components/admin/Pagination';
-import Modal from '@/Components/Modal';
+import Modal, { ModalHero } from '@/Components/Modal';
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
+import { CheckIcon } from '@/Components/icons/check';
+import { ClockIcon } from '@/Components/icons/clock';
+import { FileTextIcon } from '@/Components/icons/file-text';
+import { RotateCWIcon } from '@/Components/icons/rotate-cw';
+import { SendIcon } from '@/Components/icons/send';
+import { SmartphoneNfcIcon } from '@/Components/icons/smartphone-nfc';
 import { useToast } from '@/Components/toast/ToastProvider';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
@@ -80,35 +87,10 @@ function StatCard({ label, value, icon, tone }: StatCardProps) {
     );
 }
 
-const ICON_TOTAL = (
-    <svg viewBox="0 0 24 24">
-        <rect x="7" y="2" width="10" height="20" rx="2" />
-        <path d="M11 18h2" />
-    </svg>
-);
-const ICON_PENDING = (
-    <svg viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="M12 7.5V12l3 2" />
-    </svg>
-);
-const ICON_SENT = (
-    <svg viewBox="0 0 24 24">
-        <path d="M4 11l16-7-6 16-3-6-6-3z" />
-    </svg>
-);
-const ICON_DELIVERED = (
-    <svg viewBox="0 0 24 24">
-        <path d="M20 6L9 17l-5-5" />
-    </svg>
-);
-const ICON_FAILED = (
-    <svg viewBox="0 0 24 24">
-        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-        <line x1="12" y1="9" x2="12" y2="13" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-);
+const ICON_PENDING = <ClockIcon size={18} />;
+const ICON_SENT = <SendIcon size={18} />;
+const ICON_DELIVERED = <CheckIcon size={18} />;
+const ICON_FAILED = <BadgeAlertIcon size={18} />;
 
 // hour12 explicit, not left to the browser locale default — some locales
 // (e.g. en-GB) render toLocaleString()'s time in 24-hour "military" format
@@ -222,10 +204,7 @@ export default function SmsLogListScreen({ messages, devices, filters, stats }: 
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="7" y="2" width="10" height="20" rx="2" />
-                                <path d="M11 18h2" />
-                            </svg>
+                            <SmartphoneNfcIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">SMS Delivery Log</h1>
@@ -238,7 +217,6 @@ export default function SmsLogListScreen({ messages, devices, filters, stats }: 
                 </div>
 
                 <div className="pft-stat-grid">
-                    <StatCard label="Total" value={stats.total} icon={ICON_TOTAL} tone="blue" />
                     <StatCard label="Pending" value={stats.pending} icon={ICON_PENDING} tone="amber" />
                     <StatCard label="Sent" value={stats.sent} icon={ICON_SENT} tone="violet" />
                     <StatCard label="Delivered" value={stats.delivered} icon={ICON_DELIVERED} tone="green" />
@@ -347,44 +325,40 @@ export default function SmsLogListScreen({ messages, devices, filters, stats }: 
                             className="pf-btn pf-btn-secondary"
                             onClick={handlePrint}
                         >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z" />
-                            </svg>
+                            <FileTextIcon size={16} />
                             Print
                         </button>
                     </div>
 
+                    {messages.data.length === 0 ? (
+                        <div className="pf-empty-state">
+                            <span className="pf-empty-state-icon">
+                                <SmartphoneNfcIcon size={26} />
+                            </span>
+                            <div>
+                                <strong>{hasFilters ? 'No matching messages' : 'No SMS messages yet'}</strong>
+                                <p>
+                                    {hasFilters
+                                        ? 'Try clearing filters or searching a different phone number.'
+                                        : 'Tap alerts will appear here as fleet phones claim and send them.'}
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
                     <div className="pf-table-wrap">
                         <table className="pf-table">
                             <thead>
                                 <tr>
                                     <th scope="col">When</th>
-                                    <th scope="col">Phone Number</th>
-                                    <th scope="col">Sent By</th>
+                                    <th scope="col">Phone</th>
+                                    <th scope="col">Device</th>
                                     <th scope="col">SIM</th>
                                     <th scope="col">Status</th>
-                                    <th scope="col">Attempts</th>
-                                    <th scope="col">Sent</th>
-                                    <th scope="col">Delivered</th>
                                     <th scope="col">Error</th>
                                     <th scope="col"><span className="sr-only">Actions</span></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {messages.data.length === 0 && (
-                                    <tr>
-                                        <td colSpan={10} className="pft-empty">
-                                            <svg viewBox="0 0 24 24">
-                                                <rect x="7" y="2" width="10" height="20" rx="2" />
-                                                <path d="M11 18h2" />
-                                            </svg>
-                                            {hasFilters
-                                                ? 'No messages match these filters.'
-                                                : 'No SMS messages yet.'}
-                                        </td>
-                                    </tr>
-                                )}
-
                                 {messages.data.map((row) => (
                                     <tr key={row.id}>
                                         <td>{formatDateTime(row.created_at)}</td>
@@ -401,10 +375,7 @@ export default function SmsLogListScreen({ messages, devices, filters, stats }: 
                                                 {row.status}
                                             </span>
                                         </td>
-                                        <td className="font-mono">{row.attempts}</td>
-                                        <td>{row.sent_at ? formatDateTime(row.sent_at) : '—'}</td>
-                                        <td>{row.delivered_at ? formatDateTime(row.delivered_at) : '—'}</td>
-                                        <td style={{ color: row.last_error ? 'var(--as-danger)' : undefined, fontSize: 12.5 }}>
+                                        <td style={{ color: row.last_error ? 'var(--as-danger)' : undefined, fontSize: 12.5, maxWidth: 220 }}>
                                             {row.last_error ?? '—'}
                                         </td>
                                         <td>
@@ -423,6 +394,7 @@ export default function SmsLogListScreen({ messages, devices, filters, stats }: 
                             </tbody>
                         </table>
                     </div>
+                    )}
 
                     <Pagination links={messages.links} />
                 </div>
@@ -431,21 +403,14 @@ export default function SmsLogListScreen({ messages, devices, filters, stats }: 
             {/* Resend confirmation modal */}
             <Modal show={resendingRow !== null} onClose={() => setResendingRow(null)}>
                 <form onSubmit={submitResend} className="pf-modal">
-                    <div className="pf-modal-header">
-                        <div>
-                            <h3 className="pf-modal-title">Resend Message</h3>
-                        </div>
-                        <button
-                            type="button"
-                            className="pf-modal-close"
-                            onClick={() => setResendingRow(null)}
-                            aria-label="Close"
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                    <ModalHero
+                        tone="blue"
+                        title="Resend Message"
+                        subtitle="The tap alert goes back into the queue for the next available device, with a fresh attempt count."
+                        onClose={() => setResendingRow(null)}
+                    >
+                        <RotateCWIcon size={22} />
+                    </ModalHero>
 
                     <p style={{ padding: '0 0 8px' }}>
                         Resend the tap alert to <strong className="font-mono">{resendingRow?.phone_number}</strong>?

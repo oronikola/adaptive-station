@@ -1,19 +1,20 @@
-/* Shared app shell + sidebar + top bar (used by both the superadmin/platform
-   layout and the tenant admin portal layout). */
+/* Shared app shell + sidebar — White, light mode for all portals
+   Sticky viewport-height, no page-extending scroll. Restored from
+   988106e (main) and extended with skip-link, badges, theme toggle,
+   and dark-mode token overrides. */
 
-/* ── Skip link (a11y) ──────────────────────────────────────────────────── */
 .pf-skip-link {
     position: absolute;
     top: -100%;
     left: 16px;
     z-index: 9999;
     padding: 8px 16px;
-    background: var(--as-surface);
-    color: var(--as-brand);
+    background: #ffffff;
+    color: #234ef4;
     font-size: 13px;
     font-weight: 600;
     border-radius: 0 0 8px 8px;
-    border: 1px solid var(--as-border);
+    border: 1px solid #e2e8f0;
     text-decoration: none;
     transition: top 160ms ease;
 }
@@ -22,43 +23,173 @@
     top: 0;
 }
 
-/* ── Shell — deep gradient canvas the glass panels float on ──────────── */
 .pf-shell {
     display: flex;
     min-height: 100vh;
-    background:
-        radial-gradient(ellipse at 18% 65%, rgba(148, 163, 184, 0.18) 0%, transparent 52%),
-        radial-gradient(ellipse at 82% 12%, rgba(100, 116, 139, 0.12) 0%, transparent 46%),
-        radial-gradient(ellipse at 55% 90%, rgba(71, 85, 105, 0.10) 0%, transparent 40%),
-        var(--as-shell-canvas);
+    min-height: 100dvh;
+    background: #f1f5fb;
+    align-items: stretch;
 }
 
-/* ── Sidebar — liquid glass panel ────────────────────────────────────── */
 .pf-sidebar {
     position: sticky;
-    top: 0;
+    top: 14px;
     display: flex;
-    flex: 0 0 264px;
+    flex: 0 0 260px;
     flex-direction: column;
-    height: 100vh;
-    padding: 20px 14px;
-    /* Liquid glass: background shows through, blur creates the frosted depth */
-    background: var(--as-sidebar-glass-bg);
-    backdrop-filter: blur(32px) saturate(180%);
-    -webkit-backdrop-filter: blur(32px) saturate(180%);
-    /* No hard border — the gap to the content card is the visual separator */
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
-    overflow: hidden;
-    contain: layout paint;
+    width: 260px;
+    height: calc(100vh - 28px);
+    height: calc(100dvh - 28px);
+    max-height: calc(100dvh - 28px);
+    margin: 14px 0 14px 16px;
+    padding: 24px 16px;
+    border-radius: 24px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 8px 24px -6px rgba(15, 23, 42, 0.06),
+        0 24px 44px -16px rgba(15, 23, 42, 0.08);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+    align-self: flex-start;
+    flex-shrink: 0;
+    isolation: isolate;
     transition:
-        flex-basis 240ms cubic-bezier(0.4, 0, 0.2, 1),
-        padding 240ms cubic-bezier(0.4, 0, 0.2, 1);
+        width 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        flex-basis 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        padding 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        margin 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pf-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.pf-sidebar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+
+.pf-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.pf-sidebar > * {
+    position: relative;
+    z-index: 1;
 }
 
 @media (max-width: 1023px) {
     .pf-sidebar:not(.pf-sidebar--mobile) {
         display: none;
     }
+}
+
+.pf-sidebar--collapsed {
+    flex-basis: 76px;
+    width: 76px;
+    padding: 24px 12px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-logo-text,
+.pf-sidebar--collapsed .pf-sidebar-tenant,
+.pf-sidebar--collapsed .pf-sidebar-label,
+.pf-sidebar--collapsed .pf-sidebar-user-info,
+.pf-sidebar--collapsed .pf-sidebar-badge {
+    display: none !important;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-logo {
+    justify-content: center;
+    width: 100%;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-logo-badge {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    margin: 0 auto;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-logo-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-collapse-toggle {
+    margin: 0 auto;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-nav {
+    align-items: center;
+    gap: 6px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-link {
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    margin: 0 auto;
+    border-radius: 12px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-link:hover {
+    transform: scale(1.06);
+}
+
+.pf-sidebar--collapsed .pf-sidebar-user {
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 12px;
+    background: transparent;
+    border: none;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-avatar {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-footer {
+    padding-top: 16px;
+    align-items: center;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-footer-links {
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-footer-link {
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    margin: 0 auto;
+    border-radius: 12px;
+}
+
+.pf-sidebar--collapsed .pf-sidebar-footer-link:hover {
+    transform: scale(1.06);
 }
 
 .pf-sidebar--mobile {
@@ -68,253 +199,229 @@
     left: 0;
     z-index: 50;
     width: 280px;
-    background: var(--as-sidebar-mobile-bg);
-    backdrop-filter: blur(36px) saturate(200%);
-    -webkit-backdrop-filter: blur(36px) saturate(200%);
-    border-right: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow:
-        inset 1px 0 0 rgba(255, 255, 255, 0.30),
-        12px 0 48px -16px rgba(0, 0, 0, 0.55);
-}
-
-.pf-sidebar--collapsed {
-    flex-basis: 84px;
-    width: 84px;
-    padding-left: 10px;
-    padding-right: 10px;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border-radius: 0 24px 24px 0;
+    background: #ffffff;
+    border-right: 1px solid #e7ecf4;
+    box-shadow: 0 20px 44px -20px rgba(15, 35, 70, 0.2);
+    animation: pf-sidebar-slide-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pf-sidebar-overlay {
     position: fixed;
     inset: 0;
     z-index: 40;
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    background: rgba(15, 23, 42, 0.32);
+    backdrop-filter: blur(6px);
+    animation: pf-overlay-fade-in 200ms ease;
+}
+
+@keyframes pf-sidebar-slide-in {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes pf-overlay-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .pf-sidebar-header {
-    flex: 0 0 auto;
-    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
 }
 
 .pf-sidebar-logo {
     display: flex;
+    flex: 1 1 auto;
     align-items: center;
-    gap: 10px;
+    gap: 11px;
     min-width: 0;
     text-decoration: none;
 }
 
-.pf-sidebar-logo-mark {
-    width: 44px;
-    height: 44px;
-    flex: 0 0 44px;
+.pf-sidebar-logo-badge {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3e66ea 0%, #234ef4 50%, #1b36c8 100%);
+    color: #ffffff;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 4px 12px -2px rgba(35, 78, 244, 0.35);
+    transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    overflow: hidden;
+}
+
+.pf-sidebar-logo:hover .pf-sidebar-logo-badge {
+    transform: scale(1.06);
+}
+
+.pf-sidebar-logo-icon {
+    width: 20px;
+    height: 20px;
     object-fit: contain;
-    /* Subtle glass ring around the logo */
-    filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.20));
+    filter: brightness(0) invert(1);
 }
 
 .pf-sidebar-logo-text {
     overflow: hidden;
-    min-width: 0;
-    max-width: 160px;
-    color: var(--as-sidebar-logo-text);
+    color: #071c44;
     font-size: 15px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-weight: 800;
+    letter-spacing: -0.02em;
     white-space: nowrap;
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.18);
+    text-overflow: ellipsis;
 }
 
-/* ── Collapse button — glass pill ────────────────────────────────────── */
-.pf-sidebar-collapse-btn {
+.pf-sidebar-collapse-toggle {
     display: inline-flex;
-    width: 100%;
-    height: 42px;
-    flex: 0 0 42px;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
     align-items: center;
-    gap: 10px;
-    padding: 0 12px 0 8px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.10);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    color: rgba(255, 255, 255, 0.82);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.22),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+    justify-content: center;
+    border: 1px solid #e7ecf4;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #64748b;
     cursor: pointer;
     transition:
-        border-color 160ms ease,
-        background 160ms ease,
+        background-color 160ms ease,
         color 160ms ease,
-        transform 150ms ease,
-        box-shadow 160ms ease;
+        border-color 160ms ease,
+        transform 160ms ease;
 }
 
-.pf-sidebar-collapse-btn:hover {
-    border-color: rgba(255, 255, 255, 0.38);
-    background: rgba(255, 255, 255, 0.18);
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.30),
-        0 4px 12px rgba(0, 0, 0, 0.12);
+.pf-sidebar-collapse-toggle:hover {
+    border-color: #b9c9df;
+    background: #f8faff;
+    color: #174a96;
 }
 
-.pf-sidebar-collapse-btn:focus-visible {
-    outline: 2px solid rgba(255, 255, 255, 0.72);
+.pf-sidebar-collapse-toggle:active {
+    transform: scale(0.92);
+}
+
+.pf-sidebar-collapse-toggle:focus-visible {
+    outline: 2px solid #234ef4;
     outline-offset: 2px;
 }
 
-.pf-sidebar-collapse-btn:active {
-    transform: scale(0.97);
-}
-
-.pf-sidebar-collapse-icon {
-    display: grid;
-    width: 28px;
-    height: 28px;
-    flex: 0 0 28px;
-    place-items: center;
-    border-radius: 9px;
-    background: rgba(255, 255, 255, 0.18);
-    color: #ffffff;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
-}
-
-.pf-sidebar-collapse-icon svg {
+.pf-sidebar-collapse-toggle svg {
     width: 15px;
     height: 15px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 2.2;
+    stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.pf-sidebar-collapse-label {
-    overflow: hidden;
-    max-width: 130px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    white-space: nowrap;
+.pf-sidebar-collapse-icon {
+    display: inline-flex;
+    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.pf-sidebar--collapsed .pf-sidebar-collapse-btn {
-    width: 42px;
-    gap: 0;
-    padding: 0 6px;
-    border-radius: 12px;
-}
-
-.pf-sidebar--collapsed .pf-sidebar-collapse-icon svg {
+.pf-sidebar-collapse-icon--flipped {
     transform: rotate(180deg);
 }
 
-/* .pf-sidebar-collapse-label collapsed state is owned by motion */
-
-.pf-sidebar-tenant {
-    margin: 6px 0 0;
-    overflow: hidden;
-    max-width: 100%;
-    color: rgba(255, 255, 255, 0.52);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    white-space: nowrap;
+@media (max-width: 1023px) {
+    .pf-sidebar-collapse-toggle {
+        display: none;
+    }
 }
 
-/* .pf-sidebar-logo-text, .pf-sidebar-tenant, .pf-sidebar-link-label, and
-   .pf-sidebar-collapse-label opacity/maxWidth are now animated by motion —
-   the collapsed-state overrides below are intentionally absent. */
-
-.pf-sidebar--collapsed .pf-sidebar-logo {
-    justify-content: center;
-    gap: 0;
+.pf-sidebar-tenant {
+    flex-basis: 100%;
+    margin: 2px 0 0;
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .pf-sidebar-nav {
     display: flex;
-    flex: 1 1 auto;
     flex-direction: column;
-    gap: 3px;
-    min-height: 0;
-    overflow-y: auto;
+    gap: 4px;
 }
 
-.pf-sidebar-footer {
-    display: flex;
-    flex: 0 0 auto;
-    justify-content: center;
-    padding-top: 16px;
-    margin-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-/* ── Nav links — glass pill treatment ────────────────────────────────── */
 .pf-sidebar-link {
-    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 0 14px;
-    min-height: 44px;
-    border-radius: 9999px;
-    color: rgba(255, 255, 255, 0.72);
+    padding: 10px 14px;
+    border-radius: 14px;
+    color: #64748b;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
     transition:
-        background-color 180ms cubic-bezier(0.23, 1, 0.32, 1),
-        color 180ms cubic-bezier(0.23, 1, 0.32, 1),
-        transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
-        box-shadow 180ms cubic-bezier(0.23, 1, 0.32, 1),
-        border-color 180ms ease;
+        background 180ms ease,
+        color 180ms ease,
+        transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 180ms ease,
+        width 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        padding 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .pf-sidebar-link:hover {
-    will-change: transform;
-    background: var(--as-sidebar-link-hover);
-    color: #fff;
+    background: #edf3fc;
+    color: #234ef4;
     transform: translateX(2px);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
-.pf-sidebar-link-label {
-    overflow: hidden;
-    min-width: 0;
-    max-width: 180px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.pf-sidebar-link:active {
+    transform: scale(0.98);
 }
 
-/* Active — frosted white glass pill with brand text */
+.pf-sidebar-link:focus-visible {
+    outline: 2px solid #234ef4;
+    outline-offset: 2px;
+}
+
 .pf-sidebar-link--active,
 .pf-sidebar-link--active:hover {
-    background: var(--as-sidebar-link-active-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    color: var(--as-sidebar-link-active-fg);
-    font-weight: 600;
+    background: linear-gradient(135deg, #3e66ea 0%, #234ef4 50%, #1b36c8 100%);
+    color: #ffffff;
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.95),
-        inset 0 -1px 0 rgba(15, 23, 42, 0.08),
-        0 4px 20px -4px rgba(0, 0, 0, 0.22),
-        0 1px 4px rgba(0, 0, 0, 0.10);
-    transform: none !important;
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 8px 20px -4px rgba(35, 78, 244, 0.45),
+        0 2px 6px -1px rgba(35, 78, 244, 0.3);
 }
 
-.pf-sidebar-link--active::before {
-    display: none;
+.pf-sidebar-link--active .pf-sidebar-icon {
+    color: #ffffff;
 }
 
-/* ── Badge ────────────────────────────────────────────────────────────── */
+.pf-sidebar-link--active .pf-sidebar-label {
+    color: #ffffff;
+    font-weight: 700;
+}
+
 .pf-sidebar-badge {
     display: inline-flex;
     flex: 0 0 auto;
@@ -325,17 +432,15 @@
     padding: 0 7px;
     margin-left: auto;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: rgba(255, 255, 255, 0.82);
+    background: #edf3fc;
+    color: #174a96;
     font-size: 11px;
     font-weight: 700;
 }
 
 .pf-sidebar-link--active .pf-sidebar-badge {
-    background: var(--as-sidebar-badge-active-bg);
-    border-color: var(--as-sidebar-badge-active-bg);
-    color: var(--as-sidebar-badge-active-fg);
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
 }
 
 .pf-sidebar-icon {
@@ -344,6 +449,19 @@
     height: 20px;
     flex: 0 0 20px;
     place-items: center;
+    overflow: visible;
+    transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.pf-sidebar-icon > div {
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+}
+
+.pf-sidebar-link:hover .pf-sidebar-icon {
+    transform: scale(1.08);
 }
 
 .pf-sidebar-icon svg {
@@ -351,49 +469,460 @@
     height: 20px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
-.pf-sidebar--collapsed .pf-sidebar-link {
-    justify-content: center;
-    gap: 0;
-    padding: 10px;
+.pf-sidebar-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
-/* .pf-sidebar-link-label and .pf-sidebar-badge collapsed states are owned by motion */
+.pf-sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid #eef1f6;
+}
 
-/* ── Mobile topbar — frosted white ───────────────────────────────────── */
+.pf-sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 14px;
+    background: #f8faff;
+    border: 1px solid #eef1f6;
+    transition: background 180ms ease, border-color 180ms ease;
+}
+
+.pf-sidebar-avatar {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border-radius: 10px;
+    background: linear-gradient(145deg, #eaf2fd, #d6e5f9);
+    color: #174a96;
+    font-size: 14px;
+    font-weight: 700;
+    transition: transform 200ms ease;
+}
+
+.pf-sidebar-user:hover .pf-sidebar-avatar {
+    transform: scale(1.06);
+}
+
+.pf-sidebar-user-info {
+    min-width: 0;
+}
+
+.pf-sidebar-user-name {
+    margin: 0;
+    overflow: hidden;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pf-sidebar-user-email {
+    margin: 1px 0 0;
+    overflow: hidden;
+    color: #94a3b8;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pf-sidebar-footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pf-sidebar-footer-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: none;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    width: 100%;
+    text-align: left;
+    transition:
+        background 160ms ease,
+        color 160ms ease,
+        border-color 160ms ease,
+        transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pf-sidebar-footer-link:hover {
+    background: #f8faff;
+    color: #174a96;
+    transform: translateX(2px);
+}
+
+.pf-sidebar-footer-link:active {
+    transform: scale(0.98);
+}
+
+.pf-sidebar-footer-link:focus-visible {
+    outline: 2px solid #234ef4;
+    outline-offset: 2px;
+}
+
+.pf-sidebar-footer-link--active,
+.pf-sidebar-footer-link--active:hover {
+    background: #edf3fc;
+    color: #234ef4;
+}
+
+.pf-sidebar-footer-link--active .pf-sidebar-footer-icon {
+    color: #234ef4;
+}
+
+.pf-sidebar-footer-link--logout {
+    color: #dc2626;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.14);
+}
+
+.pf-sidebar-footer-link--logout .pf-sidebar-footer-icon {
+    color: #ef4444;
+    transition: transform 180ms ease;
+}
+
+.pf-sidebar-footer-link--logout:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #b91c1c;
+    border-color: rgba(239, 68, 68, 0.28);
+    box-shadow: 0 4px 14px -2px rgba(239, 68, 68, 0.18);
+    transform: translateX(2px);
+}
+
+.pf-sidebar-footer-link--logout:hover .pf-sidebar-footer-icon {
+    transform: scale(1.1);
+}
+
+.pf-sidebar--collapsed .pf-sidebar-footer-link--logout:hover {
+    transform: scale(1.06);
+}
+
+.pf-sidebar-footer-link--logout:active,
+.pf-sidebar-footer-link--logout.is-logging-out {
+    background: rgba(239, 68, 68, 0.24);
+    color: #991b1b;
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow:
+        inset 0 1px 2px rgba(153, 27, 27, 0.15),
+        0 4px 14px -2px rgba(239, 68, 68, 0.25);
+    transform: scale(0.97);
+}
+
+.pf-sidebar-footer-link--logout.is-logging-out .pf-sidebar-footer-icon {
+    animation: signal-pulse 1.4s ease-in-out infinite;
+}
+
+.pf-sidebar-footer-icon {
+    display: grid;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    place-items: center;
+    overflow: visible;
+}
+
+.pf-sidebar-footer-icon > div {
+    display: grid;
+    width: 18px;
+    height: 18px;
+    place-items: center;
+}
+
+.pf-sidebar-footer-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pf-sidebar-notification {
+    width: 100%;
+}
+
+.pf-sidebar-notification-icon {
+    position: relative;
+}
+
+.pf-sidebar-notification-count {
+    position: absolute;
+    top: -7px;
+    right: -8px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+}
+
+.pf-sidebar:not(.pf-sidebar--collapsed) .pf-sidebar-notification-count {
+    display: none;
+}
+
+.pf-notification-dropdown {
+    position: fixed;
+    z-index: 60;
+    display: flex;
+    width: min(320px, calc(100vw - 24px));
+    max-height: min(420px, calc(100dvh - 24px));
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow:
+        0 8px 24px -8px rgba(15, 23, 42, 0.18),
+        0 24px 48px -16px rgba(15, 23, 42, 0.16);
+}
+
+.pf-notification-dropdown-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid #eef1f6;
+}
+
+.pf-notification-dropdown-header strong {
+    display: block;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.pf-notification-dropdown-header span {
+    display: block;
+    margin-top: 2px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.pf-notification-dropdown-header a,
+.pf-notification-dropdown-header button {
+    flex: 0 0 auto;
+    border: 0;
+    background: none;
+    color: #234ef4;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0;
+    text-decoration: none;
+}
+
+.pf-notification-dropdown-header a:hover,
+.pf-notification-dropdown-header button:hover {
+    text-decoration: underline;
+}
+
+.pf-notification-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.pf-notification-empty {
+    margin: 0;
+    padding: 28px 16px;
+    color: #64748b;
+    font-size: 13px;
+    text-align: center;
+}
+
+.pf-notification-item {
+    display: flex;
+    width: 100%;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+}
+
+.pf-notification-item:hover {
+    background: #f8faff;
+}
+
+.pf-notification-item--unread {
+    background: #f5f8fe;
+}
+
+.pf-notification-severity {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 8px;
+    margin-top: 6px;
+    border-radius: 999px;
+    background: #64748b;
+}
+
+.pf-notification-item--error .pf-notification-severity {
+    background: #dc2626;
+}
+
+.pf-notification-item--warning .pf-notification-severity {
+    background: #c1791f;
+}
+
+.pf-notification-item--success .pf-notification-severity {
+    background: #188352;
+}
+
+.pf-notification-item--info .pf-notification-severity {
+    background: #234ef4;
+}
+
+.pf-notification-content {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pf-notification-content strong {
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pf-notification-content span {
+    color: #526989;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.pf-notification-content small {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.pf-notification-view-all {
+    display: block;
+    padding: 12px 16px;
+    border-top: 1px solid #eef1f6;
+    color: #234ef4;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+}
+
+.pf-notification-view-all:hover {
+    background: #f8faff;
+}
+
+.pf-global-tooltip {
+    position: fixed;
+    z-index: 10000;
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 13px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    white-space: nowrap;
+    color: #ffffff;
+    background: #071c44;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow:
+        0 4px 6px -1px rgba(7, 28, 68, 0.1),
+        0 14px 28px -4px rgba(7, 28, 68, 0.38);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    opacity: 0;
+    transform: translateY(-50%) translateX(-6px) scale(0.95);
+    transform-origin: left center;
+    transition:
+        opacity 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pf-global-tooltip--visible {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0) scale(1);
+}
+
+.pf-global-tooltip-arrow {
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    background: #071c44;
+    border-left: 1px solid rgba(255, 255, 255, 0.16);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    transform: translateY(-50%) rotate(45deg);
+    border-radius: 0 0 0 2px;
+}
+
+.pf-global-tooltip--danger {
+    background: #dc2626;
+    border-color: rgba(254, 202, 202, 0.3);
+    box-shadow:
+        0 4px 6px -1px rgba(220, 38, 38, 0.12),
+        0 14px 28px -4px rgba(220, 38, 38, 0.45);
+}
+
+.pf-global-tooltip--danger .pf-global-tooltip-arrow {
+    background: #dc2626;
+    border-color: rgba(254, 202, 202, 0.3);
+}
+
 .pf-mobile-topbar {
     display: none;
     align-items: center;
     gap: 12px;
     padding: 14px 20px;
-    border-bottom: 1px solid var(--as-topbar-border);
-    background: var(--as-mobile-topbar-bg);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-bottom: 1px solid #e7ecf4;
+    background: #ffffff;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.pf-mobile-topbar .pf-sidebar-logo-text {
+    color: #071c44;
 }
 
 @media (max-width: 1023px) {
     .pf-mobile-topbar {
         display: flex;
-    }
-
-    .pf-shell {
-        padding: 0;
-        gap: 0;
-    }
-
-    .pf-shell-main {
-        margin: 0;
-        border-radius: 0;
-        border: none;
-        min-height: 100vh;
-        box-shadow: none;
-        backdrop-filter: none;
-        background: var(--as-surface);
     }
 }
 
@@ -404,16 +933,24 @@
     flex: 0 0 38px;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--as-mobile-toggle-border);
-    border-radius: 999px;
-    background: var(--as-mobile-toggle-bg);
-    color: var(--as-text-slate);
+    border: 1px solid #e7ecf4;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #223047;
     cursor: pointer;
-    transition: background-color 150ms ease;
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        transform 150ms ease;
 }
 
 .pf-mobile-toggle:hover {
-    background: var(--as-mobile-toggle-bg-hover);
+    background: #f8faff;
+    border-color: #b9c9df;
+}
+
+.pf-mobile-toggle:active {
+    transform: scale(0.96);
 }
 
 .pf-mobile-toggle svg {
@@ -426,471 +963,252 @@
     stroke-linejoin: round;
 }
 
-/* ── Content card — frosted white glass ──────────────────────────────── */
 .pf-shell-main {
     display: flex;
     flex: 1 1 auto;
     min-width: 0;
+    min-height: 0;
     flex-direction: column;
-    margin: 12px 12px 12px 8px;
-    border-radius: 28px;
-    overflow: hidden;
-    min-height: calc(100vh - 24px);
-    background: var(--as-panel-glass-bg);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid var(--as-panel-glass-border);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.80),
-        0 20px 60px -20px rgba(10, 30, 100, 0.35),
-        0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.pf-page-transition {
+    width: 100%;
+    min-height: 100%;
+}
+
+.pf-page-transition--shell {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-page-transition {
+        transform: none !important;
+    }
 }
 
 .pf-shell-header {
-    padding: 20px clamp(16px, 4vw, 40px) 0;
+    margin: 14px 16px 0 12px;
+    padding: 22px 24px;
+    border: 1px solid var(--as-border);
+    border-radius: 24px;
+    background: var(--as-surface);
+    box-shadow: var(--as-shadow-card);
+}
+
+@media (max-width: 1023px) {
+    .pf-shell-header {
+        margin: 16px 16px 0;
+    }
 }
 
 .pf-shell-content {
     flex: 1 1 auto;
-    contain: layout;
-}
-
-/* ── Topbar — deeper frosted glass ───────────────────────────────────── */
-.pf-topbar {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 14px clamp(16px, 4vw, 40px);
-    border-bottom: 1px solid var(--as-topbar-border);
-    background: var(--as-topbar-bg);
-    backdrop-filter: blur(28px) saturate(200%);
-    -webkit-backdrop-filter: blur(28px) saturate(200%);
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.pf-topbar-left {
-    display: flex;
-    flex: 0 1 auto;
     min-width: 0;
-    align-items: center;
+    min-height: 0;
+    padding: 14px 16px 24px 12px;
 }
 
-.pf-topbar-school {
-    overflow: hidden;
-    color: var(--as-text);
-    font-size: 14px;
-    font-weight: 700;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pf-topbar-badge {
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: rgba(33, 68, 201, 0.08);
-    border: 1px solid rgba(33, 68, 201, 0.12);
-    color: var(--as-brand-mid);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.pf-topbar-right {
+.pf-shell-content:has(> .pft-dashboard) {
     display: flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: 8px;
-    margin-left: auto;
-}
-
-.pf-topbar-icon-btn {
-    position: relative;
-    display: inline-flex;
-    width: 40px;
-    height: 40px;
-    flex: 0 0 40px;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--as-topbar-icon-border);
-    border-radius: 999px;
-    background: var(--as-topbar-icon-bg);
-    color: var(--as-text-secondary);
-    cursor: pointer;
-    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
-}
-
-.pf-topbar-icon-btn:hover {
-    background: var(--as-topbar-icon-bg-hover);
-    border-color: var(--as-topbar-icon-border-hover);
-    color: var(--as-brand);
-}
-
-.pf-topbar-icon-btn:focus-visible {
-    outline: 2px solid var(--as-brand-blue);
-    outline-offset: 2px;
-}
-
-.pf-topbar-icon-btn svg {
-    width: 20px;
-    height: 20px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-/* ── Theme toggle icon — sun/moon cross-fade ──────────────────────────────
-   The two glyphs are stacked and cross-faded/rotated in place instead of
-   React swapping one <svg> for the other, which had zero transition and
-   popped instantly right where the click lands. */
-.pf-theme-icon {
-    position: relative;
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-}
-
-.pf-theme-icon-sun,
-.pf-theme-icon-moon {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transform: rotate(-72deg) scale(0.6);
-    transition: opacity 240ms var(--ease-out), transform 240ms var(--ease-out);
-}
-
-.pf-theme-icon--visible {
-    opacity: 1;
-    transform: rotate(0deg) scale(1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .pf-theme-icon-sun,
-    .pf-theme-icon-moon {
-        transition: opacity 1ms linear;
-        transform: none;
-    }
-}
-
-.pf-topbar-badge-dot {
-    position: absolute;
-    top: 8px;
-    right: 9px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--as-danger);
-    border: 2px solid var(--as-surface);
-}
-
-.pf-topbar-notification-count {
-    position: absolute;
-    top: -5px;
-    right: -6px;
-    display: grid;
-    min-width: 19px;
-    height: 19px;
-    place-items: center;
-    padding: 0 5px;
-    border: 2px solid var(--as-surface);
-    border-radius: 999px;
-    background: var(--as-danger-solid);
-    color: #fff;
-    font-size: 9px;
-    font-weight: 800;
-    line-height: 1;
-}
-
-.pf-notification-dropdown {
-    position: absolute;
-    z-index: 50;
-    top: calc(100% + 10px);
-    right: 0;
-    width: min(390px, calc(100vw - 24px));
-    overflow: hidden;
-    border: 1px solid var(--as-dropdown-border);
-    border-radius: 16px;
-    background: var(--as-dropdown-bg);
-    box-shadow: var(--as-shadow-overlay);
-    backdrop-filter: blur(18px);
-    animation: pf-topbar-dropdown-in 150ms ease;
-}
-
-.pf-notification-dropdown-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 16px 18px;
-    border-bottom: 1px solid var(--as-topbar-divider);
-}
-
-.pf-notification-dropdown-header > div {
-    display: grid;
-    gap: 2px;
-}
-
-.pf-notification-dropdown-header strong { color: var(--as-text); font-size: 14px; }
-.pf-notification-dropdown-header span { color: var(--as-text-secondary); font-size: 11px; }
-.pf-notification-dropdown-header button {
-    color: var(--as-brand-blue);
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.pf-notification-list { max-height: 430px; overflow-y: auto; }
-.pf-notification-empty { padding: 36px 18px; color: var(--as-text-secondary); text-align: center; font-size: 13px; }
-
-.pf-notification-item {
-    position: relative;
-    display: flex;
-    width: 100%;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--as-border-light);
-    color: inherit;
-    text-align: left;
-    transition: background-color 150ms ease;
-}
-
-.pf-notification-item:hover,
-.pf-notification-item:focus-visible { background: var(--as-dropdown-item-hover); }
-.pf-notification-item:focus-visible { outline: 2px solid var(--as-brand-blue); outline-offset: -2px; }
-.pf-notification-item--unread { background: var(--as-surface-active); }
-
-.pf-notification-severity {
-    width: 9px;
-    height: 9px;
-    flex: 0 0 9px;
-    margin-top: 5px;
-    border-radius: 999px;
-    background: var(--as-info);
-}
-
-.pf-notification-item--error .pf-notification-severity { background: var(--as-danger); }
-.pf-notification-item--warning .pf-notification-severity { background: var(--as-warning); }
-.pf-notification-item--success .pf-notification-severity { background: var(--as-success); }
-.pf-notification-content { display: grid; min-width: 0; gap: 4px; }
-.pf-notification-content strong { color: var(--as-text); font-size: 12px; }
-.pf-notification-content > span { color: var(--as-text-secondary); font-size: 11px; line-height: 1.5; }
-.pf-notification-content small { color: var(--as-text-muted); font-size: 10px; }
-.pf-notification-view-all {
-    display: block;
-    padding: 12px 18px;
-    color: var(--as-brand-blue);
-    text-align: center;
-    font-size: 12px;
-    font-weight: 700;
-}
-.pf-notification-view-all:hover { background: var(--as-dropdown-item-hover); }
-
-@media (prefers-reduced-motion: reduce) {
-    .pf-notification-dropdown { animation: none; }
-}
-
-.pf-topbar-divider {
-    width: 1px;
-    height: 24px;
-    margin: 0 4px;
-    background: var(--as-topbar-divider);
-}
-
-.pf-topbar-menu {
-    position: relative;
-}
-
-.pf-topbar-trigger {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 10px 6px 6px;
-    border: none;
-    border-radius: 999px;
-    background: transparent;
-    cursor: pointer;
-    transition: background-color 150ms ease;
-}
-
-.pf-topbar-trigger:hover {
-    background: var(--as-topbar-trigger-hover);
-}
-
-.pf-topbar-trigger:focus-visible {
-    outline: 2px solid var(--as-brand-blue);
-    outline-offset: 2px;
-}
-
-.pf-topbar-avatar {
-    display: grid;
-    width: 36px;
-    height: 36px;
-    flex: 0 0 36px;
-    place-items: center;
-    border-radius: 50%;
-    background: linear-gradient(145deg, var(--as-brand-blue-light-solid), var(--as-brand-blue-solid));
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 700;
-    box-shadow:
-        0 2px 8px rgba(40, 99, 189, 0.35),
-        inset 0 1px 0 rgba(255, 255, 255, 0.30);
-}
-
-.pf-topbar-user {
-    display: none;
-    min-width: 0;
     flex-direction: column;
-    text-align: left;
 }
 
-@media (min-width: 640px) {
-    .pf-topbar-user {
-        display: flex;
+@media (max-width: 1023px) {
+    .pf-shell-content {
+        padding: 16px 16px 24px;
     }
 }
 
-.pf-topbar-user-name {
-    overflow: hidden;
-    color: var(--as-text);
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.3;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pf-topbar-user-role {
-    overflow: hidden;
-    color: var(--as-brand-blue);
-    font-size: 11.5px;
-    font-weight: 600;
-    line-height: 1.3;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pf-topbar-chevron {
-    display: none;
-    width: 16px;
-    height: 16px;
-    flex: 0 0 16px;
-    fill: none;
-    stroke: var(--as-text-muted);
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    transition: transform 150ms ease;
-}
-
-@media (min-width: 640px) {
-    .pf-topbar-chevron {
-        display: block;
-    }
-}
-
-.pf-topbar-chevron--open {
-    transform: rotate(180deg);
-}
-
-/* ── User dropdown — glass card ──────────────────────────────────────── */
-.pf-topbar-dropdown {
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    z-index: 30;
-    width: 208px;
-    padding: 8px;
-    border: 1px solid var(--as-dropdown-border);
+.pf-shell-content .rounded-lg.bg-white:not(.shadow-xl) {
+    border: 1px solid #e2e8f0;
     border-radius: 20px;
-    background: var(--as-dropdown-bg);
-    backdrop-filter: blur(28px) saturate(180%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.90),
-        0 24px 48px -16px rgba(15, 35, 70, 0.28),
-        0 4px 16px rgba(0, 0, 0, 0.08);
-    animation: pf-topbar-dropdown-in 150ms ease;
+    box-shadow: 0 8px 24px -4px rgba(10, 27, 115, 0.1);
 }
 
-@keyframes pf-topbar-dropdown-in {
-    from {
-        opacity: 0;
-        transform: translateY(-4px) scale(0.98);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+.pf-shell-content .rounded-lg.bg-white.shadow-sm {
+    border-color: #e2e8f0;
+}
+
+.pf-shell-header h2 {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.02em;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .pf-topbar-dropdown {
-        animation: none;
+    .pf-sidebar,
+    .pf-sidebar-link,
+    .pf-sidebar-icon,
+    .pf-sidebar-footer-link,
+    .pf-sidebar-avatar,
+    .pf-sidebar-collapse-toggle,
+    .pf-sidebar-collapse-icon,
+    .pf-global-tooltip {
+        transition: none !important;
+    }
+
+    .pf-sidebar--mobile,
+    .pf-sidebar-overlay {
+        animation: none !important;
     }
 }
 
-.pf-topbar-dropdown-item {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border: none;
-    border-radius: 14px;
-    background: none;
-    color: var(--as-text-body);
-    font-size: 13px;
-    font-weight: 600;
-    text-align: left;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background-color 150ms ease, color 150ms ease;
+/* Dark mode — keep the floating-card shell, invert surfaces */
+:root.dark .pf-skip-link {
+    background: #131c2e;
+    color: #9db4ff;
+    border-color: #263244;
 }
 
-.pf-topbar-dropdown-item + .pf-topbar-dropdown-item {
-    margin-top: 2px;
+:root.dark .pf-shell {
+    background: #0b1220;
 }
 
-.pf-topbar-dropdown-item svg {
-    width: 16px;
-    height: 16px;
-    flex: 0 0 16px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+:root.dark .pf-sidebar {
+    background: rgba(19, 28, 46, 0.94);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.24),
+        0 8px 24px -6px rgba(0, 0, 0, 0.32);
+    scrollbar-color: #334155 transparent;
 }
 
-.pf-topbar-dropdown-item:hover,
-.pf-topbar-dropdown-item:focus-visible {
-    background: var(--as-dropdown-item-hover);
-    color: var(--as-brand-mid);
+:root.dark .pf-sidebar::-webkit-scrollbar-thumb {
+    background: #334155;
 }
 
-.pf-topbar-dropdown-item:focus-visible {
-    outline: 2px solid var(--as-brand-blue);
-    outline-offset: -2px;
+:root.dark .pf-sidebar--mobile {
+    background: #131c2e;
+    border-right-color: #263244;
 }
 
-.pf-topbar-dropdown-divider {
-    height: 1px;
-    margin: 6px 4px;
-    background: var(--as-topbar-divider);
+:root.dark .pf-sidebar-logo-text,
+:root.dark .pf-mobile-topbar .pf-sidebar-logo-text {
+    color: #f1f5f9;
 }
 
-.pf-topbar-dropdown-item--danger {
-    color: var(--as-danger);
+:root.dark .pf-sidebar-collapse-toggle {
+    background: #131c2e;
+    border-color: #263244;
+    color: #94a3b8;
 }
 
-.pf-topbar-dropdown-item--danger:hover,
-.pf-topbar-dropdown-item--danger:focus-visible {
-    background: var(--as-dropdown-danger-hover);
-    color: var(--as-danger);
+:root.dark .pf-sidebar-collapse-toggle:hover {
+    background: #182338;
+    border-color: #3b4a63;
+    color: #9db4ff;
+}
+
+:root.dark .pf-sidebar-link {
+    color: #94a3b8;
+}
+
+:root.dark .pf-sidebar-link:hover {
+    background: rgba(35, 78, 244, 0.16);
+    color: #9db4ff;
+}
+
+:root.dark .pf-sidebar-badge {
+    background: rgba(35, 78, 244, 0.18);
+    color: #9db4ff;
+}
+
+:root.dark .pf-sidebar-footer {
+    border-top-color: #263244;
+}
+
+:root.dark .pf-sidebar-user {
+    background: #182338;
+    border-color: #263244;
+}
+
+:root.dark .pf-sidebar-avatar {
+    background: linear-gradient(145deg, #1c2740, #223252);
+    color: #9db4ff;
+}
+
+:root.dark .pf-sidebar-user-name {
+    color: #f1f5f9;
+}
+
+:root.dark .pf-sidebar-footer-link {
+    color: #94a3b8;
+}
+
+:root.dark .pf-sidebar-footer-link:hover,
+:root.dark .pf-sidebar-footer-link--active,
+:root.dark .pf-sidebar-footer-link--active:hover {
+    background: rgba(35, 78, 244, 0.16);
+    color: #9db4ff;
+}
+
+:root.dark .pf-notification-dropdown {
+    background: #131c2e;
+    border-color: #263244;
+    box-shadow:
+        0 8px 24px -8px rgba(0, 0, 0, 0.4),
+        0 24px 48px -16px rgba(0, 0, 0, 0.45);
+}
+
+:root.dark .pf-notification-dropdown-header {
+    border-bottom-color: #263244;
+}
+
+:root.dark .pf-notification-dropdown-header strong {
+    color: #f1f5f9;
+}
+
+:root.dark .pf-notification-dropdown-header span {
+    color: #94a3b8;
+}
+
+:root.dark .pf-notification-dropdown-header a,
+:root.dark .pf-notification-dropdown-header button {
+    color: #9db4ff;
+}
+
+:root.dark .pf-notification-empty,
+:root.dark .pf-notification-content span {
+    color: #94a3b8;
+}
+
+:root.dark .pf-notification-item:hover,
+:root.dark .pf-notification-view-all:hover {
+    background: #182338;
+}
+
+:root.dark .pf-notification-item--unread {
+    background: rgba(35, 78, 244, 0.12);
+}
+
+:root.dark .pf-notification-content strong {
+    color: #f1f5f9;
+}
+
+:root.dark .pf-notification-content small {
+    color: #64748b;
+}
+
+:root.dark .pf-notification-view-all {
+    border-top-color: #263244;
+    color: #9db4ff;
+}
+
+:root.dark .pf-mobile-topbar {
+    background: #131c2e;
+    border-bottom-color: #263244;
+}
+
+:root.dark .pf-mobile-toggle {
+    background: #131c2e;
+    border-color: #263244;
+    color: #e2e8f0;
+}
+
+:root.dark .pf-mobile-toggle:hover {
+    background: #182338;
+    border-color: #3b4a63;
 }

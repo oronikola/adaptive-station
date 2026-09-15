@@ -1,11 +1,13 @@
 import ApplicationLogo from '@/Components/Branding/ApplicationLogo';
-import Header from '@/Components/Navigation/Header';
+import { MenuIcon } from '@/Components/icons/menu';
+import { XIcon } from '@/Components/icons/x';
+import PageTransition from '@/Components/Navigation/PageTransition';
 import Sidebar from '@/Components/Navigation/Sidebar';
 import {
     classifyFlashMessage,
     useToast,
 } from '@/Components/toast/ToastProvider';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, usePoll } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { NavItem, PageProps } from '@/types';
 import '../../../css/components/navigation.css';
@@ -18,13 +20,28 @@ interface AppShellProps {
     children: React.ReactNode;
 }
 
-const SIDEBAR_COLLAPSED_STORAGE_KEY = 'pf-sidebar-collapsed';
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'as-sidebar-collapsed';
+const LEGACY_SIDEBAR_COLLAPSED_STORAGE_KEY = 'pf-sidebar-collapsed';
 
-/** Reads the sidebar's collapsed preference synchronously so the first
- * render already matches it (no expanded-then-collapse flash on load). */
+interface TooltipState {
+    visible: boolean;
+    text: string;
+    top: number;
+    left: number;
+    variant: 'default' | 'danger';
+}
+
 function readStoredCollapsed(): boolean {
+    if (typeof window === 'undefined') {
+        return false;
+    }
+
     try {
-        return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === '1';
+        const stored =
+            window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) ??
+            window.localStorage.getItem(LEGACY_SIDEBAR_COLLAPSED_STORAGE_KEY);
+
+        return stored === '1';
     } catch {
         return false;
     }
@@ -39,35 +56,81 @@ export default function AppShell({
     children,
 }: AppShellProps) {
     const { auth, tenant, flash } = usePage<PageProps>().props;
-    const user = auth.user;
+    const user = auth?.user ?? null;
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
-    // Each Inertia page mounts its own layout, so this preference is
-    // persisted to localStorage rather than lifted state — it needs to
-    // survive across page navigations, not just re-renders.
     const [collapsed, setCollapsed] = useState(readStoredCollapsed);
+    const [tooltip, setTooltip] = useState<TooltipState>({
+        visible: false,
+        text: '',
+        top: 0,
+        left: 0,
+        variant: 'default',
+    });
     const { showToast } = useToast();
+
+    usePoll(30000, { only: ['webNotifications'] });
+
+    const handleShowTooltip = (
+        e: React.MouseEvent<HTMLElement>,
+        text: string,
+        variant: 'default' | 'danger' = 'default',
+    ) => {
+        if (!collapsed) {
+            return;
+        }
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        setTooltip({
+            visible: true,
+            text,
+            top: Math.round(rect.top + rect.height / 2),
+            left: Math.round(rect.right + 12),
+            variant,
+        });
+    };
+
+    const handleHideTooltip = () => {
+        setTooltip((previous) =>
+            previous.visible ? { ...previous, visible: false } : previous,
+        );
+    };
 
     useEffect(() => {
         try {
-            localStorage.setItem(
+            window.localStorage.setItem(
                 SIDEBAR_COLLAPSED_STORAGE_KEY,
                 collapsed ? '1' : '0',
             );
         } catch {
-            // Private browsing / storage disabled — the toggle still works
-            // for this session, it just won't be remembered next time.
+            // Private browsing / storage disabled — toggle still works
+            // for this session.
         }
     }, [collapsed]);
 
     useEffect(() => {
-        if (flash?.success) {
+        if (!tooltip.visible) {
+            return;
+        }
+
+        const handleDismiss = () => handleHideTooltip();
+        window.addEventListener('scroll', handleDismiss, true);
+        window.addEventListener('resize', handleDismiss);
+
+        return () => {
+            window.removeEventListener('scroll', handleDismiss, true);
+            window.removeEventListener('resize', handleDismiss);
+        };
+    }, [tooltip.visible]);
+
+    useEffect(() => {
+        if (flash?.success && !flash?.activationCode) {
             showToast({
                 type: classifyFlashMessage(flash.success),
                 message: flash.success,
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [flash?.success]);
+    }, [flash?.success, flash?.activationCode]);
 
     useEffect(() => {
         if (flash?.error) {
@@ -78,7 +141,9 @@ export default function AppShell({
 
     return (
         <div className="pf-shell">
-            <a href="#main-content" className="pf-skip-link">Skip to content</a>
+            <a href="#main-content" className="pf-skip-link">
+                Skip to content
+            </a>
 
             <aside
                 aria-label="Main navigation"
@@ -90,11 +155,36 @@ export default function AppShell({
                     brand={brand}
                     brandHref={brandHref}
                     items={items}
+                    user={user}
                     tenantLabel={tenant?.name}
                     collapsed={collapsed}
-                    onToggleCollapse={() => setCollapsed((previous) => !previous)}
+                    onToggleCollapsed={() => {
+                        handleHideTooltip();
+                        setCollapsed((previous) => !previous);
+                    }}
+                    onShowTooltip={handleShowTooltip}
+                    onHideTooltip={handleHideTooltip}
                 />
             </aside>
+
+            <div
+                role="tooltip"
+                aria-hidden={!tooltip.visible}
+                className={
+                    'pf-global-tooltip' +
+                    (tooltip.visible ? ' pf-global-tooltip--visible' : '') +
+                    (tooltip.variant === 'danger'
+                        ? ' pf-global-tooltip--danger'
+                        : '')
+                }
+                style={{
+                    top: `${tooltip.top}px`,
+                    left: `${tooltip.left}px`,
+                }}
+            >
+                <span className="pf-global-tooltip-arrow" aria-hidden="true" />
+                <span className="pf-global-tooltip-text">{tooltip.text}</span>
+            </div>
 
             {mobileNavOpen && (
                 <div
@@ -110,6 +200,7 @@ export default function AppShell({
                             brand={brand}
                             brandHref={brandHref}
                             items={items}
+                            user={user}
                             tenantLabel={tenant?.name}
                         />
                     </aside>
@@ -132,33 +223,32 @@ export default function AppShell({
                         aria-expanded={mobileNavOpen}
                     >
                         {mobileNavOpen ? (
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <XIcon size={20} />
                         ) : (
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
+                            <MenuIcon size={20} />
                         )}
                     </button>
                     <Link href={brandHref} className="pf-sidebar-logo">
-                        <ApplicationLogo
-                            className="pf-sidebar-logo-mark"
-                            alt=""
-                        />
+                        <span className="pf-sidebar-logo-badge">
+                            <ApplicationLogo
+                                className="pf-sidebar-logo-icon"
+                                alt=""
+                            />
+                        </span>
                         <span className="pf-sidebar-logo-text">{brand}</span>
                     </Link>
                 </div>
 
-                <Header
-                    user={user}
-                    schoolLabel={tenant?.name}
-                    isPlatform={user.role === 'platform_super_admin'}
-                />
+                <PageTransition
+                    withExit={false}
+                    className="pf-page-transition pf-page-transition--shell"
+                >
+                    {header && <div className="pf-shell-header">{header}</div>}
 
-                {header && <div className="pf-shell-header">{header}</div>}
-
-                <main id="main-content" className="pf-shell-content">{children}</main>
+                    <main id="main-content" className="pf-shell-content">
+                        {children}
+                    </main>
+                </PageTransition>
             </div>
         </div>
     );

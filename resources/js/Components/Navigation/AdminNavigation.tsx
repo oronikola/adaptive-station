@@ -1,4 +1,19 @@
+import { BellIcon } from '@/Components/icons/bell';
+import { CalendarCheckIcon } from '@/Components/icons/calendar-check';
+import { ConnectIcon } from '@/Components/icons/connect';
+import { CreditCardIcon } from '@/Components/icons/credit-card';
+import { DownloadIcon } from '@/Components/icons/download';
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
+import { HistoryIcon } from '@/Components/icons/history';
+import { LayoutGridIcon } from '@/Components/icons/layout-grid';
+import { MonitorCogIcon } from '@/Components/icons/monitor-cog';
+import { RadioTowerIcon } from '@/Components/icons/radio-tower';
+import { SmartphoneNfcIcon } from '@/Components/icons/smartphone-nfc';
+import { UserPlusIcon } from '@/Components/icons/user-plus';
+import { UsersIcon } from '@/Components/icons/users';
 import { NavItem } from '@/types';
+
+const icon = { size: 20 } as const;
 
 export const adminNavigationItems: NavItem[] = [
     {
@@ -6,75 +21,42 @@ export const adminNavigationItems: NavItem[] = [
         label: 'Dashboard',
         route: 'portal.dashboard',
         activePattern: 'portal.dashboard',
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                <rect x="14" y="14" width="7" height="7" rx="1.5" />
-            </svg>
-        ),
+        icon: <LayoutGridIcon {...icon} />,
     },
     {
         name: 'people',
         label: 'People',
         route: 'portal.people.index',
         activePattern: 'portal.people.*',
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <circle cx="12" cy="8" r="3.2" />
-                <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
-            </svg>
-        ),
+        icon: <UsersIcon {...icon} />,
     },
     {
         name: 'notifications',
         label: 'Notifications',
         route: 'notifications.index',
         activePattern: 'notifications.*',
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-                <path d="M10 21h4" />
-            </svg>
-        ),
+        icon: <BellIcon {...icon} />,
     },
     {
         name: 'rfid-cards',
         label: 'RFID Cards',
         route: 'portal.rfid-cards.index',
         activePattern: 'portal.rfid-cards.*',
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <rect x="3" y="6" width="18" height="12" rx="2" />
-                <path d="M3 10h18" />
-                <rect x="6" y="13" width="4" height="2.4" rx="0.5" />
-            </svg>
-        ),
+        icon: <CreditCardIcon {...icon} />,
     },
     {
         name: 'stations',
         label: 'Stations',
         route: 'portal.stations.index',
         activePattern: 'portal.stations.*',
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <rect x="4" y="5" width="16" height="13" rx="2" />
-                <path d="M8 21h8M9 9h6M9 13h4" />
-            </svg>
-        ),
+        icon: <MonitorCogIcon {...icon} />,
     },
     {
         name: 'attendance',
         label: 'Attendance',
         route: 'portal.attendance.index',
         activePattern: 'portal.attendance.*',
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="8.5" />
-                <path d="M12 7.5V12l3 2" />
-            </svg>
-        ),
+        icon: <CalendarCheckIcon {...icon} />,
     },
     {
         name: 'parents',
@@ -82,27 +64,14 @@ export const adminNavigationItems: NavItem[] = [
         route: 'portal.parents.index',
         activePattern: 'portal.parents.*',
         adminOnly: true,
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <circle cx="8" cy="7" r="3" />
-                <circle cx="17" cy="10" r="2.5" />
-                <path d="M2 20v-2a6 6 0 0 1 12 0v2M14 16a4.5 4.5 0 0 1 8 3v1" />
-            </svg>
-        ),
+        icon: <UserPlusIcon {...icon} />,
     },
     {
         name: 'users',
         label: 'Users',
         route: 'portal.users.index',
         activePattern: 'portal.users.*',
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <circle cx="9" cy="8" r="3" />
-                <path d="M3.5 19.5c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5" />
-                <path d="M16 8.3a2.6 2.6 0 1 0 0-5.2" />
-                <path d="M15 14.3c2.4.5 4.2 2.4 4.6 5.2" />
-            </svg>
-        ),
+        icon: <UsersIcon {...icon} />,
     },
     {
         name: 'integrations',
@@ -110,12 +79,7 @@ export const adminNavigationItems: NavItem[] = [
         route: 'portal.integrations.index',
         activePattern: 'portal.integrations.*',
         adminOnly: true,
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <path d="M8 16a4 4 0 0 1 0-5.7l2-2a4 4 0 0 1 5.7 5.7l-1 1" />
-                <path d="M16 8a4 4 0 0 1 0 5.7l-2 2a4 4 0 0 1-5.7-5.7l1-1" />
-            </svg>
-        ),
+        icon: <ConnectIcon {...icon} />,
     },
     {
         name: 'imports',
@@ -123,12 +87,7 @@ export const adminNavigationItems: NavItem[] = [
         route: 'portal.imports.index',
         activePattern: 'portal.imports.*',
         adminOnly: true,
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <path d="M12 4v10m0 0-3.5-3.5M12 14l3.5-3.5" />
-                <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
-            </svg>
-        ),
+        icon: <DownloadIcon {...icon} />,
     },
     {
         name: 'kiosk',
@@ -136,14 +95,7 @@ export const adminNavigationItems: NavItem[] = [
         route: 'kiosk',
         activePattern: 'kiosk',
         external: true,
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <rect x="2.5" y="5.5" width="13" height="14" rx="2.6" />
-                <circle cx="9" cy="12.5" r="1.6" fill="currentColor" stroke="none" />
-                <path d="M16.8 8.8a5.2 5.2 0 0 1 0 7.4" />
-                <path d="M19.4 6.2a9 9 0 0 1 0 13" opacity="0.55" />
-            </svg>
-        ),
+        icon: <SmartphoneNfcIcon {...icon} />,
     },
     {
         name: 'sms-log',
@@ -154,12 +106,7 @@ export const adminNavigationItems: NavItem[] = [
         // (the platform-wide oversight role) — a real tenant_admin/
         // tenant_operator never sees this item.
         oversightOnly: true,
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <rect x="7" y="2" width="10" height="20" rx="2" />
-                <path d="M11 18h2" />
-            </svg>
-        ),
+        icon: <HistoryIcon {...icon} />,
     },
     {
         name: 'sms-gateway',
@@ -170,12 +117,7 @@ export const adminNavigationItems: NavItem[] = [
         // shared across every school, not owned by whichever one is
         // currently selected, so this always shows the whole fleet.
         oversightOnly: true,
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <rect x="6" y="3" width="12" height="18" rx="2" />
-                <path d="M10 18h4" />
-            </svg>
-        ),
+        icon: <RadioTowerIcon {...icon} />,
     },
     {
         name: 'switch-school',
@@ -183,11 +125,6 @@ export const adminNavigationItems: NavItem[] = [
         route: 'oversight.schools.index',
         activePattern: 'oversight.schools.*',
         oversightOnly: true,
-        icon: (
-            <svg viewBox="0 0 24 24">
-                <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
-                <path d="M15 3.5l4 2v2" opacity="0.6" />
-            </svg>
-        ),
+        icon: <GraduationCapIcon {...icon} />,
     },
 ];

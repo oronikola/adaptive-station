@@ -4,6 +4,52 @@ import {
     Transition,
     TransitionChild,
 } from '@headlessui/react';
+import { XIcon } from '@/Components/icons/x';
+
+export type ModalHeroTone = 'blue' | 'violet' | 'green' | 'amber' | 'red';
+
+/** Header used by the Add Station modal (988106e): tinted icon, title,
+ * optional subtitle, and a close control. */
+export function ModalHero({
+    tone = 'blue',
+    title,
+    subtitle,
+    onClose,
+    children,
+}: {
+    tone?: ModalHeroTone;
+    title: React.ReactNode;
+    subtitle?: React.ReactNode;
+    onClose: () => void;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="pf-modal-header">
+            <div className="pf-modal-hero">
+                <span
+                    className={`pf-modal-hero-icon pf-modal-hero-icon--${tone}`}
+                    aria-hidden="true"
+                >
+                    {children}
+                </span>
+                <div className="pf-modal-hero-text">
+                    <h3 className="pf-modal-title">{title}</h3>
+                    {subtitle ? (
+                        <p className="pf-modal-subtitle">{subtitle}</p>
+                    ) : null}
+                </div>
+            </div>
+            <button
+                type="button"
+                className="pf-modal-close"
+                onClick={onClose}
+                aria-label="Close"
+            >
+                <XIcon size={18} />
+            </button>
+        </div>
+    );
+}
 
 export default function Modal({
     children,

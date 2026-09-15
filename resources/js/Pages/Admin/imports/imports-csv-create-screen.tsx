@@ -1,4 +1,9 @@
 import InputError from '@/Components/InputError';
+import { ClipboardCheckIcon } from '@/Components/icons/clipboard-check';
+import { DownloadIcon } from '@/Components/icons/download';
+import { PlusIcon } from '@/Components/icons/plus';
+import { SearchIcon } from '@/Components/icons/search';
+import { UploadIcon } from '@/Components/icons/upload';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { useRef, useState } from 'react';
@@ -75,11 +80,7 @@ export default function ImportsCsvCreateScreen() {
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="4" y="15.4" width="16" height="4.6" rx="1.4" />
-                                <rect x="10.6" y="4" width="2.8" height="7.4" rx="1.2" />
-                                <polygon points="7.4,11 16.6,11 12,15.6" />
-                            </svg>
+                            <DownloadIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Upload CSV Import</h1>
@@ -131,11 +132,7 @@ export default function ImportsCsvCreateScreen() {
                         >
                             {data.file ? (
                                 <>
-                                    <svg viewBox="0 0 24 24" style={{ width: 32, height: 32, fill: 'none', stroke: 'var(--as-success)', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                        <polyline points="14 2 14 8 20 8" />
-                                        <polyline points="9 15 11 17 15 13" />
-                                    </svg>
+                                    <ClipboardCheckIcon size={22} style={{ color: 'var(--as-success)' }} />
                                     <div>
                                         <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: 'var(--as-text)' }}>{data.file.name}</p>
                                         <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--as-text-muted)' }}>{formatFileSize(data.file.size)}</p>
@@ -151,11 +148,10 @@ export default function ImportsCsvCreateScreen() {
                                 </>
                             ) : (
                                 <>
-                                    <svg viewBox="0 0 24 24" style={{ width: 36, height: 36, fill: 'none', stroke: dragging ? 'var(--as-brand-blue)' : 'var(--as-text-muted)', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round', transition: 'stroke 180ms' }}>
-                                        <rect x="4" y="15.4" width="16" height="4.6" rx="1.4" />
-                                        <rect x="10.6" y="4" width="2.8" height="7.4" rx="1.2" />
-                                        <polygon points="7.4,11 16.6,11 12,15.6" />
-                                    </svg>
+                                    <UploadIcon
+                                        size={22}
+                                        style={{ color: dragging ? 'var(--as-brand-blue)' : 'var(--as-text-muted)', transition: 'color 180ms' }}
+                                    />
                                     <div>
                                         <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: 'var(--as-text)' }}>
                                             {dragging ? 'Drop to upload' : 'Drag & drop your CSV here'}
@@ -185,10 +181,7 @@ export default function ImportsCsvCreateScreen() {
                                 disabled={processing || !data.file}
                                 onClick={submit(false)}
                             >
-                                <svg viewBox="0 0 24 24">
-                                    <circle cx="11" cy="11" r="7" />
-                                    <path d="m20 20-3.5-3.5" />
-                                </svg>
+                                <SearchIcon size={16} />
                                 Preview
                             </button>
                             <button
@@ -197,9 +190,7 @@ export default function ImportsCsvCreateScreen() {
                                 disabled={processing || !data.file}
                                 onClick={submit(true)}
                             >
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 5v14M5 12h14" />
-                                </svg>
+                                <PlusIcon size={16} />
                                 Commit Import
                             </button>
                         </div>

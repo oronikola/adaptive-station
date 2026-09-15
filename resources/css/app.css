@@ -223,18 +223,18 @@ html.theme-transition * {
        everything that scrollbar rule doesn't reach). */
     color-scheme: light;
 
-    /* Brand */
-    --as-brand-dark:       #0f172a;
-    --as-brand:            #1e293b;
-    --as-brand-mid:        #334155;
-    --as-brand-blue:       #475569;
-    --as-brand-blue-light: #64748b;
+    /* Brand — royal blue system from 988106e */
+    --as-brand-dark:       #071c44;
+    --as-brand:            #0b2a5b;
+    --as-brand-mid:        #174a96;
+    --as-brand-blue:       #234ef4;
+    --as-brand-blue-light: #2863bd;
 
     /* Surfaces */
-    --as-bg:               #f4f6f9;
+    --as-bg:               #f1f5fb;
     --as-surface:          #ffffff;
-    --as-surface-hover:    #f8fafc;
-    --as-surface-active:   #f1f5f9;
+    --as-surface-hover:    #f8faff;
+    --as-surface-active:   #edf3fc;
 
     /* Borders */
     --as-border:           #e2e8f0;
@@ -261,59 +261,59 @@ html.theme-transition * {
     --as-danger-bg:        #fef2f2;
     --as-danger-bg-alt:    #fdecea;
     --as-danger-border:    #fecaca;
-    --as-info:             #475569;
-    --as-info-bg:          #f1f5f9;
+    --as-info:             #174a96;
+    --as-info-bg:          #edf3fc;
 
     /* Neutral status */
-    --as-neutral:          #475569;
-    --as-neutral-bg:       #eef1f6;
+    --as-neutral:          #174a96;
+    --as-neutral-bg:       #edf3fc;
 
     /* Shadows */
-    --as-shadow-card:       0 8px 24px rgba(15, 35, 70, 0.08);
+    --as-shadow-card:       0 8px 24px -4px rgba(10, 27, 115, 0.12);
     --as-shadow-card-hover: 0 12px 30px rgba(15, 35, 70, 0.12);
     --as-shadow-sm:         0 4px 12px -8px rgba(23, 74, 150, 0.75);
     --as-shadow-overlay:    0 20px 44px -20px rgba(15, 35, 70, 0.55);
     --as-shadow-deep:       0 18px 30px -22px rgba(7, 28, 68, 0.82);
 
-    /* Glass surfaces (shell/sidebar/topbar — see components/navigation.css) */
-    --as-shell-canvas:            linear-gradient(145deg, #0f172a 0%, #1e293b 42%, #334155 100%);
-    --as-panel-glass-bg:          rgba(255, 255, 255, 0.92);
-    --as-topbar-bg:               rgba(255, 255, 255, 0.80);
-    --as-topbar-border:           rgba(0, 0, 0, 0.06);
-    --as-topbar-icon-bg:          rgba(255, 255, 255, 0.70);
-    --as-topbar-icon-bg-hover:    rgba(255, 255, 255, 0.95);
-    --as-topbar-icon-border:      rgba(0, 0, 0, 0.07);
-    --as-topbar-icon-border-hover: rgba(0, 0, 0, 0.12);
-    --as-topbar-divider:          rgba(0, 0, 0, 0.08);
-    --as-topbar-trigger-hover:    rgba(0, 0, 0, 0.04);
-    --as-dropdown-bg:             rgba(255, 255, 255, 0.88);
-    --as-dropdown-border:         rgba(255, 255, 255, 0.60);
-    --as-dropdown-item-hover:     rgba(241, 245, 251, 0.80);
-    --as-dropdown-danger-hover:   rgba(254, 242, 242, 0.80);
-    --as-mobile-topbar-bg:        rgba(255, 255, 255, 0.88);
-    --as-mobile-toggle-bg:        rgba(255, 255, 255, 0.70);
-    --as-mobile-toggle-bg-hover:  rgba(255, 255, 255, 0.90);
-    --as-mobile-toggle-border:    rgba(0, 0, 0, 0.10);
-    --as-sidebar-glass-bg:        rgba(255, 255, 255, 0.10);
-    --as-sidebar-mobile-bg:       rgba(15, 23, 42, 0.88);
-    --as-sidebar-link-hover:      rgba(255, 255, 255, 0.14);
-    --as-sidebar-link-active-bg:  rgba(255, 255, 255, 0.88);
-    --as-sidebar-link-active-fg:  #1e293b;
-    --as-sidebar-logo-text:       #ffffff;
+    /* Glass surfaces (shell/sidebar — see components/navigation.css) */
+    --as-shell-canvas:            #f1f5fb;
+    --as-panel-glass-bg:          rgba(255, 255, 255, 0.94);
+    --as-topbar-bg:               rgba(255, 255, 255, 0.94);
+    --as-topbar-border:           #e7ecf4;
+    --as-topbar-icon-bg:          #ffffff;
+    --as-topbar-icon-bg-hover:    #f8faff;
+    --as-topbar-icon-border:      #e7ecf4;
+    --as-topbar-icon-border-hover: #b9c9df;
+    --as-topbar-divider:          #e7ecf4;
+    --as-topbar-trigger-hover:    #f8faff;
+    --as-dropdown-bg:             rgba(255, 255, 255, 0.96);
+    --as-dropdown-border:         #e2e8f0;
+    --as-dropdown-item-hover:     #edf3fc;
+    --as-dropdown-danger-hover:   #fef2f2;
+    --as-mobile-topbar-bg:        #ffffff;
+    --as-mobile-toggle-bg:        #ffffff;
+    --as-mobile-toggle-bg-hover:  #f8faff;
+    --as-mobile-toggle-border:    #e7ecf4;
+    --as-sidebar-glass-bg:        rgba(255, 255, 255, 0.94);
+    --as-sidebar-mobile-bg:       #ffffff;
+    --as-sidebar-link-hover:      #edf3fc;
+    --as-sidebar-link-active-bg:  #234ef4;
+    --as-sidebar-link-active-fg:  #ffffff;
+    --as-sidebar-logo-text:       #071c44;
 
     /* Solid brand badges (icon chips paired with hardcoded white icons/text
        — e.g. .pft-hero-icon, .pf-page-link--active, .auth-school-mark).
        These intentionally do NOT flip in dark mode: they're a fixed navy
        chip the white foreground always contrasts against, unlike
        --as-brand/--as-brand-blue which flip for use as accent text. */
-    --as-brand-solid:      #1e293b;
-    --as-brand-blue-solid: #475569;
+    --as-brand-solid:      #234ef4;
+    --as-brand-blue-solid: #234ef4;
     --as-success-solid:    #1a8a4c;
     --as-warning-solid:    #c1791f;
     --as-danger-solid:     #dc2626;
     --as-violet-solid:     #6c47c9;
-    --as-brand-blue-light-solid: #64748b;
-    --as-brand-mid-solid:  #334155;
+    --as-brand-blue-light-solid: #2863bd;
+    --as-brand-mid-solid:  #1b36c8;
 
     /* Panel glass edge highlight + sidebar active-badge (flip together with
        --as-panel-glass-bg / --as-sidebar-link-active-bg so contrast holds) */
@@ -343,9 +343,9 @@ html.theme-transition * {
        it flips to a bright value here rather than getting darker. */
     --as-brand-dark:       #f8fafc;
     --as-brand:            #e2e8f0;
-    --as-brand-mid:        #93b4e6;
-    --as-brand-blue:       #7fa6e0;
-    --as-brand-blue-light: #a8c3ec;
+    --as-brand-mid:        #9db4ff;
+    --as-brand-blue:       #9db4ff;
+    --as-brand-blue-light: #d5deff;
 
     /* Surfaces */
     --as-bg:               #0b1220;
@@ -393,7 +393,7 @@ html.theme-transition * {
     --as-shadow-deep:       0 18px 30px -22px rgba(0, 0, 0, 0.8);
 
     /* Glass surfaces */
-    --as-shell-canvas:            linear-gradient(145deg, #05070d 0%, #0b1220 42%, #131c2e 100%);
+    --as-shell-canvas:            #0b1220;
     --as-panel-glass-bg:          rgba(11, 18, 32, 0.92);
     --as-topbar-bg:               rgba(11, 18, 32, 0.80);
     --as-topbar-border:           rgba(255, 255, 255, 0.06);
@@ -1015,6 +1015,124 @@ html.theme-transition * {
         );
     }
 
+    /*
+     * Token: Global Dropdown Select styling
+     * Aligns native <select> elements and .pf-select with the design system
+     * from commit 988106e: 12px radius, slate hairline border, brand focus halo,
+     * tactile hover, custom SVG chevron indicator, and dark mode support.
+     */
+    select,
+    .pf-select {
+        display: inline-flex;
+        align-items: center;
+        width: 100%;
+        height: 44px;
+        padding: 0 38px 0 14px;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.5;
+        color: #162033;
+        background-color: #ffffff;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 14px center;
+        background-repeat: no-repeat;
+        background-size: 16px 16px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border: 1px solid #d7dde7;
+        border-radius: 12px;
+        outline: none;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        cursor: pointer;
+        transition:
+            border-color 160ms cubic-bezier(0.23, 1, 0.32, 1),
+            box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1),
+            background-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    select:hover,
+    .pf-select:hover {
+        border-color: #b9c9df;
+    }
+
+    select:focus,
+    .pf-select:focus {
+        border-color: #234ef4;
+        box-shadow: 0 0 0 4px rgba(35, 78, 244, 0.12);
+        outline: none;
+    }
+
+    select:disabled,
+    .pf-select:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        background-color: #f8fafc;
+    }
+
+    /* Compact select variant for toolbars, inline filters, and tables */
+    select.pf-select-sm,
+    select.select-sm {
+        height: 34px;
+        padding: 0 30px 0 10px;
+        font-size: 12px;
+        border-radius: 10px;
+        background-position: right 10px center;
+        background-size: 14px 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        select,
+        .pf-select {
+            background-color: #0f172a;
+            border-color: #334155;
+            color: #e2e8f0;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        select:hover,
+        .pf-select:hover {
+            border-color: #475569;
+        }
+
+        select:focus,
+        .pf-select:focus {
+            border-color: #234ef4;
+            box-shadow: 0 0 0 4px rgba(35, 78, 244, 0.25);
+        }
+
+        select:disabled,
+        .pf-select:disabled {
+            background-color: #1e293b;
+        }
+    }
+
+    :root.dark select,
+    :root.dark .pf-select {
+        background-color: #0f172a;
+        border-color: #334155;
+        color: #e2e8f0;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    :root.dark select:hover,
+    :root.dark .pf-select:hover {
+        border-color: #475569;
+    }
+
+    :root.dark select:focus,
+    :root.dark .pf-select:focus {
+        border-color: #234ef4;
+        box-shadow: 0 0 0 4px rgba(35, 78, 244, 0.25);
+    }
+
+    :root.dark select:disabled,
+    :root.dark .pf-select:disabled {
+        background-color: #1e293b;
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .pressable,
         .tactile-press,
@@ -1026,7 +1144,9 @@ html.theme-transition * {
         .icon-nudge,
         .ds-btn-hero,
         .ds-btn-ghost,
-        .reveal {
+        .reveal,
+        select,
+        .pf-select {
             transition: none;
         }
 

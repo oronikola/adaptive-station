@@ -1,5 +1,16 @@
 import InputError from '@/Components/InputError';
-import Modal from '@/Components/Modal';
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
+import { ChevronLeftIcon } from '@/Components/icons/chevron-left';
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { DeleteIcon } from '@/Components/icons/delete';
+import { EyeIcon } from '@/Components/icons/eye';
+import { EyeOffIcon } from '@/Components/icons/eye-off';
+import { PlusIcon } from '@/Components/icons/plus';
+import { RotateCWIcon } from '@/Components/icons/rotate-cw';
+import { SquarePenIcon } from '@/Components/icons/square-pen';
+import { UserIcon } from '@/Components/icons/user';
+import { UserPlusIcon } from '@/Components/icons/user-plus';
+import Modal, { ModalHero } from '@/Components/Modal';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -142,7 +153,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
             <div className="pf-dashboard pft-page">
                 <div style={{ marginBottom: 16 }}>
                     <Link href={route('platform.tenants.index')} className="pft-panel-link">
-                        <svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6" /></svg>
+                        <ChevronLeftIcon size={14} />
                         Back to Clients
                     </Link>
                 </div>
@@ -200,7 +211,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                                     className="pf-btn pf-btn-primary"
                                     onClick={() => setCreateAdminOpen(true)}
                                 >
-                                    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+                                    <PlusIcon size={16} />
                                     Add Admin
                                 </button>
                             )}
@@ -259,16 +270,9 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                                                                 }}
                                                             >
                                                                 {revealed ? (
-                                                                    <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                                                                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-                                                                        <circle cx="12" cy="12" r="3" />
-                                                                    </svg>
+                                                                    <EyeIcon size={14} />
                                                                 ) : (
-                                                                    <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                                                                        <path d="M3 3l18 18" />
-                                                                        <path d="M10.6 5.1A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a15.3 15.3 0 0 1-4.2 4.6M6.3 6.3C3.4 8.2 2 12 2 12s3.5 7 10 7c1.4 0 2.6-.3 3.7-.8" />
-                                                                        <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
-                                                                    </svg>
+                                                                    <EyeOffIcon size={14} />
                                                                 )}
                                                             </button>
                                                         </div>
@@ -289,7 +293,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                                                                 className="pf-row-action"
                                                                 onClick={() => openEditAdmin(admin)}
                                                             >
-                                                                <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                                                                <SquarePenIcon size={14} />
                                                                 Edit
                                                             </button>
                                                             {admin.is_active ? (
@@ -298,7 +302,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                                                                     className="pf-row-action pf-row-action--danger"
                                                                     onClick={() => setRemoveAdminTarget(admin)}
                                                                 >
-                                                                    <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-7 0v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7" /></svg>
+                                                                    <DeleteIcon size={14} />
                                                                     Remove
                                                                 </button>
                                                             ) : (
@@ -307,7 +311,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                                                                     className="pf-row-action"
                                                                     onClick={() => reactivateAdmin(admin)}
                                                                 >
-                                                                    <svg viewBox="0 0 24 24"><path d="M4 4v6h6M20 20v-6h-6M5 15a7 7 0 0 0 12.6 3M19 9A7 7 0 0 0 6.4 6" /></svg>
+                                                                    <RotateCWIcon size={14} />
                                                                     Reactivate
                                                                 </button>
                                                             )}
@@ -334,7 +338,7 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
                             </div>
                             <Link href={route('platform.stations.index')} className="pft-panel-link">
                                 Manage stations
-                                <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
+                                <ChevronRightIcon size={14} />
                             </Link>
                         </div>
 
@@ -398,16 +402,14 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
             {/* Suspend Client modal */}
             <Modal show={suspendOpen} onClose={() => setSuspendOpen(false)}>
                 <form onSubmit={handleSuspend} className="pf-modal">
-                    <div className="pf-modal-header">
-                        <div>
-                            <h3 className="pf-modal-title" style={{ color: 'var(--as-danger-dark)' }}>
-                                Suspend Client
-                            </h3>
-                        </div>
-                        <button type="button" className="pf-modal-close" onClick={() => setSuspendOpen(false)} aria-label="Close">
-                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
+                    <ModalHero
+                        tone="red"
+                        title="Suspend Client"
+                        subtitle="Stations stop accepting taps until this client is reactivated."
+                        onClose={() => setSuspendOpen(false)}
+                    >
+                        <BadgeAlertIcon size={22} />
+                    </ModalHero>
                     <p style={{ marginBottom: 20, color: 'var(--as-text-body)', fontSize: 13, lineHeight: 1.6 }}>
                         Suspend <strong>{tenant.name}</strong>? Its stations will stop accepting taps and the portal will be inaccessible until you reactivate it.
                     </p>
@@ -425,14 +427,14 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
             {/* Remove Admin modal */}
             <Modal show={removeAdminTarget !== null} onClose={() => setRemoveAdminTarget(null)}>
                 <form onSubmit={submitRemoveAdmin} className="pf-modal">
-                    <div className="pf-modal-header">
-                        <div>
-                            <h3 className="pf-modal-title">Remove Admin Access</h3>
-                        </div>
-                        <button type="button" className="pf-modal-close" onClick={() => setRemoveAdminTarget(null)} aria-label="Close">
-                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
+                    <ModalHero
+                        tone="amber"
+                        title="Remove Admin Access"
+                        subtitle="They will not be able to sign in until they are reactivated."
+                        onClose={() => setRemoveAdminTarget(null)}
+                    >
+                        <UserIcon size={22} />
+                    </ModalHero>
                     <p style={{ marginBottom: 20, color: 'var(--as-text-body)', fontSize: 13, lineHeight: 1.6 }}>
                         Remove admin access for <strong>{removeAdminTarget?.name}</strong>? They won't be able to log into the portal until reactivated.
                     </p>
@@ -450,14 +452,14 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
             {/* Delete Client modal */}
             <Modal show={deleteOpen} onClose={() => setDeleteOpen(false)}>
                 <form onSubmit={submitDelete} className="pf-modal">
-                    <div className="pf-modal-header">
-                        <h3 className="pf-modal-title" style={{ color: 'var(--as-danger-dark)' }}>
-                            Delete "{tenant.name}"?
-                        </h3>
-                        <button type="button" className="pf-modal-close" onClick={() => setDeleteOpen(false)} aria-label="Close">
-                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
+                    <ModalHero
+                        tone="red"
+                        title={`Delete "${tenant.name}"?`}
+                        subtitle="This permanently removes people, cards, stations, attendance, users, and integrations."
+                        onClose={() => setDeleteOpen(false)}
+                    >
+                        <DeleteIcon size={22} />
+                    </ModalHero>
                     <p className="pf-field-hint" style={{ marginBottom: 16 }}>
                         This permanently deletes all of this client's people, cards, stations, attendance history, users, and integrations. This cannot be undone.
                     </p>
@@ -492,15 +494,14 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
             {/* Create Admin modal */}
             <Modal show={createAdminOpen} onClose={() => { setCreateAdminOpen(false); adminForm.reset(); }}>
                 <form onSubmit={submitAdmin} className="pf-modal">
-                    <div className="pf-modal-header">
-                        <div>
-                            <h3 className="pf-modal-title">Add Admin User</h3>
-                            <p className="pf-field-hint">Saving generates a password automatically — reveal it afterward from the Admin Users table.</p>
-                        </div>
-                        <button type="button" className="pf-modal-close" onClick={() => { setCreateAdminOpen(false); adminForm.reset(); }} aria-label="Close">
-                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
+                    <ModalHero
+                        tone="blue"
+                        title="Add Admin User"
+                        subtitle="Saving generates a password automatically — reveal it afterward from the Admin Users table."
+                        onClose={() => { setCreateAdminOpen(false); adminForm.reset(); }}
+                    >
+                        <UserPlusIcon size={22} />
+                    </ModalHero>
                     <div className="pf-field">
                         <label htmlFor="admin_name">Name</label>
                         <input id="admin_name" type="text" value={adminForm.data.name} onChange={(e) => adminForm.setData('name', e.target.value)} autoFocus required />
@@ -521,15 +522,14 @@ export default function TenantDetailScreen({ tenant, admins, stations }: TenantD
             {/* Edit Admin modal */}
             <Modal show={editingAdmin !== null} onClose={closeEditAdmin}>
                 <form onSubmit={submitEditAdmin} className="pf-modal">
-                    <div className="pf-modal-header">
-                        <div>
-                            <h3 className="pf-modal-title">Edit Admin User</h3>
-                            <p className="pf-field-hint">Saving generates a new password automatically — reveal it afterward from the Admin Users table.</p>
-                        </div>
-                        <button type="button" className="pf-modal-close" onClick={closeEditAdmin} aria-label="Close">
-                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
+                    <ModalHero
+                        tone="violet"
+                        title="Edit Admin User"
+                        subtitle="Saving generates a new password automatically — reveal it afterward from the Admin Users table."
+                        onClose={closeEditAdmin}
+                    >
+                        <SquarePenIcon size={22} />
+                    </ModalHero>
                     <div className="pf-field">
                         <label htmlFor="edit_admin_name">Name</label>
                         <input id="edit_admin_name" type="text" value={editForm.data.name} onChange={(e) => editForm.setData('name', e.target.value)} autoFocus required />

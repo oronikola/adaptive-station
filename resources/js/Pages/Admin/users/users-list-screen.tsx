@@ -140,7 +140,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
         <AdminLayout>
             <Head title="Users & Access" />
 
-            <div className="pf-dashboard max-w-7xl mx-auto">
+            <div className="pf-dashboard">
                 {/* Hero Header */}
                 <div className="pf-dashboard-header">
                     <div>

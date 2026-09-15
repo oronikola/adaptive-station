@@ -1,6 +1,9 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PremiumSelect from '@/Components/PremiumSelect';
+import { ArrowLeftIcon } from '@/Components/icons/arrow-left';
+import { CircleHelpIcon } from '@/Components/icons/circle-help';
+import { UserPlusIcon } from '@/Components/icons/user-plus';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import '../../../../css/platform-dashboard.css';
@@ -28,9 +31,7 @@ export default function UsersCreateScreen() {
                         href={route('portal.users.index')}
                         className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
                     >
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
+                        <ArrowLeftIcon size={16} />
                         Back to Users Directory
                     </Link>
                 </div>
@@ -49,11 +50,7 @@ export default function UsersCreateScreen() {
                 {/* Information Callout */}
                 <div className="mb-6 flex items-start gap-3.5 rounded-2xl border border-blue-200/80 bg-blue-50/60 p-4 text-xs text-blue-900 shadow-xs dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="12" y1="16" x2="12" y2="12" />
-                            <line x1="12" y1="8" x2="12.01" y2="8" />
-                        </svg>
+                        <CircleHelpIcon size={16} />
                     </span>
                     <div className="leading-relaxed">
                         <span className="font-bold">Temporary Password Security:</span> A random one-time password will be generated and shown only once after creating this user. Relay it to the user directly — they will be required to set their own permanent password on their first login.
@@ -126,12 +123,7 @@ export default function UsersCreateScreen() {
                                 disabled={processing}
                                 className="pf-btn pf-btn-primary"
                             >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                    <circle cx="9" cy="7" r="4" />
-                                    <line x1="19" y1="8" x2="19" y2="14" />
-                                    <line x1="22" y1="11" x2="16" y2="11" />
-                                </svg>
+                                <UserPlusIcon size={16} />
                                 {processing ? 'Creating...' : 'Create User'}
                             </button>
                             <Link href={route('portal.users.index')} className="pf-btn pf-btn-secondary">

@@ -16,6 +16,9 @@ import { ChevronRightIcon } from '@/Components/icons/chevron-right';
 import { XIcon } from '@/Components/icons/x';
 import { PlusIcon } from '@/Components/icons/plus';
 import { LayoutGridIcon } from '@/Components/icons/layout-grid';
+import { ClockIcon } from '@/Components/icons/clock';
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
+import { WifiIcon } from '@/Components/icons/wifi';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -196,11 +199,7 @@ export default function StationsListScreen({
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="4" y="5" width="16" height="10" rx="1.6" />
-                                <rect x="9.5" y="17" width="5" height="2" rx="1" />
-                                <rect x="7" y="19.4" width="10" height="1.6" rx="0.8" />
-                            </svg>
+                            <MonitorCheckIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Stations</h1>
@@ -258,7 +257,7 @@ export default function StationsListScreen({
                 </div>
 
                 {/* Stations Panel */}
-                <div className="pf-panel">
+                <div className="pf-panel pfs-station-directory">
                     <div className="pf-panel-header">
                         <div>
                             <h2 className="pf-panel-title">
@@ -366,7 +365,7 @@ export default function StationsListScreen({
                             </div>
                         )
                     ) : (
-                        <div className="pf-table-wrap">
+                        <div className="pf-table-wrap pfs-station-table-shell">
                             <Table>
                                 <Table.Head>
                                     <Table.Th>Name</Table.Th>
@@ -389,12 +388,22 @@ export default function StationsListScreen({
 
                                     {stations.data.map((station) => (
                                         <tr key={station.id}>
-                                            <Table.Td className="font-semibold text-gray-900 dark:text-gray-100">
-                                                {station.name}
+                                            <Table.Td>
+                                                <div className="pfs-station-identity">
+                                                    <span className="pfs-station-avatar" aria-hidden="true">
+                                                        <MonitorCheckIcon size={17} />
+                                                    </span>
+                                                    <span className="pfs-station-name">{station.name}</span>
+                                                </div>
                                             </Table.Td>
-                                            <Table.Td className="font-mono text-xs">{station.station_code}</Table.Td>
-                                            <Table.Td className="font-medium text-slate-600">
-                                                {station.tenant?.name ?? '—'}
+                                            <Table.Td>
+                                                <span className="pfs-code-pill">{station.station_code}</span>
+                                            </Table.Td>
+                                            <Table.Td>
+                                                <span className="pfs-meta-pill pfs-meta-pill--school">
+                                                    <GraduationCapIcon size={13} aria-hidden="true" />
+                                                    {station.tenant?.name ?? '—'}
+                                                </span>
                                             </Table.Td>
                                             <Table.Td>
                                                 <StatusBadge
@@ -410,24 +419,32 @@ export default function StationsListScreen({
                                                 </StatusBadge>
                                             </Table.Td>
                                             <Table.Td>
-                                                <StatusBadge color={station.is_online ? 'green' : 'gray'}>
+                                                <span
+                                                    className={`pfs-connectivity-pill ${station.is_online ? 'pfs-connectivity-pill--online' : 'pfs-connectivity-pill--offline'}`}
+                                                >
+                                                    <WifiIcon size={13} aria-hidden="true" />
                                                     {station.is_online ? 'Online' : 'Offline'}
-                                                </StatusBadge>
+                                                </span>
                                             </Table.Td>
-                                            <Table.Td className="text-xs text-slate-500">
-                                                {station.app_version ? `v${station.app_version}` : '—'}
+                                            <Table.Td>
+                                                <span className="pfs-version-pill">
+                                                    {station.app_version ? `v${station.app_version}` : 'Unreported'}
+                                                </span>
                                             </Table.Td>
-                                            <Table.Td className="text-xs text-slate-500">
-                                                {station.last_seen_at ? new Date(station.last_seen_at).toLocaleString() : 'Never'}
+                                            <Table.Td>
+                                                <span className="pfs-meta-pill pfs-meta-pill--seen">
+                                                    <ClockIcon size={13} aria-hidden="true" />
+                                                    {station.last_seen_at ? new Date(station.last_seen_at).toLocaleString() : 'Never seen'}
+                                                </span>
                                             </Table.Td>
-                                            <Table.Td className="text-right">
-                                                <div className="flex items-center justify-end gap-2">
+                                            <Table.Td className="pfs-station-action-cell">
+                                                <div className="pfs-station-actions">
                                                     <Link
                                                         href={route('platform.stations.show', {
                                                             station: station.id,
                                                             tenant_id: station.tenant_id,
                                                         })}
-                                                        className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 text-xs"
+                                                        className="pf-row-action"
                                                     >
                                                         Manage
                                                     </Link>
@@ -435,7 +452,7 @@ export default function StationsListScreen({
                                                         <button
                                                             type="button"
                                                             onClick={() => issueCode(station)}
-                                                            className="font-medium text-amber-600 hover:text-amber-500 text-xs ml-2"
+                                                            className="pf-row-action pfs-issue-code-action"
                                                         >
                                                             Issue Code
                                                         </button>

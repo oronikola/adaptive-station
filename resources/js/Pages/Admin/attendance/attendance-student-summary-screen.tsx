@@ -1,3 +1,4 @@
+import { CalendarCheckIcon } from '@/Components/icons/calendar-check';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import type { Person } from '@/types';
@@ -42,11 +43,7 @@ export default function AttendanceStudentSummaryScreen({
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="4" y="5.4" width="16" height="14.6" rx="2" />
-                                <rect x="7.2" y="3" width="2.2" height="4" rx="1" />
-                                <rect x="14.6" y="3" width="2.2" height="4" rx="1" />
-                            </svg>
+                            <CalendarCheckIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Attendance Summary — {person.display_name}</h1>

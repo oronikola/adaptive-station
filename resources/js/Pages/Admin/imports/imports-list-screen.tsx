@@ -1,4 +1,7 @@
 import Pagination from '@/Components/admin/Pagination';
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { DownloadIcon } from '@/Components/icons/download';
+import { PlusIcon } from '@/Components/icons/plus';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
 import type { PaginatedData } from '@/types';
@@ -40,11 +43,7 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="4" y="15.4" width="16" height="4.6" rx="1.4" />
-                                <rect x="10.6" y="4" width="2.8" height="7.4" rx="1.2" />
-                                <polygon points="7.4,11 16.6,11 12,15.6" />
-                            </svg>
+                            <DownloadIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Imports</h1>
@@ -55,15 +54,11 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                     </div>
                     <div className="pft-hero-actions">
                         <Link href={route('portal.imports.csv.create')} className="pf-btn pf-btn-secondary">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
+                            <PlusIcon size={16} />
                             Upload CSV
                         </Link>
                         <Link href={route('portal.imports.create')} className="pf-btn pf-btn-primary">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
+                            <PlusIcon size={16} />
                             New Import
                         </Link>
                     </div>
@@ -127,9 +122,7 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                                                 className="pf-row-action"
                                             >
                                                 View
-                                                <svg viewBox="0 0 24 24">
-                                                    <path d="M9 6l6 6-6 6" />
-                                                </svg>
+                                                <ChevronRightIcon size={14} />
                                             </Link>
                                         </td>
                                     </tr>

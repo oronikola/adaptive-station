@@ -6,14 +6,14 @@ import { Link, router } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
-import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
-import { XIcon } from '@/Components/icons/x';
 import { SettingsIcon } from '@/Components/icons/settings';
 import { UsersIcon } from '@/Components/icons/users';
 import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
 import { DeleteIcon } from '@/Components/icons/delete';
 import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
 import { PlusIcon } from '@/Components/icons/plus';
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
+import { XIcon } from '@/Components/icons/x';
 interface Admin {
     id: number;
     name: string;
@@ -96,7 +96,7 @@ export default function ManageSchoolModal({
         setNewAdminPassword(null);
 
         axios
-            .get(route('platform.tenants.show', tenant.id), {
+            .get(route('platform.tenants.show', tenant.code), {
                 headers: { Accept: 'application/json' },
             })
             .then((res) => {
@@ -136,7 +136,7 @@ export default function ManageSchoolModal({
 
         try {
             const res = await axios.patch(
-                route('platform.tenants.update', currentTenant.id),
+                route('platform.tenants.update', currentTenant.code),
                 { name, timezone },
                 { headers: { Accept: 'application/json' } },
             );
@@ -184,7 +184,7 @@ export default function ManageSchoolModal({
         setIsUpdatingStatus(true);
         try {
             const res = await axios.patch(
-                route('platform.tenants.status', currentTenant.id),
+                route('platform.tenants.status', currentTenant.code),
                 { status: nextStatus },
                 { headers: { Accept: 'application/json' } },
             );
@@ -220,7 +220,7 @@ export default function ManageSchoolModal({
 
         try {
             const res = await axios.post(
-                route('platform.tenants.admins.store', currentTenant.id),
+                route('platform.tenants.admins.store', currentTenant.code),
                 { name: adminName, email: adminEmail },
                 { headers: { Accept: 'application/json' } },
             );
@@ -284,7 +284,7 @@ export default function ManageSchoolModal({
         setDeleteError(null);
 
         try {
-            await axios.delete(route('platform.tenants.destroy', currentTenant.id), {
+            await axios.delete(route('platform.tenants.destroy', currentTenant.code), {
                 data: { confirm_code: deleteCode },
                 headers: { Accept: 'application/json' },
             });
@@ -322,7 +322,7 @@ export default function ManageSchoolModal({
                             }
                             aria-hidden="true"
                         >
-                            <GraduationCapIcon size={20} />
+                            <GraduationCapIcon size={22} />
                         </span>
                         <div className="pf-modal-hero-text">
                             <div className="flex flex-wrap items-center gap-2.5">
@@ -355,7 +355,7 @@ export default function ManageSchoolModal({
                         onClick={onClose}
                         aria-label="Close"
                     >
-                        <XIcon size={20} />
+                        <XIcon size={14} />
                     </button>
                 </div>
 

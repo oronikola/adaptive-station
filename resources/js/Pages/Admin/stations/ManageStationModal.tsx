@@ -1,5 +1,11 @@
 import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
+import { FilePenLineIcon } from '@/Components/icons/file-pen-line';
+import { KeyIcon } from '@/Components/icons/key';
+import { LockIcon } from '@/Components/icons/lock';
+import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
+import { SquarePenIcon } from '@/Components/icons/square-pen';
+import { XIcon } from '@/Components/icons/x';
 import { useToast } from '@/Components/toast/ToastProvider';
 import { Station, StationCredential } from '@/types';
 import { Link, router } from '@inertiajs/react';
@@ -276,10 +282,7 @@ export default function ManageStationModal({
                             }
                             aria-hidden="true"
                         >
-                            <svg viewBox="0 0 24 24">
-                                <rect x="4" y="5" width="16" height="13" rx="2" />
-                                <path d="M8 21h8M9 9h6M9 13h4" />
-                            </svg>
+                            <MonitorCheckIcon size={22} />
                         </span>
                         <div className="pf-modal-hero-text">
                             <div className="flex flex-wrap items-center gap-2.5">
@@ -328,9 +331,7 @@ export default function ManageStationModal({
                         onClick={onClose}
                         aria-label="Close"
                     >
-                        <svg viewBox="0 0 24 24">
-                            <path d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <XIcon size={16} />
                     </button>
                 </div>
 
@@ -345,10 +346,7 @@ export default function ManageStationModal({
                                 : 'text-slate-600 hover:bg-white/60 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200'
                         }`}
                     >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-currentColor stroke-2">
-                            <rect x="4" y="5" width="16" height="13" rx="2" />
-                            <path d="M8 21h8M9 9h6M9 13h4" />
-                        </svg>
+                        <MonitorCheckIcon size={16} />
                         Overview &amp; Health
                     </button>
 
@@ -361,9 +359,7 @@ export default function ManageStationModal({
                                 : 'text-slate-600 hover:bg-white/60 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200'
                         }`}
                     >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-currentColor stroke-2">
-                            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                        </svg>
+                        <SquarePenIcon size={16} />
                         Configuration
                     </button>
 
@@ -376,11 +372,7 @@ export default function ManageStationModal({
                                 : 'text-slate-600 hover:bg-white/60 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200'
                         }`}
                     >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-currentColor stroke-2">
-                            <rect x="3" y="11" width="10" height="8" rx="1.5" />
-                            <path d="M7 11V8a4 4 0 0 1 8 0v3" />
-                            <circle cx="8" cy="15" r="1" />
-                        </svg>
+                        <LockIcon size={16} />
                         Device Credentials
                         <span className="rounded-full bg-slate-200/90 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-300">
                             {isLoadingDetails ? '…' : credentials.length}
@@ -396,9 +388,7 @@ export default function ManageStationModal({
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-amber-200/80 bg-amber-50/70 p-4 sm:p-5 dark:border-amber-900/50 dark:bg-amber-950/30">
                                 <div className="flex items-start gap-3">
                                     <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
-                                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                        </svg>
+                                        <KeyIcon size={20} />
                                     </span>
                                     <div>
                                         <h4 className="text-sm font-bold text-amber-900 dark:text-amber-100">
@@ -418,9 +408,7 @@ export default function ManageStationModal({
                                     }}
                                     className="pf-btn pf-btn-primary !bg-gradient-to-r !from-amber-600 !to-orange-600 hover:!from-amber-500 hover:!to-orange-500 !text-white self-start sm:self-auto !text-xs !h-9"
                                 >
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                    </svg>
+                                    <KeyIcon size={16} />
                                     Issue Code
                                 </button>
                             </div>
@@ -549,10 +537,7 @@ export default function ManageStationModal({
                                 onClick={handleFormatJson}
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                             >
-                                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <polyline points="16 18 22 12 16 6" />
-                                    <polyline points="8 6 2 12 8 18" />
-                                </svg>
+                                <FilePenLineIcon size={14} />
                                 Format JSON
                             </button>
                         </div>

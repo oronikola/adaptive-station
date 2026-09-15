@@ -8,6 +8,7 @@ import { personRouteKey } from '@/types';
 import AddPersonModal from './AddPersonModal';
 import { MenuIcon } from '@/Components/icons/menu';
 import { UserIcon } from '@/Components/icons/user';
+import { UsersIcon } from '@/Components/icons/users';
 import { ChevronRightIcon } from '@/Components/icons/chevron-right';
 import { PlusIcon } from '@/Components/icons/plus';
 import { LayoutGridIcon } from '@/Components/icons/layout-grid';
@@ -56,12 +57,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="8.5" cy="8.5" r="3" />
-                                <circle cx="16" cy="9.5" r="2.6" />
-                                <path d="M3.2 19.5a5.5 4.6 0 0 1 11 0z" />
-                                <path d="M12.8 19.5a5.2 4.2 0 0 1 10.4 0z" />
-                            </svg>
+                            <UsersIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">People</h1>
@@ -76,9 +72,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                             onClick={() => setAddPersonOpen(true)}
                             className="pf-btn pf-btn-primary"
                         >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
+                            <PlusIcon size={16} />
                             Add Person
                         </button>
                     </div>
@@ -281,9 +275,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                                     className="pf-row-action !flex-1 justify-center !py-2 rounded-xl text-xs font-semibold"
                                                 >
                                                     Attendance
-                                                    <svg viewBox="0 0 24 24">
-                                                        <path d="M9 6l6 6-6 6" />
-                                                    </svg>
+                                                    <ChevronRightIcon size={14} />
                                                 </Link>
                                             </div>
                                         </div>

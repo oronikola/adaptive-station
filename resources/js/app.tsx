@@ -4,9 +4,11 @@ import './bootstrap';
 import { createInertiaApp, usePage, ResolvedComponent } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
-import { AnimatePresence, motion } from 'motion/react';
 import React, { ReactNode } from 'react';
 import { applicationLogoUrl } from '@/Components/Branding/ApplicationLogo';
+import PageTransition, {
+    isAppShellPage,
+} from '@/Components/Navigation/PageTransition';
 import { ThemeProvider } from '@/Components/Theme/ThemeProvider';
 import { ToastProvider } from '@/Components/toast/ToastProvider';
 
@@ -31,36 +33,23 @@ function setFavicon() {
 }
 
 /**
- * Page-swap transition. Mounted once as every page's persistent `.layout`
- * (assigned below in `resolve`, reusing the same function reference so
- * Inertia keeps it mounted across navigations) — it keys off `usePage().url`
- * reactively instead of manually listening for `router.on('navigate')`.
- *
- * Previously this lived above `<App>` in a hand-rolled `Root` component that
- * tracked `page` state itself and re-passed it as `initialPage` on every
- * navigation. That forced Inertia's `<App>` to fully unmount/remount on
- * every page change (`initialPage` is meant to be set once, at boot), which
- * is what caused the blank white flash and navigations that silently never
- * recovered without a manual reload.
+ * Persistent Inertia layout wrapper. Portal/platform screens animate
+ * inside AppShell (sidebar stays put). Auth, landing, kiosk, and other
+ * full-page views use the same fade/lift here.
  */
-function PageTransition({ children }: { children: ReactNode }) {
-    const { url } = usePage();
+function RootPageTransition({ children }: { children: ReactNode }) {
+    const { component } = usePage();
 
-    return (
-        <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div
-                key={url}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } }}
-                exit={{ opacity: 0, y: -10, transition: { duration: 0.18, ease: 'easeIn' } }}
-            >
-                {children}
-            </motion.div>
-        </AnimatePresence>
-    );
+    if (isAppShellPage(component)) {
+        return <>{children}</>;
+    }
+
+    return <PageTransition>{children}</PageTransition>;
 }
 
-const withPageTransition = (page: ReactNode) => <PageTransition>{page}</PageTransition>;
+const withPageTransition = (page: ReactNode) => (
+    <RootPageTransition>{page}</RootPageTransition>
+);
 
 interface ErrorBoundaryProps {
     children: ReactNode;
@@ -134,7 +123,7 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.tsx'),
         )) as { default: ResolvedComponent };
 
-        module.default.layout = module.default.layout ?? withPageTransition;
+        module.default.layout = withPageTransition;
 
         return module;
     },

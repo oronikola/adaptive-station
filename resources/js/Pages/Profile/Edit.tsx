@@ -10,6 +10,7 @@ import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
 import { CircleCheckIcon } from '@/Components/icons/circle-check';
 import { ShieldCheckIcon } from '@/Components/icons/shield-check';
 import '../../../css/platform-dashboard.css';
+import '../../../css/platform-overview.css';
 
 interface EditProps {
     mustVerifyEmail: boolean;
@@ -57,7 +58,7 @@ export default function Edit({ mustVerifyEmail, status }: EditProps) {
 
             <div className="pf-dashboard">
                 {/* User Identity Hero Banner */}
-                <div className="mb-8 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+                <div className="pft-hero">
                     <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-5">
                             <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#234ef4] via-[#3b68f5] to-[#1b36c8] text-2xl font-extrabold text-white shadow-card-blue ring-4 ring-white dark:ring-slate-800">

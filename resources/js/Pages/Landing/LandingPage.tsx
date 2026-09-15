@@ -1,4 +1,13 @@
 import StationLogo from '@/Components/Branding/StationLogo';
+import { ArrowRightIcon } from '@/Components/icons/arrow-right';
+import { ChartBarIncreasingIcon } from '@/Components/icons/chart-bar-increasing';
+import { CheckIcon } from '@/Components/icons/check';
+import { CloudSyncIcon } from '@/Components/icons/cloud-sync';
+import { EyeIcon } from '@/Components/icons/eye';
+import { LinkIcon } from '@/Components/icons/link';
+import { ServerIcon } from '@/Components/icons/server';
+import { WifiIcon } from '@/Components/icons/wifi';
+import { WifiLowIcon } from '@/Components/icons/wifi-low';
 import { Head, Link } from '@inertiajs/react';
 import { User } from '@/types';
 
@@ -67,187 +76,18 @@ const comparisonRows = [
     },
 ];
 
-interface ArrowIconProps {
-    className?: string;
-}
 
-function ArrowIcon({ className = 'h-4 w-4' }: ArrowIconProps) {
-    return (
-        <svg
-            className={className}
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-        >
-            <path
-                d="M5 12h14m-5-5 5 5-5 5"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-    );
-}
 
-interface CheckIconProps {
-    className?: string;
-}
+function ProblemIcon({ type }: { type: 'connection' | 'database' | 'visibility' }) {
+    if (type === 'connection') {
+        return <WifiLowIcon size={20} />;
+    }
 
-function CheckIcon({ className = 'h-4 w-4' }: CheckIconProps) {
-    return (
-        <svg
-            className={className}
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-        >
-            <path
-                d="m5 12.5 4.2 4.2L19 7"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-    );
-}
+    if (type === 'database') {
+        return <ServerIcon size={20} />;
+    }
 
-interface TapSignalIconProps {
-    className?: string;
-}
-
-function TapSignalIcon({ className = 'h-6 w-6' }: TapSignalIconProps) {
-    return (
-        <svg
-            className={className}
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-        >
-            <path
-                d="M8.5 8.5a5 5 0 0 1 0 7M12 5a10 10 0 0 1 0 14M5 11a1.5 1.5 0 0 1 0 2"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-            />
-        </svg>
-    );
-}
-
-interface CloudIconProps {
-    className?: string;
-}
-
-function CloudIcon({ className = 'h-6 w-6' }: CloudIconProps) {
-    return (
-        <svg
-            className={className}
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-        >
-            <path
-                d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 8.2 4.8 4.8 0 0 0 7 18Z"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            <path
-                d="m9 14 2 2 4-4"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-    );
-}
-
-interface ChartIconProps {
-    className?: string;
-}
-
-function ChartIcon({ className = 'h-6 w-6' }: ChartIconProps) {
-    return (
-        <svg
-            className={className}
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-        >
-            <path
-                d="M5 19V9m7 10V5m7 14v-7M3 19h18"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-    );
-}
-
-interface LinkIconProps {
-    className?: string;
-}
-
-function LinkIcon({ className = 'h-6 w-6' }: LinkIconProps) {
-    return (
-        <svg
-            className={className}
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-        >
-            <path
-                d="M8.5 15.5 15.5 8M7 17H5a4 4 0 0 1 0-8h4m6 6h4a4 4 0 0 0 0-8h-2"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-            />
-        </svg>
-    );
-}
-
-interface ProblemIconProps {
-    type: 'connection' | 'database' | 'visibility';
-}
-
-function ProblemIcon({ type }: ProblemIconProps) {
-    const paths = {
-        connection: (
-            <>
-                <path d="M5 9.5a10.5 10.5 0 0 1 14 0M8.5 13a5.5 5.5 0 0 1 7 0" />
-                <path d="M12 17h.01M4 4l16 16" />
-            </>
-        ),
-        database: (
-            <>
-                <ellipse cx="12" cy="5.5" rx="7" ry="3" />
-                <path d="M5 5.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6M5 11.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" />
-            </>
-        ),
-        visibility: (
-            <>
-                <path d="M3 12s3.4-6 9-6 9 6 9 6-3.4 6-9 6-9-6-9-6Z" />
-                <circle cx="12" cy="12" r="2.5" />
-            </>
-        ),
-    };
-
-    return (
-        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <g
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            >
-                {paths[type]}
-            </g>
-        </svg>
-    );
+    return <EyeIcon size={20} />;
 }
 
 interface BrandProps {
@@ -310,7 +150,7 @@ function HeroDemonstration() {
                         <div className="my-auto flex flex-col items-center py-6 text-center">
                             <span className="relative grid h-24 w-24 place-items-center rounded-full border border-white/20 bg-white/[0.06]">
                                 <span className="absolute h-16 w-16 animate-signal-pulse rounded-full border border-[#97bff6]/40 motion-reduce:animate-none" />
-                                <TapSignalIcon className="relative h-10 w-10" />
+                                <WifiIcon size={40} className="relative" />
                             </span>
                             <strong className="mt-5 text-xl tracking-[-0.02em]">
                                 Hold your card near the reader
@@ -330,7 +170,7 @@ function HeroDemonstration() {
                         <div className="rounded-2xl bg-station-success-soft p-4 text-[#16472f]">
                             <div className="flex items-start gap-3">
                                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-station-success">
-                                    <CheckIcon className="h-5 w-5" />
+                                    <CheckIcon size={20} />
                                 </span>
                                 <div>
                                     <strong className="block text-sm">Tap saved locally</strong>
@@ -348,7 +188,7 @@ function HeroDemonstration() {
                                 </span>
                                 <div className="mt-4 flex items-center gap-3">
                                     <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-station-blue-bright">
-                                        <CloudIcon />
+                                        <CloudSyncIcon size={24} />
                                     </span>
                                     <div>
                                         <strong className="block text-sm text-station-ink">
@@ -489,7 +329,7 @@ function FeaturesSection() {
                     <article className="overflow-hidden rounded-2xl bg-station-navy p-7 text-white lg:col-span-7 lg:p-9">
                         <div className="grid gap-10 md:grid-cols-[0.9fr_1.1fr] md:items-end">
                             <div>
-                                <TapSignalIcon className="h-8 w-8 text-[#97bff6]" />
+                                <WifiIcon size={32} className="text-[#97bff6]" />
                                 <h3 className="mt-8 text-3xl font-bold tracking-[-0.03em]">
                                     The kiosk keeps the line moving.
                                 </h3>
@@ -511,7 +351,7 @@ function FeaturesSection() {
                                                 key={item}
                                                 className="flex items-center gap-3 rounded-xl bg-white/[0.06] px-4 py-3 text-sm font-semibold"
                                             >
-                                                <CheckIcon className="h-4 w-4 text-[#75e2ae]" />
+                                                <CheckIcon size={16} className="text-[#75e2ae]" />
                                                 {item}
                                             </div>
                                         ),
@@ -522,7 +362,7 @@ function FeaturesSection() {
                     </article>
 
                     <article className="rounded-2xl border border-station-line bg-white p-7 lg:col-span-5 lg:p-9">
-                        <CloudIcon className="h-8 w-8 text-station-blue-bright" />
+                        <CloudSyncIcon size={32} className="text-station-blue-bright" />
                         <h3 className="mt-8 text-2xl font-bold tracking-[-0.03em] text-station-navy">
                             Retries are safe by design.
                         </h3>
@@ -548,7 +388,7 @@ function FeaturesSection() {
                     </article>
 
                     <article className="rounded-2xl border border-station-line bg-white p-7 lg:col-span-5 lg:p-9">
-                        <ChartIcon className="h-8 w-8 text-station-blue-bright" />
+                        <ChartBarIncreasingIcon size={32} className="text-station-blue-bright" />
                         <h3 className="mt-8 text-2xl font-bold tracking-[-0.03em] text-station-navy">
                             School operations stay visible.
                         </h3>
@@ -571,7 +411,7 @@ function FeaturesSection() {
                     <article className="overflow-hidden rounded-2xl bg-[#dfeafb] p-7 lg:col-span-7 lg:p-9">
                         <div className="grid gap-10 md:grid-cols-[1fr_0.9fr] md:items-center">
                             <div>
-                                <LinkIcon className="h-8 w-8 text-station-blue" />
+                                <LinkIcon size={32} className="text-station-blue" />
                                 <h3 className="mt-8 text-3xl font-bold tracking-[-0.03em] text-station-navy">
                                     Connect without making the connection a dependency.
                                 </h3>
@@ -674,13 +514,13 @@ function DifferentiatorSection() {
                                         <span className="mt-1 block text-xs text-[#94a3b8]">{detail}</span>
                                     </div>
                                     {index < 2 && (
-                                        <ArrowIcon className="hidden h-5 w-5 text-[#75e2ae] sm:block" />
+                                        <ArrowRightIcon size={20} className="hidden text-[#75e2ae] sm:block" />
                                     )}
                                 </div>
                             ))}
                         </div>
                         <div className="mt-5 flex items-center gap-3 rounded-2xl bg-[#e3f6ea] px-5 py-4 text-[#16472f]">
-                            <CheckIcon className="h-5 w-5 shrink-0 text-station-success" />
+                            <CheckIcon size={20} className="shrink-0 text-station-success" />
                             <span className="text-sm font-bold">
                                 Immediate feedback does not wait for the final step.
                             </span>
@@ -730,7 +570,7 @@ function ComparisonSection() {
                                 </span>
                                 <p className="mt-2 flex items-start gap-3 text-sm leading-6 text-station-navy">
                                     <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-station-success-soft text-station-success">
-                                        <CheckIcon className="h-3.5 w-3.5" />
+                                        <CheckIcon size={14} />
                                     </span>
                                     {row.adaptive}
                                 </p>
@@ -770,7 +610,7 @@ function ComparisonSection() {
                                         <td className="bg-[#f5f8fe] px-6 py-5 text-sm leading-6 text-station-navy">
                                             <span className="flex items-start gap-3">
                                                 <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-station-success-soft text-station-success">
-                                                    <CheckIcon className="h-3.5 w-3.5" />
+                                                    <CheckIcon size={14} />
                                                 </span>
                                                 {row.adaptive}
                                             </span>
@@ -811,7 +651,7 @@ function FinalCallToAction({ workspaceHref, workspaceLabel }: FinalCallToActionP
                             className="btn-glass-primary tactile-press inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#64748b] via-[#475569] to-[#334155] px-6 text-sm font-bold text-white transition-all hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#334155] focus-visible:ring-offset-2"
                         >
                             Review the workflow
-                            <ArrowIcon />
+                            <ArrowRightIcon size={16} />
                         </a>
                         <Link
                             href={workspaceHref}
@@ -919,7 +759,7 @@ export default function LandingPage({ auth }: LandingPageProps) {
                                 >
                                     <span className="relative z-10 inline-flex items-center gap-2">
                                         See how it works
-                                        <ArrowIcon />
+                                        <ArrowRightIcon size={16} />
                                     </span>
                                 </a>
                                 <Link
@@ -931,11 +771,11 @@ export default function LandingPage({ auth }: LandingPageProps) {
                             </div>
                             <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-white/70">
                                 <span className="inline-flex items-center gap-2">
-                                    <CheckIcon className="h-4 w-4 text-[#75e2ae]" />
+                                    <CheckIcon size={16} className="text-[#75e2ae]" />
                                     Built for student and staff attendance
                                 </span>
                                 <span className="inline-flex items-center gap-2">
-                                    <CheckIcon className="h-4 w-4 text-[#75e2ae]" />
+                                    <CheckIcon size={16} className="text-[#75e2ae]" />
                                     Works alongside existing school systems
                                 </span>
                             </div>

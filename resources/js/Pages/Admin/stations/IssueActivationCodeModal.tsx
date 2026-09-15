@@ -1,4 +1,11 @@
 import Modal from '@/Components/Modal';
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
+import { CheckIcon } from '@/Components/icons/check';
+import { CopyIcon } from '@/Components/icons/copy';
+import { KeyIcon } from '@/Components/icons/key';
+import { LoaderCircleIcon } from '@/Components/icons/loader-circle';
+import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
+import { XIcon } from '@/Components/icons/x';
 import { useToast } from '@/Components/toast/ToastProvider';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
@@ -118,9 +125,7 @@ export default function IssueActivationCodeModal({
                             className="pf-modal-hero-icon pf-modal-hero-icon--amber"
                             aria-hidden="true"
                         >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                            </svg>
+                            <KeyIcon size={22} />
                         </span>
                         <div className="pf-modal-hero-text">
                             <h3 className="pf-modal-title text-xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -137,9 +142,7 @@ export default function IssueActivationCodeModal({
                         onClick={handleClose}
                         aria-label="Close"
                     >
-                        <svg viewBox="0 0 24 24">
-                            <path d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <XIcon size={16} />
                     </button>
                 </div>
 
@@ -147,10 +150,7 @@ export default function IssueActivationCodeModal({
                 <div className="mb-6 flex items-center justify-between rounded-2xl border border-slate-200/90 bg-slate-50/90 p-4 dark:border-slate-800 dark:bg-slate-900/60">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm">
-                            <svg className="h-5 w-5 fill-none stroke-currentColor stroke-2" viewBox="0 0 24 24">
-                                <rect x="4" y="5" width="16" height="13" rx="2" />
-                                <path d="M8 21h8M9 9h6M9 13h4" />
-                            </svg>
+                            <MonitorCheckIcon size={20} />
                         </div>
                         <div>
                             <h4 className="text-sm font-bold text-slate-900 dark:text-white">
@@ -182,15 +182,7 @@ export default function IssueActivationCodeModal({
                     <div className="space-y-5">
                         <div className="rounded-2xl border border-amber-200/80 bg-amber-50/60 p-4 text-xs leading-relaxed text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
                             <div className="flex gap-2.5">
-                                <svg
-                                    className="h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                >
-                                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
+                                <BadgeAlertIcon size={16} className="flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                                 <div>
                                     <p className="font-bold">Important Notice</p>
                                     <p className="mt-1 text-amber-800/90 dark:text-amber-300/90">
@@ -228,17 +220,12 @@ export default function IssueActivationCodeModal({
                             >
                                 {isGenerating ? (
                                     <>
-                                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                        </svg>
+                                        <LoaderCircleIcon size={16} className="animate-spin" />
                                         Generating Code...
                                     </>
                                 ) : (
                                     <>
-                                        <svg viewBox="0 0 24 24">
-                                            <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                        </svg>
+                                        <KeyIcon size={16} />
                                         Generate Activation Code
                                     </>
                                 )}
@@ -271,17 +258,12 @@ export default function IssueActivationCodeModal({
                                 >
                                     {copied ? (
                                         <>
-                                            <svg className="h-4 w-4 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <polyline points="20 6 9 17 4 12" />
-                                            </svg>
+                                            <CheckIcon size={16} className="text-emerald-600 dark:text-emerald-400" />
                                             <span className="text-emerald-700 dark:text-emerald-400">Copied to Clipboard!</span>
                                         </>
                                     ) : (
                                         <>
-                                            <svg className="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                            </svg>
+                                            <CopyIcon size={16} className="text-slate-500" />
                                             <span>Copy Code</span>
                                         </>
                                     )}

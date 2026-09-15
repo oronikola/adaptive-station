@@ -1,4 +1,10 @@
 import InputError from '@/Components/InputError';
+import { CheckIcon } from '@/Components/icons/check';
+import { ChevronLeftIcon } from '@/Components/icons/chevron-left';
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { PlusIcon } from '@/Components/icons/plus';
+import { SearchIcon } from '@/Components/icons/search';
+import { UserPlusIcon } from '@/Components/icons/user-plus';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
@@ -53,9 +59,7 @@ function StepIndicator({ current, steps }: { current: number; steps: typeof CREA
                                 }}
                             >
                                 {done ? (
-                                    <svg viewBox="0 0 24 24" style={{ width: 14, height: 14, stroke: '#fff', strokeWidth: 2.5, fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-                                        <polyline points="20 6 9 17 4 12" />
-                                    </svg>
+                                    <CheckIcon size={14} />
                                 ) : i + 1}
                             </div>
                             <div style={{ textAlign: 'center', lineHeight: 1.2 }}>
@@ -238,12 +242,7 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="8.5" cy="8.5" r="3" />
-                                <path d="M3.2 19.5a5.5 4.6 0 0 1 11 0z" />
-                                <path d="M14 10c1.5 0 2.8 1.2 2.8 2.8" />
-                                <path d="M16.8 19.5a5.2 4.2 0 0 1 10.4 0z" opacity=".5" />
-                            </svg>
+                            <UserPlusIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Add parent</h1>
@@ -329,9 +328,7 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                                         onClick={() => setStep(1)}
                                     >
                                         Next — Link Students
-                                        <svg viewBox="0 0 24 24">
-                                            <path d="M9 6l6 6-6 6" />
-                                        </svg>
+                                        <ChevronRightIcon size={16} />
                                     </button>
                                 </div>
                             </>
@@ -368,10 +365,10 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
 
                                 <div className="pf-field pft-search-field" style={{ position: 'relative' }}>
                                     <label htmlFor="student-search">Find students to link</label>
-                                    <svg viewBox="0 0 24 24" style={{ position: 'absolute', bottom: 11, left: 14, width: 15, height: 15, fill: 'none', stroke: 'var(--as-text-muted)', strokeWidth: 2, pointerEvents: 'none' }}>
-                                        <circle cx="11" cy="11" r="7" />
-                                        <path d="m20 20-3.5-3.5" />
-                                    </svg>
+                                    <SearchIcon
+                                        size={14}
+                                        style={{ position: 'absolute', bottom: 11, left: 14, color: 'var(--as-text-muted)', pointerEvents: 'none' }}
+                                    />
                                     <input
                                         id="student-search"
                                         type="search"
@@ -423,12 +420,12 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
 
                                 <div className="pft-form-actions">
                                     <button type="button" className="pf-btn pf-btn-secondary" onClick={() => setStep(0)}>
-                                        <svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6" /></svg>
+                                        <ChevronLeftIcon size={16} />
                                         Back
                                     </button>
                                     <button type="button" className="pf-btn pf-btn-primary" onClick={() => setStep(2)}>
                                         Review
-                                        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
+                                        <ChevronRightIcon size={16} />
                                     </button>
                                 </div>
                             </>
@@ -477,7 +474,7 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
 
                                 <div className="pft-form-actions">
                                     <button type="button" className="pf-btn pf-btn-secondary" onClick={() => setStep(1)}>
-                                        <svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6" /></svg>
+                                        <ChevronLeftIcon size={16} />
                                         Back
                                     </button>
                                     <button
@@ -485,7 +482,7 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                                         className={'pf-btn pf-btn-primary' + (form.processing ? ' pf-btn--loading' : '')}
                                         disabled={form.processing}
                                     >
-                                        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+                                        <PlusIcon size={16} />
                                         {form.processing ? 'Saving…' : 'Create parent account'}
                                     </button>
                                 </div>

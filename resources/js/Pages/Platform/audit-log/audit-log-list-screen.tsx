@@ -1,4 +1,5 @@
 import Pagination from '@/Components/admin/Pagination';
+import { HistoryIcon } from '@/Components/icons/history';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
@@ -132,11 +133,7 @@ export default function AuditLogListScreen({ logs, filters }: AuditLogListScreen
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="4" y="5.6" width="16" height="2.8" rx="1.4" />
-                                <rect x="4" y="10.6" width="16" height="2.8" rx="1.4" />
-                                <rect x="4" y="15.6" width="10" height="2.8" rx="1.4" />
-                            </svg>
+                            <HistoryIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Audit Log</h1>
