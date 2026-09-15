@@ -9,7 +9,10 @@ use App\Models\SmsGatewayDeviceToken;
 use App\Support\SmsGatewayFleetSnapshot;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -67,7 +70,17 @@ class SmsGatewayDeviceController extends Controller
         ]);
 
         $password = $data['password'] ?? Str::password(16);
-        $device->forceFill(['password' => $password, 'password_plaintext' => $password])->save();
+
+        // Update both credentials directly so a legacy/cross-key encrypted
+        // password_plaintext value cannot be decrypted during Eloquent's
+        // dirty check. The reset must replace an unreadable old payload.
+        DB::connection('mysql')->table('sms_gateway_devices')
+            ->where('id', $device->id)
+            ->update([
+                'password' => Hash::make($password),
+                'password_plaintext' => Crypt::encryptString($password),
+                'updated_at' => now(),
+            ]);
 
         AuditLog::record('sms_gateway_device.password_reset', $request->user(), null, 'sms_gateway_device', $device->id);
 

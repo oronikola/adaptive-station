@@ -5,6 +5,7 @@ namespace Tests\Feature\Platform;
 use App\Models\SmsGatewayDevice;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -110,6 +111,31 @@ class SmsGatewayDeviceProvisioningTest extends TestCase
         $this->postJson('/api/v1/auth/login', [
             'identifier' => 'phone01',
             'password' => 'my-chosen-password',
+        ])->assertOk();
+    }
+
+    public function test_reset_replaces_an_unreadable_previous_plaintext_payload(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        ['device' => $device] = SmsGatewayDevice::provision([
+            'label' => 'Phone 01',
+            'username' => 'phone01',
+            'password' => 'oldpassword',
+        ]);
+
+        DB::connection('mysql')->table('sms_gateway_devices')
+            ->where('id', $device->id)
+            ->update(['password_plaintext' => 'invalid-encrypted-payload']);
+
+        $this->actingAs($platformAdmin)
+            ->patch(route('platform.sms-gateway.devices.reset-password', $device->id), [
+                'password' => 'newpassword',
+            ])
+            ->assertRedirect(route('platform.sms-gateway.devices.index'));
+
+        $this->postJson('/api/v1/auth/login', [
+            'identifier' => 'phone01',
+            'password' => 'newpassword',
         ])->assertOk();
     }
 
