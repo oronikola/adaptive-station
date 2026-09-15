@@ -21,6 +21,7 @@ class DashboardController extends Controller
             ->orderBy('created_at')
             ->get(['id', 'status', 'created_at']);
         $stationTotals = Tenant::platformStationTotals();
+        $thirtyDaysAgo = Date::now()->subDays(30);
         $weekEndings = collect(range(7, 0))->map(
             fn (int $weeksAgo) => Date::now()->subWeeks($weeksAgo)->endOfDay(),
         );
@@ -41,8 +42,13 @@ class DashboardController extends Controller
             'stats' => [
                 'tenant_count' => $tenants->count(),
                 'active_tenant_count' => $tenants->where('status', TenantStatus::Active)->count(),
+                'inactive_tenant_count' => $tenants->whereIn('status', [TenantStatus::Suspended, TenantStatus::Archived])->count(),
+                'new_tenant_count' => $tenants->where('created_at', '>=', $thirtyDaysAgo)->count(),
                 'station_count' => $stationTotals['total'],
                 'active_station_count' => $stationTotals['active'],
+                'pending_station_count' => $stationTotals['pending_activation'],
+                'disabled_station_count' => $stationTotals['disabled'],
+                'retired_station_count' => $stationTotals['retired'],
             ],
             'statusCounts' => [
                 'active' => $tenants->where('status', TenantStatus::Active)->count(),

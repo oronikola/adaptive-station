@@ -1,3 +1,6 @@
+import { LockIcon } from '@/Components/icons/lock';
+import { XIcon } from '@/Components/icons/x';
+
 interface SimStat {
     sim_slot: number;
     sent_today: number;
@@ -132,14 +135,16 @@ export default function SmsDevicePhone({
                 )}
                 {canManage && device.is_active && (
                     <div className="pft-row-actions">
-                        <button type="button" className="pf-row-action" onClick={onReset}>
+                        <button type="button" className="pf-row-action pf-row-action--control" onClick={onReset}>
+                            <LockIcon size={15} aria-hidden="true" />
                             Reset password
                         </button>
                         <button
                             type="button"
-                            className="pf-row-action pf-row-action--danger"
+                            className="pf-row-action pf-row-action--control pf-row-action--danger"
                             onClick={onDeactivate}
                         >
+                            <XIcon size={15} aria-hidden="true" />
                             Deactivate
                         </button>
                     </div>

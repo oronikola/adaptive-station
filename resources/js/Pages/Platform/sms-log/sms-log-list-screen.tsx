@@ -3,6 +3,8 @@ import PremiumSelect from '@/Components/PremiumSelect';
 import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
 import { CheckIcon } from '@/Components/icons/check';
 import { ClockIcon } from '@/Components/icons/clock';
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
+import { PhoneIcon } from '@/Components/icons/phone';
 import { SendIcon } from '@/Components/icons/send';
 import { SmartphoneNfcIcon } from '@/Components/icons/smartphone-nfc';
 import PlatformLayout from '@/Layouts/PlatformLayout';
@@ -257,7 +259,7 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                         </div>
                     ) : (
                     <div className="pf-table-wrap">
-                        <table className="pf-table">
+                        <table className="pf-table sms-log-table">
                             <thead>
                                 <tr>
                                     <th scope="col">When</th>
@@ -272,11 +274,11 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                             <tbody>
                                 {messages.data.map((row) => (
                                     <tr key={row.id}>
-                                        <td>{formatDateTime(row.created_at)}</td>
-                                        <td>{row.tenant?.name ?? '—'}</td>
-                                        <td className="font-mono">{row.phone_number}</td>
-                                        <td>{row.device?.label ?? '—'}</td>
-                                        <td>{row.sim_slot !== null ? `SIM ${row.sim_slot + 1}` : '—'}</td>
+                                        <td><span className="sms-log-meta"><ClockIcon size={14} aria-hidden="true" />{formatDateTime(row.created_at)}</span></td>
+                                        <td>{row.tenant ? <span className="pfs-meta-pill pfs-meta-pill--school"><GraduationCapIcon size={13} aria-hidden="true" />{row.tenant.name}</span> : <span className="sms-log-empty-value">Unknown school</span>}</td>
+                                        <td><span className="sms-log-phone"><PhoneIcon size={14} aria-hidden="true" />{row.phone_number}</span></td>
+                                        <td>{row.device ? <span className="sms-log-device"><span className="sms-log-device-icon" aria-hidden="true"><SmartphoneNfcIcon size={15} /></span>{row.device.label}</span> : <span className="sms-log-empty-value">Unassigned</span>}</td>
+                                        <td>{row.sim_slot !== null ? <span className="sms-log-sim">SIM {row.sim_slot + 1}</span> : <span className="sms-log-empty-value">—</span>}</td>
                                         <td>
                                             <span
                                                 className={
@@ -287,9 +289,7 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                                                 {row.status}
                                             </span>
                                         </td>
-                                        <td style={{ color: row.last_error ? 'var(--as-danger)' : undefined, fontSize: 12.5, maxWidth: 220 }}>
-                                            {row.last_error ?? '—'}
-                                        </td>
+                                        <td>{row.last_error ? <span className="sms-log-error"><BadgeAlertIcon size={14} aria-hidden="true" />{row.last_error}</span> : <span className="sms-log-empty-value">No error</span>}</td>
                                     </tr>
                                 ))}
                             </tbody>

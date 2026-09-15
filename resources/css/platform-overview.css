@@ -202,6 +202,26 @@
     font-size: 11.5px;
 }
 
+.pft-stat-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.pft-stat-pill { display: inline-flex; align-items: baseline; gap: 4px; min-height: 25px; padding: 5px 9px; border: 1px solid var(--as-border); border-radius: 999px; background: var(--as-surface-active); color: var(--as-text-secondary); font-size: 10.5px; line-height: 1.2; }
+.pft-stat-pill strong { color: var(--as-text); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.pft-stat-pill--blue,
+.pft-stat-pill--green,
+.pft-stat-pill--amber { border-color: var(--as-border-mid); color: var(--as-text-secondary); }
+
+/* Keep metric pills and the growth legend in one monotone vocabulary. */
+.pft-stat-pill,
+.pf-chart-legend-item,
+.pf-chart-legend-item--blue,
+.pf-chart-legend-item--green {
+    border-color: var(--as-border);
+    background: var(--as-surface-active);
+    color: var(--as-text-secondary);
+}
+
+.pf-chart-legend-item--blue .pf-chart-legend-dot { background: var(--as-text); }
+.pf-chart-legend-item--green .pf-chart-legend-dot { background: var(--as-text-muted); }
+
 /* ── Filter bar tweaks ───────────────────────────────────────────────── */
 
 .pft-page .pf-filter-bar {
@@ -1036,17 +1056,11 @@
     height: 100%;
 }
 
-.pft-status-seg--active {
-    background: linear-gradient(90deg, rgba(35, 78, 244, 0.18) 0%, #5b7cee 42%, #234ef4 100%);
-}
+.pft-status-seg--active { background: #234ef4; }
 
-.pft-status-seg--suspended {
-    background: linear-gradient(90deg, rgba(193, 121, 31, 0.16) 0%, #e0b15a 45%, #c1791f 100%);
-}
+.pft-status-seg--suspended { background: #c1791f; }
 
-.pft-status-seg--archived {
-    background: linear-gradient(90deg, rgba(100, 116, 139, 0.16) 0%, #94a3b8 50%, #64748b 100%);
-}
+.pft-status-seg--archived { background: #64748b; }
 
 .pft-status-legend {
     display: flex;
@@ -1196,6 +1210,23 @@
     min-height: 0;
 }
 
+/* Compact dashboard progress summaries stay inside their half-height panels. */
+.pft-dashboard .pft-gauge-card { align-items: stretch; gap: 18px; min-height: 0; padding: 22px 24px 26px; }
+.pft-gauge-summary { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.pft-gauge-summary > strong { color: var(--as-text); font-size: 20px; font-variant-numeric: tabular-nums; }
+.pft-gauge-summary > strong span { color: var(--as-text-muted); font-size: 13px; font-weight: 600; }
+.pft-gauge-summary .pft-gauge-caption { max-width: none; margin: 2px 0 0; text-align: left; }
+.pft-activation-track { width: 100%; height: 14px; overflow: hidden; border: 1px solid var(--as-border); border-radius: 999px; background: var(--as-surface-active); box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08); }
+.pft-activation-track > span { display: block; height: 100%; border-radius: inherit; background: var(--as-brand-blue-solid); transition: width 500ms ease; }
+.pft-activation-pills { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.pft-activation-pills > span { display: inline-flex; align-items: center; gap: 7px; color: var(--as-text-secondary); font-size: 11.5px; }
+.pft-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--as-text-muted); }
+.pft-dot--pending { background: var(--as-warning-solid); }
+.pft-status-track { gap: 3px; height: 28px; padding: 3px; border: 1px solid var(--as-border); border-radius: 10px; }
+.pft-status-seg { min-width: 6px; border-radius: 6px; }
+.pft-status-legend-item strong { display: inline-flex; align-items: baseline; gap: 5px; }
+.pft-status-legend-item strong small { color: var(--as-text-muted); font-size: 10px; font-weight: 650; }
+
 @media (max-width: 1024px) {
     .pft-dashboard {
         min-height: 0;
@@ -1336,6 +1367,153 @@
 
 /* ── Section labels above a stat grid (SMS Gateway Fleet) ─────────────── */
 
+.pal-audit-filters {
+    padding: 18px;
+    border-color: var(--as-border-mid);
+    border-radius: 20px;
+    background: linear-gradient(180deg, var(--as-surface) 0%, var(--as-surface-hover) 100%);
+    box-shadow: 0 10px 28px -22px rgba(10, 27, 115, 0.28);
+}
+
+.pal-audit-filter {
+    min-width: 168px;
+}
+
+.pal-audit-filter--action {
+    flex: 1 1 260px !important;
+}
+
+.pal-audit-select button {
+    min-height: 42px;
+    border-radius: 12px;
+    border-color: var(--as-border);
+    background: var(--as-surface);
+    color: var(--as-text);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.pal-audit-panel {
+    border-color: var(--as-border-mid);
+    box-shadow: 0 12px 30px -18px rgba(10, 27, 115, 0.24);
+}
+
+.pal-audit-panel > .pf-panel-header {
+    padding: 22px 24px;
+    background: linear-gradient(180deg, var(--as-surface) 0%, var(--as-surface-hover) 100%);
+}
+
+.pal-audit-table {
+    min-width: 940px;
+}
+
+.pal-audit-table thead th {
+    height: 44px;
+    padding-block: 0;
+    border-bottom-color: var(--as-border);
+    background: var(--as-surface-active);
+    font-size: 10.5px;
+    letter-spacing: 0.075em;
+}
+
+.pal-audit-table tbody tr {
+    background: var(--as-surface);
+    box-shadow: inset 3px 0 0 transparent;
+    transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.pal-audit-table tbody tr:hover {
+    background: var(--as-surface-hover);
+    box-shadow: inset 3px 0 0 var(--as-brand-blue);
+}
+
+.pal-audit-table tbody td {
+    height: 66px;
+    vertical-align: middle;
+}
+
+.pal-audit-meta,
+.pal-actor-pill,
+.pal-action-pill,
+.pal-entity-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 30px;
+    padding: 5px 11px;
+    border: 1px solid var(--as-border);
+    border-radius: 999px;
+    background: var(--as-surface-active);
+    color: var(--as-text-secondary);
+    font-size: 11.5px;
+    font-weight: 650;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.pal-audit-meta--time {
+    color: var(--as-brand-blue-light);
+}
+
+.pal-audit-meta--client {
+    max-width: 25ch;
+    overflow: hidden;
+    border-color: color-mix(in srgb, var(--as-brand-blue) 18%, transparent);
+    background: color-mix(in srgb, var(--as-brand-blue) 8%, var(--as-surface));
+    color: var(--as-brand-blue-light);
+    text-overflow: ellipsis;
+}
+
+.pal-actor-pill {
+    text-transform: capitalize;
+}
+
+.pal-actor-pill--user,
+.pal-actor-pill--parent_account {
+    border-color: color-mix(in srgb, var(--as-success) 20%, transparent);
+    background: var(--as-success-bg);
+    color: var(--as-success);
+}
+
+.pal-actor-pill--station {
+    border-color: color-mix(in srgb, var(--as-violet-solid) 20%, transparent);
+    background: color-mix(in srgb, var(--as-violet-solid) 8%, var(--as-surface));
+    color: var(--as-violet-solid);
+}
+
+.pal-action-pill {
+    max-width: 32ch;
+    overflow: hidden;
+    color: var(--as-text);
+    text-overflow: ellipsis;
+    text-transform: capitalize;
+}
+
+.pal-action-pill--station,
+.pal-action-pill--sms_gateway_device {
+    border-color: color-mix(in srgb, var(--as-violet-solid) 18%, transparent);
+    background: color-mix(in srgb, var(--as-violet-solid) 8%, var(--as-surface));
+    color: var(--as-violet-solid);
+}
+
+.pal-action-pill--tenant,
+.pal-action-pill--user {
+    border-color: color-mix(in srgb, var(--as-brand-blue) 18%, transparent);
+    background: color-mix(in srgb, var(--as-brand-blue) 8%, var(--as-surface));
+    color: var(--as-brand-blue-light);
+}
+
+.pal-entity-pill {
+    gap: 8px;
+    text-transform: capitalize;
+}
+
+.pal-entity-pill code {
+    padding-left: 8px;
+    border-left: 1px solid var(--as-border-mid);
+    color: var(--as-text-muted);
+    font-size: 10.5px;
+}
+
 .pft-section-title {
     margin: 0 2px 12px;
     color: var(--as-text);
@@ -1389,6 +1567,176 @@
     margin: 1px 0 0;
     color: var(--as-text-secondary);
     font-size: 11.5px;
+}
+
+.pft-fleet-table {
+    min-width: 900px;
+}
+
+.pft-fleet-table tbody td {
+    height: 68px;
+    vertical-align: middle;
+}
+
+/* ── SMS delivery log table ─────────────────────────────────────────── */
+.sms-log-table { min-width: 980px; }
+.sms-log-table tbody td { height: 64px; vertical-align: middle; }
+
+.sms-log-meta,
+.sms-log-phone,
+.sms-log-sim {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 5px 10px;
+    border: 1px solid var(--as-border);
+    border-radius: 999px;
+    background: var(--as-surface-active);
+    color: var(--as-text-secondary);
+    font-size: 11.5px;
+    font-weight: 650;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.sms-log-meta svg,
+.sms-log-phone svg { width: 14px; height: 14px; flex: 0 0 auto; }
+.sms-log-phone { color: var(--as-text-body); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.01em; }
+.sms-log-sim { min-width: 54px; justify-content: center; background: var(--as-surface); color: var(--as-text-body); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.sms-log-device { display: inline-flex; align-items: center; gap: 9px; min-width: 0; color: var(--as-text-body); font-size: 12.5px; font-weight: 650; }
+.sms-log-device-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 10px; background: var(--as-surface-active); color: var(--as-text-secondary); }
+.sms-log-device-icon svg { width: 15px; height: 15px; }
+.sms-log-empty-value { color: var(--as-text-muted); font-size: 12px; }
+
+.sms-log-error { display: flex; align-items: flex-start; gap: 7px; max-width: 240px; color: var(--as-danger); font-size: 11.5px; font-weight: 600; line-height: 1.4; white-space: normal; }
+.sms-log-error svg { width: 14px; height: 14px; flex: 0 0 14px; margin-top: 1px; }
+.sms-log-action-cell { text-align: right; }
+
+/* ── Platform administrator accounts ────────────────────────────────── */
+.pfa-admin-table { min-width: 840px; }
+.pfa-admin-table tbody td { height: 70px; vertical-align: middle; }
+.pfa-admin-identity { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.pfa-admin-identity > span:last-child { display: grid; gap: 3px; min-width: 0; }
+.pfa-admin-identity strong { overflow: hidden; color: var(--as-text); font-size: 13.5px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.pfa-admin-identity small { display: inline-flex; align-items: center; gap: 5px; color: var(--as-text-secondary); font-size: 11px; font-weight: 600; }
+.pfa-admin-avatar { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; border-radius: 12px; background: linear-gradient(145deg, var(--as-brand-blue-solid), var(--as-brand-solid)); color: #fff; font-size: 13px; font-weight: 800; }
+.pfa-data-field,
+.pfa-credential { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0; border: 0; background: transparent; }
+.pfa-data-field--email { min-width: 270px; }
+.pfa-data-field-value { display: grid; flex: 1 1 auto; gap: 2px; min-width: 0; }
+.pfa-data-field-value small { color: var(--as-text-muted); font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; line-height: 1; text-transform: uppercase; }
+.pfa-data-field-value > span { overflow: hidden; color: var(--as-text-body); font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.pfa-credential-icon { display: grid; color: var(--as-text-secondary); }
+.pfa-credential code { min-width: 104px; color: var(--as-text-body); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; letter-spacing: 0.04em; }
+.pfa-reveal-button { display: inline-grid; width: 24px; height: 24px; flex: 0 0 24px; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--as-text-secondary); cursor: pointer; transition: color 150ms ease, transform 150ms ease; }
+.pfa-reveal-button:hover { background: transparent; color: var(--as-text); }
+.pfa-reveal-button:active { transform: scale(0.96); }
+.pfa-reveal-button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--as-surface), 0 0 0 4px var(--as-brand-blue); }
+.pfa-copy-button { display: inline-grid; width: 24px; height: 24px; flex: 0 0 24px; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--as-text-secondary); cursor: pointer; transition: transform 150ms ease, color 150ms ease; }
+.pfa-copy-button:hover { border-color: transparent; background: transparent; color: var(--as-text); transform: translateY(-1px); }
+.pfa-copy-button:active { transform: scale(0.96); }
+.pfa-copy-button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--as-surface), 0 0 0 4px var(--as-brand-blue); }
+.pfa-copy-button--copied { border-color: transparent; background: transparent; color: var(--as-success); }
+.pfa-credential-unavailable { display: inline-flex; align-items: center; gap: 6px; color: var(--as-text-muted); font-size: 11.5px; font-weight: 600; }
+.pfa-admin-action-cell { text-align: right; }
+.pf-row-action--success { border-color: color-mix(in srgb, var(--as-success) 28%, transparent); background: var(--as-success-bg); color: var(--as-success); }
+.pf-row-action--success:hover { border-color: color-mix(in srgb, var(--as-success) 42%, transparent); background: color-mix(in srgb, var(--as-success-bg) 82%, #fff); color: #12683a; }
+.pf-row-action--control:disabled { cursor: not-allowed; opacity: 0.55; transform: none; }
+.pfa-empty-state { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.pfa-empty-state strong { color: var(--as-text); font-size: 13.5px; }
+.pfa-empty-state > span:last-child { color: var(--as-text-secondary); font-size: 12px; }
+
+.pft-fleet-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 30px;
+    padding: 5px 11px;
+    border: 1px solid var(--as-border);
+    border-radius: 999px;
+    background: var(--as-surface-active);
+    color: var(--as-text-secondary);
+    font-size: 11.5px;
+    font-weight: 650;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.pft-fleet-metric svg {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 13px;
+}
+
+.pft-fleet-metric--seen:not(.pft-fleet-metric--stale) {
+    border-color: color-mix(in srgb, var(--as-brand-blue) 18%, transparent);
+    background: color-mix(in srgb, var(--as-brand-blue) 8%, var(--as-surface));
+    color: var(--as-brand-blue-light);
+}
+
+.pft-fleet-metric--stale {
+    border-color: color-mix(in srgb, var(--as-warning) 22%, transparent);
+    background: var(--as-warning-bg);
+    color: var(--as-warning);
+}
+
+.pft-fleet-metric--today {
+    min-width: 154px;
+    color: var(--as-brand-blue-light);
+}
+
+.pft-fleet-metric--cap-near {
+    border-color: color-mix(in srgb, var(--as-warning) 24%, transparent);
+    background: var(--as-warning-bg);
+    color: var(--as-warning);
+}
+
+.pft-fleet-metric--cap-at {
+    border-color: color-mix(in srgb, var(--as-danger) 24%, transparent);
+    background: var(--as-danger-bg);
+    color: var(--as-danger);
+}
+
+.pft-fleet-metric-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+
+.pft-fleet-metric-value span {
+    color: var(--as-text-muted);
+    font-weight: 600;
+}
+
+.pft-fleet-cap-track {
+    width: 36px;
+    height: 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--as-border);
+}
+
+.pft-fleet-cap-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    transition: width 400ms ease;
+}
+
+.pft-fleet-metric--failed {
+    min-width: 54px;
+    justify-content: center;
+    border-color: color-mix(in srgb, var(--as-success) 18%, transparent);
+    background: var(--as-success-bg);
+    color: var(--as-success);
+}
+
+.pft-fleet-metric--has-failures {
+    border-color: color-mix(in srgb, var(--as-danger) 24%, transparent);
+    background: var(--as-danger-bg);
+    color: var(--as-danger);
 }
 
 /* ── Per-SIM capacity bar + badges ─────────────────────────────────────── */

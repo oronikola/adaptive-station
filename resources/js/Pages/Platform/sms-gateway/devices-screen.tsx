@@ -338,8 +338,8 @@ export default function SmsGatewayDevicesScreen({
                             ))}
                         </div>
                     ) : (
-                    <div className="pf-table-wrap">
-                        <table className="pf-table">
+                    <div className="pf-table-wrap pft-fleet-table-wrap">
+                        <table className="pf-table pft-fleet-table">
                             <thead>
                                 <tr>
                                     <th scope="col">Device</th>
@@ -387,35 +387,53 @@ export default function SmsGatewayDevicesScreen({
                                             </span>
                                         </td>
                                         <td>
-                                            {device.last_seen_at
-                                                ? formatDateTime(device.last_seen_at)
-                                                : 'Never'}
+                                            <span
+                                                className={`pft-fleet-metric pft-fleet-metric--seen ${device.is_stale ? 'pft-fleet-metric--stale' : ''}`}
+                                            >
+                                                <ClockIcon size={13} aria-hidden="true" />
+                                                {device.last_seen_at
+                                                    ? formatDateTime(device.last_seen_at)
+                                                    : 'Never seen'}
+                                            </span>
                                         </td>
-                                        <td style={{ minWidth: 140 }}>
-                                            <div className="font-mono">{device.sent_today} / {device.daily_send_cap}</div>
-                                            <div className="pft-cap-bar">
-                                                <div
-                                                    className="pft-cap-bar-fill"
-                                                    style={{ width: `${capPct}%`, background: CAP_STATUS_COLOR[device.cap_status] }}
-                                                />
-                                            </div>
+                                        <td>
+                                            <span className={`pft-fleet-metric pft-fleet-metric--today pft-fleet-metric--cap-${device.cap_status}`}>
+                                                <CheckIcon size={13} aria-hidden="true" />
+                                                <span className="pft-fleet-metric-value">
+                                                    {device.sent_today}
+                                                    <span> / {device.daily_send_cap}</span>
+                                                </span>
+                                                <span className="pft-fleet-cap-track" aria-hidden="true">
+                                                    <span
+                                                        className="pft-fleet-cap-fill"
+                                                        style={{ width: `${capPct}%`, background: CAP_STATUS_COLOR[device.cap_status] }}
+                                                    />
+                                                </span>
+                                            </span>
                                         </td>
-                                        <td className="font-mono" style={{ color: device.failed_today > 0 ? 'var(--as-danger)' : undefined }}>{device.failed_today}</td>
+                                        <td>
+                                            <span className={`pft-fleet-metric pft-fleet-metric--failed ${device.failed_today > 0 ? 'pft-fleet-metric--has-failures' : ''}`}>
+                                                <BadgeAlertIcon size={13} aria-hidden="true" />
+                                                <span className="pft-fleet-metric-value">{device.failed_today}</span>
+                                            </span>
+                                        </td>
                                         <td>
                                             {canManage && device.is_active && (
                                                 <div className="pft-row-actions">
                                                     <button
                                                         type="button"
-                                                        className="pf-row-action"
+                                                        className="pf-row-action pf-row-action--control"
                                                         onClick={() => setResettingDevice(device)}
                                                     >
+                                                        <LockIcon size={15} aria-hidden="true" />
                                                         Reset password
                                                     </button>
                                                     <button
                                                         type="button"
-                                                        className="pf-row-action pf-row-action--danger"
+                                                        className="pf-row-action pf-row-action--control pf-row-action--danger"
                                                         onClick={() => setRevokingDevice(device)}
                                                     >
+                                                        <XIcon size={15} aria-hidden="true" />
                                                         Deactivate
                                                     </button>
                                                 </div>

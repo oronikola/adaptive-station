@@ -5,6 +5,7 @@ import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
 import { CheckIcon } from '@/Components/icons/check';
 import { ClockIcon } from '@/Components/icons/clock';
 import { FileTextIcon } from '@/Components/icons/file-text';
+import { PhoneIcon } from '@/Components/icons/phone';
 import { RotateCWIcon } from '@/Components/icons/rotate-cw';
 import { SendIcon } from '@/Components/icons/send';
 import { SmartphoneNfcIcon } from '@/Components/icons/smartphone-nfc';
@@ -352,7 +353,7 @@ export default function SmsLogListScreen({ messages, devices, filters, stats }: 
                         </div>
                     ) : (
                     <div className="pf-table-wrap">
-                        <table className="pf-table">
+                        <table className="pf-table sms-log-table">
                             <thead>
                                 <tr>
                                     <th scope="col">When</th>
@@ -367,10 +368,10 @@ export default function SmsLogListScreen({ messages, devices, filters, stats }: 
                             <tbody>
                                 {messages.data.map((row) => (
                                     <tr key={row.id}>
-                                        <td>{formatDateTime(row.created_at)}</td>
-                                        <td className="font-mono">{row.phone_number}</td>
-                                        <td>{row.device?.label ?? '—'}</td>
-                                        <td>{row.sim_slot !== null ? `SIM ${row.sim_slot + 1}` : '—'}</td>
+                                        <td><span className="sms-log-meta"><ClockIcon size={14} aria-hidden="true" />{formatDateTime(row.created_at)}</span></td>
+                                        <td><span className="sms-log-phone"><PhoneIcon size={14} aria-hidden="true" />{row.phone_number}</span></td>
+                                        <td>{row.device ? <span className="sms-log-device"><span className="sms-log-device-icon" aria-hidden="true"><SmartphoneNfcIcon size={15} /></span>{row.device.label}</span> : <span className="sms-log-empty-value">Unassigned</span>}</td>
+                                        <td>{row.sim_slot !== null ? <span className="sms-log-sim">SIM {row.sim_slot + 1}</span> : <span className="sms-log-empty-value">—</span>}</td>
                                         <td>
                                             <span
                                                 className={
@@ -381,16 +382,15 @@ export default function SmsLogListScreen({ messages, devices, filters, stats }: 
                                                 {row.status}
                                             </span>
                                         </td>
-                                        <td style={{ color: row.last_error ? 'var(--as-danger)' : undefined, fontSize: 12.5, maxWidth: 220 }}>
-                                            {row.last_error ?? '—'}
-                                        </td>
-                                        <td>
+                                        <td>{row.last_error ? <span className="sms-log-error"><BadgeAlertIcon size={14} aria-hidden="true" />{row.last_error}</span> : <span className="sms-log-empty-value">No error</span>}</td>
+                                        <td className="sms-log-action-cell">
                                             {canResend(row) && (
                                                 <button
                                                     type="button"
-                                                    className="pf-row-action"
+                                                    className="pf-row-action pf-row-action--control"
                                                     onClick={() => openResend(row)}
                                                 >
+                                                    <RotateCWIcon size={15} aria-hidden="true" />
                                                     Resend
                                                 </button>
                                             )}

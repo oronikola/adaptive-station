@@ -1,5 +1,12 @@
 import Pagination from '@/Components/admin/Pagination';
+import PremiumSelect from '@/Components/PremiumSelect';
+import PremiumDatePicker from '@/Components/PremiumDatePicker';
+import { ActivityIcon } from '@/Components/icons/activity';
+import { CalendarDaysIcon } from '@/Components/icons/calendar-days';
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
 import { HistoryIcon } from '@/Components/icons/history';
+import { ServerIcon } from '@/Components/icons/server';
+import { UserIcon } from '@/Components/icons/user';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
@@ -94,6 +101,32 @@ const KNOWN_ACTION_GROUPS: { label: string; actions: string[] }[] = [
     },
 ];
 
+const ACTION_OPTIONS = [
+    { value: '', label: 'All actions' },
+    ...KNOWN_ACTION_GROUPS.flatMap((group) =>
+        group.actions.map((action) => ({
+            value: action,
+            label: `${group.label} · ${action.split('.').at(-1)?.replaceAll('_', ' ')}`,
+        })),
+    ),
+];
+
+const ACTOR_OPTIONS = [
+    { value: '', label: 'All actor types' },
+    { value: 'user', label: 'User' },
+    { value: 'station', label: 'Station' },
+    { value: 'parent_account', label: 'Parent account' },
+    { value: 'system', label: 'System' },
+];
+
+function formatAction(action: string): string {
+    return action.replaceAll('.', ' · ').replaceAll('_', ' ');
+}
+
+function actionTone(action: string): string {
+    return action.split('.')[0] ?? 'system';
+}
+
 export default function AuditLogListScreen({ logs, filters }: AuditLogListScreenProps) {
     const [isFiltering, setIsFiltering] = useState(false);
     const hasFilters = Boolean(filters.search || filters.actor_type || filters.date_from || filters.date_to);
@@ -145,59 +178,51 @@ export default function AuditLogListScreen({ logs, filters }: AuditLogListScreen
                     </div>
                 </div>
 
-                <form onSubmit={submit} className="pf-filter-bar" role="search">
-                    <div className="pf-field">
+                <form onSubmit={submit} className="pf-filter-bar pal-audit-filters" role="search">
+                    <div className="pf-field pal-audit-filter pal-audit-filter--action">
                         <label htmlFor="search">Action</label>
-                        <select
+                        <PremiumSelect
                             id="search"
                             value={data.search}
-                            onChange={(e) => setData('search', e.target.value)}
-                        >
-                            <option value="">All actions</option>
-                            {KNOWN_ACTION_GROUPS.map((group) => (
-                                <optgroup key={group.label} label={group.label}>
-                                    {group.actions.map((action) => (
-                                        <option key={action} value={action}>{action}</option>
-                                    ))}
-                                </optgroup>
-                            ))}
-                        </select>
+                            onChange={(value) => setData('search', value)}
+                            options={ACTION_OPTIONS}
+                            className="pal-audit-select"
+                        />
                     </div>
 
-                    <div className="pf-field">
+                    <div className="pf-field pal-audit-filter">
                         <label htmlFor="actor_type">Actor type</label>
-                        <select
+                        <PremiumSelect
                             id="actor_type"
                             value={data.actor_type}
-                            onChange={(e) => setData('actor_type', e.target.value)}
-                        >
-                            <option value="">All</option>
-                            <option value="user">User</option>
-                            <option value="system">System</option>
-                            <option value="platform">Platform</option>
-                        </select>
+                            onChange={(value) => setData('actor_type', value)}
+                            options={ACTOR_OPTIONS}
+                            className="pal-audit-select"
+                        />
                     </div>
 
                     <div className="pf-field">
                         <label htmlFor="date_from">From</label>
-                        <input
+                        <PremiumDatePicker
                             id="date_from"
-                            type="date"
                             value={data.date_from}
                             max={today}
-                            onChange={(e) => handleDateFrom(e.target.value)}
+                            onChange={handleDateFrom}
+                            placeholder="Start date"
+                            className="pal-audit-select"
                         />
                     </div>
 
                     <div className="pf-field">
                         <label htmlFor="date_to">To</label>
-                        <input
+                        <PremiumDatePicker
                             id="date_to"
-                            type="date"
                             value={data.date_to}
                             min={data.date_from || undefined}
                             max={today}
-                            onChange={(e) => setData('date_to', e.target.value)}
+                            onChange={(value) => setData('date_to', value)}
+                            placeholder="End date"
+                            className="pal-audit-select"
                         />
                     </div>
 
@@ -220,7 +245,7 @@ export default function AuditLogListScreen({ logs, filters }: AuditLogListScreen
                     </div>
                 </form>
 
-                <div className="pf-panel">
+                <div className="pf-panel pal-audit-panel">
                     <div className="pf-panel-header">
                         <div>
                             <h2 className="pf-panel-title">Recent Activity</h2>
@@ -230,8 +255,8 @@ export default function AuditLogListScreen({ logs, filters }: AuditLogListScreen
                         </div>
                     </div>
 
-                    <div className="pf-table-wrap">
-                        <table className="pf-table">
+                    <div className="pf-table-wrap pal-audit-table-wrap">
+                        <table className="pf-table pal-audit-table">
                             <thead>
                                 <tr>
                                     <th scope="col">When</th>
@@ -255,14 +280,38 @@ export default function AuditLogListScreen({ logs, filters }: AuditLogListScreen
                                 {logs.data.map((log) => (
                                     <tr key={log.id}>
                                         <td>
-                                            {new Date(log.created_at).toLocaleString()}
+                                            <span className="pal-audit-meta pal-audit-meta--time">
+                                                <CalendarDaysIcon size={13} aria-hidden="true" />
+                                                {new Date(log.created_at).toLocaleString()}
+                                            </span>
                                         </td>
-                                        <td>{log.tenant?.name ?? '—'}</td>
-                                        <td className="capitalize">{log.actor_type}</td>
-                                        <td className="font-mono">{log.action}</td>
                                         <td>
-                                            {log.entity_type ?? '—'}
-                                            {log.entity_id ? ` #${log.entity_id.slice(0, 8)}` : ''}
+                                            <span className="pal-audit-meta pal-audit-meta--client">
+                                                <GraduationCapIcon size={13} aria-hidden="true" />
+                                                {log.tenant?.name ?? 'Platform-wide'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`pal-actor-pill pal-actor-pill--${log.actor_type}`}>
+                                                {log.actor_type === 'system' ? (
+                                                    <ServerIcon size={13} aria-hidden="true" />
+                                                ) : (
+                                                    <UserIcon size={13} aria-hidden="true" />
+                                                )}
+                                                {log.actor_type.replaceAll('_', ' ')}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`pal-action-pill pal-action-pill--${actionTone(log.action)}`}>
+                                                <ActivityIcon size={13} aria-hidden="true" />
+                                                {formatAction(log.action)}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className="pal-entity-pill">
+                                                <span>{log.entity_type?.replaceAll('_', ' ') ?? 'No entity'}</span>
+                                                {log.entity_id && <code>{log.entity_id.slice(0, 8)}</code>}
+                                            </span>
                                         </td>
                                     </tr>
                                 ))}

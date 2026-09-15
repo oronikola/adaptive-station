@@ -19,6 +19,8 @@ import { LayoutGridIcon } from '@/Components/icons/layout-grid';
 import { ClockIcon } from '@/Components/icons/clock';
 import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
 import { WifiIcon } from '@/Components/icons/wifi';
+import { KeyIcon } from '@/Components/icons/key';
+import { WrenchIcon } from '@/Components/icons/wrench';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -344,8 +346,9 @@ export default function StationsListScreen({
                                                         station: station.id,
                                                         tenant_id: station.tenant_id,
                                                     })}
-                                                    className="pf-row-action"
+                                                    className="pf-row-action pf-row-action--control"
                                                 >
+                                                    <WrenchIcon size={15} aria-hidden="true" />
                                                     View Details
                                                     <ChevronRightIcon size={20} />
                                                 </Link>
@@ -353,8 +356,9 @@ export default function StationsListScreen({
                                                     <button
                                                         type="button"
                                                         onClick={() => issueCode(station)}
-                                                        className="pf-row-action text-amber-600 hover:text-amber-700"
+                                                        className="pf-row-action pf-row-action--control pf-row-action--warning"
                                                     >
+                                                        <KeyIcon size={15} aria-hidden="true" />
                                                         Issue Code
                                                     </button>
                                                 )}
@@ -444,16 +448,18 @@ export default function StationsListScreen({
                                                             station: station.id,
                                                             tenant_id: station.tenant_id,
                                                         })}
-                                                        className="pf-row-action"
+                                                        className="pf-row-action pf-row-action--control"
                                                     >
+                                                        <WrenchIcon size={15} aria-hidden="true" />
                                                         Manage
                                                     </Link>
                                                     {canManage && station.status === 'pending_activation' && (
                                                         <button
                                                             type="button"
                                                             onClick={() => issueCode(station)}
-                                                            className="pf-row-action pfs-issue-code-action"
+                                                            className="pf-row-action pf-row-action--control pf-row-action--warning"
                                                         >
+                                                            <KeyIcon size={15} aria-hidden="true" />
                                                             Issue Code
                                                         </button>
                                                     )}

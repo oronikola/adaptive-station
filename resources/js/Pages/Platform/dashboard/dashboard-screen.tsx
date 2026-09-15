@@ -25,7 +25,7 @@ interface StatCardProps {
     value: number;
     icon: string;
     tone: string;
-    meta?: string;
+    pills: Array<{ label: string; value: number | string; tone?: string }>;
 }
 
 const STAT_ICONS: Record<string, React.ReactNode> = {
@@ -35,7 +35,7 @@ const STAT_ICONS: Record<string, React.ReactNode> = {
     activeStations: <ZapIcon size={19} />,
 };
 
-function StatCard({ label, value, icon, tone, meta }: StatCardProps) {
+function StatCard({ label, value, icon, tone, pills }: StatCardProps) {
     return (
         <div className="pft-stat-card">
             <div className="pft-stat-card-top">
@@ -45,7 +45,13 @@ function StatCard({ label, value, icon, tone, meta }: StatCardProps) {
                 </span>
             </div>
             <p className="pft-stat-value">{value}</p>
-            <p className="pft-stat-meta">{meta ?? '\u00a0'}</p>
+            <div className="pft-stat-pills">
+                {pills.map((pill) => (
+                    <span key={pill.label} className={`pft-stat-pill pft-stat-pill--${pill.tone ?? 'neutral'}`}>
+                        <strong>{pill.value}</strong> {pill.label}
+                    </span>
+                ))}
+            </div>
         </div>
     );
 }
@@ -56,47 +62,33 @@ function ActivationGauge({
     label,
     value,
     total,
+    pending,
+    disabled,
 }: {
     label: string;
     value: number;
     total: number;
+    pending: number;
+    disabled: number;
 }) {
     const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-    const radius = 54;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (Math.min(100, pct) / 100) * circumference;
 
     return (
         <div className="pft-gauge-card">
-            <div className="pft-gauge">
-                <div className="pft-gauge-glow" aria-hidden="true" />
-                <svg viewBox="0 0 130 130" className="pft-gauge-svg" aria-hidden="true">
-                    <defs>
-                        <linearGradient id="stationGaugeFade" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#8ea6ff" />
-                            <stop offset="55%" stopColor="#234ef4" />
-                            <stop offset="100%" stopColor="#188352" />
-                        </linearGradient>
-                    </defs>
-                    <circle cx="65" cy="65" r={radius} className="pft-gauge-track" />
-                    <circle
-                        cx="65"
-                        cy="65"
-                        r={radius}
-                        className="pft-gauge-value"
-                        stroke="url(#stationGaugeFade)"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={offset}
-                    />
-                </svg>
-                <div className="pft-gauge-center">
+            <div className="pft-gauge-summary">
+                <div>
                     <span className="pft-gauge-pct">{pct}%</span>
+                    <p className="pft-gauge-caption">{label}</p>
                 </div>
+                <strong>{value}<span> / {total}</span></strong>
             </div>
-            <p className="pft-gauge-caption">{label}</p>
-            <p className="pft-gauge-meta">
-                {value} of {total} active
-            </p>
+            <div className="pft-activation-track" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={total || 1} aria-valuenow={value}>
+                <span style={{ width: `${Math.min(100, pct)}%` }} />
+            </div>
+            <div className="pft-activation-pills">
+                <span><i className="pft-dot pft-dot--pending" />{pending} awaiting activation</span>
+                <span><i className="pft-dot pft-dot--disabled" />{disabled} disabled or retired</span>
+            </div>
         </div>
     );
 }
@@ -256,7 +248,7 @@ function ClientStatusChart({ counts }: { counts: StatusCounts }) {
                     <li key={segment.key} className={`pft-status-legend-item pft-status-legend-item--${segment.key}`}>
                         <span className="pft-status-legend-dot" />
                         <span>{segment.label}</span>
-                        <strong>{segment.value}</strong>
+                        <strong>{segment.value} <small>{Math.round((segment.value / total) * 100)}%</small></strong>
                     </li>
                 ))}
             </ul>
@@ -308,8 +300,13 @@ interface DashboardScreenProps {
     stats: {
         tenant_count: number;
         active_tenant_count: number;
+        inactive_tenant_count: number;
+        new_tenant_count: number;
         station_count: number;
         active_station_count: number;
+        pending_station_count: number;
+        disabled_station_count: number;
+        retired_station_count: number;
     };
     statusCounts: StatusCounts;
     growth: GrowthPoint[];
@@ -354,29 +351,40 @@ export default function DashboardScreen({ stats, statusCounts, growth, recentAct
                         value={stats.tenant_count}
                         icon="tenants"
                         tone="blue"
+                        pills={[
+                            { label: 'new in 30 days', value: stats.new_tenant_count, tone: 'blue' },
+                            { label: 'inactive', value: stats.inactive_tenant_count },
+                        ]}
                     />
                     <StatCard
                         label="Active Clients"
                         value={stats.active_tenant_count}
                         icon="activeTenants"
                         tone="green"
-                        meta={
-                            stats.tenant_count > 0
-                                ? `${Math.round((stats.active_tenant_count / stats.tenant_count) * 100)}% of all clients`
-                                : undefined
-                        }
+                        pills={[
+                            { label: 'of all clients', value: `${stats.tenant_count > 0 ? Math.round((stats.active_tenant_count / stats.tenant_count) * 100) : 0}%`, tone: 'green' },
+                            { label: 'need review', value: stats.inactive_tenant_count },
+                        ]}
                     />
                     <StatCard
                         label="Stations"
                         value={stats.station_count}
                         icon="stations"
                         tone="violet"
+                        pills={[
+                            { label: 'active', value: stats.active_station_count, tone: 'green' },
+                            { label: 'awaiting setup', value: stats.pending_station_count, tone: 'amber' },
+                        ]}
                     />
                     <StatCard
                         label="Active Stations"
                         value={stats.active_station_count}
                         icon="activeStations"
                         tone="amber"
+                        pills={[
+                            { label: 'activation rate', value: `${stats.station_count > 0 ? Math.round((stats.active_station_count / stats.station_count) * 100) : 0}%`, tone: 'green' },
+                            { label: 'disabled or retired', value: stats.disabled_station_count + stats.retired_station_count },
+                        ]}
                     />
                 </div>
 
@@ -480,6 +488,8 @@ export default function DashboardScreen({ stats, statusCounts, growth, recentAct
                                 label="Stations active"
                                 value={stats.active_station_count}
                                 total={stats.station_count}
+                                pending={stats.pending_station_count}
+                                disabled={stats.disabled_station_count + stats.retired_station_count}
                             />
                         </div>
 

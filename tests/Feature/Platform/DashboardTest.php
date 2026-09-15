@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Platform;
 
+use App\Enums\StationStatus;
 use App\Enums\TenantStatus;
+use App\Models\Station;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -64,5 +66,29 @@ class DashboardTest extends TestCase
                 ->where('statusCounts.archived', 1)
                 ->where('stats.tenant_count', 3)
                 ->where('stats.active_tenant_count', 1));
+    }
+
+    public function test_summary_cards_include_actionable_client_and_station_breakdowns(): void
+    {
+        $this->travelTo(Date::parse('2026-09-15 12:00:00', 'UTC'));
+        $admin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create(['created_at' => Date::now()->subDays(10)]);
+        Tenant::factory()->create([
+            'status' => TenantStatus::Suspended,
+            'created_at' => Date::now()->subDays(45),
+        ]);
+        Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
+        Station::factory()->for($tenant)->create(['status' => StationStatus::PendingActivation]);
+        Station::factory()->for($tenant)->create(['status' => StationStatus::Disabled]);
+
+        $this->actingAs($admin)->get(route('platform.dashboard'))
+            ->assertInertia(fn ($page) => $page
+                ->where('stats.new_tenant_count', 1)
+                ->where('stats.inactive_tenant_count', 1)
+                ->where('stats.station_count', 3)
+                ->where('stats.active_station_count', 1)
+                ->where('stats.pending_station_count', 1)
+                ->where('stats.disabled_station_count', 1)
+                ->where('stats.retired_station_count', 0));
     }
 }

@@ -1,6 +1,7 @@
 import { BellIcon } from '@/Components/icons/bell';
 import { PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -48,6 +49,7 @@ export default function NotificationBell({
     const unreadCount = webNotifications?.unread_count ?? 0;
     const recent = webNotifications?.recent ?? [];
     const [open, setOpen] = useState(false);
+    const prefersReducedMotion = useReducedMotion();
     const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
     const buttonRef = useRef<HTMLButtonElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
@@ -155,14 +157,24 @@ export default function NotificationBell({
                 )}
             </button>
 
-            {open &&
+            {typeof document !== 'undefined' &&
                 createPortal(
-                    <div
+                    <AnimatePresence>
+                        {open && (
+                    <motion.div
+                        key="sidebar-notifications"
                         ref={panelRef}
                         className="pf-notification-dropdown"
                         role="menu"
                         aria-label="Notifications"
                         style={panelStyle}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{
+                            duration: prefersReducedMotion ? 0.1 : 0.18,
+                            ease: [0.23, 1, 0.32, 1],
+                        }}
                     >
                         <div className="pf-notification-dropdown-header">
                             <div>
@@ -240,7 +252,9 @@ export default function NotificationBell({
                         >
                             View all notifications
                         </Link>
-                    </div>,
+                    </motion.div>
+                        )}
+                    </AnimatePresence>,
                     document.body,
                 )}
         </div>

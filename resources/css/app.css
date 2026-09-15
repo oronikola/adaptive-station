@@ -184,7 +184,7 @@
 /* ── Global theme transition ───────────────────────────────────────────
    Smooths every color-driven property when the .dark class flips, without
    requiring per-component transition classes. Components/Theme/ThemeProvider.tsx
-   adds `.theme-transition` to <html> for ~260ms around each toggle and then
+   adds `.theme-transition` to <html> for ~360ms around each toggle and then
    removes it, so this rule stays out of the way of hover/route transitions,
    transform-based effects (tactile-press, btn-glass-*, Sidebar's motion/react
    springs), and keyframe animations (capability-marquee, signal-pulse,
@@ -203,15 +203,63 @@
 html.theme-transition,
 html.theme-transition * {
     transition:
-        background-color 220ms ease-in-out,
-        color 220ms ease-in-out,
-        border-color 220ms ease-in-out !important;
+        background-color 300ms var(--ease-out),
+        color 300ms var(--ease-out),
+        border-color 300ms var(--ease-out),
+        fill 300ms var(--ease-out),
+        stroke 300ms var(--ease-out),
+        outline-color 300ms var(--ease-out) !important;
+}
+
+html.theme-transition::after {
+    content: '';
+    position: fixed;
+    z-index: 2147483647;
+    inset: 0;
+    pointer-events: none;
+    background: #020617;
+    animation: theme-palette-wash 340ms var(--ease-out) both;
+}
+
+html.theme-transition:not(.dark)::after {
+    background: #ffffff;
+}
+
+html.theme-transition [aria-label^='Switch to'] svg {
+    animation: theme-icon-change 260ms var(--ease-out) both;
+}
+
+@keyframes theme-palette-wash {
+    from {
+        opacity: 0.14;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes theme-icon-change {
+    from {
+        opacity: 0;
+        transform: rotate(-24deg) scale(0.78);
+    }
+
+    to {
+        opacity: 1;
+        transform: rotate(0) scale(1);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
     html.theme-transition,
     html.theme-transition * {
         transition: none !important;
+    }
+
+    html.theme-transition::after {
+        content: none;
+        animation: none;
     }
 }
 

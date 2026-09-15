@@ -1,3 +1,4 @@
+import PremiumSelect from '@/Components/PremiumSelect';
 import { CalendarCheckIcon } from '@/Components/icons/calendar-check';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
@@ -27,14 +28,6 @@ export default function AttendanceStudentSummaryScreen({
     months,
     totalDaysPresent,
 }: AttendanceStudentSummaryScreenProps) {
-    function changeYear(e: React.ChangeEvent<HTMLSelectElement>) {
-        router.get(
-            route('portal.attendance.students.show', personRouteKey(person)),
-            { year: e.target.value },
-            { preserveState: true },
-        );
-    }
-
     return (
         <AdminLayout>
             <Head title={`Attendance Summary — ${person.display_name}`} />
@@ -74,14 +67,26 @@ export default function AttendanceStudentSummaryScreen({
                         </div>
                         <div className="pf-field" style={{ marginBottom: 0, minWidth: 120 }}>
                             <label htmlFor="year">Year</label>
-                            <select id="year" value={year} onChange={changeYear}>
-                                {years.length === 0 && <option value={year}>{year}</option>}
-                                {years.map((y) => (
-                                    <option key={y} value={y}>
-                                        {y}
-                                    </option>
-                                ))}
-                            </select>
+                            <PremiumSelect
+                                id="year"
+                                value={String(year)}
+                                onChange={(val) => {
+                                    router.get(
+                                        route('portal.attendance.students.show', personRouteKey(person)),
+                                        { year: val },
+                                        { preserveState: true },
+                                    );
+                                }}
+                                options={
+                                    years.length === 0
+                                        ? [{ value: String(year), label: String(year) }]
+                                        : years.map((y) => ({
+                                              value: String(y),
+                                              label: String(y),
+                                          }))
+                                }
+                                className="w-32"
+                            />
                         </div>
                     </div>
 

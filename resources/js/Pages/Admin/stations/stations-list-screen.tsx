@@ -9,8 +9,8 @@ import { CircleCheckIcon } from '@/Components/icons/circle-check';
 import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
 import { MenuIcon } from '@/Components/icons/menu';
 import { KeyIcon } from '@/Components/icons/key';
-import { ChevronRightIcon } from '@/Components/icons/chevron-right';
 import { CheckIcon } from '@/Components/icons/check';
+import { WrenchIcon } from '@/Components/icons/wrench';
 import { LayoutGridIcon } from '@/Components/icons/layout-grid';
 import IssueActivationCodeModal from './IssueActivationCodeModal';
 import ManageStationModal from './ManageStationModal';
@@ -395,19 +395,19 @@ export default function StationsListScreen({ stations }: StationsListScreenProps
                                                         <button
                                                             type="button"
                                                             onClick={() => setIssueCodeStation(station)}
-                                                            className="pf-row-action !text-amber-700 hover:!bg-amber-50"
+                                                            className="pf-row-action pf-row-action--control pf-row-action--warning"
                                                         >
+                                                            <KeyIcon size={15} aria-hidden="true" />
                                                             Issue Code
-                                                            <KeyIcon size={20} />
                                                         </button>
                                                     )}
                                                     <button
                                                         type="button"
                                                         onClick={() => setManageStation(station)}
-                                                        className="pf-row-action"
+                                                        className="pf-row-action pf-row-action--control"
                                                     >
+                                                        <WrenchIcon size={15} aria-hidden="true" />
                                                         Manage
-                                                        <ChevronRightIcon size={20} />
                                                     </button>
                                                 </div>
                                             </div>
@@ -506,19 +506,19 @@ export default function StationsListScreen({ stations }: StationsListScreenProps
                                                         <button
                                                             type="button"
                                                             onClick={() => setIssueCodeStation(station)}
-                                                            className="pf-row-action !text-amber-700 hover:!bg-amber-50"
+                                                            className="pf-row-action pf-row-action--control pf-row-action--warning"
                                                         >
+                                                            <KeyIcon size={15} aria-hidden="true" />
                                                             Issue Code
-                                                            <KeyIcon size={20} />
                                                         </button>
                                                     )}
                                                     <button
                                                         type="button"
                                                         onClick={() => setManageStation(station)}
-                                                        className="pf-row-action"
+                                                        className="pf-row-action pf-row-action--control"
                                                     >
+                                                        <WrenchIcon size={15} aria-hidden="true" />
                                                         Manage
-                                                        <ChevronRightIcon size={20} />
                                                     </button>
                                                 </div>
                                             </td>

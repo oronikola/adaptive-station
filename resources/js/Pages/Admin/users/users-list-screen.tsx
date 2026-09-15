@@ -1,4 +1,5 @@
 import SecretOnceCallout from '@/Components/SecretOnceCallout';
+import PremiumSelect from '@/Components/PremiumSelect';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
@@ -246,26 +247,28 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                             </div>
 
                             {/* Role Filter */}
-                            <select
+                            <PremiumSelect
                                 value={roleFilter}
-                                onChange={(e) => setRoleFilter(e.target.value as 'all' | 'tenant_admin' | 'tenant_operator')}
-                                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/15 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-200"
-                            >
-                                <option value="all">All Roles</option>
-                                <option value="tenant_admin">Admins Only</option>
-                                <option value="tenant_operator">Operators Only</option>
-                            </select>
+                                onChange={(value) => setRoleFilter(value as 'all' | 'tenant_admin' | 'tenant_operator')}
+                                options={[
+                                    { value: 'all', label: 'All Roles' },
+                                    { value: 'tenant_admin', label: 'Admins Only' },
+                                    { value: 'tenant_operator', label: 'Operators Only' },
+                                ]}
+                                className="w-36"
+                            />
 
                             {/* Status Filter */}
-                            <select
+                            <PremiumSelect
                                 value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-                                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/15 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-200"
-                            >
-                                <option value="all">All Statuses</option>
-                                <option value="active">Active Only</option>
-                                <option value="inactive">Inactive Only</option>
-                            </select>
+                                onChange={(value) => setStatusFilter(value as 'all' | 'active' | 'inactive')}
+                                options={[
+                                    { value: 'all', label: 'All Statuses' },
+                                    { value: 'active', label: 'Active Only' },
+                                    { value: 'inactive', label: 'Inactive Only' },
+                                ]}
+                                className="w-36"
+                            />
 
                             {/* View Toggle */}
                             <div className="pf-view-toggle" role="group" aria-label="View mode">

@@ -1190,3 +1190,39 @@
         filter: none;
     }
 }
+
+/* Login branding uses the product blue palette and lets the official mark stand on its own. */
+.auth-login-page .station-logo,
+.auth-login-page .auth-login-showcase .station-logo,
+.auth-login-page .auth-login-main .station-logo {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.auth-login-page .auth-login-brand,
+.auth-login-page .auth-eyebrow,
+.auth-login-page .auth-mobile-kicker {
+    color: #234ef4;
+}
+
+.auth-login-page .auth-showcase-content h2,
+.auth-login-page .auth-form-heading h1 {
+    color: #0f172a;
+}
+
+.auth-login-page .auth-tap-reader {
+    background: linear-gradient(145deg, #234ef4 0%, #1b36c8 76%);
+}
+
+.auth-login-page .auth-submit {
+    background: #234ef4;
+    border-color: #234ef4;
+    box-shadow: none;
+}
+
+.auth-login-page .auth-submit:hover {
+    background: #1b36c8;
+    filter: none;
+    box-shadow: none;
+}

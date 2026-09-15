@@ -39,7 +39,7 @@ export default function Sidebar({
 }: SidebarProps) {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const { theme, toggleTheme } = useTheme();
-    const themeLabel =
+    const themeActionLabel =
         theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
 
     return (
@@ -189,15 +189,17 @@ export default function Sidebar({
                             onHideTooltip?.();
                             toggleTheme();
                         }}
-                        onMouseEnter={(e) => onShowTooltip?.(e, themeLabel)}
+                        onMouseEnter={(e) =>
+                            onShowTooltip?.(e, themeActionLabel)
+                        }
                         onMouseLeave={onHideTooltip}
-                        aria-label={themeLabel}
+                        aria-label={themeActionLabel}
                         aria-pressed={theme === 'dark'}
                     >
                         <span className="pf-sidebar-footer-icon">
                             {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
                         </span>
-                        <span className="pf-sidebar-label">{themeLabel}</span>
+                        <span className="pf-sidebar-label">Darkmode</span>
                     </button>
                     <Link
                         href={route('profile.edit')}

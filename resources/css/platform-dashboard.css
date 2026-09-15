@@ -703,6 +703,70 @@
     stroke-linejoin: round;
 }
 
+.pf-row-action--control {
+    min-height: 34px;
+    gap: 7px;
+    margin: 0;
+    padding: 7px 12px;
+    border: 1px solid var(--as-border);
+    background: var(--as-surface);
+    color: var(--as-text-body);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    transition:
+        transform 180ms cubic-bezier(0.23, 1, 0.32, 1),
+        background-color 160ms ease,
+        border-color 160ms ease,
+        color 160ms ease;
+}
+
+.pf-row-action--control:hover {
+    border-color: var(--as-border-mid);
+    background: var(--as-surface-active);
+    color: var(--as-text);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.pf-row-action--control:active {
+    transform: scale(0.97);
+}
+
+.pf-row-action--control:focus-visible {
+    border-radius: 999px;
+}
+
+.pf-row-action--control svg {
+    width: 15px;
+    height: 15px;
+}
+
+.pf-row-action--warning {
+    border-color: color-mix(in srgb, var(--as-warning) 28%, transparent);
+    background: var(--as-warning-bg);
+    color: var(--as-warning);
+}
+
+.pf-row-action--warning:hover {
+    border-color: color-mix(in srgb, var(--as-warning) 45%, transparent);
+    background: color-mix(in srgb, var(--as-warning-bg) 78%, #ffffff);
+    color: #8a5515;
+}
+
+.pf-row-action--control.pf-row-action--danger {
+    border-color: var(--as-danger-border);
+    background: var(--as-danger-bg);
+    color: var(--as-danger);
+}
+
+.pf-row-action--control.pf-row-action--danger:hover {
+    border-color: color-mix(in srgb, var(--as-danger) 38%, transparent);
+    background: var(--as-danger-bg-alt);
+    color: var(--as-danger-dark);
+}
+
 .pf-empty {
     padding: 48px 24px;
     color: var(--as-text-secondary);
@@ -2118,4 +2182,3 @@
     border-color: #234ef4;
     box-shadow: 0 0 0 4px rgba(35, 78, 244, 0.25);
 }
-
