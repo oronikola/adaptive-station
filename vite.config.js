@@ -22,16 +22,16 @@ export default defineConfig({
         },
     },
     server: {
-        // Bind to the LAN IP (not 127.0.0.1) so `public/hot` points browsers
-        // on other machines at a reachable address instead of their own
-        // loopback. `host: true` listens on all interfaces; `hmr.host` pins
-        // the URL written into `public/hot` and used for the HMR websocket
-        // to this machine's actual LAN address so it resolves from anywhere
-        // on the network, not just this PC.
+        // Bind to all interfaces (`host: true`) so other machines on the LAN
+        // can connect if desired. `hmr.host` defaults to 'localhost' for
+        // local development, but can be overridden with VITE_HMR_HOST in .env
+        // (e.g. VITE_HMR_HOST=10.0.0.118) when testing from mobile/LAN devices.
+        // Port 5175 avoids collisions with other local projects on 5173/5174.
         host: true,
+        port: process.env.VITE_PORT ? Number(process.env.VITE_PORT) : 5175,
         cors: true,
         hmr: {
-            host: '192.168.1.10',
+            host: process.env.VITE_HMR_HOST || 'localhost',
         },
     },
 });
