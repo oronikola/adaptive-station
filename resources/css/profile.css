@@ -11,7 +11,7 @@
     min-width: 0;
     border: 1px solid var(--as-border);
     border-radius: 18px;
-    background: #fff;
+    background: var(--as-surface);
     transition: border-color 180ms ease;
 }
 
@@ -22,7 +22,7 @@
 .profile-summary { overflow: hidden; }
 .profile-summary-cover {
     height: 88px;
-    background: linear-gradient(120deg, var(--as-brand-dark), var(--as-brand-mid));
+    background: linear-gradient(120deg, var(--as-brand-solid), var(--as-brand-mid-solid));
 }
 
 .profile-summary-body { padding: 0 24px 24px; }
@@ -33,9 +33,9 @@
     width: 76px;
     height: 76px;
     margin: -38px 0 18px;
-    border: 5px solid #fff;
+    border: 5px solid var(--as-surface);
     border-radius: 24px;
-    background: #e7effc;
+    background: var(--as-icon-blue-bg);
     color: var(--as-brand-mid);
     font-size: 24px;
     font-weight: 700;
@@ -45,7 +45,7 @@
     display: inline-flex;
     padding: 4px 10px;
     border-radius: 999px;
-    background: #edf3fc;
+    background: var(--as-icon-blue-bg);
     color: var(--as-brand-mid);
     font-size: 11px;
     font-weight: 600;
@@ -94,9 +94,9 @@
 .profile-page .profile-card input {
     min-height: 44px;
     margin-top: 8px;
-    border: 1px solid #dbe2ec;
+    border: 1px solid var(--as-border-mid);
     border-radius: 10px;
-    background: #fbfcfe;
+    background: var(--as-surface-hover);
     color: var(--as-text-slate);
     font-size: 14px;
     box-shadow: none;
@@ -104,7 +104,7 @@
 
 .profile-page .profile-card input:focus {
     border-color: var(--as-brand-blue);
-    outline: 2px solid #dce8fa;
+    outline: 2px solid var(--as-brand-blue);
     outline-offset: 1px;
     --tw-ring-color: transparent;
 }
@@ -115,11 +115,12 @@
     align-items: center;
     gap: 12px;
     padding-top: 20px;
-    border-top: 1px solid #edf1f7;
+    border-top: 1px solid var(--as-border-light);
 }
 
-.profile-card--danger { border-color: #f0dcdc; }
-.profile-page .profile-card--danger > header h2 { color: #b42318; }
+.profile-form-actions [role="status"] { color: var(--as-success); }
+.profile-card--danger { border-color: var(--as-danger-border); }
+.profile-page .profile-card--danger > header h2 { color: var(--as-danger-dark); }
 .profile-delete-button { border-radius: 999px; min-height: 42px; text-transform: none; letter-spacing: normal; margin-top: 20px; }
 
 @media (max-width: 900px) {
