@@ -110,4 +110,95 @@ class StationManagementTest extends TestCase
         $this->actingAs($operator)->post(route('portal.stations.credentials.store', $station))
             ->assertForbidden();
     }
+
+    public function test_tenant_admin_can_fetch_station_detail_as_json_for_manage_modal(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
+
+        $response = $this->actingAs($admin)
+            ->getJson(route('portal.stations.show', $station));
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                'station' => [
+                    'id',
+                    'name',
+                    'station_code',
+                    'status',
+                    'is_online',
+                ],
+                'credentials',
+            ])
+            ->assertJsonPath('station.id', $station->id)
+            ->assertJsonPath('station.station_code', $station->station_code);
+    }
+
+    public function test_tenant_admin_can_issue_activation_code_via_json_modal_request(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $station = Station::factory()->for($tenant)->create(['status' => StationStatus::PendingActivation]);
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('portal.stations.activation-code', $station));
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                'message',
+                'activationCode',
+            ]);
+
+        $this->assertNotEmpty($response->json('activationCode'));
+    }
+
+    public function test_tenant_admin_can_update_configuration_via_json_modal_request(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
+
+        $response = $this->actingAs($admin)
+            ->patchJson(route('portal.stations.configuration', $station), [
+                'configuration' => ['kiosk_mode' => true, 'refresh_rate' => 30],
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Configuration updated.')
+            ->assertJsonPath('station.configuration.kiosk_mode', true);
+
+        $this->assertSame(['kiosk_mode' => true, 'refresh_rate' => 30], $station->fresh()->configuration);
+    }
+
+    public function test_tenant_admin_can_issue_and_revoke_credential_via_json_modal_request(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
+
+        $issueResponse = $this->actingAs($admin)
+            ->postJson(route('portal.stations.credentials.store', $station), [
+                'label' => 'Gate Terminal 02',
+            ]);
+
+        $issueResponse->assertOk()
+            ->assertJsonStructure([
+                'message',
+                'deviceToken',
+                'credentials',
+            ]);
+
+        $this->assertNotEmpty($issueResponse->json('deviceToken'));
+
+        $credential = StationCredential::allTenants()->where('station_id', $station->id)->firstOrFail();
+
+        $revokeResponse = $this->actingAs($admin)
+            ->patchJson(route('portal.stations.credentials.revoke', [$station, $credential]));
+
+        $revokeResponse->assertOk()
+            ->assertJsonPath('message', 'Credential revoked.');
+
+        $this->assertNotNull($credential->fresh()->revoked_at);
+    }
 }

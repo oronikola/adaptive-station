@@ -433,6 +433,14 @@ html.theme-transition * {
 :root {
     /* Token ease-out: default easing for nearly all transitions. */
     --ease-emil-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+    /* Transitions.dev — avatar group hover */
+    --avatar-lift: -4px;
+    --avatar-dur: 320ms;
+    --avatar-scale: 1.05;
+    --avatar-falloff: 0.45;
+    --avatar-ease-in: cubic-bezier(0.22, 1, 0.36, 1);
+    --avatar-ease-out: cubic-bezier(0.34, 3.85, 0.64, 1);
 }
 
 @layer utilities {
@@ -440,6 +448,210 @@ html.theme-transition * {
     .bg-dot-grid {
         background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1.4px);
         background-size: 14px 14px;
+    }
+}
+
+/* Hover-spring transition only — bring your own avatar/chip
+   styling (size, shape, border, stacking, background). */
+.t-avatar {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    transform-origin: center;
+    /* translateY before scale so scale doesn't amplify the lift offset. */
+    transform:
+        translateY(var(--shift, 0px))
+        scale(var(--scale-active, 1));
+    transition: transform var(--avatar-dur) var(--avatar-ease-in);
+    will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .t-avatar {
+        transition: none !important;
+        transform: none !important;
+    }
+}
+
+/*
+ * Landing page theme tokens. Dark (the existing royal drench) is the
+ * default. Light swaps the canvas and copy while leaving product islands
+ * marked `.lp-keep-dark` and the royal capability ribbon unchanged.
+ */
+.landing-page {
+    --lp-canvas: #234ef4;
+    --lp-ink: #ffffff;
+    --lp-muted: rgb(255 255 255 / 0.78);
+    --lp-faint: rgb(255 255 255 / 0.55);
+    --lp-glass-bg: rgb(255 255 255 / 0.1);
+    --lp-border: rgb(255 255 255 / 0.16);
+    --lp-dot: rgb(255 255 255 / 0.18);
+    color-scheme: dark;
+}
+
+.landing-page[data-theme='light'] {
+    --lp-canvas: #e8eef8;
+    --lp-ink: #071c44;
+    --lp-muted: #3d5270;
+    --lp-faint: #64748b;
+    --lp-glass-bg: rgb(255 255 255 / 0.78);
+    --lp-border: rgb(7 28 68 / 0.1);
+    --lp-dot: rgb(7 28 68 / 0.1);
+    color-scheme: light;
+}
+
+.lp-canvas {
+    background-color: var(--lp-canvas);
+    color: var(--lp-ink);
+}
+
+.lp-orb-tl {
+    background: radial-gradient(circle, rgb(255 255 255 / 0.16) 0%, rgb(255 255 255 / 0) 70%);
+}
+
+.lp-orb-br {
+    background: radial-gradient(circle, rgb(10 27 115 / 0.35) 0%, rgb(10 27 115 / 0) 70%);
+}
+
+.lp-hero-accent {
+    background-image: linear-gradient(to right, #fff, #fff, #d5deff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.landing-page::selection,
+.landing-page *::selection {
+    background: #fff;
+    color: #234ef4;
+}
+
+.landing-page[data-theme='light']::selection,
+.landing-page[data-theme='light'] *::selection {
+    background: rgb(35 78 244 / 0.22);
+    color: #071c44;
+}
+
+.landing-page,
+.lp-canvas {
+    transition:
+        background-color 280ms var(--ease-emil-out),
+        color 280ms var(--ease-emil-out);
+}
+
+.landing-page[data-theme='light'] .bg-dot-grid {
+    background-image: radial-gradient(var(--lp-dot) 1px, transparent 1.4px);
+}
+
+.landing-page[data-theme='light'] .lp-orb-tl {
+    background: radial-gradient(circle, rgb(35 78 244 / 0.14) 0%, rgb(35 78 244 / 0) 70%);
+}
+
+.landing-page[data-theme='light'] .lp-orb-br {
+    background: radial-gradient(circle, rgb(7 28 68 / 0.1) 0%, rgb(7 28 68 / 0) 70%);
+}
+
+.landing-page[data-theme='light'] .lp-hero-accent {
+    background-image: none;
+    color: #174a96;
+    -webkit-text-fill-color: #174a96;
+}
+
+.landing-page[data-theme='light'] .eyebrow-badge {
+    color: #071c44;
+    background: rgb(7 28 68 / 0.06);
+    border-color: rgb(7 28 68 / 0.1);
+}
+
+.landing-page[data-theme='light'] .eyebrow-badge::before {
+    background: #188352;
+}
+
+.landing-page[data-theme='light'] .lp-canvas .text-white {
+    color: var(--lp-ink);
+}
+
+.landing-page[data-theme='light'] .lp-canvas [class*='text-white/'] {
+    color: var(--lp-muted);
+}
+
+.landing-page[data-theme='light'] .lp-canvas [class*='text-white/3'],
+.landing-page[data-theme='light'] .lp-canvas [class*='text-white/4'],
+.landing-page[data-theme='light'] .lp-canvas [class*='text-white/5'] {
+    color: var(--lp-faint);
+}
+
+.landing-page[data-theme='light'] .lp-canvas [class*='border-white/'] {
+    border-color: var(--lp-border);
+}
+
+.landing-page[data-theme='light'] .lp-canvas [class*='bg-white/']:not(.btn-glass-secondary):not(.ds-btn-hero) {
+    background-color: var(--lp-glass-bg);
+}
+
+.landing-page[data-theme='light'] .lp-canvas [class*='text-[#bcd4f7]'] {
+    color: var(--lp-muted);
+}
+
+.landing-page[data-theme='light'] .glass-hover {
+    background-color: rgb(255 255 255 / 0.92);
+    border-color: #dbe3ef;
+    color: #071c44;
+}
+
+.landing-page[data-theme='light'] .faq-hover {
+    background-color: rgb(255 255 255 / 0.78);
+    border-color: #dbe3ef;
+}
+
+.landing-page[data-theme='light'] .faq-hover[class*='bg-white/15'] {
+    background-color: #fff;
+}
+
+.landing-page[data-theme='light'] .faq-hover span,
+.landing-page[data-theme='light'] .faq-hover p,
+.landing-page[data-theme='light'] .glass-hover blockquote,
+.landing-page[data-theme='light'] .glass-hover figcaption {
+    color: inherit;
+}
+
+.landing-page[data-theme='light'] .lp-keep-dark,
+.landing-page[data-theme='light'] .lp-keep-dark .text-white,
+.landing-page[data-theme='light'] .lp-keep-dark [class*='text-white'] {
+    color: #fff;
+}
+
+.landing-page[data-theme='light'] .lp-keep-dark [class*='text-white/'] {
+    color: rgb(255 255 255 / 0.75);
+}
+
+.landing-page[data-theme='light'] .lp-keep-dark [class*='border-white/'] {
+    border-color: rgb(255 255 255 / 0.12);
+}
+
+.landing-page[data-theme='light'] .lp-keep-dark [class*='bg-white/'] {
+    background-color: rgb(255 255 255 / 0.08);
+}
+
+.landing-page[data-theme='light'] .lp-keep-dark [class*='text-[#bcd4f7]'] {
+    color: #bcd4f7;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .landing-page[data-theme='light'] .glass-hover:hover {
+        background-color: #fff;
+        box-shadow: 0 18px 38px -18px rgb(10 27 115 / 0.22);
+    }
+
+    .landing-page[data-theme='light'] .faq-hover:hover {
+        background-color: #fff;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing-page,
+    .lp-canvas {
+        transition: none;
     }
 }
 

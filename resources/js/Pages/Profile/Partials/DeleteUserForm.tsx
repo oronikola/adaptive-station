@@ -7,6 +7,8 @@ import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
 import React, { useRef, useState } from 'react';
 
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
+import { XIcon } from '@/Components/icons/x';
 interface DeleteUserFormProps {
     className?: string;
 }
@@ -53,9 +55,7 @@ export default function DeleteUserForm({ className = '' }: DeleteUserFormProps) 
         <section className={className}>
             <header className="flex items-start gap-3.5 border-b border-rose-100 pb-5 dark:border-rose-900/30">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M12 8v6M12 16h.01M10.8 4.2L4.2 15.6a1.5 1.5 0 0 0 1.3 2.2h13a1.5 1.5 0 0 0 1.3-2.2L13.2 4.2a1.5 1.5 0 0 0-2.4 0Z" />
-                    </svg>
+                    <BadgeAlertIcon size={20} />
                 </span>
                 <div>
                     <h2 className="text-lg font-bold tracking-tight text-rose-950 dark:text-rose-200">
@@ -84,9 +84,7 @@ export default function DeleteUserForm({ className = '' }: DeleteUserFormProps) 
                     <div className="pf-modal-header mb-4">
                         <div className="pf-modal-hero">
                             <span className="pf-modal-hero-icon pf-modal-hero-icon--red" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M12 8v6M12 16h.01M10.8 4.2L4.2 15.6a1.5 1.5 0 0 0 1.3 2.2h13a1.5 1.5 0 0 0 1.3-2.2L13.2 4.2a1.5 1.5 0 0 0-2.4 0Z" />
-                                </svg>
+                                <BadgeAlertIcon size={20} />
                             </span>
                             <div className="pf-modal-hero-text">
                                 <h2 className="pf-modal-title text-xl font-bold text-slate-900 dark:text-white">Delete Account?</h2>
@@ -96,7 +94,7 @@ export default function DeleteUserForm({ className = '' }: DeleteUserFormProps) 
                             </div>
                         </div>
                         <button type="button" className="pf-modal-close" onClick={closeModal} aria-label="Close">
-                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                            <XIcon size={20} />
                         </button>
                     </div>
 

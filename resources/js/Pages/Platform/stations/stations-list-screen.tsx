@@ -10,6 +10,12 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import Pagination from '@/Components/admin/Pagination';
 import { PageProps, PaginatedData, Tenant } from '@/types';
+import { MenuIcon } from '@/Components/icons/menu';
+import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { XIcon } from '@/Components/icons/x';
+import { PlusIcon } from '@/Components/icons/plus';
+import { LayoutGridIcon } from '@/Components/icons/layout-grid';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -216,9 +222,7 @@ export default function StationsListScreen({
                                     setCreateOpen(true);
                                 }}
                             >
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 5v14M5 12h14" />
-                                </svg>
+                                <PlusIcon size={20} />
                                 Add Station
                             </button>
                         </div>
@@ -271,9 +275,7 @@ export default function StationsListScreen({
                                 onClick={() => setViewMode('table')}
                                 aria-pressed={viewMode === 'table'}
                             >
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
+                                <MenuIcon size={20} />
                                 Table
                             </button>
                             <button
@@ -282,12 +284,7 @@ export default function StationsListScreen({
                                 onClick={() => setViewMode('gallery')}
                                 aria-pressed={viewMode === 'gallery'}
                             >
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="7" height="7" rx="1.2" />
-                                    <rect x="14" y="3" width="7" height="7" rx="1.2" />
-                                    <rect x="3" y="14" width="7" height="7" rx="1.2" />
-                                    <rect x="14" y="14" width="7" height="7" rx="1.2" />
-                                </svg>
+                                <LayoutGridIcon size={20} />
                                 Gallery
                             </button>
                         </div>
@@ -309,10 +306,7 @@ export default function StationsListScreen({
                                         <div key={station.id} className="station-card" style={{ animationDelay: `${index * 36}ms` }}>
                                             <div className="station-card-top">
                                                 <span className={`station-card-icon ${iconTone}`} aria-hidden="true">
-                                                    <svg viewBox="0 0 24 24">
-                                                        <rect x="4" y="5" width="16" height="13" rx="2" />
-                                                        <path d="M8 21h8M9 9h6M9 13h4" />
-                                                    </svg>
+                                                    <MonitorCheckIcon size={20} />
                                                 </span>
                                                 <div className="flex items-center gap-1.5">
                                                     <StatusBadge
@@ -354,9 +348,7 @@ export default function StationsListScreen({
                                                     className="pf-row-action"
                                                 >
                                                     View Details
-                                                    <svg viewBox="0 0 24 24">
-                                                        <path d="M9 6l6 6-6 6" />
-                                                    </svg>
+                                                    <ChevronRightIcon size={20} />
                                                 </Link>
                                                 {canManage && station.status === 'pending_activation' && (
                                                     <button
@@ -466,10 +458,7 @@ export default function StationsListScreen({
                     <div className="pf-modal-header">
                         <div className="pf-modal-hero">
                             <span className="pf-modal-hero-icon pf-modal-hero-icon--violet" aria-hidden="true">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="4" y="5" width="16" height="13" rx="2" />
-                                    <path d="M8 21h8M9 9h6M9 13h4" />
-                                </svg>
+                                <MonitorCheckIcon size={20} />
                             </span>
                             <div className="pf-modal-hero-text">
                                 <h3 className="pf-modal-title">Add Station</h3>
@@ -482,9 +471,7 @@ export default function StationsListScreen({
                             onClick={() => { setCreateOpen(false); setStationCodeTouched(false); reset(); }}
                             aria-label="Close"
                         >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <XIcon size={20} />
                         </button>
                     </div>
 

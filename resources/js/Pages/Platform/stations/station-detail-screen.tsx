@@ -12,6 +12,14 @@ import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { StationCredential, Tenant } from '@/types';
+import { ArrowLeftIcon } from '@/Components/icons/arrow-left';
+import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
+import { CircleHelpIcon } from '@/Components/icons/circle-help';
+import { DollarSignIcon } from '@/Components/icons/dollar-sign';
+import { ActivityIcon } from '@/Components/icons/activity';
+import { LockIcon } from '@/Components/icons/lock';
+import { XIcon } from '@/Components/icons/x';
+import { PlusIcon } from '@/Components/icons/plus';
 import '../../../../css/platform-dashboard.css';
 
 interface StationDetail {
@@ -158,9 +166,7 @@ export default function StationDetailScreen({
                         href={route('platform.stations.index', { tenant_id: tenant.id })}
                         className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
                     >
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
+                        <ArrowLeftIcon size={16} />
                         Back to Stations
                     </Link>
 
@@ -240,9 +246,7 @@ export default function StationDetailScreen({
                                 onClick={issueActivationCode}
                                 className="pf-btn pf-btn-primary"
                             >
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 5v14M5 12h14" />
-                                </svg>
+                                <PlusIcon size={20} />
                                 Issue Activation Code
                             </button>
                         )}
@@ -256,10 +260,7 @@ export default function StationDetailScreen({
                 <div className="pf-stat-grid">
                     <div className="pf-stat-card">
                         <span className="pf-stat-icon pf-stat-icon--blue" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="4" y="5" width="16" height="13" rx="2" />
-                                <path d="M8 21h8M9 9h6M9 13h4" />
-                            </svg>
+                            <MonitorCheckIcon size={20} />
                         </span>
                         <div>
                             <p className="pf-stat-label">Connectivity</p>
@@ -272,10 +273,7 @@ export default function StationDetailScreen({
 
                     <div className="pf-stat-card">
                         <span className="pf-stat-icon pf-stat-icon--violet" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 6v6l4 2" />
-                            </svg>
+                            <CircleHelpIcon size={20} />
                         </span>
                         <div>
                             <p className="pf-stat-label">Last Seen</p>
@@ -290,9 +288,7 @@ export default function StationDetailScreen({
 
                     <div className="pf-stat-card">
                         <span className="pf-stat-icon pf-stat-icon--green" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                            </svg>
+                            <DollarSignIcon size={20} />
                         </span>
                         <div>
                             <p className="pf-stat-label">App Version</p>
@@ -305,9 +301,7 @@ export default function StationDetailScreen({
 
                     <div className="pf-stat-card">
                         <span className="pf-stat-icon pf-stat-icon--amber" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                            </svg>
+                            <ActivityIcon size={20} />
                         </span>
                         <div>
                             <p className="pf-stat-label">Pending Events</p>
@@ -325,10 +319,7 @@ export default function StationDetailScreen({
                         <div className="p-6">
                             <div className="flex items-start gap-4">
                                 <span className="pf-modal-hero-icon pf-modal-hero-icon--amber shrink-0" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24">
-                                        <rect x="4" y="5" width="16" height="13" rx="2" />
-                                        <path d="M8 21h8M9 9h6M9 13h4" />
-                                    </svg>
+                                    <MonitorCheckIcon size={20} />
                                 </span>
                                 <div>
                                     <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
@@ -401,9 +392,7 @@ export default function StationDetailScreen({
                             onClick={() => setIssueCredentialOpen(true)}
                             className="pf-btn pf-btn-secondary text-xs"
                         >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
+                            <PlusIcon size={20} />
                             Issue New Credential
                         </button>
                     </div>
@@ -463,11 +452,7 @@ export default function StationDetailScreen({
                     <div className="pf-modal-header">
                         <div className="pf-modal-hero">
                             <span className="pf-modal-hero-icon pf-modal-hero-icon--amber" aria-hidden="true">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="3" y="11" width="10" height="8" rx="1.5" />
-                                    <path d="M7 11V8a4 4 0 0 1 8 0v3" />
-                                    <circle cx="8" cy="15" r="1" />
-                                </svg>
+                                <LockIcon size={20} />
                             </span>
                             <div className="pf-modal-hero-text">
                                 <h3 className="pf-modal-title">Issue Device Credential</h3>
@@ -482,9 +467,7 @@ export default function StationDetailScreen({
                             onClick={() => setIssueCredentialOpen(false)}
                             aria-label="Close"
                         >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <XIcon size={20} />
                         </button>
                     </div>
 

@@ -4,7 +4,8 @@ import {
     ListboxOption,
     ListboxOptions,
 } from '@headlessui/react';
-import { Check, ChevronDown } from 'reicon-react';
+import { CheckIcon } from '@/Components/icons/check';
+import { ChevronDownIcon } from '@/Components/icons/chevron-down';
 
 export interface PremiumSelectOption<T extends string | number> {
     value: T;
@@ -27,7 +28,7 @@ interface PremiumSelectProps<T extends string | number> {
  * Premium dropdown select shared by every form and filter bar.
  *
  * Headless UI Listbox with an anchored, portaled options panel (never
- * clipped by modals or cards), full keyboard support, Reicon affordances,
+ * clipped by modals or cards), full keyboard support, animated icon affordances,
  * and token styling: 20px radius, slate hairline, brand focus ring,
  * ink-tinted dropdown shadow, tactile press.
  */
@@ -61,7 +62,7 @@ export default function PremiumSelect<T extends string | number>({
                     >
                         {selected?.label ?? placeholder}
                     </span>
-                    <ChevronDown
+                    <ChevronDownIcon
                         size={16}
                         className="shrink-0 text-gray-400 transition-transform duration-200 group-data-[open]:rotate-180 motion-reduce:transition-none"
                     />
@@ -89,7 +90,7 @@ export default function PremiumSelect<T extends string | number>({
                         >
                             <span className="block truncate">{option.label}</span>
                             <span className="invisible shrink-0 text-station-blue-bright group-data-[selected]:visible">
-                                <Check size={16} />
+                                <CheckIcon size={16} />
                             </span>
                         </ListboxOption>
                     ))}

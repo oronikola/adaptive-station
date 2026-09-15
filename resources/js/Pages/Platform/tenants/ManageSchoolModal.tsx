@@ -6,6 +6,14 @@ import { Link, router } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
+import { XIcon } from '@/Components/icons/x';
+import { SettingsIcon } from '@/Components/icons/settings';
+import { UsersIcon } from '@/Components/icons/users';
+import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
+import { DeleteIcon } from '@/Components/icons/delete';
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
+import { PlusIcon } from '@/Components/icons/plus';
 interface Admin {
     id: number;
     name: string;
@@ -314,9 +322,7 @@ export default function ManageSchoolModal({
                             }
                             aria-hidden="true"
                         >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
-                            </svg>
+                            <GraduationCapIcon size={20} />
                         </span>
                         <div className="pf-modal-hero-text">
                             <div className="flex flex-wrap items-center gap-2.5">
@@ -349,9 +355,7 @@ export default function ManageSchoolModal({
                         onClick={onClose}
                         aria-label="Close"
                     >
-                        <svg viewBox="0 0 24 24">
-                            <path d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <XIcon size={20} />
                     </button>
                 </div>
 
@@ -366,10 +370,7 @@ export default function ManageSchoolModal({
                                 : 'text-slate-600 hover:bg-white/60 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200'
                         }`}
                     >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-currentColor stroke-2">
-                            <circle cx="12" cy="12" r="3" />
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                        </svg>
+                        <SettingsIcon size={16} />
                         Overview & Status
                     </button>
 
@@ -382,12 +383,7 @@ export default function ManageSchoolModal({
                                 : 'text-slate-600 hover:bg-white/60 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200'
                         }`}
                     >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-currentColor stroke-2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                            <circle cx="9" cy="7" r="4" />
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                        </svg>
+                        <UsersIcon size={16} />
                         School Admins
                         <span className="rounded-full bg-slate-200/90 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-300">
                             {isLoadingDetails ? '…' : admins.length}
@@ -403,10 +399,7 @@ export default function ManageSchoolModal({
                                 : 'text-slate-600 hover:bg-white/60 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200'
                         }`}
                     >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-currentColor stroke-2">
-                            <rect x="4" y="5" width="16" height="13" rx="2" />
-                            <path d="M8 21h8M9 9h6M9 13h4" />
-                        </svg>
+                        <MonitorCheckIcon size={16} />
                         Stations
                         <span className="rounded-full bg-slate-200/90 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-300">
                             {isLoadingDetails ? '…' : stations.length}
@@ -422,9 +415,7 @@ export default function ManageSchoolModal({
                                 : 'text-red-600/80 hover:bg-red-50/70 hover:text-red-700 dark:text-red-400/80 dark:hover:bg-red-950/40 dark:hover:text-red-300'
                         }`}
                     >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-currentColor stroke-2">
-                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
+                        <DeleteIcon size={16} />
                         Danger Zone
                     </button>
                 </div>
@@ -577,9 +568,7 @@ export default function ManageSchoolModal({
                                 onClick={() => setIsAddingAdmin(!isAddingAdmin)}
                                 className="pf-btn pf-btn-secondary text-xs"
                             >
-                                <svg viewBox="0 0 24 24" className="h-4 w-4">
-                                    <path d="M12 5v14M5 12h14" />
-                                </svg>
+                                <PlusIcon size={16} />
                                 {isAddingAdmin ? 'Cancel' : 'Add Admin'}
                             </button>
                         </div>
@@ -774,9 +763,7 @@ export default function ManageSchoolModal({
                         <div className="rounded-2xl border border-red-200 bg-red-50/60 p-5 dark:border-red-900/50 dark:bg-red-950/20">
                             <div className="flex items-start gap-3">
                                 <span className="pf-modal-hero-icon pf-modal-hero-icon--red mt-0.5 !h-9 !w-9 !flex-[0_0_36px]">
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M12 8v6M12 16h.01M10.8 4.2L4.2 15.6a1.5 1.5 0 0 0 1.3 2.2h13a1.5 1.5 0 0 0 1.3-2.2L13.2 4.2a1.5 1.5 0 0 0-2.4 0Z" />
-                                    </svg>
+                                    <BadgeAlertIcon size={20} />
                                 </span>
                                 <div>
                                     <h4 className="text-sm font-bold text-red-700 dark:text-red-400">

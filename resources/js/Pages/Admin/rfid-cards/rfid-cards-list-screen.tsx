@@ -4,6 +4,15 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import type { PaginatedData, PaginationLink, Person, RfidCard } from '@/types';
 import ManageHolderModal from './ManageHolderModal';
+import { CreditCardIcon } from '@/Components/icons/credit-card';
+import { CheckIcon } from '@/Components/icons/check';
+import { CircleHelpIcon } from '@/Components/icons/circle-help';
+import { UserPlusIcon } from '@/Components/icons/user-plus';
+import { MenuIcon } from '@/Components/icons/menu';
+import { WifiIcon } from '@/Components/icons/wifi';
+import { CopyIcon } from '@/Components/icons/copy';
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { LayoutGridIcon } from '@/Components/icons/layout-grid';
 import '../../../../css/platform-dashboard.css';
 
 interface RfidCardWithPerson extends RfidCard {
@@ -35,29 +44,16 @@ interface StatCardProps {
 
 const STAT_ICONS: Record<StatCardProps['icon'], React.ReactNode> = {
     cards: (
-        <svg viewBox="0 0 24 24">
-            <rect x="3" y="5" width="18" height="14" rx="3" />
-            <path d="M3 10h18" />
-            <path d="M7 15h2" />
-        </svg>
+        <CreditCardIcon size={20} />
     ),
     active: (
-        <svg viewBox="0 0 24 24">
-            <path d="m5 12 4.5 4.5L19 7" />
-        </svg>
+        <CheckIcon size={20} />
     ),
     inactive: (
-        <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" />
-            <path d="m4.9 4.9 14.2 14.2" />
-        </svg>
+        <CircleHelpIcon size={20} />
     ),
     assigned: (
-        <svg viewBox="0 0 24 24">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M19 11v6M22 14h-6" />
-        </svg>
+        <UserPlusIcon size={20} />
     ),
 };
 
@@ -262,9 +258,7 @@ export default function RfidCardsListScreen({
                                 onClick={() => setViewMode('table')}
                                 aria-pressed={viewMode === 'table'}
                             >
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
+                                <MenuIcon size={20} />
                                 Table
                             </button>
                             <button
@@ -273,12 +267,7 @@ export default function RfidCardsListScreen({
                                 onClick={() => setViewMode('gallery')}
                                 aria-pressed={viewMode === 'gallery'}
                             >
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="7" height="7" rx="1.2" />
-                                    <rect x="14" y="3" width="7" height="7" rx="1.2" />
-                                    <rect x="3" y="14" width="7" height="7" rx="1.2" />
-                                    <rect x="14" y="14" width="7" height="7" rx="1.2" />
-                                </svg>
+                                <LayoutGridIcon size={20} />
                                 Gallery
                             </button>
                         </div>
@@ -320,11 +309,7 @@ export default function RfidCardsListScreen({
                                                 <td>
                                                     <div className="flex items-center gap-2.5">
                                                         <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-blue-200/80 bg-blue-50 text-blue-600 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-400">
-                                                            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-currentColor stroke-2" strokeLinecap="round" strokeLinejoin="round">
-                                                                <path d="M6 8.32a7.43 7.43 0 0 1 0 7.36" />
-                                                                <path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58" />
-                                                                <path d="M12.91 4.1a15.91 15.91 0 0 1 0 15.8" />
-                                                            </svg>
+                                                            <WifiIcon size={14} />
                                                         </span>
                                                         <div className="flex items-center gap-1.5">
                                                             <span className="font-mono text-xs font-bold tracking-wider text-slate-800 dark:text-slate-200">
@@ -337,14 +322,9 @@ export default function RfidCardsListScreen({
                                                                 title="Copy Card UID"
                                                             >
                                                                 {copiedUid === card.card_uid ? (
-                                                                    <svg viewBox="0 0 24 24" className="h-3 w-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                                                        <path d="M20 6L9 17l-5-5" />
-                                                                    </svg>
+                                                                    <CheckIcon size={12} className="text-emerald-600 dark:text-emerald-400" />
                                                                 ) : (
-                                                                    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                                                    </svg>
+                                                                    <CopyIcon size={12} />
                                                                 )}
                                                             </button>
                                                         </div>
@@ -407,9 +387,7 @@ export default function RfidCardsListScreen({
                                                             className="pf-row-action"
                                                         >
                                                             Manage Holder
-                                                            <svg viewBox="0 0 24 24">
-                                                                <path d="M9 6l6 6-6 6" />
-                                                            </svg>
+                                                            <ChevronRightIcon size={20} />
                                                         </button>
                                                     ) : (
                                                         <span className="text-xs text-slate-400">—</span>
@@ -426,10 +404,7 @@ export default function RfidCardsListScreen({
                         rfidCards.data.length === 0 ? (
                             <div className="py-16 text-center">
                                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
-                                    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-none stroke-currentColor stroke-1.8">
-                                        <rect x="3" y="5" width="18" height="14" rx="3" />
-                                        <path d="M3 10h18" />
-                                    </svg>
+                                    <CreditCardIcon size={28} />
                                 </div>
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No RFID cards found</h3>
                                 <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500 dark:text-slate-400">
@@ -453,10 +428,7 @@ export default function RfidCardsListScreen({
                                             {/* Top card header */}
                                             <div className="flex items-center justify-between gap-2">
                                                 <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                                                    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" strokeWidth="2">
-                                                        <rect x="3" y="5" width="18" height="14" rx="3" />
-                                                        <path d="M3 10h18" />
-                                                    </svg>
+                                                    <CreditCardIcon size={14} className="text-blue-600 dark:text-blue-400" />
                                                     <span>RFID PASS</span>
                                                 </div>
 
@@ -480,11 +452,7 @@ export default function RfidCardsListScreen({
                                                         <div className="h-6 w-8 rounded border border-amber-400/80 bg-gradient-to-tr from-amber-300 via-amber-200 to-amber-100 shadow-inner flex items-center justify-center">
                                                             <div className="h-3 w-4 border border-amber-600/40 rounded-sm" />
                                                         </div>
-                                                        <svg viewBox="0 0 24 24" className="h-4 w-4 text-blue-600/70 dark:text-blue-400/70" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                                            <path d="M6 8.32a7.43 7.43 0 0 1 0 7.36" />
-                                                            <path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58" />
-                                                            <path d="M12.91 4.1a15.91 15.91 0 0 1 0 15.8" />
-                                                        </svg>
+                                                        <WifiIcon size={16} className="text-blue-600/70 dark:text-blue-400/70" />
                                                     </div>
                                                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                                         CARD UID
@@ -492,10 +460,7 @@ export default function RfidCardsListScreen({
                                                 </div>
                                                 <div className="mt-2.5 flex items-center justify-between">
                                                     <div className="flex items-center gap-2 font-mono text-sm font-extrabold tracking-wider text-slate-800 dark:text-white">
-                                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" strokeWidth="2">
-                                                            <rect x="2" y="5" width="20" height="14" rx="2" />
-                                                            <line x1="2" y1="10" x2="22" y2="10" />
-                                                        </svg>
+                                                        <CreditCardIcon size={14} className="text-slate-400 dark:text-slate-500" />
                                                         <span>{card.card_uid}</span>
                                                     </div>
                                                     <button
@@ -508,14 +473,9 @@ export default function RfidCardsListScreen({
                                                         title="Copy Card UID"
                                                     >
                                                         {copiedUid === card.card_uid ? (
-                                                            <svg viewBox="0 0 24 24" className="h-3 w-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                                                <path d="M20 6L9 17l-5-5" />
-                                                            </svg>
+                                                            <CheckIcon size={12} className="text-emerald-600 dark:text-emerald-400" />
                                                         ) : (
-                                                            <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                                            </svg>
+                                                            <CopyIcon size={12} />
                                                         )}
                                                     </button>
                                                 </div>
@@ -570,9 +530,7 @@ export default function RfidCardsListScreen({
                                                         className="pf-row-action !w-full justify-center !py-2 rounded-xl text-xs font-semibold cursor-pointer"
                                                     >
                                                         Manage Holder
-                                                        <svg viewBox="0 0 24 24">
-                                                            <path d="M9 6l6 6-6 6" />
-                                                        </svg>
+                                                        <ChevronRightIcon size={20} />
                                                     </button>
                                                 ) : (
                                                     <div className="py-2 text-center text-xs text-slate-400">

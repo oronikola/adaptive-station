@@ -3,6 +3,15 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import type { PaginatedData, User, PageProps, PaginationLink } from '@/types';
+import { UserPlusIcon } from '@/Components/icons/user-plus';
+import { UsersIcon } from '@/Components/icons/users';
+import { ShieldCheckIcon } from '@/Components/icons/shield-check';
+import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
+import { SearchIcon } from '@/Components/icons/search';
+import { MenuIcon } from '@/Components/icons/menu';
+import { CircleHelpIcon } from '@/Components/icons/circle-help';
+import { CheckIcon } from '@/Components/icons/check';
+import { LayoutGridIcon } from '@/Components/icons/layout-grid';
 import '../../../../css/platform-dashboard.css';
 
 interface UserListItem extends User {
@@ -143,12 +152,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                     </div>
                     {canManage && (
                         <Link href={route('portal.users.create')} className="pf-btn pf-btn-primary">
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                                <line x1="19" y1="8" x2="19" y2="14" />
-                                <line x1="22" y1="11" x2="16" y2="11" />
-                            </svg>
+                            <UserPlusIcon size={16} />
                             Add User
                         </Link>
                     )}
@@ -164,12 +168,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                         <div className="pf-stat-head">
                             <span className="pf-stat-label">Total Staff</span>
                             <span className="pf-stat-badge pf-stat-badge--blue" aria-hidden="true">
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                    <circle cx="9" cy="7" r="4" />
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                                </svg>
+                                <UsersIcon size={16} />
                             </span>
                         </div>
                         <div className="pf-stat-value">{stats.total}</div>
@@ -193,9 +192,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                         <div className="pf-stat-head">
                             <span className="pf-stat-label">School Admins</span>
                             <span className="pf-stat-badge pf-stat-badge--indigo" aria-hidden="true">
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                                </svg>
+                                <ShieldCheckIcon size={16} />
                             </span>
                         </div>
                         <div className="pf-stat-value">{stats.admins}</div>
@@ -207,11 +204,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                         <div className="pf-stat-head">
                             <span className="pf-stat-label">Operators</span>
                             <span className="pf-stat-badge pf-stat-badge--slate" aria-hidden="true">
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <rect x="2" y="3" width="20" height="14" rx="2" />
-                                    <line x1="8" y1="21" x2="16" y2="21" />
-                                    <line x1="12" y1="17" x2="12" y2="21" />
-                                </svg>
+                                <MonitorCheckIcon size={16} />
                             </span>
                         </div>
                         <div className="pf-stat-value">{stats.operators}</div>
@@ -240,16 +233,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                     placeholder="Search name or email..."
                                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 pl-8 pr-7 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                                 />
-                                <svg
-                                    className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                >
-                                    <circle cx="11" cy="11" r="8" />
-                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                                </svg>
+                                <SearchIcon size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
                                 {search && (
                                     <button
                                         type="button"
@@ -291,9 +275,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                     onClick={() => setViewMode('table')}
                                     aria-pressed={viewMode === 'table'}
                                 >
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M4 6h16M4 12h16M4 18h16" />
-                                    </svg>
+                                    <MenuIcon size={20} />
                                     Table
                                 </button>
                                 <button
@@ -302,12 +284,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                     onClick={() => setViewMode('gallery')}
                                     aria-pressed={viewMode === 'gallery'}
                                 >
-                                    <svg viewBox="0 0 24 24">
-                                        <rect x="3" y="3" width="7" height="7" rx="1.2" />
-                                        <rect x="14" y="3" width="7" height="7" rx="1.2" />
-                                        <rect x="3" y="14" width="7" height="7" rx="1.2" />
-                                        <rect x="14" y="14" width="7" height="7" rx="1.2" />
-                                    </svg>
+                                    <LayoutGridIcon size={20} />
                                     Cards
                                 </button>
                             </div>
@@ -333,11 +310,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                             <td colSpan={5} className="pf-empty">
                                                 <div className="flex flex-col items-center justify-center py-6">
                                                     <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-3 dark:bg-gray-800">
-                                                        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                                            <circle cx="9" cy="7" r="4" />
-                                                            <line x1="19" y1="8" x2="19" y2="14" />
-                                                        </svg>
+                                                        <UserPlusIcon size={24} />
                                                     </span>
                                                     <p className="font-semibold text-slate-700 dark:text-slate-200">No users found</p>
                                                     <p className="text-xs text-slate-400 mt-0.5">
@@ -433,10 +406,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                                                 as="button"
                                                                 className="pf-btn-danger-soft"
                                                             >
-                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <circle cx="12" cy="12" r="10" />
-                                                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-                                                                </svg>
+                                                                <CircleHelpIcon size={20} />
                                                                 Deactivate
                                                             </Link>
                                                         ) : (
@@ -446,9 +416,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                                                 as="button"
                                                                 className="pf-btn-success-soft"
                                                             >
-                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <polyline points="20 6 9 17 4 12" />
-                                                                </svg>
+                                                                <CheckIcon size={20} />
                                                                 Reactivate
                                                             </Link>
                                                         )
@@ -542,10 +510,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                                                 as="button"
                                                                 className="pf-btn-danger-soft"
                                                             >
-                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <circle cx="12" cy="12" r="10" />
-                                                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-                                                                </svg>
+                                                                <CircleHelpIcon size={20} />
                                                                 Deactivate
                                                             </Link>
                                                         ) : (
@@ -555,9 +520,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                                                 as="button"
                                                                 className="pf-btn-success-soft"
                                                             >
-                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <polyline points="20 6 9 17 4 12" />
-                                                                </svg>
+                                                                <CheckIcon size={20} />
                                                                 Reactivate
                                                             </Link>
                                                         )

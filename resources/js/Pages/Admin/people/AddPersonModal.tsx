@@ -6,6 +6,10 @@ import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
+import { UsersIcon } from '@/Components/icons/users';
+import { XIcon } from '@/Components/icons/x';
+import { UserIcon } from '@/Components/icons/user';
 interface AddPersonModalProps {
     show: boolean;
     onClose: () => void;
@@ -120,16 +124,9 @@ export default function AddPersonModal({
                             aria-hidden="true"
                         >
                             {personType === 'student' ? (
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                                </svg>
+                                <GraduationCapIcon size={20} />
                             ) : (
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                    <circle cx="9" cy="7" r="4" />
-                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                                </svg>
+                                <UsersIcon size={20} />
                             )}
                         </span>
                         <div className="pf-modal-hero-text">
@@ -147,9 +144,7 @@ export default function AddPersonModal({
                         onClick={onClose}
                         aria-label="Close"
                     >
-                        <svg viewBox="0 0 24 24">
-                            <path d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <XIcon size={20} />
                     </button>
                 </div>
 
@@ -169,10 +164,7 @@ export default function AddPersonModal({
                                         : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
                                 }`}
                             >
-                                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-currentColor stroke-2">
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                                </svg>
+                                <GraduationCapIcon size={16} />
                                 Student
                             </button>
                             <button
@@ -184,10 +176,7 @@ export default function AddPersonModal({
                                         : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
                                 }`}
                             >
-                                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-currentColor stroke-2">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                    <circle cx="9" cy="7" r="4" />
-                                </svg>
+                                <UserIcon size={16} />
                                 Staff Member
                             </button>
                         </div>

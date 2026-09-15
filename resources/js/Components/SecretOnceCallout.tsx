@@ -1,41 +1,12 @@
 import { useEffect, useState } from 'react';
 import Modal from '@/Components/Modal';
 
-function KeyIcon({ className = 'h-5 w-5' }: { className?: string }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
-            <path d="M21 2l-2 2m-1.5 1.5L14 9M3 15a6 6 0 1 0 11.66-2H21v4h-2v2h-2v2h-4v-2.34A6 6 0 0 0 3 15z" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="7.5" cy="16.5" r="1.5" fill="currentColor" />
-        </svg>
-    );
-}
+import { KeyIcon } from '@/Components/icons/key';
+import { CopyIcon } from '@/Components/icons/copy';
+import { CheckIcon } from '@/Components/icons/check';
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
+import { XIcon } from '@/Components/icons/x';
 
-function CopyIcon({ className = 'h-4 w-4' }: { className?: string }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
-}
-
-function CheckIcon({ className = 'h-4 w-4' }: { className?: string }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={className} aria-hidden="true">
-            <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
-}
-
-function ShieldAlertIcon({ className = 'h-4 w-4' }: { className?: string }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
-            <line x1="12" y1="8" x2="12" y2="12" strokeLinecap="round" />
-            <line x1="12" y1="16" x2="12.01" y2="16" strokeLinecap="round" />
-        </svg>
-    );
-}
 
 interface SecretOnceCalloutProps {
     label: string;
@@ -87,7 +58,7 @@ export default function SecretOnceCallout({ label, value }: SecretOnceCalloutPro
                 <div className="pf-modal-header mb-6">
                     <div className="pf-modal-hero">
                         <span className="pf-modal-hero-icon pf-modal-hero-icon--amber" aria-hidden="true">
-                            <KeyIcon className="h-5 w-5" />
+                            <KeyIcon size={20} />
                         </span>
                         <div className="pf-modal-hero-text">
                             <div className="flex items-center gap-2.5 flex-wrap">
@@ -110,7 +81,7 @@ export default function SecretOnceCallout({ label, value }: SecretOnceCalloutPro
                         onClick={() => setIsOpen(false)}
                         aria-label="Close"
                     >
-                        <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                        <XIcon size={20} />
                     </button>
                 </div>
 
@@ -138,7 +109,7 @@ export default function SecretOnceCallout({ label, value }: SecretOnceCalloutPro
                         <span className="text-[11px] text-slate-400">
                             {copied ? (
                                 <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-400">
-                                    <CheckIcon className="h-3.5 w-3.5" />
+                                    <CheckIcon size={14} />
                                     Copied to clipboard!
                                 </span>
                             ) : (
@@ -154,7 +125,7 @@ export default function SecretOnceCallout({ label, value }: SecretOnceCalloutPro
                                     : 'bg-white/10 hover:bg-white/15 text-white border border-white/10'
                             }`}
                         >
-                            {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <CopyIcon className="h-3.5 w-3.5" />}
+                            {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
                             <span>{copied ? 'Copied' : 'Copy'}</span>
                         </button>
                     </div>
@@ -162,7 +133,7 @@ export default function SecretOnceCallout({ label, value }: SecretOnceCalloutPro
 
                 {/* Security Notice */}
                 <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber-200/80 bg-amber-50/70 p-3.5 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
-                    <ShieldAlertIcon className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <BadgeAlertIcon size={16} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
                     <div className="leading-relaxed">
                         <strong className="font-semibold block">Store in a secure place</strong>
                         <span>For security reasons, this token cannot be recovered or retrieved again after this session. Enter it on the station kiosk immediately.</span>
@@ -189,12 +160,12 @@ export default function SecretOnceCallout({ label, value }: SecretOnceCalloutPro
                     >
                         {copied ? (
                             <>
-                                <CheckIcon className="h-4 w-4" />
+                                <CheckIcon size={16} />
                                 <span>Copied to clipboard!</span>
                             </>
                         ) : (
                             <>
-                                <CopyIcon className="h-4 w-4" />
+                                <CopyIcon size={16} />
                                 <span>Copy {label}</span>
                             </>
                         )}

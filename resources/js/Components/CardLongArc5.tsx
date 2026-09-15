@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Wifi } from 'reicon-react';
+import { WifiIcon } from '@/Components/icons/wifi';
 import StationLogo from '@/Components/StationLogo';
 
 interface CardLongArc5Props {
@@ -127,7 +127,7 @@ export default function CardLongArc5({
                                         <span className="h-px w-6 bg-[#b9c9df]" />
                                     </span>
                                 </span>
-                                <Wifi size={20} className="text-station-blue" />
+                                <WifiIcon size={20} className="text-station-blue" />
                             </span>
                             <span className="font-mono text-[11px] font-semibold text-station-blue">
                                 {face.number}

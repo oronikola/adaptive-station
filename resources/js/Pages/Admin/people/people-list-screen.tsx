@@ -6,6 +6,11 @@ import { useEffect, useState } from 'react';
 import type { PaginatedData, Person } from '@/types';
 import { personRouteKey } from '@/types';
 import AddPersonModal from './AddPersonModal';
+import { MenuIcon } from '@/Components/icons/menu';
+import { UserIcon } from '@/Components/icons/user';
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { PlusIcon } from '@/Components/icons/plus';
+import { LayoutGridIcon } from '@/Components/icons/layout-grid';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -139,12 +144,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                 onClick={() => setViewMode('gallery')}
                                 aria-pressed={viewMode === 'gallery'}
                             >
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="7" height="7" rx="1.2" />
-                                    <rect x="14" y="3" width="7" height="7" rx="1.2" />
-                                    <rect x="3" y="14" width="7" height="7" rx="1.2" />
-                                    <rect x="14" y="14" width="7" height="7" rx="1.2" />
-                                </svg>
+                                <LayoutGridIcon size={20} />
                                 Gallery
                             </button>
                             <button
@@ -153,9 +153,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                 onClick={() => setViewMode('table')}
                                 aria-pressed={viewMode === 'table'}
                             >
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
+                                <MenuIcon size={20} />
                                 Table
                             </button>
                         </div>
@@ -165,10 +163,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                         people.data.length === 0 ? (
                             <div className="py-16 text-center">
                                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
-                                    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-none stroke-currentColor stroke-2">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                        <circle cx="9" cy="7" r="4" />
-                                    </svg>
+                                    <UserIcon size={28} />
                                 </div>
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No people found</h3>
                                 <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500 dark:text-slate-400">
@@ -181,9 +176,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                     onClick={() => setAddPersonOpen(true)}
                                     className="pf-btn pf-btn-primary mt-4 text-xs"
                                 >
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M12 5v14M5 12h14" />
-                                    </svg>
+                                    <PlusIcon size={20} />
                                     Add Person
                                 </button>
                             </div>
@@ -281,9 +274,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                                     className="pf-row-action !flex-1 justify-center !py-2 rounded-xl text-xs font-semibold"
                                                 >
                                                     View Profile
-                                                    <svg viewBox="0 0 24 24">
-                                                        <path d="M9 6l6 6-6 6" />
-                                                    </svg>
+                                                    <ChevronRightIcon size={20} />
                                                 </Link>
                                                 <Link
                                                     href={route('portal.attendance.students.show', personRouteKey(person))}
@@ -374,9 +365,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                                         className="pf-row-action"
                                                     >
                                                         View
-                                                        <svg viewBox="0 0 24 24">
-                                                            <path d="M9 6l6 6-6 6" />
-                                                        </svg>
+                                                        <ChevronRightIcon size={20} />
                                                     </Link>
                                                     <Link
                                                         href={route(
@@ -386,9 +375,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                                         className="pf-row-action"
                                                     >
                                                         Attendance
-                                                        <svg viewBox="0 0 24 24">
-                                                            <path d="M9 6l6 6-6 6" />
-                                                        </svg>
+                                                        <ChevronRightIcon size={20} />
                                                     </Link>
                                                 </div>
                                             </td>

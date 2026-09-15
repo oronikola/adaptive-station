@@ -10,6 +10,7 @@ import { applicationLogoUrl } from '@/Components/Branding/ApplicationLogo';
 import { ThemeProvider } from '@/Components/Theme/ThemeProvider';
 import { ToastProvider } from '@/Components/toast/ToastProvider';
 
+import { CircleHelpIcon } from '@/Components/icons/circle-help';
 const configuredAppName = import.meta.env.VITE_APP_NAME;
 const appName =
     configuredAppName && configuredAppName !== 'Laravel'
@@ -90,11 +91,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
                 <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6 font-sans dark:bg-slate-900">
                     <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-lg dark:border-slate-800 dark:bg-slate-950">
                         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
-                            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="12" y1="8" x2="12" y2="12" />
-                                <line x1="12" y1="16" x2="12.01" y2="16" />
-                            </svg>
+                            <CircleHelpIcon size={28} />
                         </div>
                         <h2 className="mt-5 text-xl font-bold text-slate-900 dark:text-white">
                             Unable to display this view

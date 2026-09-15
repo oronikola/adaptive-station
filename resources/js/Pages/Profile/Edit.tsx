@@ -6,6 +6,9 @@ import type { PageProps } from '@/types';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
+import { CircleCheckIcon } from '@/Components/icons/circle-check';
+import { ShieldCheckIcon } from '@/Components/icons/shield-check';
 import '../../../css/platform-dashboard.css';
 
 interface EditProps {
@@ -90,9 +93,7 @@ export default function Edit({ mustVerifyEmail, status }: EditProps) {
                         <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4 sm:border-t-0 sm:pt-0 dark:border-slate-800">
                             {tenant && (
                                 <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-300">
-                                    <svg className="h-4 w-4 text-[#234ef4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
-                                    </svg>
+                                    <GraduationCapIcon size={16} className="text-[#234ef4]" />
                                     <div>
                                         <span className="font-semibold block">{tenant.name}</span>
                                         <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">
@@ -103,10 +104,7 @@ export default function Edit({ mustVerifyEmail, status }: EditProps) {
                             )}
 
                             <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-300">
-                                <svg className="h-4 w-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="12" r="9" />
-                                    <path d="m9 12 2 2 4-4" />
-                                </svg>
+                                <CircleCheckIcon size={16} className="text-emerald-600" />
                                 <div>
                                     <span className="font-semibold block">Session Active</span>
                                     <span className="text-[10px] text-slate-400">
@@ -142,9 +140,7 @@ export default function Edit({ mustVerifyEmail, status }: EditProps) {
                         <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                             <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
                                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-[#234ef4] dark:bg-blue-950/40 dark:text-blue-300">
-                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                                    </svg>
+                                    <ShieldCheckIcon size={16} />
                                 </span>
                                 <div>
                                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">

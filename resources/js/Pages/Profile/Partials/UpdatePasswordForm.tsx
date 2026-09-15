@@ -6,6 +6,8 @@ import { Transition } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
 import React, { useRef } from 'react';
 
+import { LockIcon } from '@/Components/icons/lock';
+import { CheckIcon } from '@/Components/icons/check';
 interface UpdatePasswordFormProps {
     className?: string;
 }
@@ -52,10 +54,7 @@ export default function UpdatePasswordForm({ className = '' }: UpdatePasswordFor
         <section className={className}>
             <header className="flex items-start gap-3.5 border-b border-slate-100 pb-5 dark:border-slate-800">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#234ef4] dark:bg-blue-950/40 dark:text-blue-300">
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
+                    <LockIcon size={20} />
                 </span>
                 <div>
                     <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
@@ -153,9 +152,7 @@ export default function UpdatePasswordForm({ className = '' }: UpdatePasswordFor
                         leaveTo="opacity-0 translate-y-1"
                     >
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
-                            <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                            </svg>
+                            <CheckIcon size={14} />
                             Password updated successfully
                         </span>
                     </Transition>

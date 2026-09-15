@@ -7,6 +7,9 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { Person, RfidCard } from '@/types';
+import { CreditCardIcon } from '@/Components/icons/credit-card';
+import { XIcon } from '@/Components/icons/x';
+import { PlusIcon } from '@/Components/icons/plus';
 import '../../../../css/platform-dashboard.css';
 
 interface RfidCardWithAssign extends RfidCard {
@@ -251,9 +254,7 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
                                 className="pf-btn pf-btn-primary"
                                 onClick={() => setAssignOpen(true)}
                             >
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 5v14M5 12h14" />
-                                </svg>
+                                <PlusIcon size={20} />
                                 Assign Card
                             </button>
                         )}
@@ -332,11 +333,7 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
                     <div className="pf-modal-header">
                         <div className="pf-modal-hero">
                             <span className="pf-modal-hero-icon pf-modal-hero-icon--blue" aria-hidden="true">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="3" y="6" width="18" height="12" rx="2" />
-                                    <path d="M3 10h18" />
-                                    <rect x="6" y="13" width="4" height="2.4" rx="0.5" />
-                                </svg>
+                                <CreditCardIcon size={20} />
                             </span>
                             <div className="pf-modal-hero-text">
                                 <h3 className="pf-modal-title">Assign a Card</h3>
@@ -349,9 +346,7 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
                             onClick={() => setAssignOpen(false)}
                             aria-label="Close"
                         >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <XIcon size={20} />
                         </button>
                     </div>
 
@@ -392,11 +387,7 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
                     <div className="pf-modal-header">
                         <div className="pf-modal-hero">
                             <span className="pf-modal-hero-icon pf-modal-hero-icon--amber" aria-hidden="true">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="3" y="6" width="18" height="12" rx="2" />
-                                    <path d="M3 10h18" />
-                                    <path d="M14 14l3 3M17 14l-3 3" />
-                                </svg>
+                                <CreditCardIcon size={20} />
                             </span>
                             <div className="pf-modal-hero-text">
                                 <h3 className="pf-modal-title">Replace Card</h3>
@@ -409,9 +400,7 @@ export default function PeopleEditScreen({ person }: { person: PersonWithCards }
                             onClick={() => setReplacingCard(null)}
                             aria-label="Close"
                         >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <XIcon size={20} />
                         </button>
                     </div>
 

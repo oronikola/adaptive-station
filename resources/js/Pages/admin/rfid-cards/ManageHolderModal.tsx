@@ -6,6 +6,16 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import type { Person, RfidCard } from '@/types';
 
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
+import { UsersIcon } from '@/Components/icons/users';
+import { WifiIcon } from '@/Components/icons/wifi';
+import { CheckIcon } from '@/Components/icons/check';
+import { CopyIcon } from '@/Components/icons/copy';
+import { CalendarDaysIcon } from '@/Components/icons/calendar-days';
+import { CreditCardIcon } from '@/Components/icons/credit-card';
+import { UserIcon } from '@/Components/icons/user';
+import { ExternalLinkIcon } from '@/Components/icons/external-link';
+import { XIcon } from '@/Components/icons/x';
 interface RfidCardWithPerson extends RfidCard {
     card_uid: string;
     assigned_at: string;
@@ -289,16 +299,9 @@ export default function ManageHolderModal({
                             aria-hidden="true"
                         >
                             {isStudent ? (
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                                </svg>
+                                <GraduationCapIcon size={20} />
                             ) : (
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                    <circle cx="9" cy="7" r="4" />
-                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                                </svg>
+                                <UsersIcon size={20} />
                             )}
                         </span>
                         <div className="pf-modal-hero-text">
@@ -317,9 +320,7 @@ export default function ManageHolderModal({
                         className="pf-modal-close"
                         aria-label="Close modal"
                     >
-                        <svg viewBox="0 0 24 24">
-                            <path d="M18 6L6 18M6 6l12 12" />
-                        </svg>
+                        <XIcon size={20} />
                     </button>
                 </div>
 
@@ -413,12 +414,7 @@ export default function ManageHolderModal({
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
                                     <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-blue-200/80 bg-blue-50 text-blue-600 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-400">
-                                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-currentColor stroke-2">
-                                            <path d="M6 8.32a7.43 7.43 0 0 1 0 7.36" />
-                                            <path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58" />
-                                            <path d="M12.91 4.1a15.91 15.91 0 0 1 0 15.8" />
-                                            <path d="M16.37 2a20.16 20.16 0 0 1 0 20" />
-                                        </svg>
+                                        <WifiIcon size={16} />
                                     </span>
                                     <span className="font-mono text-sm font-extrabold tracking-wider text-slate-900 dark:text-white">
                                         {currentCard.card_uid}
@@ -433,17 +429,12 @@ export default function ManageHolderModal({
                                 >
                                     {copiedUid ? (
                                         <>
-                                            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                                <path d="M20 6L9 17l-5-5" />
-                                            </svg>
+                                            <CheckIcon size={14} className="text-emerald-600 dark:text-emerald-400" />
                                             <span className="text-emerald-600 dark:text-emerald-400 font-bold">Copied</span>
                                         </>
                                     ) : (
                                         <>
-                                            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                            </svg>
+                                            <CopyIcon size={14} />
                                             <span>Copy</span>
                                         </>
                                     )}
@@ -451,12 +442,7 @@ export default function ManageHolderModal({
                             </div>
 
                             <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                                <svg viewBox="0 0 24 24" className="h-3 w-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                    <line x1="16" y1="2" x2="16" y2="6" />
-                                    <line x1="8" y1="2" x2="8" y2="6" />
-                                    <line x1="3" y1="10" x2="21" y2="10" />
-                                </svg>
+                                <CalendarDaysIcon size={12} className="text-slate-400" />
                                 <span>Assigned:</span>
                                 <span className="font-semibold text-slate-700 dark:text-slate-200">
                                     {currentCard.assigned_at
@@ -484,10 +470,7 @@ export default function ManageHolderModal({
                                     : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                             }`}
                         >
-                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                                <rect x="3" y="5" width="18" height="14" rx="3" />
-                                <path d="M3 10h18" />
-                            </svg>
+                            <CreditCardIcon size={16} />
                             Card Operations
                         </button>
 
@@ -500,10 +483,7 @@ export default function ManageHolderModal({
                                     : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                             }`}
                         >
-                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                            </svg>
+                            <UserIcon size={16} />
                             Edit Holder Record
                         </button>
                     </nav>
@@ -731,11 +711,7 @@ export default function ManageHolderModal({
                                         className="pf-btn pf-btn-secondary"
                                     >
                                         Full Profile
-                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5">
-                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                            <polyline points="15 3 21 3 21 9" />
-                                            <line x1="10" y1="14" x2="21" y2="3" />
-                                        </svg>
+                                        <ExternalLinkIcon size={14} />
                                     </Link>
                                 </div>
                             </div>

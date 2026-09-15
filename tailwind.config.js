@@ -62,6 +62,10 @@ export default {
                     from: { opacity: '0', transform: 'translateY(-16px) scale(0.96)' },
                     to: { opacity: '1', transform: 'translateY(0) scale(1)' },
                 },
+                'footer-enter': {
+                    from: { opacity: '0', transform: 'translateY(16px) scale(0.96)' },
+                    to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+                },
                 'capability-marquee': {
                     from: { transform: 'translateX(0)' },
                     to: { transform: 'translateX(-50%)' },
@@ -81,6 +85,7 @@ export default {
             },
             animation: {
                 'header-enter': 'header-enter 0.7s cubic-bezier(0.23, 1, 0.32, 1) backwards',
+                'footer-enter': 'footer-enter 0.7s cubic-bezier(0.23, 1, 0.32, 1) backwards',
                 'texture-pan': 'texture-pan 18s linear infinite',
                 'capability-marquee': 'capability-marquee 30s linear infinite',
                 'signal-pulse': 'signal-pulse 2.4s ease-in-out infinite',

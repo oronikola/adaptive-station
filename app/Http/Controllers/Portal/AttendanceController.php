@@ -195,6 +195,7 @@ class AttendanceController extends Controller
         return Inertia::render('Admin/attendance/attendance-summary-screen', [
             'summary' => $summary,
             'filters' => $filters,
+            'stats' => $stats,
             'stations' => Station::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
