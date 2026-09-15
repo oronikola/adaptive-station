@@ -70,6 +70,8 @@ class HandleInertiaRequests extends Middleware
                 'temporaryPassword' => fn () => $request->session()->get('temporaryPassword'),
                 'activationCode' => fn () => $request->session()->get('activationCode'),
                 'deviceToken' => fn () => $request->session()->get('deviceToken'),
+                'deviceUsername' => fn () => $request->session()->get('deviceUsername'),
+                'devicePassword' => fn () => $request->session()->get('devicePassword'),
             ],
         ];
     }

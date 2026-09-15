@@ -82,6 +82,7 @@ class SmsGatewayDeviceProvisioningTest extends TestCase
 
         $response->assertRedirect(route('platform.sms-gateway.devices.index'));
         $newPassword = session('devicePassword');
+        $this->assertSame($device->username, session('deviceUsername'));
         $this->assertNotSame('oldpassword', $newPassword);
 
         $this->postJson('/api/v1/auth/login', [
