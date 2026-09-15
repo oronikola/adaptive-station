@@ -157,7 +157,7 @@ class StationController extends Controller
             ]);
         });
 
-        return Inertia::render('superadmin/stations/station-detail-screen', [
+        return Inertia::render('Platform/stations/station-detail-screen', [
             'station' => [
                 'id' => $stationModel->id,
                 'tenant_id' => $tenant->id,

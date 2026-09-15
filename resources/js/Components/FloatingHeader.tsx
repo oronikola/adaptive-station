@@ -4,7 +4,7 @@ import { MenuIcon } from '@/Components/icons/menu';
 import { MoonIcon } from '@/Components/icons/moon';
 import { SunIcon } from '@/Components/icons/sun';
 import { XIcon } from '@/Components/icons/x';
-import StationLogo from '@/Components/StationLogo';
+import StationLogo from '@/Components/Branding/StationLogo';
 import type { LandingTheme } from '@/hooks/useLandingTheme';
 
 interface NavItem {

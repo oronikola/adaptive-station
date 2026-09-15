@@ -141,7 +141,7 @@ class RfidCardManagementTest extends TestCase
 
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->component('admin/rfid-cards/rfid-cards-list-screen')
+                ->component('Admin/rfid-cards/rfid-cards-list-screen')
                 ->has('rfidCards.data', 2)
                 ->where('stats.total_cards', 2)
                 ->where('stats.active_cards', 1)

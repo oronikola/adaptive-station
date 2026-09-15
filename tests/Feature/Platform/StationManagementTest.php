@@ -28,7 +28,7 @@ class StationManagementTest extends TestCase
         $this->actingAs($superAdmin)->get(route('platform.stations.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('superadmin/stations/stations-list-screen')
+                ->component('Platform/stations/stations-list-screen')
                 ->has('stations.data', 2)
                 ->has('tenants', 2)
                 ->has('allStationOptions', 2)
@@ -38,7 +38,7 @@ class StationManagementTest extends TestCase
         $this->actingAs($superAdmin)->get(route('platform.stations.index', ['tenant_id' => $tenantA->id]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('superadmin/stations/stations-list-screen')
+                ->component('Platform/stations/stations-list-screen')
                 ->has('stations.data', 1)
                 ->where('stations.data.0.id', $stationA->id)
                 ->where('stations.data.0.tenant_id', $tenantA->id)
@@ -49,7 +49,7 @@ class StationManagementTest extends TestCase
         $this->actingAs($superAdmin)->get(route('platform.stations.index', ['tenant_id' => $tenantB->id]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('superadmin/stations/stations-list-screen')
+                ->component('Platform/stations/stations-list-screen')
                 ->has('stations.data', 1)
                 ->where('stations.data.0.id', $stationB->id)
                 ->where('stations.data.0.tenant_id', $tenantB->id)
@@ -101,7 +101,7 @@ class StationManagementTest extends TestCase
         $this->actingAs($superAdmin)->get(route('platform.stations.show', ['station' => $station->id, 'tenant_id' => $tenant->id]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('superadmin/stations/station-detail-screen')
+                ->component('Platform/stations/station-detail-screen')
                 ->where('station.id', $station->id)
                 ->where('station.name', 'East Gate Kiosk')
                 ->where('tenant.id', $tenant->id)

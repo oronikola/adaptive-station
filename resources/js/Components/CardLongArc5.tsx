@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'motion/react';
 import { WifiIcon } from '@/Components/icons/wifi';
-import StationLogo from '@/Components/StationLogo';
+import StationLogo from '@/Components/Branding/StationLogo';
 
 interface CardLongArc5Props {
     angle?: number;
