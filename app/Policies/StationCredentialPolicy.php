@@ -9,7 +9,7 @@ class StationCredentialPolicy
 {
     public function view(User $user, StationCredential $credential): bool
     {
-        return $this->belongsToTenant($user, $credential->station->tenant_id);
+        return $this->belongsToTenant($user, $credential->tenant_id ?? $credential->station?->tenant_id ?? '');
     }
 
     public function create(User $user): bool

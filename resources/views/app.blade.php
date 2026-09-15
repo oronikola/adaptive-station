@@ -28,7 +28,7 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:wght@400;500;600;700&family=plus-jakarta-sans:wght@400;500;600;700;800&family=jetbrains-mono:wght@500&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @routes

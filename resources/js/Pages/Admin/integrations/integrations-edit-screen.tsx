@@ -1,16 +1,18 @@
 import InputError from '@/Components/InputError';
+import InputLabel from '@/Components/InputLabel';
+import PremiumSelect from '@/Components/PremiumSelect';
+import PrimaryButton from '@/Components/PrimaryButton';
+import TextInput from '@/Components/TextInput';
+import StatusBadge from '@/Components/admin/StatusBadge';
+import Table from '@/Components/admin/Table';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import '../../../../css/platform-dashboard.css';
-import '../../../../css/platform-overview.css';
 
 interface IntegrationProfile {
     id: number;
     name: string;
-    driver: string;
     direction: string;
     status: string;
-    last_successful_run_at: string | null;
 }
 
 interface IntegrationRun {
@@ -20,34 +22,6 @@ interface IntegrationRun {
     started_at: string | null;
     summary?: Record<string, unknown> | null;
 }
-
-const STATUS_PILL_CLASS: Record<string, string> = {
-    active: 'pf-pill--active',
-    disabled: 'pf-pill--inactive',
-    error: 'pf-pill--danger',
-};
-
-const RUN_STATUS_PILL_CLASS: Record<string, string> = {
-    succeeded: 'pf-pill--active',
-    failed: 'pf-pill--danger',
-    running: 'pf-pill--inactive',
-    pending: 'pf-pill--inactive',
-};
-
-const DIRECTION_LABELS: Record<string, string> = {
-    import_only: 'Import only',
-    export_only: 'Export only',
-    bidirectional: 'Import + Export',
-};
-
-const textareaStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '12px 14px',
-    border: '1px solid var(--as-border)',
-    borderRadius: 12,
-    outline: 'none',
-    fontSize: 13,
-};
 
 export default function IntegrationsEditScreen({ profile, runs }: { profile: IntegrationProfile; runs: IntegrationRun[] }) {
     const form = useForm({
@@ -68,272 +42,144 @@ export default function IntegrationsEditScreen({ profile, runs }: { profile: Int
         exportForm.post(route('portal.integrations.export', profile.id));
     }
 
-    // A handoff file, not a live push — no live connection or write access
-    // to the legacy system is needed for this one, so it's built as a plain
-    // link (browser download) rather than a form submission.
-    const csvExportForm = useForm({ date_from: '', date_to: '' });
-    const csvExportUrl = csvExportForm.data.date_from && csvExportForm.data.date_to
-        ? `${route('portal.integrations.export-csv', profile.id)}?${new URLSearchParams(csvExportForm.data).toString()}`
-        : null;
-
     return (
-        <AdminLayout>
+        <AdminLayout
+            header={
+                <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                        {profile.name}
+                    </h2>
+                    <StatusBadge color={profile.status === 'active' ? 'green' : 'gray'}>
+                        {profile.status}
+                    </StatusBadge>
+                </div>
+            }
+        >
             <Head title={profile.name} />
 
-            <div className="pf-dashboard pft-page">
-                <div className="pft-hero">
-                    <div className="pft-hero-main">
-                        <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="7" cy="12" r="3.4" />
-                                <rect x="9" y="10.3" width="6" height="3.4" rx="1.2" />
-                                <circle cx="17" cy="12" r="3.4" />
-                            </svg>
-                        </span>
-                        <div>
-                            <h1 className="pft-hero-title">
-                                {profile.name}{' '}
-                                <span
-                                    className={
-                                        'pf-pill ' +
-                                        (STATUS_PILL_CLASS[profile.status] ?? 'pf-pill--inactive')
-                                    }
-                                    style={{ verticalAlign: 'middle', marginLeft: 8 }}
-                                >
-                                    {profile.status}
-                                </span>
-                            </h1>
-                            <p className="pft-hero-subtitle">
-                                <span className="font-mono">{profile.driver}</span> ·{' '}
-                                {DIRECTION_LABELS[profile.direction] ?? profile.direction}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="pft-hero-actions">
-                        <Link href={route('portal.integrations.index')} className="pf-btn pf-btn-secondary">
-                            Back to Integrations
-                        </Link>
-                    </div>
-                </div>
+            <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+                <Link
+                    href={route('portal.integrations.index')}
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                >
+                    Back to Integrations
+                </Link>
 
-                <div className="pf-panel" style={{ marginBottom: 16 }}>
-                    <div className="pf-panel-header">
-                        <div>
-                            <h2 className="pf-panel-title">Profile</h2>
-                        </div>
+                <form onSubmit={submitProfile} className="space-y-4 rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Profile</h3>
+
+                    <div>
+                        <InputLabel htmlFor="name" value="Name" />
+                        <TextInput
+                            id="name"
+                            value={form.data.name}
+                            onChange={(e) => form.setData('name', e.target.value)}
+                            className="mt-1 block w-full"
+                        />
+                        <InputError message={form.errors.name} className="mt-2" />
                     </div>
 
-                    <form onSubmit={submitProfile} className="pf-modal">
-                        <div className="pf-field">
-                            <label htmlFor="name">Name</label>
-                            <input
-                                id="name"
-                                type="text"
-                                value={form.data.name}
-                                onChange={(e) => form.setData('name', e.target.value)}
-                                required
-                            />
-                            <InputError message={form.errors.name} className="mt-2" />
-                        </div>
+                    <div>
+                        <InputLabel htmlFor="direction" value="Direction" />
+                        <PremiumSelect
+                            id="direction"
+                            value={form.data.direction}
+                            onChange={(direction) => form.setData('direction', direction)}
+                            options={[
+                                { value: 'import_only', label: 'Import only' },
+                                { value: 'export_only', label: 'Export only' },
+                                { value: 'bidirectional', label: 'Import + Export' },
+                            ]}
+                            className="mt-1 block w-full"
+                        />
+                    </div>
 
-                        <div className="pf-field">
-                            <label htmlFor="direction">Direction</label>
-                            <select
-                                id="direction"
-                                value={form.data.direction}
-                                onChange={(e) => form.setData('direction', e.target.value)}
-                            >
-                                <option value="import_only">Import only</option>
-                                <option value="export_only">Export only</option>
-                                <option value="bidirectional">Import + Export</option>
-                            </select>
-                            <InputError message={form.errors.direction} className="mt-2" />
-                        </div>
+                    <div>
+                        <InputLabel htmlFor="config" value="Connection & Table Mapping (JSON)" />
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Leave blank to keep the current configuration unchanged — it is never redisplayed after saving.
+                        </p>
+                        <textarea
+                            id="config"
+                            rows={12}
+                            placeholder="Paste replacement JSON here only if you want to change it"
+                            value={form.data.config}
+                            onChange={(e) => form.setData('config', e.target.value)}
+                            className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                        />
+                        <InputError message={form.errors.config} className="mt-2" />
+                    </div>
 
-                        <div className="pf-field">
-                            <label htmlFor="config">Connection &amp; Table Mapping (JSON)</label>
-                            <p className="pf-field-hint" style={{ marginBottom: 8 }}>
-                                Leave blank to keep the current configuration unchanged — it is never redisplayed after saving.
-                            </p>
-                            <textarea
-                                id="config"
-                                rows={12}
-                                placeholder="Paste replacement JSON here only if you want to change it"
-                                value={form.data.config}
-                                onChange={(e) => form.setData('config', e.target.value)}
-                                className="font-mono"
-                                style={textareaStyle}
-                            />
-                            <InputError message={form.errors.config} className="mt-2" />
-                        </div>
+                    <PrimaryButton disabled={form.processing}>Save</PrimaryButton>
+                </form>
 
-                        <div className="pf-modal-footer" style={{ justifyContent: 'flex-start' }}>
-                            <button
-                                type="submit"
-                                className={'pf-btn pf-btn-primary' + (form.processing ? ' pf-btn--loading' : '')}
-                                disabled={form.processing}
-                            >
-                                Save
-                            </button>
+                {profile.direction !== 'import_only' && (
+                    <form onSubmit={submitExport} className="space-y-4 rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                            Run Attendance Export
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            One-way: Adaptive Station tap events → legacy taphistory format. Safe to re-run over an overlapping range.
+                        </p>
+
+                        <div className="flex gap-4">
+                            <div>
+                                <InputLabel htmlFor="date_from" value="From" />
+                                <TextInput
+                                    id="date_from"
+                                    type="date"
+                                    value={exportForm.data.date_from}
+                                    onChange={(e) => exportForm.setData('date_from', e.target.value)}
+                                    className="mt-1 block"
+                                />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="date_to" value="To" />
+                                <TextInput
+                                    id="date_to"
+                                    type="date"
+                                    value={exportForm.data.date_to}
+                                    onChange={(e) => exportForm.setData('date_to', e.target.value)}
+                                    className="mt-1 block"
+                                />
+                            </div>
                         </div>
+                        <InputError message={exportForm.errors.date_from ?? exportForm.errors.date_to} className="mt-2" />
+
+                        <PrimaryButton disabled={exportForm.processing}>Run Export</PrimaryButton>
                     </form>
-                </div>
-
-                {profile.direction !== 'import_only' && (
-                    <div className="pf-panel" style={{ marginBottom: 16 }}>
-                        <div className="pf-panel-header">
-                            <div>
-                                <h2 className="pf-panel-title">Run Attendance Export</h2>
-                                <p className="pf-panel-count">
-                                    One-way: Adaptive Station tap events → legacy taphistory format. Safe to re-run over an overlapping range.
-                                </p>
-                            </div>
-                        </div>
-
-                        <form onSubmit={submitExport} className="pf-modal">
-                            <div className="pft-form-grid">
-                                <div className="pf-field">
-                                    <label htmlFor="date_from">From</label>
-                                    <input
-                                        id="date_from"
-                                        type="date"
-                                        value={exportForm.data.date_from}
-                                        onChange={(e) => exportForm.setData('date_from', e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <div className="pf-field">
-                                    <label htmlFor="date_to">To</label>
-                                    <input
-                                        id="date_to"
-                                        type="date"
-                                        value={exportForm.data.date_to}
-                                        onChange={(e) => exportForm.setData('date_to', e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <InputError message={exportForm.errors.date_from ?? exportForm.errors.date_to} className="mt-2" />
-
-                            <div className="pf-modal-footer" style={{ justifyContent: 'flex-start' }}>
-                                <button
-                                    type="submit"
-                                    className={'pf-btn pf-btn-primary' + (exportForm.processing ? ' pf-btn--loading' : '')}
-                                    disabled={exportForm.processing}
-                                >
-                                    Run Export
-                                </button>
-                            </div>
-                        </form>
-                    </div>
                 )}
 
-                {profile.direction !== 'import_only' && (
-                    <div className="pf-panel" style={{ marginBottom: 16 }}>
-                        <div className="pf-panel-header">
-                            <div>
-                                <h2 className="pf-panel-title">Download Legacy CSV</h2>
-                                <p className="pf-panel-count">
-                                    For when there's no live connection to the legacy system yet —
-                                    downloads a CSV in its own taphistory column shape
-                                    (tdate/ttime/tapstate/studid/...) to hand off manually, for
-                                    their own team to import on their side.
-                                </p>
-                            </div>
-                        </div>
+                <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
+                    <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">Recent Runs</h3>
+                    <Table>
+                        <Table.Head>
+                            <Table.Th>Direction</Table.Th>
+                            <Table.Th>Status</Table.Th>
+                            <Table.Th>Started</Table.Th>
+                            <Table.Th>Summary</Table.Th>
+                        </Table.Head>
+                        <Table.Body>
+                            {runs.length === 0 && <Table.Empty colSpan={4}>No runs yet.</Table.Empty>}
 
-                        <div className="pf-modal">
-                            <div className="pft-form-grid">
-                                <div className="pf-field">
-                                    <label htmlFor="csv_date_from">From</label>
-                                    <input
-                                        id="csv_date_from"
-                                        type="date"
-                                        value={csvExportForm.data.date_from}
-                                        onChange={(e) => csvExportForm.setData('date_from', e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <div className="pf-field">
-                                    <label htmlFor="csv_date_to">To</label>
-                                    <input
-                                        id="csv_date_to"
-                                        type="date"
-                                        value={csvExportForm.data.date_to}
-                                        onChange={(e) => csvExportForm.setData('date_to', e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="pf-modal-footer" style={{ justifyContent: 'flex-start' }}>
-                                {csvExportUrl ? (
-                                    <a href={csvExportUrl} className="pf-btn pf-btn-secondary">
-                                        Download CSV
-                                    </a>
-                                ) : (
-                                    <button type="button" className="pf-btn pf-btn-secondary" disabled>
-                                        Download CSV
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <div className="pf-panel">
-                    <div className="pf-panel-header">
-                        <div>
-                            <h2 className="pf-panel-title">Recent Runs</h2>
-                            <p className="pf-panel-count">
-                                {runs.length} run{runs.length === 1 ? '' : 's'}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="pf-table-wrap">
-                        <table className="pf-table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Direction</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Started</th>
-                                    <th scope="col">Summary</th>
+                            {runs.map((run: IntegrationRun) => (
+                                <tr key={run.id}>
+                                    <Table.Td>{run.direction}</Table.Td>
+                                    <Table.Td>
+                                        <StatusBadge color={run.status === 'succeeded' ? 'green' : run.status === 'failed' ? 'red' : 'yellow'}>
+                                            {run.status}
+                                        </StatusBadge>
+                                    </Table.Td>
+                                    <Table.Td>
+                                        {run.started_at ? new Date(run.started_at).toLocaleString() : '—'}
+                                    </Table.Td>
+                                    <Table.Td className="font-mono text-xs">
+                                        {run.summary ? JSON.stringify(run.summary) : '—'}
+                                    </Table.Td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {runs.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="pf-empty">
-                                            No runs yet.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {runs.map((run: IntegrationRun) => (
-                                    <tr key={run.id}>
-                                        <td>{DIRECTION_LABELS[run.direction] ?? run.direction}</td>
-                                        <td>
-                                            <span
-                                                className={
-                                                    'pf-pill ' +
-                                                    (RUN_STATUS_PILL_CLASS[run.status] ?? 'pf-pill--inactive')
-                                                }
-                                            >
-                                                {run.status}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {run.started_at ? new Date(run.started_at).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="font-mono" style={{ fontSize: 12 }}>
-                                            {run.summary ? JSON.stringify(run.summary) : '—'}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                            ))}
+                        </Table.Body>
+                    </Table>
                 </div>
             </div>
         </AdminLayout>

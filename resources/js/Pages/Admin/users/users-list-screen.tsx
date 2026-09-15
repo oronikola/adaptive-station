@@ -1,12 +1,9 @@
-import Pagination from '@/Components/admin/Pagination';
 import SecretOnceCallout from '@/Components/SecretOnceCallout';
-import Modal from '@/Components/Modal';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
-import type { PaginatedData, User, PageProps } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
+import type { PaginatedData, User, PageProps, PaginationLink } from '@/types';
 import '../../../../css/platform-dashboard.css';
-import '../../../../css/platform-overview.css';
 
 interface UserListItem extends User {
     is_active: boolean;
@@ -21,252 +18,562 @@ const roleLabels: Record<string, string> = {
     tenant_operator: 'Operator',
 };
 
-export default function UsersListScreen({ users }: { users: PaginatedData<UserListItem> }) {
-    const { auth, flash } = usePage<UsersListPageProps>().props;
-    const canManage = auth.user.role === 'tenant_admin';
-    const [deactivatingUser, setDeactivatingUser] = useState<UserListItem | null>(null);
-    const [isDeactivating, setIsDeactivating] = useState(false);
-
-    function submitDeactivate() {
-        if (!deactivatingUser) { return; }
-        setIsDeactivating(true);
-        router.patch(route('portal.users.deactivate', deactivatingUser.id), {}, {
-            onFinish: () => {
-                setIsDeactivating(false);
-                setDeactivatingUser(null);
-            },
-        });
+function PaginationBar({ links }: { links: PaginationLink[] }) {
+    if (!links || links.length <= 3) {
+        return null;
     }
 
     return (
-        <AdminLayout>
-            <Head title="Users" />
+        <nav className="pf-pagination">
+            {links.map((link: PaginationLink, index: number) => {
+                const label = link.label
+                    .replace('&laquo; Previous', '‹ Previous')
+                    .replace('Next &raquo;', 'Next ›');
 
-            <div className="pf-dashboard pft-page">
-                <div className="pft-hero">
-                    <div className="pft-hero-main">
-                        <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="12" cy="8.4" r="3.6" />
-                                <path d="M4.5 19.6a7.5 6 0 0 1 15 0z" />
-                            </svg>
+                if (link.url === null) {
+                    return (
+                        <span key={index} className="pf-page-link pf-page-link--disabled">
+                            {label}
                         </span>
-                        <div>
-                            <h1 className="pft-hero-title">Users</h1>
-                            <p className="pft-hero-subtitle">
-                                Manage the admin and operator accounts for your school.
-                            </p>
-                        </div>
+                    );
+                }
+
+                return (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        preserveScroll
+                        className={
+                            'pf-page-link' +
+                            (link.active ? ' pf-page-link--active' : '')
+                        }
+                    >
+                        {label}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}
+
+function formatDate(isoString?: string): string {
+    if (!isoString) return '—';
+    try {
+        const date = new Date(isoString);
+        return new Intl.DateTimeFormat('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        }).format(date);
+    } catch {
+        return isoString;
+    }
+}
+
+export default function UsersListScreen({ users }: { users: PaginatedData<UserListItem> }) {
+    const { auth, flash } = usePage<UsersListPageProps>().props;
+    const canManage = auth?.user?.role === 'tenant_admin';
+
+    const [viewMode, setViewMode] = useState<'table' | 'gallery'>(() => {
+        if (typeof window !== 'undefined') {
+            return (localStorage.getItem('as-portal-users-view') as 'table' | 'gallery') || 'table';
+        }
+        return 'table';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('as-portal-users-view', viewMode);
+    }, [viewMode]);
+
+    const [search, setSearch] = useState('');
+    const [roleFilter, setRoleFilter] = useState<'all' | 'tenant_admin' | 'tenant_operator'>('all');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+    // Metrics calculations
+    const stats = useMemo(() => {
+        const total = users.total ?? users.data.length;
+        let active = 0;
+        let admins = 0;
+        let operators = 0;
+
+        users.data.forEach((u) => {
+            if (u.is_active) active++;
+            if (u.role === 'tenant_admin') admins++;
+            if (u.role === 'tenant_operator') operators++;
+        });
+
+        return { total, active, admins, operators };
+    }, [users]);
+
+    // Client-side filtering for fast interactive searching
+    const filteredUsers = useMemo(() => {
+        return users.data.filter((u) => {
+            if (roleFilter !== 'all' && u.role !== roleFilter) {
+                return false;
+            }
+            if (statusFilter === 'active' && !u.is_active) {
+                return false;
+            }
+            if (statusFilter === 'inactive' && u.is_active) {
+                return false;
+            }
+            if (search.trim()) {
+                const query = search.toLowerCase();
+                const matchesName = u.name.toLowerCase().includes(query);
+                const matchesEmail = u.email.toLowerCase().includes(query);
+                return matchesName || matchesEmail;
+            }
+            return true;
+        });
+    }, [users.data, search, roleFilter, statusFilter]);
+
+    return (
+        <AdminLayout>
+            <Head title="Users & Access" />
+
+            <div className="pf-dashboard max-w-7xl mx-auto">
+                {/* Hero Header */}
+                <div className="pf-dashboard-header">
+                    <div>
+                        <p className="pf-dashboard-kicker">ACCESS & ROLES</p>
+                        <h1 className="pf-dashboard-title">Users & Staff</h1>
+                        <p className="pf-dashboard-subtitle">
+                            Manage administrators, operators, and staff credentials for your school workspace.
+                        </p>
                     </div>
                     {canManage && (
-                        <div className="pft-hero-actions">
-                            <Link href={route('portal.users.create')} className="pf-btn pf-btn-primary">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 5v14M5 12h14" />
-                                </svg>
-                                Add User
-                            </Link>
-                        </div>
+                        <Link href={route('portal.users.create')} className="pf-btn pf-btn-primary">
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <line x1="19" y1="8" x2="19" y2="14" />
+                                <line x1="22" y1="11" x2="16" y2="11" />
+                            </svg>
+                            Add User
+                        </Link>
                     )}
                 </div>
 
+                {/* Secret Callout for Temporary Passwords */}
                 <SecretOnceCallout label="Temporary password" value={flash?.temporaryPassword} />
 
+                {/* Stat Grid */}
+                <div className="pf-stat-grid mb-8">
+                    {/* Total Users */}
+                    <div className="pf-stat-card">
+                        <div className="pf-stat-head">
+                            <span className="pf-stat-label">Total Staff</span>
+                            <span className="pf-stat-badge pf-stat-badge--blue" aria-hidden="true">
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                            </span>
+                        </div>
+                        <div className="pf-stat-value">{stats.total}</div>
+                        <div className="pf-stat-sub">Provisioned portal accounts</div>
+                    </div>
+
+                    {/* Active Accounts */}
+                    <div className="pf-stat-card">
+                        <div className="pf-stat-head">
+                            <span className="pf-stat-label">Active Users</span>
+                            <span className="pf-stat-badge pf-stat-badge--emerald" aria-hidden="true">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                            </span>
+                        </div>
+                        <div className="pf-stat-value">{stats.active}</div>
+                        <div className="pf-stat-sub">Authorized & sign-in enabled</div>
+                    </div>
+
+                    {/* Administrators */}
+                    <div className="pf-stat-card">
+                        <div className="pf-stat-head">
+                            <span className="pf-stat-label">School Admins</span>
+                            <span className="pf-stat-badge pf-stat-badge--indigo" aria-hidden="true">
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                </svg>
+                            </span>
+                        </div>
+                        <div className="pf-stat-value">{stats.admins}</div>
+                        <div className="pf-stat-sub">Full configuration & staff access</div>
+                    </div>
+
+                    {/* Operators */}
+                    <div className="pf-stat-card">
+                        <div className="pf-stat-head">
+                            <span className="pf-stat-label">Operators</span>
+                            <span className="pf-stat-badge pf-stat-badge--slate" aria-hidden="true">
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                                    <line x1="8" y1="21" x2="16" y2="21" />
+                                    <line x1="12" y1="17" x2="12" y2="21" />
+                                </svg>
+                            </span>
+                        </div>
+                        <div className="pf-stat-value">{stats.operators}</div>
+                        <div className="pf-stat-sub">Attendance & kiosk operations</div>
+                    </div>
+                </div>
+
+                {/* Main Panel */}
                 <div className="pf-panel">
-                    <div className="pf-panel-header">
+                    <div className="pf-panel-header flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <h2 className="pf-panel-title">All Users</h2>
+                            <h2 className="pf-panel-title">School User Directory</h2>
                             <p className="pf-panel-count">
-                                {users.from !== null ? `${users.from}–${users.to} of ${users.total}` : 'No results'}
+                                {filteredUsers.length} of {users.data.length} staff shown
                             </p>
+                        </div>
+
+                        {/* Search & Filters Controls */}
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            {/* Search Input */}
+                            <div className="relative min-w-[220px]">
+                                <input
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search name or email..."
+                                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 pl-8 pr-7 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                                />
+                                <svg
+                                    className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                >
+                                    <circle cx="11" cy="11" r="8" />
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                </svg>
+                                {search && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearch('')}
+                                        className="absolute right-2.5 top-2 text-xs text-slate-400 hover:text-slate-600"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Role Filter */}
+                            <select
+                                value={roleFilter}
+                                onChange={(e) => setRoleFilter(e.target.value as 'all' | 'tenant_admin' | 'tenant_operator')}
+                                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/15 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-200"
+                            >
+                                <option value="all">All Roles</option>
+                                <option value="tenant_admin">Admins Only</option>
+                                <option value="tenant_operator">Operators Only</option>
+                            </select>
+
+                            {/* Status Filter */}
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
+                                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/15 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-200"
+                            >
+                                <option value="all">All Statuses</option>
+                                <option value="active">Active Only</option>
+                                <option value="inactive">Inactive Only</option>
+                            </select>
+
+                            {/* View Toggle */}
+                            <div className="pf-view-toggle" role="group" aria-label="View mode">
+                                <button
+                                    type="button"
+                                    className={`pf-view-toggle-btn ${viewMode === 'table' ? 'pf-view-toggle-btn--active' : ''}`}
+                                    onClick={() => setViewMode('table')}
+                                    aria-pressed={viewMode === 'table'}
+                                >
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M4 6h16M4 12h16M4 18h16" />
+                                    </svg>
+                                    Table
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`pf-view-toggle-btn ${viewMode === 'gallery' ? 'pf-view-toggle-btn--active' : ''}`}
+                                    onClick={() => setViewMode('gallery')}
+                                    aria-pressed={viewMode === 'gallery'}
+                                >
+                                    <svg viewBox="0 0 24 24">
+                                        <rect x="3" y="3" width="7" height="7" rx="1.2" />
+                                        <rect x="14" y="3" width="7" height="7" rx="1.2" />
+                                        <rect x="3" y="14" width="7" height="7" rx="1.2" />
+                                        <rect x="14" y="14" width="7" height="7" rx="1.2" />
+                                    </svg>
+                                    Cards
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="pf-table-wrap">
-                        <table className="pf-table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Email</th>
-                                    <th scope="col">Role</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">
-                                        <span className="sr-only">Actions</span>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {users.data.length === 0 && (
+                    {/* TABLE VIEW */}
+                    {viewMode === 'table' ? (
+                        <div className="pf-table-wrap">
+                            <table className="pf-table">
+                                <thead>
                                     <tr>
-                                        <td colSpan={5} className="pf-empty">
-                                            No users yet.
-                                        </td>
+                                        <th>Staff User</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Joined</th>
+                                        <th className="text-right">Action</th>
                                     </tr>
-                                )}
-
-                                {users.data.map((user: UserListItem) => (
-                                    <tr key={user.id}>
-                                        <td className="pf-tenant-name">
-                                            {user.name}
-                                            {user.id === auth.user.id && (
-                                                <span style={{ marginLeft: '0.5rem', fontSize: '11px', color: 'var(--as-text-muted)' }}>(you)</span>
-                                            )}
-                                        </td>
-                                        <td>{user.email}</td>
-                                        <td>{roleLabels[user.role] ?? user.role}</td>
-                                        <td>
-                                            <span
-                                                className={
-                                                    'pf-pill ' +
-                                                    (user.is_active
-                                                        ? 'pf-pill--active'
-                                                        : 'pf-pill--inactive')
-                                                }
-                                            >
-                                                {user.is_active ? 'active' : 'inactive'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {canManage && user.id !== auth.user.id && (
-                                                <div className="pft-row-actions">
-                                                    {user.is_active ? (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setDeactivatingUser(user)}
-                                                            className="pf-row-action pf-row-action--danger"
-                                                        >
-                                                            <svg viewBox="0 0 24 24">
-                                                                <path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-7 0v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7" />
-                                                            </svg>
-                                                            Deactivate
-                                                        </button>
-                                                    ) : (
+                                </thead>
+                                <tbody>
+                                    {filteredUsers.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="pf-empty">
+                                                <div className="flex flex-col items-center justify-center py-6">
+                                                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-3 dark:bg-gray-800">
+                                                        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                                            <circle cx="9" cy="7" r="4" />
+                                                            <line x1="19" y1="8" x2="19" y2="14" />
+                                                        </svg>
+                                                    </span>
+                                                    <p className="font-semibold text-slate-700 dark:text-slate-200">No users found</p>
+                                                    <p className="text-xs text-slate-400 mt-0.5">
+                                                        {search || roleFilter !== 'all' || statusFilter !== 'all'
+                                                            ? 'Try adjusting your search query or filter settings.'
+                                                            : 'Get started by inviting your first school administrator or operator.'}
+                                                    </p>
+                                                    {canManage && (
                                                         <Link
-                                                            href={route('portal.users.reactivate', user.id)}
-                                                            method="patch"
-                                                            as="button"
-                                                            className="pf-row-action"
+                                                            href={route('portal.users.create')}
+                                                            className="pf-btn pf-btn-secondary text-xs mt-3.5"
                                                         >
-                                                            <svg viewBox="0 0 24 24">
-                                                                <path d="M4 4v6h6M20 20v-6h-6M5 15a7 7 0 0 0 12.6 3M19 9A7 7 0 0 0 6.4 6" />
-                                                            </svg>
-                                                            Reactivate
+                                                            Add User
                                                         </Link>
                                                     )}
                                                 </div>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                            </td>
+                                        </tr>
+                                    )}
 
-                    <Pagination links={users.links} />
+                                    {filteredUsers.map((user: UserListItem) => {
+                                        const isCurrentUser = user.id === auth?.user?.id;
+                                        const isAdmin = user.role === 'tenant_admin';
+
+                                        return (
+                                            <tr key={user.id}>
+                                                {/* User Info with Avatar */}
+                                                <td>
+                                                    <div className="pf-tenant-cell">
+                                                        <span
+                                                            className={`pf-tenant-avatar ${
+                                                                isAdmin
+                                                                    ? 'bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-700 dark:from-indigo-950 dark:to-indigo-900 dark:text-indigo-300'
+                                                                    : 'bg-gradient-to-br from-sky-100 to-slate-200 text-sky-700 dark:from-sky-950 dark:to-slate-900 dark:text-sky-300'
+                                                            }`}
+                                                        >
+                                                            {user.name.charAt(0).toUpperCase()}
+                                                        </span>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="pf-tenant-name">{user.name}</span>
+                                                                {isCurrentUser && (
+                                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">
+                                                                        You
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <span className="pf-tenant-code">{user.email}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                {/* Role Pill */}
+                                                <td>
+                                                    <span
+                                                        className={`pf-pill ${
+                                                            isAdmin ? 'pf-pill--role-admin' : 'pf-pill--role-operator'
+                                                        }`}
+                                                    >
+                                                        {roleLabels[user.role] ?? user.role}
+                                                    </span>
+                                                </td>
+
+                                                {/* Status Pill */}
+                                                <td>
+                                                    <span
+                                                        className={`pf-pill ${
+                                                            user.is_active ? 'pf-pill--active' : 'pf-pill--danger'
+                                                        }`}
+                                                    >
+                                                        {user.is_active ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </td>
+
+                                                {/* Created Date */}
+                                                <td>
+                                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                                        {formatDate(user.created_at)}
+                                                    </span>
+                                                </td>
+
+                                                {/* Action Button */}
+                                                <td className="text-right">
+                                                    {isCurrentUser ? (
+                                                        <span className="text-xs text-slate-400 dark:text-slate-500 italic px-2">
+                                                            Current session
+                                                        </span>
+                                                    ) : canManage ? (
+                                                        user.is_active ? (
+                                                            <Link
+                                                                href={route('portal.users.deactivate', user.id)}
+                                                                method="patch"
+                                                                as="button"
+                                                                className="pf-btn-danger-soft"
+                                                            >
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                    <circle cx="12" cy="12" r="10" />
+                                                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                                                                </svg>
+                                                                Deactivate
+                                                            </Link>
+                                                        ) : (
+                                                            <Link
+                                                                href={route('portal.users.reactivate', user.id)}
+                                                                method="patch"
+                                                                as="button"
+                                                                className="pf-btn-success-soft"
+                                                            >
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                    <polyline points="20 6 9 17 4 12" />
+                                                                </svg>
+                                                                Reactivate
+                                                            </Link>
+                                                        )
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400">—</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        /* GALLERY / CARD VIEW */
+                        <div className="p-6">
+                            {filteredUsers.length === 0 ? (
+                                <p className="pf-empty">No users match the selected filters.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {filteredUsers.map((user: UserListItem) => {
+                                        const isCurrentUser = user.id === auth?.user?.id;
+                                        const isAdmin = user.role === 'tenant_admin';
+
+                                        return (
+                                            <div
+                                                key={user.id}
+                                                className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-200 hover:border-slate-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900"
+                                            >
+                                                <div>
+                                                    {/* Card Header */}
+                                                    <div className="flex items-start justify-between gap-3 mb-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <span
+                                                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold shadow-xs ${
+                                                                    isAdmin
+                                                                        ? 'bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-700 dark:from-indigo-950 dark:to-indigo-900 dark:text-indigo-300'
+                                                                        : 'bg-gradient-to-br from-sky-100 to-slate-200 text-sky-700 dark:from-sky-950 dark:to-slate-900 dark:text-sky-300'
+                                                                }`}
+                                                            >
+                                                                {user.name.charAt(0).toUpperCase()}
+                                                            </span>
+                                                            <div className="min-w-0">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <h3 className="truncate text-sm font-bold text-slate-900 dark:text-white">
+                                                                        {user.name}
+                                                                    </h3>
+                                                                    {isCurrentUser && (
+                                                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">
+                                                                            You
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                                                                    {user.email}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Pills Row */}
+                                                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                                                        <span
+                                                            className={`pf-pill ${
+                                                                isAdmin ? 'pf-pill--role-admin' : 'pf-pill--role-operator'
+                                                            }`}
+                                                        >
+                                                            {roleLabels[user.role] ?? user.role}
+                                                        </span>
+                                                        <span
+                                                            className={`pf-pill ${
+                                                                user.is_active ? 'pf-pill--active' : 'pf-pill--danger'
+                                                            }`}
+                                                        >
+                                                            {user.is_active ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Card Footer */}
+                                                <div className="border-t border-slate-100 pt-3 dark:border-gray-800 flex items-center justify-between text-xs text-slate-400">
+                                                    <span>Joined {formatDate(user.created_at)}</span>
+
+                                                    {isCurrentUser ? (
+                                                        <span className="italic text-slate-400">Current session</span>
+                                                    ) : canManage ? (
+                                                        user.is_active ? (
+                                                            <Link
+                                                                href={route('portal.users.deactivate', user.id)}
+                                                                method="patch"
+                                                                as="button"
+                                                                className="pf-btn-danger-soft"
+                                                            >
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                    <circle cx="12" cy="12" r="10" />
+                                                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                                                                </svg>
+                                                                Deactivate
+                                                            </Link>
+                                                        ) : (
+                                                            <Link
+                                                                href={route('portal.users.reactivate', user.id)}
+                                                                method="patch"
+                                                                as="button"
+                                                                className="pf-btn-success-soft"
+                                                            >
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                    <polyline points="20 6 9 17 4 12" />
+                                                                </svg>
+                                                                Reactivate
+                                                            </Link>
+                                                        )
+                                                    ) : null}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <PaginationBar links={users.links} />
                 </div>
             </div>
-            <Modal show={deactivatingUser !== null} onClose={() => setDeactivatingUser(null)}>
-                <div className="pf-modal">
-                    <div className="pf-modal-header">
-                        <h2 className="pf-modal-title">Deactivate user?</h2>
-                        <button
-                            type="button"
-                            className="pf-modal-close"
-                            onClick={() => setDeactivatingUser(null)}
-                            aria-label="Close"
-                        >
-                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
-
-                    {/* User summary card */}
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 14,
-                            padding: '14px 16px',
-                            borderRadius: 14,
-                            border: '1px solid var(--as-border)',
-                            background: 'var(--as-surface-active)',
-                            marginBottom: 14,
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: 42,
-                                height: 42,
-                                borderRadius: '50%',
-                                background: 'var(--as-brand-blue)',
-                                color: '#fff',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 700,
-                                fontSize: 16,
-                                flexShrink: 0,
-                            }}
-                        >
-                            {deactivatingUser?.name?.charAt(0).toUpperCase() ?? '?'}
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                            <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--as-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {deactivatingUser?.name}
-                            </span>
-                            <span style={{ fontSize: 12, color: 'var(--as-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {deactivatingUser?.email}
-                            </span>
-                            <span style={{ fontSize: 11, color: 'var(--as-text-muted)', marginTop: 2 }}>
-                                {roleLabels[deactivatingUser?.role ?? ''] ?? deactivatingUser?.role}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Consequence notice */}
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: 10,
-                            padding: '11px 14px',
-                            borderRadius: 12,
-                            border: '1px solid var(--as-danger-bg-alt)',
-                            background: 'var(--as-danger-bg)',
-                            marginBottom: 18,
-                        }}
-                    >
-                        <svg viewBox="0 0 24 24" style={{ width: 15, height: 15, flexShrink: 0, fill: 'none', stroke: 'var(--as-danger)', strokeWidth: 2, marginTop: 1 }}>
-                            <circle cx="12" cy="12" r="9" />
-                            <path d="M12 7v5" />
-                            <circle cx="12" cy="16.5" r=".5" fill="var(--as-danger)" />
-                        </svg>
-                        <p style={{ margin: 0, fontSize: 12.5, color: 'var(--as-danger)', lineHeight: 1.5 }}>
-                            This user will lose access <strong>immediately</strong>. They will not be notified.
-                            You can reactivate them at any time from this screen.
-                        </p>
-                    </div>
-
-                    {/* Actions — stacked column */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <button
-                            type="button"
-                            className={'pf-btn pf-btn-danger' + (isDeactivating ? ' pf-btn--loading' : '')}
-                            onClick={submitDeactivate}
-                            disabled={isDeactivating}
-                        >
-                            Deactivate {deactivatingUser?.name?.split(' ')[0]}
-                        </button>
-                        <button
-                            type="button"
-                            className="pf-btn pf-btn-secondary"
-                            onClick={() => setDeactivatingUser(null)}
-                            disabled={isDeactivating}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            </Modal>
         </AdminLayout>
     );
 }

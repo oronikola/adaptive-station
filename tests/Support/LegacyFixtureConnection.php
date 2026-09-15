@@ -19,7 +19,7 @@ class LegacyFixtureConnection
 
     public static function register(): void
     {
-        config(["database.connections.".self::NAME => [
+        config(['database.connections.'.self::NAME => [
             'driver' => 'sqlite',
             'database' => ':memory:',
             'prefix' => '',

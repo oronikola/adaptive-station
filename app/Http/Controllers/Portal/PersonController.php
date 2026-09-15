@@ -10,6 +10,7 @@ use App\Models\ParentStudentLink;
 use App\Models\Person;
 use App\Models\RfidCard;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -49,7 +50,7 @@ class PersonController extends Controller
         return Inertia::render('Admin/people/people-create-screen');
     }
 
-    public function store(StorePersonRequest $request): RedirectResponse
+    public function store(StorePersonRequest $request): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
         $tenantId = $request->user()->actingTenantId();
@@ -67,6 +68,14 @@ class PersonController extends Controller
         }
 
         $temporaryPassword = $this->syncGuardian($person, $tenantId, $data, $actor);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Person created successfully.',
+                'person' => $person->fresh(),
+                'temporaryPassword' => $temporaryPassword,
+            ]);
+        }
 
         $redirect = redirect()->route('portal.people.edit', $person)->with('success', 'Person created.');
 
@@ -90,7 +99,7 @@ class PersonController extends Controller
         ]);
     }
 
-    public function update(UpdatePersonRequest $request, Person $person): RedirectResponse
+    public function update(UpdatePersonRequest $request, Person $person): JsonResponse|RedirectResponse
     {
         $data = $request->validated();
         $tenantId = $request->user()->actingTenantId();
@@ -105,25 +114,47 @@ class PersonController extends Controller
 
         $temporaryPassword = $this->syncGuardian($person, $tenantId, $data, $actor);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Person updated successfully.',
+                'person' => $person->fresh(),
+                'temporaryPassword' => $temporaryPassword,
+            ]);
+        }
+
         $redirect = redirect()->route('portal.people.edit', $person)->with('success', 'Person updated.');
 
         return $temporaryPassword !== null ? $redirect->with('temporaryPassword', $temporaryPassword) : $redirect;
     }
 
-    public function deactivate(Request $request, Person $person): RedirectResponse
+    public function deactivate(Request $request, Person $person): JsonResponse|RedirectResponse
     {
         Gate::authorize('update', $person);
 
         Person::deactivate($person, $request->user());
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Person deactivated.',
+                'person' => $person->fresh(),
+            ]);
+        }
+
         return redirect()->route('portal.people.edit', $person)->with('success', 'Person deactivated.');
     }
 
-    public function reactivate(Request $request, Person $person): RedirectResponse
+    public function reactivate(Request $request, Person $person): JsonResponse|RedirectResponse
     {
         Gate::authorize('update', $person);
 
         Person::reactivate($person, $request->user());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Person reactivated.',
+                'person' => $person->fresh(),
+            ]);
+        }
 
         return redirect()->route('portal.people.edit', $person)->with('success', 'Person reactivated.');
     }

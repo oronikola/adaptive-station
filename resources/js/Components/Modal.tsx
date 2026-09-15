@@ -30,7 +30,9 @@ export default function Modal({
         lg: 'sm:max-w-lg',
         xl: 'sm:max-w-xl',
         '2xl': 'sm:max-w-2xl',
-    }[maxWidth];
+        '3xl': 'sm:max-w-3xl',
+        '4xl': 'sm:max-w-4xl',
+    }[maxWidth] ?? 'sm:max-w-2xl';
 
     return (
         <Transition show={show} leave="duration-200">
@@ -41,26 +43,26 @@ export default function Modal({
                 onClose={close}
             >
                 <TransitionChild
-                    enter="ease-out duration-300"
+                    enter="ease-[cubic-bezier(0.22,1,0.36,1)] duration-[320ms]"
                     enterFrom="opacity-0"
                     enterTo="opacity-100"
                     leave="ease-in duration-200"
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="absolute inset-0 bg-gray-500/75 dark:bg-gray-900/75" />
+                    <div className="absolute inset-0 bg-[#0f172a]/45 backdrop-blur-[6px] dark:bg-[#020617]/60" />
                 </TransitionChild>
 
                 <TransitionChild
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    enterTo="opacity-100 translate-y-0 sm:scale-100"
+                    enter="ease-[cubic-bezier(0.22,1,0.36,1)] duration-[360ms]"
+                    enterFrom="opacity-0 translate-y-3 scale-[0.97]"
+                    enterTo="opacity-100 translate-y-0 scale-100"
                     leave="ease-in duration-200"
-                    leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                    leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    leaveFrom="opacity-100 translate-y-0 scale-100"
+                    leaveTo="opacity-0 translate-y-4 scale-[0.97]"
                 >
                     <DialogPanel
-                        className={`mb-6 transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full dark:bg-gray-800 ${maxWidthClass}`}
+                        className={`mb-6 transform overflow-hidden rounded-[28px] border border-[#e2e8f0] bg-white shadow-[0_24px_64px_-16px_rgba(15,23,42,0.22),0_12px_32px_-8px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.04] transition-all sm:mx-auto sm:w-full dark:border-gray-700 dark:bg-gray-800 ${maxWidthClass}`}
                     >
                         {children}
                     </DialogPanel>

@@ -39,10 +39,12 @@ export interface Person {
     person_type: 'student' | 'staff';
     display_name: string;
     first_name: string;
+    middle_name?: string | null;
     last_name: string;
     external_id: string | null;
     grade_level: string | null;
     section: string | null;
+    photo_url?: string | null;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -98,9 +100,9 @@ export interface PaginatedData<T> {
 
 export interface PageProps {
     auth: {
-        user: User;
+        user: User | null;
     };
-    tenant?: Tenant;
+    tenant?: Tenant | null;
     webNotifications?: WebNotificationSummary | null;
     flash?: {
         success?: string;

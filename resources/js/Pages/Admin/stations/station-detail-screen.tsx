@@ -1,40 +1,23 @@
 import InputError from '@/Components/InputError';
+import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
+import TextInput from '@/Components/TextInput';
 import SecretOnceCallout from '@/Components/SecretOnceCallout';
+import StatusBadge from '@/Components/admin/StatusBadge';
+import Table from '@/Components/admin/Table';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { Station, StationCredential } from '@/types';
-import '../../../../css/platform-dashboard.css';
-import '../../../../css/platform-overview.css';
 
-const STATUS_LABELS: Record<string, string> = {
+const statusLabels: Record<string, string> = {
     pending_activation: 'Pending Activation',
     active: 'Active',
     disabled: 'Disabled',
     retired: 'Retired',
 };
-
-const STATUS_PILL_CLASS: Record<string, string> = {
-    active: 'pf-pill--active',
-    pending_activation: 'pf-pill--suspended',
-    disabled: 'pf-pill--archived',
-    retired: 'pf-pill--archived',
-};
-
-// last_used_at is a full UTC timestamp — displayed in GMT+8 (Asia/Manila, no
-// DST) since that's the timezone every tenant in this system runs on today.
-function formatDateTime(value: string): string {
-    return new Date(value).toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'Asia/Manila',
-    });
-}
 
 export default function StationDetailScreen({ station, credentials }: { station: Station; credentials: StationCredential[] }) {
     const { props } = usePage<import('@/types').PageProps>();
@@ -57,7 +40,7 @@ export default function StationDetailScreen({ station, credentials }: { station:
             return;
         }
 
-        router.patch(route('portal.stations.configuration', station.station_code), {
+        router.patch(route('portal.stations.configuration', station.id), {
             configuration: parsed as unknown as string,
         });
     }
@@ -67,7 +50,7 @@ export default function StationDetailScreen({ station, credentials }: { station:
 
     function submitIssueCredential(e: React.FormEvent) {
         e.preventDefault();
-        credentialForm.post(route('portal.stations.credentials.store', station.station_code), {
+        credentialForm.post(route('portal.stations.credentials.store', station.id), {
             onSuccess: () => {
                 setIssueCredentialOpen(false);
                 credentialForm.reset();
@@ -75,341 +58,177 @@ export default function StationDetailScreen({ station, credentials }: { station:
         });
     }
 
-    const [revokingCredential, setRevokingCredential] = useState<StationCredential | null>(null);
-    const [isRevoking, setIsRevoking] = useState(false);
-
-    function submitRevokeCredential() {
-        if (!revokingCredential) { return; }
-        setIsRevoking(true);
-        router.patch(
-            route('portal.stations.credentials.revoke', [station.station_code, revokingCredential.id] as unknown as Record<string, unknown>),
-            {},
-            {
-                preserveScroll: true,
-                onFinish: () => {
-                    setIsRevoking(false);
-                    setRevokingCredential(null);
-                },
-            },
-        );
-    }
-
-    const [resetModalOpen, setResetModalOpen] = useState(false);
-    const [isResetting, setIsResetting] = useState(false);
-
-    function submitResetActivation() {
-        setIsResetting(true);
-        router.patch(route('portal.stations.reset-activation', station.station_code), {}, {
-            onFinish: () => {
-                setIsResetting(false);
-                setResetModalOpen(false);
-            },
-        });
+    function revokeCredential(credentialId: number) {
+        if (confirm('Revoke this credential? The kiosk using it will lose access immediately.')) {
+            router.patch(route('portal.stations.credentials.revoke', [station.id, credentialId] as unknown as Record<string, unknown>));
+        }
     }
 
     function issueActivationCode() {
-        router.post(route('portal.stations.activation-code', station.station_code));
+        router.post(route('portal.stations.activation-code', station.id));
     }
 
     return (
-        <AdminLayout>
+        <AdminLayout
+            header={
+                <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                        {station.name}
+                    </h2>
+                    <StatusBadge color={station.status === 'active' ? 'green' : 'yellow'}>
+                        {statusLabels[station.status] ?? station.status}
+                    </StatusBadge>
+                </div>
+            }
+        >
             <Head title={station.name} />
 
-            <div className="pf-dashboard pft-page">
-                <Link href={route('portal.stations.index')} className="pft-panel-link" style={{ marginBottom: 14 }}>
-                    <svg viewBox="0 0 24 24">
-                        <path d="m15 6-6 6 6 6" />
-                    </svg>
+            <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+                <Link
+                    href={route('portal.stations.index')}
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                >
                     Back to Stations
                 </Link>
-
-                <div className="pft-hero">
-                    <div className="pft-hero-main">
-                        <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="4" y="5" width="16" height="10" rx="1.6" />
-                                <rect x="9.5" y="17" width="5" height="2" rx="1" />
-                                <rect x="7" y="19.4" width="10" height="1.6" rx="0.8" />
-                            </svg>
-                        </span>
-                        <div>
-                            <h1 className="pft-hero-title">{station.name}</h1>
-                            <p className="pft-hero-subtitle">
-                                <span className="font-mono">{station.station_code}</span>
-                            </p>
-                        </div>
-                    </div>
-                    <div className="pft-hero-actions">
-                        <span
-                            className={
-                                'pf-pill ' + (STATUS_PILL_CLASS[station.status] ?? 'pf-pill--inactive')
-                            }
-                        >
-                            {STATUS_LABELS[station.status] ?? station.status}
-                        </span>
-                        {station.status === 'pending_activation' && (
-                            <button type="button" className="pf-btn pf-btn-primary" onClick={issueActivationCode}>
-                                Issue Activation Code
-                            </button>
-                        )}
-                        {station.status === 'active' && (
-                            <button type="button" className="pf-btn pf-btn-secondary" onClick={() => setResetModalOpen(true)}>
-                                Reset to Pending Activation
-                            </button>
-                        )}
-                    </div>
-                </div>
 
                 <SecretOnceCallout label="Device credential token" value={flash?.deviceToken} />
                 <SecretOnceCallout label="Activation code" value={flash?.activationCode} />
 
-                <div className="pf-panel" style={{ marginBottom: 16 }}>
-                    <div className="pf-panel-header">
-                        <div>
-                            <h2 className="pf-panel-title">Configuration</h2>
-                            <p className="pf-panel-count">
-                                Raw JSON delivered to the kiosk's display/operational
-                                configuration on its next sync.
-                            </p>
-                        </div>
+                {station.status === 'pending_activation' && (
+                    <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
+                        <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">
+                            Activation
+                        </h3>
+                        <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                            This station hasn't been activated yet. Issue an
+                            activation code and enter it on the kiosk.
+                        </p>
+                        <PrimaryButton type="button" onClick={issueActivationCode}>
+                            Issue Activation Code
+                        </PrimaryButton>
+                    </div>
+                )}
+
+                <form
+                    onSubmit={submitConfiguration}
+                    className="space-y-4 rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800"
+                >
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                        Configuration
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Raw JSON delivered to the kiosk's display/operational
+                        configuration on its next sync.
+                    </p>
+
+                    <div>
+                        <InputLabel htmlFor="configuration" value="Configuration (JSON)" />
+                        <textarea
+                            id="configuration"
+                            rows={8}
+                            value={configForm.data.configuration}
+                            onChange={(e) => configForm.setData('configuration', e.target.value)}
+                            className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                        />
+                        <InputError message={configError ?? configForm.errors.configuration} className="mt-2" />
                     </div>
 
-                    <form onSubmit={submitConfiguration} style={{ padding: '20px 24px 24px' }}>
-                        <div className="pf-field">
-                            <label htmlFor="configuration">Configuration (JSON)</label>
-                            <textarea
-                                id="configuration"
-                                rows={8}
-                                value={configForm.data.configuration}
-                                onChange={(e) => configForm.setData('configuration', e.target.value)}
-                                className="font-mono"
-                                style={{
-                                    width: '100%',
-                                    padding: '12px 14px',
-                                    border: '1px solid var(--as-border)',
-                                    borderRadius: 12,
-                                    fontSize: 12.5,
-                                    lineHeight: 1.6,
-                                    color: 'var(--as-brand-dark)',
-                                }}
-                            />
-                            <InputError message={configError ?? configForm.errors.configuration} className="mt-2" />
-                        </div>
+                    <PrimaryButton disabled={configForm.processing}>Save Configuration</PrimaryButton>
+                </form>
 
-                        <button
-                            type="submit"
-                            className={'pf-btn pf-btn-primary' + (configForm.processing ? ' pf-btn--loading' : '')}
-                            disabled={configForm.processing}
-                        >
-                            Save Configuration
-                        </button>
-                    </form>
-                </div>
-
-                <div className="pf-panel">
-                    <div className="pf-panel-header">
-                        <div>
-                            <h2 className="pf-panel-title">Device Credentials</h2>
-                            <p className="pf-panel-count">
-                                {credentials.length} credential{credentials.length === 1 ? '' : 's'}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            className="pf-btn pf-btn-primary"
-                            onClick={() => setIssueCredentialOpen(true)}
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
+                <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
+                    <div className="mb-4 flex items-center justify-between">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                            Device Credentials
+                        </h3>
+                        <PrimaryButton type="button" onClick={() => setIssueCredentialOpen(true)}>
                             Issue New Credential
-                        </button>
+                        </PrimaryButton>
                     </div>
 
-                    <div className="pf-table-wrap">
-                        <table className="pf-table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Label</th>
-                                    <th scope="col">Last Used</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">
-                                        <span className="sr-only">Actions</span>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {credentials.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="pf-empty">
-                                            No credentials issued yet.
-                                        </td>
-                                    </tr>
-                                )}
+                    <Table>
+                        <Table.Head>
+                            <Table.Th>Label</Table.Th>
+                            <Table.Th>Last Used</Table.Th>
+                            <Table.Th>Status</Table.Th>
+                            <Table.Th>
+                                <span className="sr-only">Actions</span>
+                            </Table.Th>
+                        </Table.Head>
+                        <Table.Body>
+                            {credentials.length === 0 && (
+                                <Table.Empty colSpan={4}>No credentials issued yet.</Table.Empty>
+                            )}
 
-                                {credentials.map((credential: StationCredential) => (
-                                    <tr key={credential.id}>
-                                        <td className="pf-tenant-name">{credential.label ?? '—'}</td>
-                                        <td>
-                                            {credential.last_used_at
-                                                ? formatDateTime(credential.last_used_at)
-                                                : 'Never'}
-                                        </td>
-                                        <td>
-                                            <span
-                                                className={
-                                                    'pf-pill ' +
-                                                    (credential.revoked_at ? 'pf-pill--archived' : 'pf-pill--active')
-                                                }
+                            {credentials.map((credential: StationCredential) => (
+                                <tr key={credential.id}>
+                                    <Table.Td>{credential.label ?? '—'}</Table.Td>
+                                    <Table.Td>
+                                        {credential.last_used_at
+                                            ? new Date(credential.last_used_at).toLocaleString()
+                                            : 'Never'}
+                                    </Table.Td>
+                                    <Table.Td>
+                                        <StatusBadge color={credential.revoked_at ? 'gray' : 'green'}>
+                                            {credential.revoked_at ? 'Revoked' : 'Active'}
+                                        </StatusBadge>
+                                    </Table.Td>
+                                    <Table.Td className="text-right">
+                                        {!credential.revoked_at && (
+                                            <button
+                                                type="button"
+                                                onClick={() => revokeCredential(credential.id)}
+                                                className="font-medium text-red-600 hover:text-red-500 dark:text-red-400"
                                             >
-                                                {credential.revoked_at ? 'Revoked' : 'Active'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {!credential.revoked_at && (
-                                                <div className="pft-row-actions">
-                                                    <button
-                                                        type="button"
-                                                        className="pf-row-action pf-row-action--danger"
-                                                        onClick={() => setRevokingCredential(credential)}
-                                                    >
-                                                        <svg viewBox="0 0 24 24">
-                                                            <path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-7 0v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7" />
-                                                        </svg>
-                                                        Revoke
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                                Revoke
+                                            </button>
+                                        )}
+                                    </Table.Td>
+                                </tr>
+                            ))}
+                        </Table.Body>
+                    </Table>
                 </div>
             </div>
 
-            <Modal
-                show={issueCredentialOpen}
-                onClose={() => {
-                    setIssueCredentialOpen(false);
-                    credentialForm.reset();
-                }}
-            >
+            <Modal show={issueCredentialOpen} onClose={() => setIssueCredentialOpen(false)}>
                 <form onSubmit={submitIssueCredential} className="pf-modal">
                     <div className="pf-modal-header">
-                        <div>
-                            <h3 className="pf-modal-title">Issue New Credential</h3>
-                            <p className="pf-field-hint">
-                                The device token is shown only once — enter it into
-                                the kiosk's configuration immediately.
-                            </p>
+                        <div className="pf-modal-hero">
+                            <span className="pf-modal-hero-icon pf-modal-hero-icon--amber" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="3" y="11" width="10" height="8" rx="1.5" />
+                                    <path d="M7 11V8a4 4 0 0 1 8 0v3" />
+                                    <circle cx="8" cy="15" r="1" />
+                                </svg>
+                            </span>
+                            <div className="pf-modal-hero-text">
+                                <h3 className="pf-modal-title">Issue New Credential</h3>
+                                <p className="pf-modal-subtitle">Token shown once — enter it on the kiosk immediately.</p>
+                            </div>
                         </div>
-                        <button
-                            type="button"
-                            className="pf-modal-close"
-                            onClick={() => {
-                                setIssueCredentialOpen(false);
-                                credentialForm.reset();
-                            }}
-                            aria-label="Close"
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                        <button type="button" className="pf-modal-close" onClick={() => setIssueCredentialOpen(false)} aria-label="Close">
+                            <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
-
-                    <div className="pf-field">
-                        <label htmlFor="label">Label (optional)</label>
-                        <input
+                    <div className="mt-4">
+                        <InputLabel htmlFor="label" value="Label (optional)" />
+                        <TextInput
                             id="label"
-                            type="text"
                             value={credentialForm.data.label}
                             onChange={(e) => credentialForm.setData('label', e.target.value)}
-                            autoFocus
+                            className="mt-1 block w-full"
+                            isFocused
                         />
                         <InputError message={credentialForm.errors.label} className="mt-2" />
                     </div>
-
-                    <div className="pf-modal-footer">
-                        <button
-                            type="button"
-                            className="pf-btn pf-btn-secondary"
-                            onClick={() => {
-                                setIssueCredentialOpen(false);
-                                credentialForm.reset();
-                            }}
-                        >
+                    <div className="mt-6 flex justify-end gap-3">
+                        <SecondaryButton type="button" onClick={() => setIssueCredentialOpen(false)}>
                             Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className={'pf-btn pf-btn-primary' + (credentialForm.processing ? ' pf-btn--loading' : '')}
-                            disabled={credentialForm.processing}
-                        >
-                            {credentialForm.processing ? 'Issuing…' : 'Issue'}
-                        </button>
+                        </SecondaryButton>
+                        <PrimaryButton disabled={credentialForm.processing}>Issue</PrimaryButton>
                     </div>
                 </form>
-            </Modal>
-
-            <Modal show={revokingCredential !== null} onClose={() => setRevokingCredential(null)}>
-                <div className="pf-modal">
-                    <div className="pf-modal-header">
-                        <h2 className="pf-modal-title">Revoke credential?</h2>
-                        <p className="pf-modal-desc">
-                            <strong>{revokingCredential?.label ?? 'Untitled'}</strong> — the kiosk using this credential will lose access immediately.
-                        </p>
-                    </div>
-                    <div className="pf-modal-footer">
-                        <button
-                            type="button"
-                            className="pf-btn pf-btn-secondary"
-                            onClick={() => setRevokingCredential(null)}
-                            disabled={isRevoking}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            className={'pf-btn pf-btn-danger' + (isRevoking ? ' pf-btn--loading' : '')}
-                            onClick={submitRevokeCredential}
-                            disabled={isRevoking}
-                        >
-                            Revoke
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
-            <Modal show={resetModalOpen} onClose={() => setResetModalOpen(false)}>
-                <div className="pf-modal">
-                    <div className="pf-modal-header">
-                        <h2 className="pf-modal-title">Reset to Pending Activation?</h2>
-                        <p className="pf-modal-desc">
-                            All existing device credentials will be revoked immediately. The station will need a new activation code before it can go back online.
-                        </p>
-                    </div>
-                    <div className="pf-modal-footer">
-                        <button
-                            type="button"
-                            className="pf-btn pf-btn-secondary"
-                            onClick={() => setResetModalOpen(false)}
-                            disabled={isResetting}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            className={'pf-btn pf-btn-danger' + (isResetting ? ' pf-btn--loading' : '')}
-                            onClick={submitResetActivation}
-                            disabled={isResetting}
-                        >
-                            Reset station
-                        </button>
-                    </div>
-                </div>
             </Modal>
         </AdminLayout>
     );

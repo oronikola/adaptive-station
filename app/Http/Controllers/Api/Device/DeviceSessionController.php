@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api\Device;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\Device\Concerns\ResolvesAuthenticatedStation;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
