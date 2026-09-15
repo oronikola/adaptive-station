@@ -1,4 +1,5 @@
 import Pagination from '@/Components/admin/Pagination';
+import PremiumSelect from '@/Components/PremiumSelect';
 import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
 import { CheckIcon } from '@/Components/icons/check';
 import { ClockIcon } from '@/Components/icons/clock';
@@ -149,47 +150,55 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                 <form onSubmit={submit} className="pf-filter-bar" role="search">
                     <div className="pf-field">
                         <label htmlFor="tenant_id">School</label>
-                        <select
+                        <PremiumSelect
                             id="tenant_id"
                             value={data.tenant_id}
-                            onChange={(e) => setData('tenant_id', e.target.value)}
-                        >
-                            <option value="">All schools</option>
-                            {tenants.map((tenant) => (
-                                <option key={tenant.id} value={tenant.id}>{tenant.name}</option>
-                            ))}
-                        </select>
+                            onChange={(value) => setData('tenant_id', value)}
+                            options={[
+                                { value: '', label: 'All schools' },
+                                ...tenants.map((tenant) => ({
+                                    value: String(tenant.id),
+                                    label: tenant.name,
+                                })),
+                            ]}
+                            placeholder="All schools"
+                        />
                     </div>
 
                     <div className="pf-field">
                         <label htmlFor="device_id">Phone</label>
-                        <select
+                        <PremiumSelect
                             id="device_id"
                             value={data.device_id}
-                            onChange={(e) => setData('device_id', e.target.value)}
-                        >
-                            <option value="">All phones</option>
-                            {devices.map((device) => (
-                                <option key={device.id} value={device.id}>{device.label}</option>
-                            ))}
-                        </select>
+                            onChange={(value) => setData('device_id', value)}
+                            options={[
+                                { value: '', label: 'All phones' },
+                                ...devices.map((device) => ({
+                                    value: String(device.id),
+                                    label: device.label,
+                                })),
+                            ]}
+                            placeholder="All phones"
+                        />
                     </div>
 
                     <div className="pf-field">
                         <label htmlFor="status">Status</label>
-                        <select
+                        <PremiumSelect
                             id="status"
                             value={data.status}
-                            onChange={(e) => setData('status', e.target.value)}
-                        >
-                            <option value="">All</option>
-                            <option value="pending">Pending</option>
-                            <option value="claimed">Claimed</option>
-                            <option value="sent">Sent</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="failed">Failed</option>
-                            <option value="expired">Expired</option>
-                        </select>
+                            onChange={(value) => setData('status', value)}
+                            options={[
+                                { value: '', label: 'All' },
+                                { value: 'pending', label: 'Pending' },
+                                { value: 'claimed', label: 'Claimed' },
+                                { value: 'sent', label: 'Sent' },
+                                { value: 'delivered', label: 'Delivered' },
+                                { value: 'failed', label: 'Failed' },
+                                { value: 'expired', label: 'Expired' },
+                            ]}
+                            placeholder="All"
+                        />
                     </div>
 
                     <div className="pf-field">

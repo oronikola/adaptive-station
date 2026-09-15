@@ -1,4 +1,5 @@
 import Pagination from '@/Components/admin/Pagination';
+import PremiumSelect from '@/Components/PremiumSelect';
 import Modal, { ModalHero } from '@/Components/Modal';
 import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
 import { CheckIcon } from '@/Components/icons/check';
@@ -226,33 +227,38 @@ export default function SmsLogListScreen({ messages, devices, filters, stats }: 
                 <form onSubmit={submit} className="pf-filter-bar" role="search">
                     <div className="pf-field">
                         <label htmlFor="status">Status</label>
-                        <select
+                        <PremiumSelect
                             id="status"
                             value={data.status}
-                            onChange={(e) => setData('status', e.target.value)}
-                        >
-                            <option value="">All</option>
-                            <option value="pending">Pending</option>
-                            <option value="claimed">Claimed</option>
-                            <option value="sent">Sent</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="failed">Failed</option>
-                            <option value="expired">Expired</option>
-                        </select>
+                            onChange={(value) => setData('status', value)}
+                            options={[
+                                { value: '', label: 'All' },
+                                { value: 'pending', label: 'Pending' },
+                                { value: 'claimed', label: 'Claimed' },
+                                { value: 'sent', label: 'Sent' },
+                                { value: 'delivered', label: 'Delivered' },
+                                { value: 'failed', label: 'Failed' },
+                                { value: 'expired', label: 'Expired' },
+                            ]}
+                            placeholder="All"
+                        />
                     </div>
 
                     <div className="pf-field">
                         <label htmlFor="device_id">Phone</label>
-                        <select
+                        <PremiumSelect
                             id="device_id"
                             value={data.device_id}
-                            onChange={(e) => setData('device_id', e.target.value)}
-                        >
-                            <option value="">All phones</option>
-                            {devices.map((device) => (
-                                <option key={device.id} value={device.id}>{device.label}</option>
-                            ))}
-                        </select>
+                            onChange={(value) => setData('device_id', value)}
+                            options={[
+                                { value: '', label: 'All phones' },
+                                ...devices.map((device) => ({
+                                    value: String(device.id),
+                                    label: device.label,
+                                })),
+                            ]}
+                            placeholder="All phones"
+                        />
                     </div>
 
                     <div className={'pf-field' + (phoneNumberError ? ' pf-field--error' : '')}>
