@@ -48,13 +48,15 @@ The product saves tap events locally first and syncs later — a conventional sy
 
 No confirmed external brand assets. Logo component exists (`StationLogo`) — treat as in-progress. Name is provisional.
 
-**Visual direction (user-confirmed, binding):** Slate shell — deep slate-900 to slate-700 gradient (`#0f172a → #1e293b → #334155`) — anchors the app chrome across all authenticated surfaces (platform, admin portal, kiosk-adjacent). Pattern: sidebar lives inside the slate shell as part of the background; white rounded content card (`border-radius: 28px`, right+vertical margin) floats on the slate. Pill-shaped nav links with white text; active state is a white pill with slate text. Topbar: frosted glass (`bg-white/90`, `backdrop-blur`). Glass shimmer effect on primary buttons (slate gradient). Design tokens defined as `--as-brand-*` CSS custom properties in `app.css`. Tailwind `station-*` color aliases mirror the same palette. This replaced the former electric-blue (`#2144c9`) world by user request on 2026-09-10.
+**Visual direction (user-confirmed, binding, as of 2026-09-16):** Royal blue system — brand blue `#234ef4` over a deep-navy brand scale (`--as-brand-dark: #071c44 → --as-brand: #0b2a5b → --as-brand-mid: #174a96`) — anchors the app chrome across all authenticated surfaces (platform, admin portal, kiosk-adjacent). Pattern: white/off-white content cards float on a light slate-tinted canvas (`--as-bg: #f1f5fb`); sidebar and topbar use frosted glass (`--as-sidebar-glass-bg`, `--as-topbar-bg`, `backdrop-blur`). Pill-shaped nav links; active state is a solid royal-blue pill with white text. Glass shimmer effect on primary buttons (royal-blue gradient). Full dark-mode support via a parallel `:root.dark` token set (toggle in the header/sidebar, persisted, defaults to OS preference until the user picks explicitly). Design tokens defined as `--as-*` CSS custom properties in `app.css`.
+
+Superseded history: a slate-shell direction (`#0f172a → #1e293b → #334155`, replacing an earlier electric-blue `#2144c9` world) was confirmed on 2026-09-10 (commit `ce205ea`) and DESIGN.md still describes that slate world. The royal-blue palette above returned five days later during `fe7e3bb` ("reconcile dashboard and navigation redesign"), apparently as a side effect of merging redesign branches rather than a deliberate re-decision — but the user confirmed on 2026-09-16 that royal blue is the current, intended direction, not a regression to revert. DESIGN.md is being regenerated from the current code to match.
 
 ## Evidence on Hand
 
 - Full Laravel + Inertia.js + React codebase with working routes, controllers, and pages.
 - Landing page copy describing capabilities and comparison with conventional attendance systems.
-- No design system documentation (DESIGN.md absent).
+- DESIGN.md exists but (until this pass) documented the superseded slate world rather than the current royal-blue implementation — see Brand Commitments.
 - No committed screenshots or visual regression fixtures.
 
 ## Product Principles
