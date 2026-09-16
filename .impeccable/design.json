@@ -1,56 +1,72 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-10T00:00:00Z",
+  "generatedAt": "2026-09-16T15:16:29Z",
   "title": "Design System: Adaptive Station",
   "extensions": {
     "colorMeta": {
-      "brand-dark":    { "role": "primary",  "displayName": "Abyss",       "canonical": "#0f172a", "tonalRamp": ["#020408","#0a1120","#0f172a","#1a2540","#1e293b","#334155","#475569","#64748b"] },
-      "brand":         { "role": "primary",  "displayName": "Gunmetal",    "canonical": "#1e293b", "tonalRamp": ["#0a1120","#0f172a","#1a2540","#1e293b","#2d3f55","#334155","#475569","#64748b"] },
-      "brand-mid":     { "role": "primary",  "displayName": "Slate Deck",  "canonical": "#334155", "tonalRamp": ["#1a2540","#1e293b","#2d3f55","#334155","#47576b","#475569","#64748b","#94a3b8"] },
-      "brand-muted":   { "role": "secondary","displayName": "Steel",       "canonical": "#475569", "tonalRamp": ["#1e293b","#334155","#3c4c61","#475569","#5a6a80","#64748b","#94a3b8","#cbd5e1"] },
-      "brand-light":   { "role": "secondary","displayName": "Ash",         "canonical": "#64748b", "tonalRamp": ["#334155","#475569","#5a6a80","#64748b","#7b8fa5","#94a3b8","#b8c4d0","#e2e8f0"] },
-      "surface-bg":    { "role": "neutral",  "displayName": "Canvas",      "canonical": "#f4f6f9", "tonalRamp": ["#cbd5e1","#e2e8f0","#eef1f6","#f1f5f9","#f4f6f9","#f8fafc","#fafcfe","#ffffff"] },
-      "surface":       { "role": "neutral",  "displayName": "White",       "canonical": "#ffffff", "tonalRamp": ["#e2e8f0","#f1f5f9","#f4f6f9","#f8fafc","#fafcfe","#ffffff","#ffffff","#ffffff"] },
-      "border":        { "role": "neutral",  "displayName": "Hairline",    "canonical": "#e2e8f0", "tonalRamp": ["#94a3b8","#b8c4d0","#cbd5e1","#dce4ee","#e2e8f0","#eef1f6","#f1f5f9","#f8fafc"] },
-      "text-primary":  { "role": "neutral",  "displayName": "Ink",         "canonical": "#0f172a", "tonalRamp": ["#020408","#0a1120","#0f172a","#1a2540","#1e293b","#334155","#475569","#64748b"] },
-      "text-body":     { "role": "neutral",  "displayName": "Graphite",    "canonical": "#334155", "tonalRamp": ["#1a2540","#1e293b","#2d3f55","#334155","#47576b","#475569","#64748b","#94a3b8"] },
-      "text-secondary":{ "role": "neutral",  "displayName": "Pewter",      "canonical": "#64748b", "tonalRamp": ["#334155","#475569","#5a6a80","#64748b","#7b8fa5","#94a3b8","#b8c4d0","#e2e8f0"] },
-      "text-muted":    { "role": "neutral",  "displayName": "Fog",         "canonical": "#94a3b8", "tonalRamp": ["#475569","#64748b","#7b8fa5","#94a3b8","#adb8c8","#cbd5e1","#e2e8f0","#f1f5f9"] },
-      "success":       { "role": "semantic", "displayName": "Emerald",     "canonical": "#1a8a4c", "tonalRamp": ["#0a4a28","#0f6637","#1a8a4c","#22a860","#2dc774","#53dea0","#a7f0c8","#e3f6ea"] },
-      "warning":       { "role": "semantic", "displayName": "Amber",       "canonical": "#c1791f", "tonalRamp": ["#6b4010","#8b5515","#c1791f","#d4892a","#e8a040","#f5c070","#fde0a0","#fdf1e0"] },
-      "danger":        { "role": "semantic", "displayName": "Crimson",     "canonical": "#dc2626", "tonalRamp": ["#7f1d1d","#991b1b","#b91c1c","#dc2626","#ef4444","#f87171","#fca5a5","#fef2f2"] },
-      "info":          { "role": "semantic", "displayName": "Steel-Info",  "canonical": "#475569", "tonalRamp": ["#1e293b","#334155","#3c4c61","#475569","#5a6a80","#64748b","#94a3b8","#f1f5f9"] }
+      "brand-blue": {
+        "role": "primary",
+        "displayName": "Royal Signal",
+        "canonical": "#234ef4",
+        "tonalRamp": ["#061347", "#0a2076", "#0d2da5", "#1139d4", "#2b53ee", "#5a79f2", "#97abf7", "#d9e0fc"]
+      },
+      "brand-dark": {
+        "role": "primary",
+        "displayName": "Deep Navy",
+        "canonical": "#071c44",
+        "tonalRamp": ["#071d45", "#0c3074", "#1143a2", "#1556d0", "#2f6fea", "#5d8fee", "#99b9f5", "#dae5fb"]
+      },
+      "success": {
+        "role": "status",
+        "displayName": "Confirmed Green",
+        "canonical": "#1a8a4c",
+        "tonalRamp": ["#0c4023", "#146b3b", "#1c9653", "#24c16a", "#3edb84", "#69e39f", "#a1edc3", "#ddf9e9"]
+      },
+      "warning": {
+        "role": "status",
+        "displayName": "Pending Amber",
+        "canonical": "#c1791f",
+        "tonalRamp": ["#42290b", "#6e4512", "#9a6019", "#c67c20", "#df9539", "#e6ad65", "#efcb9e", "#f9ecdc"]
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Alert Crimson",
+        "canonical": "#dc2626",
+        "tonalRamp": ["#420b0b", "#6e1212", "#9a1919", "#c62020", "#df3939", "#e66565", "#ef9e9e", "#f9dcdc"]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Pewter",
+        "canonical": "#64748b",
+        "tonalRamp": ["#20252c", "#353e4a", "#4b5768", "#606f85", "#7a899f", "#97a3b4", "#bec5d0", "#e7eaee"]
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "Auth page hero and landing section headlines. Tight tracking for visual compression at large scale." },
-      "headline": { "displayName": "Headline", "purpose": "Page-level headings inside content cards (People, RFID Cards, Stations, etc.)." },
-      "title":    { "displayName": "Title", "purpose": "Section titles within panels, modal headings." },
-      "body":     { "displayName": "Body", "purpose": "All paragraph, table cell, form field, and description text." },
-      "label":    { "displayName": "Label", "purpose": "Column headers, pill eyebrows, status tags, uppercase nav text. Positive tracking compensates for small size." },
-      "mono":     { "displayName": "Mono", "purpose": "API keys, integration tokens, import keys only. Never for general UI." }
+      "display": { "displayName": "Display", "purpose": "Landing-page and auth hero headlines only." },
+      "headline": { "displayName": "Headline", "purpose": "Page-level dashboard titles inside content cards." },
+      "title": { "displayName": "Title", "purpose": "Panel headers, modal titles, section titles." },
+      "body": { "displayName": "Body", "purpose": "Paragraph text, table cells, form fields, descriptions." },
+      "label": { "displayName": "Label", "purpose": "Field labels, column headers, status-pill text, kicker eyebrows." },
+      "mono": { "displayName": "Mono", "purpose": "Audit-log entity IDs and integration keys only." }
     },
     "shadows": [
-      { "name": "card-ambient",  "value": "0 8px 24px rgba(15,35,70,0.08)",      "purpose": "Default resting shadow on content cards floating above the shell." },
-      { "name": "card-hover",    "value": "0 12px 30px rgba(15,35,70,0.12)",     "purpose": "Hover lift on interactive cards." },
-      { "name": "panel-sm",      "value": "0 4px 12px -8px rgba(23,74,150,0.75)","purpose": "Structural inner shadow on form panels and sub-panels." },
-      { "name": "overlay",       "value": "0 20px 44px -20px rgba(15,35,70,0.55)","purpose": "Deep modal and drawer shadow." },
-      { "name": "deep",          "value": "0 18px 30px -22px rgba(7,28,68,0.82)", "purpose": "Auth card and device-mock maximum presence." },
-      { "name": "button-glow",   "value": "0 8px 20px -8px rgba(71,85,105,0.45)", "purpose": "Diffuse halo under primary/danger buttons on dark backgrounds." }
+      { "name": "card", "value": "0 8px 24px -4px rgba(10, 27, 115, 0.12)", "purpose": "Default resting shadow under panels and content cards. Dark: 0 8px 24px rgba(0,0,0,0.45)." },
+      { "name": "card-hover", "value": "0 12px 30px rgba(15, 35, 70, 0.12)", "purpose": "Interactive card lift on hover. Dark: rgba(0,0,0,0.55)." },
+      { "name": "sm", "value": "0 4px 12px -8px rgba(23, 74, 150, 0.75)", "purpose": "Tighter structural shadow for sub-panels and compact controls. Dark: rgba(0,0,0,0.6)." },
+      { "name": "overlay", "value": "0 20px 44px -20px rgba(15, 35, 70, 0.55)", "purpose": "Modals, drawers, dropdowns. Dark: rgba(0,0,0,0.7)." },
+      { "name": "deep", "value": "0 18px 30px -22px rgba(7, 28, 68, 0.82)", "purpose": "Auth card, reader-mock components — maximum presence. Dark: rgba(0,0,0,0.8)." }
     ],
     "motion": [
-      { "name": "ease-out",    "value": "cubic-bezier(0.23, 1, 0.32, 1)",    "purpose": "Standard easing for UI transitions (button, panel, accordion)." },
-      { "name": "ease-in-out", "value": "cubic-bezier(0.77, 0, 0.175, 1)",  "purpose": "Drawer and modal entry/exit." },
-      { "name": "ease-drawer", "value": "cubic-bezier(0.32, 0.72, 0, 1)",   "purpose": "Sidebar collapse and mobile drawer slide." },
-      { "name": "duration-fast","value": "100ms", "purpose": "Tactile press (scale). Instant feedback." },
-      { "name": "duration-std", "value": "160ms", "purpose": "Button hover, filter transition." },
-      { "name": "duration-slow","value": "260ms", "purpose": "Panel expand, content fade-in." }
+      { "name": "ease-out", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Default easing for nearly all transitions and hover lifts." },
+      { "name": "ease-drawer", "value": "cubic-bezier(0.32, 0.72, 0, 1)", "purpose": "Sidebar drawer slide-in/out." },
+      { "name": "tactile-press", "value": "transform: scale(0.97) on :active, 160ms cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Every button and pressable control gets this same press feedback." },
+      { "name": "theme-transition", "value": "View Transitions API cross-fade (~280ms), falling back to a 260ms color transition on unsupported browsers", "purpose": "Dark/light toggle — see Components/Theme/ThemeProvider.tsx." }
     ],
     "breakpoints": [
-      { "name": "sm",  "value": "640px" },
-      { "name": "md",  "value": "768px" },
-      { "name": "lg",  "value": "1024px" },
-      { "name": "xl",  "value": "1280px" },
-      { "name": "2xl", "value": "1536px" }
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
     ]
   },
   "components": [
@@ -58,94 +74,94 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Single primary action per form. Slate gradient, glass shimmer, tactile press.",
-      "html": "<button class=\"ds-btn-primary\">Save Changes</button>",
-      "css": ".ds-btn-primary { position: relative; overflow: hidden; isolation: isolate; display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.24); background: linear-gradient(180deg, #64748b 0%, #475569 50%, #334155 100%); color: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; line-height: 1; cursor: pointer; box-shadow: inset 0 1px 1px 0 rgba(255,255,255,0.42), inset 0 -1px 1px 0 rgba(0,0,0,0.14), 0 8px 20px -8px rgba(71,85,105,0.45); transition: transform 160ms cubic-bezier(0.23,1,0.32,1), filter 160ms cubic-bezier(0.23,1,0.32,1); } .ds-btn-primary::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.06) 45%, rgba(255,255,255,0) 100%); pointer-events: none; z-index: 1; } .ds-btn-primary:hover { transform: translateY(-1px); filter: brightness(1.08); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #475569; }"
+      "description": "The single primary action in a panel — royal-blue gradient with glass shimmer and tactile press.",
+      "html": "<button class=\"ds-btn-primary\">Save changes</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 42px; padding: 0 20px; border: 1px solid rgba(255,255,255,0.16); border-radius: 999px; background: linear-gradient(180deg, #5b7cee 0%, #3e66ea 50%, #2247cc 100%); color: #fff; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: inset 0 1px 1px rgba(255,255,255,0.45), 0 10px 24px -4px rgba(35,78,225,0.42), 0 4px 10px -2px rgba(35,78,225,0.25); transition: transform 200ms cubic-bezier(0.23,1,0.32,1), filter 200ms cubic-bezier(0.23,1,0.32,1); } .ds-btn-primary:hover { filter: brightness(1.05); transform: translateY(-1px); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #234ef4; }"
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Cancel, navigate-back actions on white surfaces. White glass with border.",
+      "description": "Cancel / navigate-back actions — translucent white glass with a top-sheen highlight.",
       "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
-      "css": ".ds-btn-secondary { position: relative; overflow: hidden; isolation: isolate; display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; border: 1px solid rgba(226,232,240,0.9); background: rgba(255,255,255,0.85); color: #334155; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; line-height: 1; cursor: pointer; box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.95), inset 0 -1px 0 0 rgba(0,0,0,0.04), 0 1px 2px 0 rgba(0,0,0,0.05); transition: transform 160ms cubic-bezier(0.23,1,0.32,1), border-color 160ms ease, filter 160ms ease; } .ds-btn-secondary:hover { transform: translateY(-1px); border-color: #cbd5e1; filter: brightness(0.98); } .ds-btn-secondary:active { transform: scale(0.97); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #94a3b8; }"
+      "css": ".ds-btn-secondary { position: relative; overflow: hidden; height: 42px; padding: 0 20px; border: 1px solid rgba(226,232,240,0.9); border-radius: 999px; background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); color: #1e293b; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.95), 0 1px 2px 0 rgba(0,0,0,0.05); transition: transform 200ms cubic-bezier(0.23,1,0.32,1), background-color 160ms ease; } .ds-btn-secondary:hover { background: #f1f5f9; color: #0f172a; transform: translateY(-1px); } .ds-btn-secondary:active { transform: scale(0.97); }"
     },
     {
-      "name": "Danger Button",
-      "kind": "button",
-      "refersTo": "button-danger",
-      "description": "Irreversible destructive actions only — deactivate, delete, revoke.",
-      "html": "<button class=\"ds-btn-danger\">Deactivate</button>",
-      "css": ".ds-btn-danger { position: relative; overflow: hidden; isolation: isolate; display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25); background: linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%); color: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; line-height: 1; cursor: pointer; box-shadow: inset 0 1px 1px 0 rgba(255,255,255,0.42), inset 0 -1px 1px 0 rgba(0,0,0,0.15), 0 1px 2px 0 rgba(220,38,38,0.12); transition: transform 160ms cubic-bezier(0.23,1,0.32,1), filter 160ms cubic-bezier(0.23,1,0.32,1); } .ds-btn-danger::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0) 100%); pointer-events: none; z-index: 1; } .ds-btn-danger:hover { transform: translateY(-1px); filter: brightness(1.06); } .ds-btn-danger:active { transform: scale(0.97); } .ds-btn-danger:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #dc2626; }"
-    },
-    {
-      "name": "Text Input",
-      "kind": "input",
-      "refersTo": "button-secondary",
-      "description": "Standard text / search input. Rounded, subtle focus ring.",
-      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\">STUDENT NAME</label><input class=\"ds-input\" type=\"text\" placeholder=\"Search…\" /></div>",
-      "css": ".ds-field { display: flex; flex-direction: column; gap: 8px; } .ds-field-label { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: #334155; } .ds-input { width: 100%; box-sizing: border-box; padding: 14px 16px; border-radius: 16px; border: 1px solid #e2e8f0; background: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 400; color: #0f172a; outline: none; transition: border-color 160ms ease, box-shadow 160ms ease; } .ds-input::placeholder { color: #94a3b8; } .ds-input:focus { border-color: #cbd5e1; box-shadow: 0 0 0 4px rgba(71,85,105,0.11); }"
-    },
-    {
-      "name": "Status Badge",
+      "name": "Status Pill — Success",
       "kind": "chip",
-      "refersTo": "button-secondary",
-      "description": "Pill label conveying system state. Colour is semantic — never decorative.",
-      "html": "<span class=\"ds-badge ds-badge--success\">Present</span><span class=\"ds-badge ds-badge--warning\">Late</span><span class=\"ds-badge ds-badge--danger\">Absent</span><span class=\"ds-badge ds-badge--info\">Inactive</span>",
-      "css": ".ds-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; } .ds-badge--success { color: #1a8a4c; background: #e3f6ea; } .ds-badge--warning { color: #c1791f; background: #fdf1e0; } .ds-badge--danger { color: #dc2626; background: #fef2f2; } .ds-badge--info { color: #475569; background: #f1f5f9; }"
+      "refersTo": "status-pill",
+      "description": "Present/active/confirmed status. Dark mode uses a translucent tint, not a carried-over solid pastel.",
+      "html": "<span class=\"ds-pill ds-pill--success\">Active</span>",
+      "css": ".ds-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-family: Inter, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.02em; text-transform: capitalize; } .ds-pill--success { background: #e3f6ea; color: #1a8a4c; }"
     },
     {
-      "name": "Content Panel",
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field-input",
+      "description": "Standard labeled input — 12px radius, focus ring in brand blue.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-name\">School name</label><input id=\"ds-name\" class=\"ds-field-input\" type=\"text\" placeholder=\"e.g. Pilgrim Christian College\" /></div>",
+      "css": ".ds-field-label { display: block; margin-bottom: 7px; color: #1e293b; font-family: Inter, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; } .ds-field-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; color: #0f172a; font-family: Inter, sans-serif; font-size: 13px; transition: border-color 160ms ease, box-shadow 160ms ease; } .ds-field-input::placeholder { color: #94a3b8; } .ds-field-input:focus { outline: none; border-color: #234ef4; box-shadow: 0 0 0 4px rgba(35,78,244,0.12); }"
+    },
+    {
+      "name": "Content Card",
       "kind": "card",
-      "refersTo": "button-secondary",
-      "description": "Main content container floating on the slate shell. White card, large radius, ambient shadow.",
-      "html": "<div class=\"ds-panel\"><h2 class=\"ds-panel-title\">People</h2><p class=\"ds-panel-body\">Manage student and staff records, RFID card assignments, and attendance history.</p></div>",
-      "css": ".ds-panel { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 24px; box-shadow: 0 8px 24px rgba(15,35,70,0.08); } .ds-panel-title { margin: 0 0 8px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: #0f172a; } .ds-panel-body { margin: 0; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 400; color: #334155; line-height: 1.5; }"
+      "refersTo": "card",
+      "description": "The system's signature 28px-radius floating white surface with a navy-tinted ambient shadow.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">All Clients</h3><p class=\"ds-card-body\">12 of 48 schools shown.</p></div>",
+      "css": ".ds-card { border-radius: 24px; border: 1px solid #e2e8f0; background: #ffffff; box-shadow: 0 8px 24px -4px rgba(10,27,115,0.12); padding: 24px; } .ds-card-title { margin: 0 0 6px; color: #0f172a; font-family: 'Plus Jakarta Sans', Inter, sans-serif; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; } .ds-card-body { margin: 0; color: #334155; font-family: Inter, sans-serif; font-size: 13px; line-height: 1.5; }"
     },
     {
-      "name": "Navigation Sidebar",
+      "name": "Sidebar Nav Link",
       "kind": "nav",
-      "refersTo": "button-secondary",
-      "description": "Slate gradient sidebar with pill nav links. Active state inverts to white pill with slate text.",
-      "html": "<nav class=\"ds-sidebar\"><a class=\"ds-nav-link ds-nav-link--active\" href=\"#\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M23 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/></svg>People</a><a class=\"ds-nav-link\" href=\"#\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"5\" width=\"20\" height=\"14\" rx=\"2\"/><line x1=\"2\" y1=\"10\" x2=\"22\" y2=\"10\"/></svg>RFID Cards</a></nav>",
-      "css": ".ds-sidebar { display: flex; flex-direction: column; gap: 2px; padding: 8px; background: linear-gradient(145deg, #0f172a 0%, #1e293b 42%, #334155 100%); height: 100%; } .ds-nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.70); text-decoration: none; transition: background 160ms ease, color 160ms ease; } .ds-nav-link:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.90); } .ds-nav-link--active { background: #ffffff; color: #1e293b; box-shadow: inset 0 1px 2px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.22); }"
+      "refersTo": "nav-link",
+      "description": "Pill-shaped nav link; active state is a solid royal-blue pill (a Solid Badge Exception — stays vivid in both themes).",
+      "html": "<a class=\"ds-nav-link ds-nav-link--active\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\"/></svg><span>Dashboard</span></a>",
+      "css": ".ds-nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 999px; color: rgba(30,41,59,0.7); font-family: Inter, sans-serif; font-size: 13px; font-weight: 600; text-decoration: none; transition: background-color 150ms ease, color 150ms ease; } .ds-nav-link:hover { background: #edf3fc; } .ds-nav-link--active { background: #234ef4; color: #ffffff; }"
+    },
+    {
+      "name": "Modal Hero Header",
+      "kind": "custom",
+      "refersTo": "modal-hero",
+      "description": "Signature modal header: tinted icon chip (solid-badge exception) + title + subtitle + close control.",
+      "html": "<div class=\"ds-modal-header\"><div class=\"ds-modal-hero\"><span class=\"ds-modal-icon\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 10v6M2 10l10-5 10 5-10 5-10-5Z\"/><path d=\"M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5\"/></svg></span><div><h3 class=\"ds-modal-title\">Add Client</h3><p class=\"ds-modal-subtitle\">Provisions a new school workspace with its own database.</p></div></div><button class=\"ds-modal-close\" aria-label=\"Close\">&times;</button></div>",
+      "css": ".ds-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; } .ds-modal-hero { display: flex; align-items: flex-start; gap: 14px; } .ds-modal-icon { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; border-radius: 14px; background: linear-gradient(135deg, #eef2ff 0%, #dbe4ff 100%); color: #234ef4; border: 1px solid #dbe4ff; } .ds-modal-title { margin: 0; color: #071c44; font-family: 'Plus Jakarta Sans', Inter, sans-serif; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; } .ds-modal-subtitle { margin: 4px 0 0; color: #64748b; font-family: Inter, sans-serif; font-size: 13px; line-height: 1.5; } .ds-modal-close { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid #e2e8f0; border-radius: 999px; background: #ffffff; color: #64748b; cursor: pointer; } .ds-modal-close:hover { background: #f8faff; color: #223047; }"
     }
   ],
   "narrative": {
-    "northStar": "The Granite Ledger",
-    "overview": "Adaptive Station's visual language is institutional and earned — a slate-and-white system that communicates permanence, precision, and low ceremony. The shell is a deep slate gradient (slate-900 to slate-700: #0f172a → #1e293b → #334155), giving the interface architectural weight without vibration. White content cards with large radii float inside this shell with visible breathing room, creating a clear signal hierarchy: chrome lives in the dark; work lives in the white.\n\nEvery decision optimises for the daily operator: the school registrar who opens the portal at 7 AM and works through the same eight flows every day. Nothing in the system bids for attention unless it has news to deliver. Colour is reserved for status (green, amber, red) and confirmation (gradient primary buttons). At rest, the interface is almost achromatic — slate text on white card — and only state and status are coloured.\n\nThe tactile press animation (subtle scale(0.97) on active) and glass shimmer on buttons give the system its one indulgence: a sense that every button click has physical weight. Everything else is restrained.",
+    "northStar": "The Royal Ledger",
+    "overview": "Adaptive Station's visual language is an administrative ledger with a confident, saturated signature: royal blue (#234ef4) is the identity color, but it appears with discipline — reserved for the shell's glass surfaces, primary actions, and active states, never spread thin across the page. Content lives on near-white, faintly blue-tinted surfaces with soft, deep-navy ambient shadows rather than pure black — every shadow in the system carries a trace of the brand color, so even the negative space feels branded.\n\nThe system runs a genuine two-mode life: a light \"ledger\" mode (white cards, blue accents, navy text) and a full dark mode that inverts every surface to a deep navy-black while keeping royal blue as the through-line — it just brightens rather than staying identical, so it reads correctly against a dark canvas instead of vibrating. The theme follows the visitor's OS preference until they make an explicit choice, then persists and syncs across tabs.\n\nEvery decision optimises for the daily operator. Status color appears only when the system has something to report; at rest, the interface is blue-and-white with confident navy text. The tactile press and glass-shimmer sheen on primary/danger buttons give the system its one indulgence: every click has physical weight.",
     "keyCharacteristics": [
-      "Deep slate shell with floating white content cards",
-      "Status-only colour; palette is near-achromatic at rest",
-      "Plus Jakarta Sans throughout — geometric, contemporary, optimistic",
-      "Glass shimmer on dark-background buttons; flat/bordered on light surfaces",
-      "Tactile press on every interactive element",
-      "Pill navigation links; pill badges; soft-radius inputs and panels"
+      "Royal-blue glass shell (sidebar + topbar) around white, blue-tinted content surfaces",
+      "Full parallel dark-mode token set — not an afterthought, a first-class second state",
+      "Status-only saturated color; the blue is identity, not decoration",
+      "Plus Jakarta Sans for display/headings, Inter for body and UI text, JetBrains Mono for codes/IDs",
+      "Glass shimmer + tactile press on every button; pill shapes for buttons, nav links, and badges",
+      "Ambient shadows tinted navy-blue, never neutral gray"
     ],
     "rules": [
-      { "name": "The Status-Only Colour Rule", "body": "Saturated hue (green, amber, red) appears only when the system is communicating state — success, warning, error, deactivation. Never use a status colour decoratively.", "section": "colors" },
-      { "name": "The One Brand Rule", "body": "The slate gradient lives in the shell. Inside content cards, brand presence is reduced to text weights and subtle borders — never a tinted background, never a brand-coloured CTA that isn't the primary action.", "section": "colors" },
-      { "name": "The Weight Hierarchy Rule", "body": "700 for structural elements (headings, labels, buttons), 600 for supporting data, 400/500 for reading text. Never use 300 or lighter anywhere in the portal.", "section": "typography" },
-      { "name": "The Tight-Tracking Display Rule", "body": "letter-spacing: -0.04em or tighter only above 20px. Below that, tracking stays neutral or slightly positive.", "section": "typography" },
-      { "name": "The Depth By Shell Rule", "body": "The shell's dark colour creates the primary depth illusion — content cards appear elevated simply by contrast. Shadows reinforce structure, not height.", "section": "elevation" },
-      { "name": "The State-Responsive Shadow Rule", "body": "Shadows increase only in response to hover or modal state. Resting surfaces are flat or near-flat.", "section": "elevation" },
-      { "name": "The No-Hard-Corner Rule", "body": "No element in the authenticated portal uses border-radius: 0 or border-radius: 4px. Pill shape is the system's identity.", "section": "shapes" }
+      { "name": "The Translucent Dark Rule", "body": "Every status/pastel background that has to work in dark mode becomes a translucent rgba tint over the dark canvas, never a solid pastel carried over unchanged from light mode.", "section": "colors" },
+      { "name": "The Manual Toggle Rule", "body": "Dark mode is driven exclusively by the `.dark` class the user's explicit toggle applies to `<html>`, never by a parallel `@media (prefers-color-scheme: dark)` block.", "section": "colors" },
+      { "name": "The Solid Badge Exception", "body": "A small set of tokens are deliberately fixed and do not flip in dark mode: solid navy/colored icon chips and badges paired with a hardcoded white foreground.", "section": "colors" },
+      { "name": "The Two-Font Split Rule", "body": "Plus Jakarta Sans is reserved for headings and hero/display moments; Inter carries everything else.", "section": "typography" },
+      { "name": "The Tinted Shadow Rule", "body": "Shadows in light mode are always navy-tinted rgba, never neutral black. Dark mode is the one deliberate exception — shadows there go to true black.", "section": "elevation" },
+      { "name": "The State-Responsive Shadow Rule", "body": "Shadow intensity increases only in response to hover or modal/overlay state. A resting surface's shadow is ambient and unchanging.", "section": "elevation" },
+      { "name": "The No-Hard-Corner Rule", "body": "No visible component uses border-radius: 0 or a value below 12px.", "section": "shapes" }
     ],
     "dos": [
       "Do use pf-btn-primary for one primary action per panel.",
-      "Do apply pf-btn--loading class during async operations.",
-      "Do use the --as-* CSS custom properties when adding new components; never hard-code hex values that duplicate a token.",
-      "Do use border-radius: 999px for all buttons, nav links, and badges.",
-      "Do keep saturated colour for status only.",
-      "Do pair glass shimmer with dark-background buttons only (primary, danger)."
+      "Do use the --as-* CSS custom properties for anything color-related; never hard-code a hex value that duplicates a token — and never redeclare the same property with a hardcoded literal after the token version in the same rule.",
+      "Do gate any dark-mode-specific style behind the .dark class, never @media (prefers-color-scheme: dark).",
+      "Do use border-radius: 999px for all buttons, nav links, badges, and pills.",
+      "Do keep saturated status color reserved for actual status communication.",
+      "Do tint shadows with brand navy in light mode; switch to true-black rgba only in dark mode."
     ],
     "donts": [
-      "Don't use border-radius: 0 or values below 8px on any visible component.",
-      "Don't introduce a new brand colour outside the slate-900 → slate-500 ramp without explicit design decision.",
-      "Don't add a shadow to a panel or card that is already sitting inside the dark shell.",
-      "Don't use the PrimaryButton or SecondaryButton Tailwind components from resources/js/Components/ in portal screens.",
-      "Don't place status colour on decorative elements, headings, or link text.",
-      "Don't use <form className=\"pf-modal\"> as a layout wrapper — pf-modal wraps the overlay element, not the form."
+      "Don't use border-radius below 12px on any visible component.",
+      "Don't introduce a new accent color outside the royal-blue + status palette without an explicit design decision.",
+      "Don't carry a light-mode pastel status/chip background into dark mode unchanged.",
+      "Don't use the PrimaryButton/SecondaryButton Tailwind components from resources/js/Components/ in portal screens.",
+      "Don't place status color on decorative elements, headings, or link text.",
+      "Don't skip the pf-modal-header/ModalHero structure in modal forms."
     ]
   }
 }
