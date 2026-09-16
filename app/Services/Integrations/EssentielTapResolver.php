@@ -50,6 +50,26 @@ class EssentielTapResolver
 
         $personId = $event->person_id ?? $this->resolveOrCreateLocalPerson($tenant->id, $event->card_uid, $response);
 
+        Log::info('essentiel tap lookup: photo fields in response.', [
+            'tenant_id' => $tenant->id,
+            'tap_event_id' => $event->id,
+            'card_uid' => $event->card_uid,
+            'person_id' => $personId,
+            'photo_url' => $response['person']['photo_url'] ?? null,
+            'photo_path' => $response['person']['photo_path'] ?? null,
+            'person_keys' => $response['person'] !== null ? array_keys($response['person']) : null,
+        ]);
+
+        // Keeps the local Person's photo in step with essentiel's own —
+        // covers both a card resolved for the very first time above and one
+        // that already had a local Person row from before essentiel started
+        // returning photos (or before this one changed), so the kiosk's tap
+        // display and its offline cache both get a photo without waiting on
+        // a portal-side edit.
+        if ($personId !== null) {
+            $this->syncPersonPhoto($personId, $response['person'] ?? null);
+        }
+
         // The tap is initially stored before Essentiel resolves a card that
         // is missing from the kiosk's local cache. Backfill the resolved
         // identity so portal attendance can recognize the very first tap,
@@ -93,6 +113,23 @@ class EssentielTapResolver
             'person' => $response['person'] ?? null,
             'tapstate' => $response['tap']['tapstate'] ?? null,
         ];
+    }
+
+    protected function syncPersonPhoto(string $personId, ?array $personData): void
+    {
+        $photoUrl = $personData['photo_url'] ?? $personData['photo_path'] ?? null;
+
+        if ($photoUrl === null) {
+            return;
+        }
+
+        $person = Person::allTenants()->find($personId);
+
+        if ($person === null || $person->photo_url === $photoUrl) {
+            return;
+        }
+
+        Person::updateDetails($person, ['photo_url' => $photoUrl]);
     }
 
     /**

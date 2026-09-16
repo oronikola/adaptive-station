@@ -119,6 +119,8 @@ export interface ResolveTapPerson {
     type?: string;
     name?: ResolveTapPersonName;
     level?: { id?: number; name?: string | null } | null;
+    photo_url?: string | null;
+    photo_path?: string | null;
 }
 
 export interface ResolveTapResponse {

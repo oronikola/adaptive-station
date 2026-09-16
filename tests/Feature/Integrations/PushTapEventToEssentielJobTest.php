@@ -141,6 +141,52 @@ class PushTapEventToEssentielJobTest extends TestCase
         $this->assertSame($person->id, $sms->person_id);
     }
 
+    public function test_a_new_auto_provisioned_person_gets_its_photo_from_essentiel(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $event = $this->seedTapEvent($tenant);
+        $this->makeProfile($tenant, $admin);
+        $this->fakeRecordResponse(['person' => [
+            'type' => 'student', 'utype' => 7, 'id' => 4657,
+            'name' => ['first' => 'IVAN', 'middle' => null, 'last' => 'MASTER', 'full' => 'IVAN MASTER'],
+            'level' => ['id' => 1, 'name' => 'GRADE 1'],
+            'photo_url' => 'https://app-hcb.essentiel.test/photos/4657.jpg',
+        ]]);
+
+        (new PushTapEventToEssentielJob($tenant->id, $event->id))->handle(app(EssentielTapResolver::class));
+
+        $person = Person::allTenants()->where('tenant_id', $tenant->id)
+            ->where('source_system', EssentielTapResolver::SOURCE_SYSTEM)
+            ->where('source_record_id', '4657')
+            ->sole();
+        $this->assertSame('https://app-hcb.essentiel.test/photos/4657.jpg', $person->photo_url);
+    }
+
+    /**
+     * A person auto-provisioned before essentiel started returning photos
+     * (or before this one changed) must not be stuck without one forever —
+     * every later tap opportunistically backfills it.
+     */
+    public function test_an_existing_person_without_a_photo_is_backfilled_from_essentiel(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $person = Person::factory()->for($tenant)->create(['photo_url' => null]);
+        $event = $this->seedTapEvent($tenant, $person);
+        $this->makeProfile($tenant, $admin);
+        $this->fakeRecordResponse(['person' => [
+            'type' => 'student', 'utype' => 7, 'id' => 4657,
+            'name' => ['first' => 'IVAN', 'middle' => null, 'last' => 'MASTER', 'full' => 'IVAN MASTER'],
+            'level' => ['id' => 1, 'name' => 'GRADE 1'],
+            'photo_url' => 'https://app-hcb.essentiel.test/photos/4657.jpg',
+        ]]);
+
+        (new PushTapEventToEssentielJob($tenant->id, $event->id))->handle(app(EssentielTapResolver::class));
+
+        $this->assertSame('https://app-hcb.essentiel.test/photos/4657.jpg', $person->fresh()->photo_url);
+    }
+
     /** Two taps of the same still-unregistered card must not create two people. */
     public function test_a_second_tap_of_the_same_unrecognized_card_does_not_duplicate_the_person(): void
     {

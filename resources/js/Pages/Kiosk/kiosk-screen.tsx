@@ -82,6 +82,15 @@ interface TapResult {
     photoUrl?: string | null;
 }
 
+/** Avatar fallback when a person has no photo synced — first + last initials read far better at kiosk viewing distance than a generic person icon. */
+function getInitials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
+    return (first + last).toUpperCase();
+}
+
 function speak(text: string) {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     try {
@@ -351,16 +360,17 @@ export default function KioskScreen({
 
         const now = new Date();
         // No local tap history exists for a card the kiosk has never seen,
-        // so there is nothing to toggle from — this is necessarily its
-        // first-ever local IN.
-        const eventType: TapEventType = 'IN';
+        // so this is submitted as its first-ever local IN — the resolver
+        // (essentiel, for a configured tenant) determines the real IN/OUT
+        // state server-side and reports it back via `tapstate` below.
+        const requestEventType: TapEventType = 'IN';
 
         let response: ResolveTapResponse;
         try {
             response = await resolveTap({
                 id: generateEventId(),
                 card_uid: cardUid,
-                event_type: eventType,
+                event_type: requestEventType,
                 occurred_at: now.toISOString(),
                 occurred_offset_minutes: -now.getTimezoneOffset(),
             });
@@ -385,6 +395,11 @@ export default function KioskScreen({
             [response.person?.name?.first, response.person?.name?.last].filter(Boolean).join(' ') ||
             'Student';
 
+        // essentiel reports '0' for an OUT tap, anything else for IN — see
+        // EssentielTapResolver::formatSmsMessage() for the same convention.
+        const eventType: TapEventType = response.tapstate === '0' ? 'OUT' : 'IN';
+        const photoUrl = response.person?.photo_url ?? response.person?.photo_path ?? null;
+
         // Cache it locally now, so this same card's *next* tap resolves the
         // ordinary instant, offline-capable way — see @/kiosk/db.
         await upsertPerson({
@@ -394,7 +409,7 @@ export default function KioskScreen({
             display_name: displayName,
             grade_level: response.person?.level?.name ?? null,
             section: null,
-            photo_url: null,
+            photo_url: photoUrl,
             is_active: true,
             metadata: null,
             updated_at: now.toISOString(),
@@ -402,8 +417,13 @@ export default function KioskScreen({
         await upsertCard({ card_uid: cardUid, id: cardUid, person_id: response.person_id, is_active: true });
         await setLastTap({ person_id: response.person_id, event_type: eventType, at: now.toISOString() });
 
-        speak(`${displayName}, checked in.`);
-        showResult({ kind: 'success', title: displayName, subtitle: 'Checked In' });
+        speak(`${displayName}, checked ${eventType === 'IN' ? 'in' : 'out'}.`);
+        showResult({
+            kind: 'success',
+            title: displayName,
+            subtitle: eventType === 'IN' ? 'Checked In' : 'Checked Out',
+            photoUrl,
+        });
     }
 
     async function handleTapSubmit(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -770,48 +790,121 @@ export default function KioskScreen({
                                 key={result.title + result.kind}
                                 className="kiosk-fade-in"
                                 style={{
-                                    width: 'min(480px, 100%)',
-                                    padding: '40px 36px',
-                                    borderRadius: 28,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    width: 'min(500px, 100%)',
+                                    padding: '52px 44px 44px',
+                                    borderRadius: 32,
                                     background: theme.bg,
+                                    backdropFilter: 'blur(12px)',
                                     border: `1px solid ${theme.border}`,
                                     boxShadow: `0 0 0 1px rgba(255,255,255,.03), 0 30px 70px -25px ${theme.glow}`,
                                 }}
                             >
-                                <div
-                                    style={{
-                                        width: 68,
-                                        height: 68,
-                                        margin: '0 auto 20px',
-                                        borderRadius: '50%',
-                                        display: 'grid',
-                                        placeItems: 'center',
-                                        color: theme.fg,
-                                        background: 'rgba(255,255,255,.06)',
-                                        border: `1px solid ${theme.border}`,
-                                    }}
-                                >
-                                    {result.kind === 'success' && <CheckIcon size={30} />}
-                                    {(result.kind === 'duplicate' || result.kind === 'checking') && <ClockIcon size={30} />}
-                                    {result.kind === 'error' && <BadgeAlertIcon size={30} />}
-                                </div>
-
-                                {result.photoUrl && (
-                                    <img
-                                        src={result.photoUrl}
-                                        alt=""
+                                {/* Avatar: photo when known, initials when not, a
+                                    small status badge overlapping its edge either
+                                    way — the photo/name is the focal point, the
+                                    icon is a secondary confirmation, not the star. */}
+                                <div style={{ position: 'relative', width: 128, height: 128, marginBottom: 28 }}>
+                                    <div
+                                        aria-hidden="true"
                                         style={{
-                                            width: 88,
-                                            height: 88,
+                                            position: 'absolute',
+                                            inset: -14,
                                             borderRadius: '50%',
-                                            objectFit: 'cover',
-                                            margin: '0 auto 18px',
-                                            display: 'block',
-                                            border: `3px solid ${theme.border}`,
+                                            background: `radial-gradient(circle, ${theme.glow} 0%, transparent 70%)`,
                                         }}
                                     />
-                                )}
-                                <h2 style={{ margin: '0 0 10px', fontSize: 30, fontWeight: 800, letterSpacing: '-.01em' }}>
+                                    {result.kind === 'checking' ? (
+                                        <div
+                                            style={{
+                                                position: 'relative',
+                                                width: '100%',
+                                                height: '100%',
+                                                borderRadius: '50%',
+                                                display: 'grid',
+                                                placeItems: 'center',
+                                                background: 'rgba(255,255,255,.06)',
+                                                border: `2px solid ${theme.border}`,
+                                            }}
+                                        >
+                                            <span className="kiosk-spinner" style={{ width: 32, height: 32, borderWidth: 3 }} />
+                                        </div>
+                                    ) : result.photoUrl ? (
+                                        <img
+                                            src={result.photoUrl}
+                                            alt=""
+                                            style={{
+                                                position: 'relative',
+                                                width: '100%',
+                                                height: '100%',
+                                                borderRadius: '50%',
+                                                objectFit: 'cover',
+                                                display: 'block',
+                                                border: `3px solid ${theme.border}`,
+                                                boxShadow: '0 8px 24px -8px rgba(0,0,0,.5)',
+                                            }}
+                                        />
+                                    ) : (
+                                        <div
+                                            style={{
+                                                position: 'relative',
+                                                width: '100%',
+                                                height: '100%',
+                                                borderRadius: '50%',
+                                                display: 'grid',
+                                                placeItems: 'center',
+                                                background: 'rgba(255,255,255,.06)',
+                                                border: `3px solid ${theme.border}`,
+                                                color: theme.fg,
+                                                fontSize: 40,
+                                                fontWeight: 800,
+                                                letterSpacing: '.02em',
+                                            }}
+                                        >
+                                            {result.kind === 'error' ? <BadgeAlertIcon size={44} /> : getInitials(result.title)}
+                                        </div>
+                                    )}
+
+                                    {result.kind !== 'checking' && (
+                                        <div
+                                            aria-hidden="true"
+                                            style={{
+                                                position: 'absolute',
+                                                bottom: -2,
+                                                right: -2,
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: '50%',
+                                                display: 'grid',
+                                                placeItems: 'center',
+                                                background: '#0b1220',
+                                                border: `3px solid ${theme.border}`,
+                                                color: theme.fg,
+                                                boxShadow: '0 4px 14px -4px rgba(0,0,0,.6)',
+                                            }}
+                                        >
+                                            {result.kind === 'success' && <CheckIcon size={18} />}
+                                            {result.kind === 'duplicate' && <ClockIcon size={18} />}
+                                            {result.kind === 'error' && <BadgeAlertIcon size={18} />}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <h2
+                                    style={{
+                                        margin: '0 0 14px',
+                                        maxWidth: '100%',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        fontSize: 30,
+                                        fontWeight: 800,
+                                        letterSpacing: '-.01em',
+                                        lineHeight: 1.2,
+                                    }}
+                                >
                                     {result.title}
                                 </h2>
                                 {result.subtitle && (
@@ -821,12 +914,15 @@ export default function KioskScreen({
                                             alignItems: 'center',
                                             gap: 6,
                                             margin: 0,
-                                            padding: '6px 16px',
+                                            padding: '8px 20px',
+                                            maxWidth: '100%',
                                             borderRadius: 999,
                                             background: 'rgba(255,255,255,.07)',
                                             color: theme.fg,
                                             fontSize: 14.5,
                                             fontWeight: 700,
+                                            lineHeight: 1.4,
+                                            textWrap: 'balance',
                                         }}
                                     >
                                         {result.subtitle}
@@ -840,8 +936,8 @@ export default function KioskScreen({
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
-                                    width: 'min(480px, 100%)',
-                                    padding: '52px 40px',
+                                    width: 'min(500px, 100%)',
+                                    padding: '56px 44px',
                                     borderRadius: 32,
                                     background: 'rgba(255,255,255,.035)',
                                     backdropFilter: 'blur(12px)',
@@ -882,7 +978,7 @@ export default function KioskScreen({
                                 >
                                     Tap your card
                                 </h1>
-                                <p style={{ margin: '12px 0 0', fontSize: 14.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.5 }}>
+                                <p style={{ margin: '14px 0 0', fontSize: 14.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.5 }}>
                                     Hold your ID near the reader to check in or out
                                 </p>
                             </div>
