@@ -161,39 +161,41 @@ export default function KioskScreen({
         return () => clearInterval(clockInterval);
     }, []);
 
-    // ── Boot: is this device already activated? If not, and it was opened
-    // via a station's pairing link, redeem that instead of asking someone to
-    // type an activation code — see DevicePairingController's docblock. A
-    // failed redemption (revoked/invalid link) falls back to the manual
-    // activation form rather than dead-ending the kiosk.
+    // ── Boot: opening a station's pairing link is a deliberate action to
+    // bind *this* device to *that* station, so it always takes priority over
+    // whatever credential this browser happened to have cached already —
+    // otherwise re-using a browser/tablet to pair a second station silently
+    // keeps it bound to the first one instead (see DevicePairingController's
+    // docblock). Only fall back to the cached credential, then the manual
+    // activation form, when the kiosk wasn't opened via a pairing link.
     useEffect(() => {
         getMeta().then(async (meta) => {
+            if (pairingToken) {
+                setPhase('pairing');
+                try {
+                    const response = await pairViaLink(pairingToken);
+                    await setMeta({
+                        credentialToken: response.credential_token,
+                        stationId: response.station.id,
+                        stationName: response.station.name,
+                        masterDataCursor: 0,
+                    });
+                    setStationName(response.station.name);
+                    setPhase('ready');
+                } catch {
+                    setActivationError('This pairing link is invalid or has been revoked. Enter an activation code instead.');
+                    setPhase('activation');
+                }
+                return;
+            }
+
             if (meta.credentialToken) {
                 setStationName(meta.stationName ?? '');
                 setPhase('ready');
                 return;
             }
 
-            if (!pairingToken) {
-                setPhase('activation');
-                return;
-            }
-
-            setPhase('pairing');
-            try {
-                const response = await pairViaLink(pairingToken);
-                await setMeta({
-                    credentialToken: response.credential_token,
-                    stationId: response.station.id,
-                    stationName: response.station.name,
-                    masterDataCursor: 0,
-                });
-                setStationName(response.station.name);
-                setPhase('ready');
-            } catch {
-                setActivationError('This pairing link is invalid or has been revoked. Enter an activation code instead.');
-                setPhase('activation');
-            }
+            setPhase('activation');
         });
     }, [pairingToken]);
 
