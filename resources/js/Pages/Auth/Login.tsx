@@ -6,6 +6,9 @@ import { EyeIcon } from '@/Components/icons/eye';
 import { EyeOffIcon } from '@/Components/icons/eye-off';
 import { WifiIcon } from '@/Components/icons/wifi';
 import { CheckIcon } from '@/Components/icons/check';
+import { MoonIcon } from '@/Components/icons/moon';
+import { SunIcon } from '@/Components/icons/sun';
+import { useTheme } from '@/Components/Theme/ThemeProvider';
 import '../../../css/pages/login.css';
 
 
@@ -15,6 +18,8 @@ interface LoginProps {
 }
 
 export default function Login({ status, canResetPassword }: LoginProps) {
+    const { theme, toggleTheme } = useTheme();
+    const themeActionLabel = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
     const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
@@ -130,6 +135,18 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 New here?{' '}
                                 <Link href={route('register')}>Request access</Link>
                             </p>
+                            <button
+                                type="button"
+                                className="auth-theme-toggle"
+                                onClick={toggleTheme}
+                                aria-label={themeActionLabel}
+                                title={themeActionLabel}
+                                aria-pressed={theme === 'dark'}
+                            >
+                                <span className="pf-theme-icon" aria-hidden="true">
+                                    {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+                                </span>
+                            </button>
                         </div>
 
                         <div className="auth-form-wrap">
