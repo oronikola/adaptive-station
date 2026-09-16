@@ -277,10 +277,7 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Client Management</h1>
-                            <p className="pft-hero-subtitle">
-                                View every client school on Adaptive Station, or
-                                provision a new one.
-                            </p>
+                            <p className="pft-hero-subtitle">View every client school on Adaptive Station, or provision a new one.</p>
                         </div>
                     </div>
                     <div className="pft-hero-actions">
@@ -294,18 +291,20 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                 <form onSubmit={submitFilters} className="pf-filter-bar" role="search">
                             <div className="pf-field pft-search-field">
                                 <label htmlFor="search">Search</label>
-                                <SearchIcon
-                                    size={14}
-                                    className="pointer-events-none"
-                                    style={{ position: 'absolute', bottom: 11, left: 14, color: 'var(--as-text-muted)' }}
-                                />
-                                <input
-                                    id="search"
-                                    type="text"
-                                    value={searchValue}
-                                    onChange={(e) => handleSearchChange(e.target.value)}
-                                    placeholder="Client name or code..."
-                                />
+                                <div className="pft-search-input-wrap">
+                                    <SearchIcon
+                                        size={14}
+                                        className="pointer-events-none"
+                                        aria-hidden="true"
+                                    />
+                                    <input
+                                        id="search"
+                                        type="text"
+                                        value={searchValue}
+                                        onChange={(e) => handleSearchChange(e.target.value)}
+                                        placeholder="Client name or code..."
+                                    />
+                                </div>
                             </div>
 
                             <div className="pf-field">
@@ -389,9 +388,10 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                     <tbody>
                                         {tenants.data.length === 0 && (
                                             <tr>
-                                                <td colSpan={5} className="pf-empty pft-empty">
-                                                    <GraduationCapIcon size={22} />
-                                                    {hasFilters ? (
+                                                <td colSpan={5} className="pf-empty pft-client-empty-cell">
+                                                    <div className="pft-empty">
+                                                        <GraduationCapIcon size={22} aria-hidden="true" />
+                                                        {hasFilters ? (
                                                             'No clients match these filters.'
                                                         ) : (
                                                             <>
@@ -401,13 +401,13 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
                                                                         type="button"
                                                                         onClick={openCreateModal}
                                                                         className="pf-row-action"
-                                                                        style={{ display: 'inline', marginLeft: 4 }}
                                                                     >
                                                                         Provision your first client →
                                                                     </button>
                                                                 )}
                                                             </>
                                                         )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         )}

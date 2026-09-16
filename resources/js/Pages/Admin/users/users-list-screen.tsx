@@ -312,7 +312,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                         <tr>
                                             <td colSpan={5} className="pf-empty">
                                                 <div className="flex flex-col items-center justify-center py-6">
-                                                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-3 dark:bg-gray-800">
+                                                    <span className="pf-empty-state-icon" aria-hidden="true">
                                                         <UserPlusIcon size={24} />
                                                     </span>
                                                     <p className="font-semibold text-slate-700 dark:text-slate-200">No users found</p>
@@ -437,7 +437,10 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                         /* GALLERY / CARD VIEW */
                         <div className="p-6">
                             {filteredUsers.length === 0 ? (
-                                <p className="pf-empty">No users match the selected filters.</p>
+                                <div className="pf-empty-state">
+                                    <span className="pf-empty-state-icon" aria-hidden="true"><UsersIcon size={34} /></span>
+                                    <p>No users match the selected filters.</p>
+                                </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                                     {filteredUsers.map((user: UserListItem) => {

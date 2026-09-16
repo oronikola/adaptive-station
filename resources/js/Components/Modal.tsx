@@ -108,7 +108,7 @@ export default function Modal({
                     leaveTo="opacity-0 translate-y-4 scale-[0.97]"
                 >
                     <DialogPanel
-                        className={`mb-6 transform overflow-hidden rounded-[28px] border border-[#e2e8f0] bg-white shadow-[0_24px_64px_-16px_rgba(15,23,42,0.22),0_12px_32px_-8px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.04] transition-all sm:mx-auto sm:w-full dark:border-gray-700 dark:bg-gray-800 ${maxWidthClass}`}
+                        className={`mb-6 transform overflow-hidden rounded-[28px] border border-[#e2e8f0] bg-white shadow-[0_24px_64px_-16px_rgba(15,23,42,0.22),0_12px_32px_-8px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.04] transition-all sm:mx-auto sm:w-full dark:border-[var(--as-border)] dark:bg-[var(--as-surface)] ${maxWidthClass}`}
                     >
                         {children}
                     </DialogPanel>

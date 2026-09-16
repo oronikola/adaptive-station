@@ -693,7 +693,7 @@ export default function ManageSchoolModal({
                                         </tr>
                                     ) : admins.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="py-6 text-center text-xs text-slate-400">
+                                            <td colSpan={4} className="pf-empty">
                                                 No administrators found. Click "Add Admin" to create one.
                                             </td>
                                         </tr>
@@ -802,7 +802,7 @@ export default function ManageSchoolModal({
                                         </tr>
                                     ) : stations.length === 0 ? (
                                         <tr>
-                                            <td colSpan={3} className="py-6 text-center text-xs text-slate-400">
+                                            <td colSpan={3} className="pf-empty">
                                                 No stations registered for this school yet.
                                             </td>
                                         </tr>

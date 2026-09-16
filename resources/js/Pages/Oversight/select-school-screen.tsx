@@ -135,20 +135,25 @@ export default function SelectSchoolScreen({
 
             <div className="pf-field pft-search-field" style={{ marginBottom: 20 }}>
                 <label htmlFor="school-search">Search</label>
-                <SearchIcon size={15} aria-hidden="true" />
-                <input
-                    id="school-search"
-                    type="text"
-                    placeholder="Search by school name or code..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    autoFocus
-                />
+                <div className="pft-search-input-wrap">
+                    <SearchIcon size={15} aria-hidden="true" />
+                    <input
+                        id="school-search"
+                        type="text"
+                        placeholder="Search by school name or code..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        autoFocus
+                    />
+                </div>
             </div>
 
             {filtered.length === 0 ? (
-                <div className="pf-panel" style={{ padding: '48px 24px', textAlign: 'center' }}>
-                    <p className="pf-empty">No schools match your search.</p>
+                <div className="pf-panel">
+                    <div className="pf-empty-state">
+                        <span className="pf-empty-state-icon" aria-hidden="true"><GraduationCapIcon size={34} /></span>
+                        <p>No schools match your search.</p>
+                    </div>
                 </div>
             ) : (
                 <div className="pft-school-grid">

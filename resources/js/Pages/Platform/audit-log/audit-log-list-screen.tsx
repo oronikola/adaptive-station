@@ -270,9 +270,12 @@ export default function AuditLogListScreen({ logs, filters }: AuditLogListScreen
                                 {logs.data.length === 0 && (
                                     <tr>
                                         <td colSpan={5} className="pf-empty">
+                                            <div className="pf-empty-state">
+                                                <span className="pf-empty-state-icon" aria-hidden="true"><HistoryIcon size={34} /></span>
                                             {hasFilters
                                                 ? 'No entries match these filters.'
                                                 : 'No audit log entries yet.'}
+                                            </div>
                                         </td>
                                     </tr>
                                 )}

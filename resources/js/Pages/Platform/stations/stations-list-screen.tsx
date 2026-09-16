@@ -353,7 +353,10 @@ export default function StationsListScreen({
 
                     {viewMode === 'gallery' ? (
                         stations.data.length === 0 ? (
-                            <p className="pf-empty">No stations found matching the selected filters.</p>
+                            <div className="pf-empty-state">
+                                <span className="pf-empty-state-icon" aria-hidden="true"><MonitorCheckIcon size={34} /></span>
+                                <p>No stations found matching the selected filters.</p>
+                            </div>
                         ) : (
                             <div className="station-gallery">
                                 {stations.data.map((station, index) => {
@@ -484,7 +487,10 @@ export default function StationsListScreen({
                                 <Table.Body>
                                     {stations.data.length === 0 && (
                                         <Table.Empty colSpan={8}>
-                                            No stations found matching the selected filters.
+                                            <div className="pf-empty-state">
+                                                <span className="pf-empty-state-icon" aria-hidden="true"><MonitorCheckIcon size={34} /></span>
+                                                <p>No stations found matching the selected filters.</p>
+                                            </div>
                                         </Table.Empty>
                                     )}
 

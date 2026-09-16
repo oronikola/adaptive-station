@@ -363,22 +363,20 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                                     ))}
                                 </ul>
 
-                                <div className="pf-field pft-search-field" style={{ position: 'relative' }}>
+                                <div className="pf-field pft-search-field">
                                     <label htmlFor="student-search">Find students to link</label>
-                                    <SearchIcon
-                                        size={14}
-                                        style={{ position: 'absolute', bottom: 11, left: 14, color: 'var(--as-text-muted)', pointerEvents: 'none' }}
-                                    />
-                                    <input
-                                        id="student-search"
-                                        type="search"
-                                        value={query}
-                                        maxLength={100}
-                                        placeholder="Search by student name or school ID…"
-                                        style={{ paddingLeft: 38 }}
-                                        onChange={(event) => setQuery(event.target.value)}
-                                        autoFocus
-                                    />
+                                    <div className="pft-search-input-wrap">
+                                        <SearchIcon size={14} aria-hidden="true" />
+                                        <input
+                                            id="student-search"
+                                            type="search"
+                                            value={query}
+                                            maxLength={100}
+                                            placeholder="Search by student name or school ID…"
+                                            onChange={(event) => setQuery(event.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
                                     <p className="pf-field-hint">Results update as you type (400ms debounce). Showing up to 30 results.</p>
                                 </div>
 

@@ -657,7 +657,7 @@ export default function ManageStationModal({
                                 <tbody className="divide-y divide-slate-200/80 bg-white dark:divide-slate-800/80 dark:bg-slate-900/40">
                                     {credentials.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="px-4 py-6 text-center text-slate-400 italic">
+                                            <td colSpan={4} className="pf-empty">
                                                 No credentials issued yet.
                                             </td>
                                         </tr>

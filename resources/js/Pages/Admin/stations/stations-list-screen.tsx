@@ -346,7 +346,10 @@ export default function StationsListScreen({ stations }: StationsListScreenProps
 
                     {viewMode === 'gallery' ? (
                         stations.data.length === 0 ? (
-                            <p className="pf-empty">No stations registered yet.</p>
+                            <div className="pf-empty-state">
+                                <span className="pf-empty-state-icon" aria-hidden="true"><MonitorCheckIcon size={34} /></span>
+                                <p>No stations registered yet.</p>
+                            </div>
                         ) : (
                             <div className="station-gallery">
                                 {stations.data.map((station, index) => {

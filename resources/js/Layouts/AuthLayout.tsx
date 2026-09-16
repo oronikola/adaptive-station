@@ -1,4 +1,7 @@
 import StationLogo from '@/Components/Branding/StationLogo';
+import { MoonIcon } from '@/Components/icons/moon';
+import { SunIcon } from '@/Components/icons/sun';
+import { useTheme } from '@/Components/Theme/ThemeProvider';
 import { Head, Link } from '@inertiajs/react';
 import '../../css/pages/login.css';
 
@@ -45,6 +48,9 @@ export default function AuthLayout({
     footer,
     children,
 }: AuthLayoutProps) {
+    const { theme, toggleTheme } = useTheme();
+    const themeActionLabel = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+
     return (
         <>
             <Head title={title} />
@@ -80,6 +86,18 @@ export default function AuthLayout({
                                     {topbarPrompt} <Link href={topbarLinkHref}>{topbarLinkText}</Link>
                                 </p>
                             )}
+                            <button
+                                type="button"
+                                className="auth-theme-toggle"
+                                onClick={toggleTheme}
+                                aria-label={themeActionLabel}
+                                title={themeActionLabel}
+                                aria-pressed={theme === 'dark'}
+                            >
+                                <span className="pf-theme-icon" aria-hidden="true">
+                                    {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+                                </span>
+                            </button>
                         </div>
 
                         <div className="auth-form-wrap">

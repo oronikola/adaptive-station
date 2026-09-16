@@ -1,14 +1,13 @@
 import ApplicationLogo from '@/Components/Branding/ApplicationLogo';
 import { ChevronLeftIcon } from '@/Components/icons/chevron-left';
-import { LogoutIcon } from '@/Components/icons/logout';
 import { MoonIcon } from '@/Components/icons/moon';
 import { SunIcon } from '@/Components/icons/sun';
 import { UserIcon } from '@/Components/icons/user';
+import LogoutConfirm from '@/Components/Navigation/LogoutConfirm';
 import NotificationBell from '@/Components/Navigation/NotificationBell';
 import { useTheme } from '@/Components/Theme/ThemeProvider';
 import { NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { useState } from 'react';
 
 interface SidebarProps {
     brand: string;
@@ -37,7 +36,6 @@ export default function Sidebar({
     onShowTooltip,
     onHideTooltip,
 }: SidebarProps) {
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const { theme, toggleTheme } = useTheme();
     const themeActionLabel =
         theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
@@ -219,31 +217,11 @@ export default function Sidebar({
                         </span>
                         <span className="pf-sidebar-label">Profile</span>
                     </Link>
-                    <Link
-                        href={route('logout')}
-                        method="post"
-                        as="button"
-                        title={collapsed ? undefined : 'Log out'}
-                        onMouseEnter={(e) =>
-                            onShowTooltip?.(e, 'Log Out', 'danger')
-                        }
-                        onMouseLeave={onHideTooltip}
-                        onClick={() => {
-                            onHideTooltip?.();
-                            setIsLoggingOut(true);
-                        }}
-                        className={
-                            'pf-sidebar-footer-link pf-sidebar-footer-link--logout' +
-                            (isLoggingOut ? ' is-logging-out' : '')
-                        }
-                    >
-                        <span className="pf-sidebar-footer-icon">
-                            <LogoutIcon size={18} />
-                        </span>
-                        <span className="pf-sidebar-label">
-                            {isLoggingOut ? 'Logging out...' : 'Log Out'}
-                        </span>
-                    </Link>
+                    <LogoutConfirm
+                        collapsed={collapsed}
+                        onShowTooltip={onShowTooltip}
+                        onHideTooltip={onHideTooltip}
+                    />
                 </div>
             </div>
         </>

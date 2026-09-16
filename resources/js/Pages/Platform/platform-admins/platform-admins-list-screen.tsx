@@ -141,8 +141,8 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
                                 {admins.length === 0 && (
                                     <tr>
                                         <td colSpan={5} className="pf-empty">
-                                            <div className="pfa-empty-state">
-                                                <span className="pfa-admin-avatar" aria-hidden="true"><ShieldCheckIcon size={18} /></span>
+                                            <div className="pf-empty-state">
+                                                <span className="pf-empty-state-icon" aria-hidden="true"><ShieldCheckIcon size={34} /></span>
                                                 <strong>No platform admins yet</strong>
                                                 <span>Add an admin to grant read-only oversight access.</span>
                                             </div>

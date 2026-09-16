@@ -155,8 +155,8 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
 
                     {viewMode === 'gallery' ? (
                         people.data.length === 0 ? (
-                            <div className="py-16 text-center">
-                                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+                            <div className="pf-empty-state">
+                                <div className="pf-empty-state-icon" aria-hidden="true">
                                     <UserIcon size={28} />
                                 </div>
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No people found</h3>

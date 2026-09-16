@@ -292,7 +292,10 @@ export default function RfidCardsListScreen({
                                     {rfidCards.data.length === 0 && (
                                         <tr>
                                             <td colSpan={5} className="pf-empty">
-                                                No RFID cards found.
+                                                <div className="pf-empty-state">
+                                                    <span className="pf-empty-state-icon" aria-hidden="true"><CreditCardIcon size={34} /></span>
+                                                    <p>No RFID cards found.</p>
+                                                </div>
                                             </td>
                                         </tr>
                                     )}
@@ -402,8 +405,8 @@ export default function RfidCardsListScreen({
                     ) : (
                         /* Gallery Cards View */
                         rfidCards.data.length === 0 ? (
-                            <div className="py-16 text-center">
-                                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+                            <div className="pf-empty-state">
+                                <div className="pf-empty-state-icon" aria-hidden="true">
                                     <CreditCardIcon size={28} />
                                 </div>
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No RFID cards found</h3>
