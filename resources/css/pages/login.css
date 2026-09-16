@@ -575,7 +575,7 @@
 
 .auth-login-topbar p {
     margin: 0;
-    color: var(--as-text-secondary);
+    color: #64748b;
     font-size: 12px;
 }
 
@@ -621,7 +621,7 @@
 
 .auth-form-heading > p:last-child {
     margin: 10px 0 0;
-    color: var(--as-text-secondary);
+    color: #64748b;
     font-size: 13px;
     line-height: 1.55;
 }
@@ -700,7 +700,7 @@
 }
 
 .auth-field input::placeholder {
-    color: var(--as-text-muted);
+    color: #94a3b8;
 }
 
 .auth-field input:focus {
@@ -725,6 +725,22 @@
 .auth-field input[aria-invalid='true'] {
     border-color: #f87171;
     box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.12);
+}
+
+.auth-login-page .auth-field input:is(:autofill, :-webkit-autofill) {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    caret-color: #0f172a;
+    box-shadow: inset 0 0 0 1000px #ffffff;
+}
+
+.auth-login-page .auth-field input:is(:autofill, :-webkit-autofill):focus {
+    box-shadow: inset 0 0 0 1000px #ffffff, 0 0 0 4px rgba(35, 78, 244, 0.1);
+}
+
+.auth-login-page .auth-field input:is(:autofill, :-webkit-autofill)[aria-invalid='true'] {
+    box-shadow: inset 0 0 0 1000px #ffffff, 0 0 0 4px rgba(248, 113, 113, 0.12);
 }
 
 .auth-password-field {
@@ -789,7 +805,7 @@
     cursor: pointer;
     align-items: center;
     gap: 9px;
-    color: var(--as-text-secondary);
+    color: #64748b;
     font-size: 12px;
 }
 
@@ -797,9 +813,8 @@
     width: 17px;
     height: 17px;
     margin: 0;
-    border: 1px solid var(--as-border-mid);
+    border: 1px solid #cbd5e1;
     border-radius: 5px;
-    color: var(--as-brand-mid);
     accent-color: #234ef4;
     color: #234ef4;
 }
@@ -899,7 +914,7 @@
     align-items: center;
     justify-content: center;
     margin: 24px 0;
-    color: var(--as-text-muted);
+    color: #94a3b8;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.04em;
@@ -934,9 +949,9 @@
     overflow: hidden;
     isolation: isolate;
     gap: 8px;
-    background: linear-gradient(180deg, var(--as-surface) 0%, var(--as-surface-hover) 100%);
-    border: 1px solid var(--as-border);
-    color: var(--as-text);
+    background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+    border: 1px solid #e2e8f0;
+    color: #0f172a;
     box-shadow:
         inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.04),
@@ -983,7 +998,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    color: var(--as-text-muted);
+    color: #94a3b8;
     font-size: 10px;
 }
 
@@ -1225,4 +1240,190 @@
     background: #1b36c8;
     filter: none;
     box-shadow: none;
+}
+
+.auth-login-topbar {
+    gap: 12px;
+}
+
+.auth-theme-toggle {
+    display: grid;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--as-border);
+    border-radius: 12px;
+    background: var(--as-surface);
+    color: var(--as-text);
+    cursor: pointer;
+}
+
+.auth-theme-toggle:hover {
+    background: var(--as-surface-hover);
+    border-color: var(--as-border-mid);
+}
+
+:root.dark .auth-login-page {
+    background: var(--as-bg);
+    color: var(--as-text);
+}
+
+:root.dark .auth-login-card,
+:root.dark .auth-login-main,
+:root.dark .auth-login-showcase {
+    background: var(--as-surface);
+    border-color: var(--as-border);
+    box-shadow: none;
+}
+
+:root.dark .auth-login-page .auth-showcase-content h2,
+:root.dark .auth-login-page .auth-form-heading h1,
+:root.dark .auth-field label,
+:root.dark .auth-label-row label {
+    color: var(--as-text);
+}
+
+:root.dark .auth-login-topbar p,
+:root.dark .auth-form-heading > p:last-child,
+:root.dark .auth-showcase-caption,
+:root.dark .auth-helper-text,
+:root.dark .auth-remember,
+:root.dark .auth-login-footer {
+    color: var(--as-text-secondary);
+}
+
+:root.dark .auth-login-page .auth-login-brand,
+:root.dark .auth-login-page .auth-eyebrow,
+:root.dark .auth-login-page .auth-mobile-kicker,
+:root.dark .auth-login-topbar a,
+:root.dark .auth-label-row a,
+:root.dark .auth-text-link,
+:root.dark .auth-login-footer a:hover {
+    color: var(--as-brand-mid);
+    border-color: var(--as-border-mid);
+}
+
+:root.dark .auth-divider::before {
+    background: var(--as-border);
+}
+
+:root.dark .auth-divider span,
+:root.dark .auth-secondary-button {
+    background: var(--as-surface);
+    color: var(--as-text);
+    border-color: var(--as-border);
+    box-shadow: none;
+}
+
+:root.dark .auth-secondary-button::before {
+    background: none;
+}
+
+:root.dark .auth-secondary-button:hover {
+    background: var(--as-surface-hover);
+    border-color: var(--as-border-mid);
+}
+
+:root.dark .auth-status {
+    background: var(--as-info-bg);
+    border-color: var(--as-border);
+    color: var(--as-text);
+}
+
+:root.dark .auth-login-page {
+    color-scheme: dark;
+}
+
+:root.dark .auth-login-page .auth-field input {
+    background: var(--as-surface-hover);
+    color: var(--as-text);
+    border-color: var(--as-border-mid);
+}
+
+:root.dark .auth-login-page .auth-field input::placeholder {
+    color: var(--as-text-secondary);
+}
+
+:root.dark .auth-login-page .auth-field input:focus {
+    border-color: var(--as-brand-mid);
+}
+
+:root.dark .auth-login-page .auth-field input[aria-invalid='true'] {
+    border-color: var(--as-danger);
+}
+
+:root.dark .auth-login-page .auth-field input:is(:autofill, :-webkit-autofill) {
+    background-color: var(--as-surface-hover) !important;
+    color: var(--as-text) !important;
+    -webkit-text-fill-color: var(--as-text) !important;
+    caret-color: var(--as-text);
+    box-shadow: inset 0 0 0 1000px var(--as-surface-hover);
+}
+
+:root.dark .auth-login-page .auth-field input:is(:autofill, :-webkit-autofill):focus {
+    box-shadow: inset 0 0 0 1000px var(--as-surface-hover), 0 0 0 4px rgba(35, 78, 244, 0.1);
+}
+
+:root.dark .auth-login-page .auth-field input:is(:autofill, :-webkit-autofill)[aria-invalid='true'] {
+    box-shadow: inset 0 0 0 1000px var(--as-surface-hover), 0 0 0 4px var(--as-danger-bg);
+}
+
+:root.dark .auth-login-page .auth-remember input {
+    background-color: var(--as-surface-hover);
+    border-color: var(--as-border-mid);
+    color: var(--as-brand-mid);
+    accent-color: var(--as-brand-mid);
+}
+
+:root.dark .auth-login-page .auth-remember input:checked {
+    background-color: var(--as-brand-solid);
+}
+
+:root.dark .auth-login-page .auth-eyebrow,
+:root.dark .auth-tap-visual,
+:root.dark .auth-student-card,
+:root.dark .auth-tap-confirmation {
+    background: var(--as-surface-hover);
+    border-color: var(--as-border);
+    box-shadow: none;
+}
+
+:root.dark .auth-eyebrow::before {
+    background: var(--as-brand-mid);
+}
+
+:root.dark .auth-student-photo,
+:root.dark .auth-confirmation-icon {
+    background: var(--as-surface-active);
+    border-color: var(--as-border);
+    box-shadow: none;
+    color: var(--as-brand-mid);
+}
+
+:root.dark .auth-card-slot {
+    background: var(--as-border-mid);
+}
+
+:root.dark .auth-tap-confirmation strong {
+    color: var(--as-text);
+}
+
+:root.dark .auth-student-number,
+:root.dark .auth-student-brand small,
+:root.dark .auth-tap-confirmation small {
+    color: var(--as-text-secondary);
+}
+
+:root.dark .auth-student-brand,
+:root.dark .auth-student-name,
+:root.dark .auth-student-footer,
+:root.dark .auth-tap-confirmation b {
+    color: var(--as-brand-mid);
+    border-color: var(--as-border);
+}
+
+:root.dark .auth-student-footer svg {
+    stroke: currentColor;
 }

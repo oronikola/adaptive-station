@@ -36,7 +36,7 @@
 .attendance-station-track { height: 8px; border-radius: 8px; background: var(--as-surface-active); overflow: hidden; }
 .attendance-station-track > div { height: 100%; border-radius: 8px; background: var(--as-brand); }
 .attendance-station-share { display: block; color: var(--as-text-secondary); font-size: 12px; margin-top: 6px; }
-.attendance-analytics-empty { padding: 24px; }
+.attendance-analytics-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 56px 24px; text-align: center; }
 .attendance-analytics-empty p { margin: 6px 0 0; color: var(--as-text-secondary); }
 @media (max-width: 1199px) { .attendance-analytics-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 700px) { .attendance-insights { grid-template-columns: minmax(0, 1fr); gap: 8px; } }

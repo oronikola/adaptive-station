@@ -74,7 +74,8 @@
 
 .pft-hero-subtitle {
     margin: 4px 0 0;
-    max-width: 46ch;
+    max-width: none;
+    white-space: nowrap;
     color: var(--as-text-secondary);
     font-size: 14px;
     line-height: 1.55;
@@ -229,14 +230,23 @@
 }
 
 .pft-search-field {
-    position: relative;
     flex: 1 1 220px;
 }
 
-.pft-search-field svg {
+/* Wraps just the icon + input (not the label above or the hint text some
+   screens render below), so the icon centers on the input's own box via
+   top: 50% instead of a bottom-offset magic number guessed against the
+   whole field's height — the old approach drifted out of center whenever
+   a label/hint of a different height sat in the same .pft-search-field. */
+.pft-search-input-wrap {
+    position: relative;
+}
+
+.pft-search-input-wrap svg {
     position: absolute;
-    bottom: 11px;
+    top: 50%;
     left: 14px;
+    transform: translateY(-50%);
     width: 15px;
     height: 15px;
     fill: none;
@@ -245,7 +255,7 @@
     pointer-events: none;
 }
 
-.pft-search-field input {
+.pft-search-input-wrap input {
     padding-left: 38px !important;
 }
 
@@ -314,6 +324,12 @@
     height: 68px;
     padding-block: 14px;
     vertical-align: middle;
+}
+
+.pft-client-table tbody td.pft-client-empty-cell {
+    height: auto;
+    padding: 0;
+    white-space: normal;
 }
 
 .pft-client-table .pf-tenant-name {
@@ -587,6 +603,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     padding: 56px 24px !important;
     color: var(--as-text-secondary);
@@ -1775,47 +1792,6 @@
     font-weight: 700;
     color: var(--as-text-secondary);
     white-space: nowrap;
-}
-
-.pf-empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    min-height: 280px;
-    padding: 56px 28px;
-    text-align: center;
-}
-
-.pf-empty-state-icon {
-    display: grid;
-    width: 56px;
-    height: 56px;
-    place-items: center;
-    border-radius: 18px;
-    background: var(--as-surface-active);
-    color: var(--as-text-muted);
-}
-
-.pf-empty-state-icon svg {
-    width: 26px;
-    height: 26px;
-}
-
-.pf-empty-state strong {
-    display: block;
-    color: var(--as-text);
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.pf-empty-state p {
-    margin: 0;
-    max-width: 36ch;
-    color: var(--as-text-secondary);
-    font-size: 13px;
-    line-height: 1.5;
 }
 
 .sms-device-gallery {

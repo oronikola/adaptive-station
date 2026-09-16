@@ -1158,33 +1158,13 @@ html.theme-transition * {
         background-size: 14px 14px;
     }
 
-    @media (prefers-color-scheme: dark) {
-        select,
-        .pf-select {
-            background-color: #0f172a;
-            border-color: #334155;
-            color: #e2e8f0;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        select:hover,
-        .pf-select:hover {
-            border-color: #475569;
-        }
-
-        select:focus,
-        .pf-select:focus {
-            border-color: #234ef4;
-            box-shadow: 0 0 0 4px rgba(35, 78, 244, 0.25);
-        }
-
-        select:disabled,
-        .pf-select:disabled {
-            background-color: #1e293b;
-        }
-    }
-
+    /* Was also duplicated inside `@media (prefers-color-scheme: dark)` —
+       removed. That variant fired off the OS setting rather than the
+       in-app `.dark` toggle, so an OS-dark visitor who'd chosen light in
+       the app got every <select>/.pf-select forced dark (and the reverse:
+       an OS-light visitor who'd chosen dark in the app never got this at
+       all — only the plain :root.dark rules below actually reflect the
+       app's own theme, so they're the only copy that should exist). */
     :root.dark select,
     :root.dark .pf-select {
         background-color: #0f172a;

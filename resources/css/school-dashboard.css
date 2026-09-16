@@ -67,7 +67,7 @@
 .school-station-list a { color: var(--as-text); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .school-station-list span { color: var(--as-text-secondary); font-size: 12px; }
 .school-panel-footer { display: block; padding: 18px 24px; }
-.school-empty { padding: 0 24px 20px; color: var(--as-text-secondary); margin: 0; }
+.school-empty { padding: 56px 24px; color: var(--as-text-secondary); margin: 0; text-align: center; }
 .school-inventory { padding: 0; }
 .school-inventory h2 { margin: 0; }
 .school-inventory dl {

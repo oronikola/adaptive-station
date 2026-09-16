@@ -633,6 +633,14 @@
     animation: signal-pulse 1.4s ease-in-out infinite;
 }
 
+/* The pressed/logging-out state's brick-red (#991b1b) has borderline
+   contrast against the sidebar's near-black dark-mode background — brighten
+   it the same way --as-danger itself brightens for dark mode. */
+:root.dark .pf-sidebar-footer-link--logout:active,
+:root.dark .pf-sidebar-footer-link--logout.is-logging-out {
+    color: #f87171;
+}
+
 .pf-sidebar-footer-icon {
     display: grid;
     width: 18px;
