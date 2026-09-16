@@ -196,7 +196,7 @@ export default function Sidebar({
                         aria-label={themeActionLabel}
                         aria-pressed={theme === 'dark'}
                     >
-                        <span className="pf-sidebar-footer-icon">
+                        <span className="pf-sidebar-footer-icon pf-theme-icon">
                             {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
                         </span>
                         <span className="pf-sidebar-label">Darkmode</span>

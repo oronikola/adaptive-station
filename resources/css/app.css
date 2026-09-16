@@ -182,56 +182,64 @@
 }
 
 /* ── Global theme transition ───────────────────────────────────────────
-   Smooths every color-driven property when the .dark class flips, without
-   requiring per-component transition classes. Components/Theme/ThemeProvider.tsx
-   adds `.theme-transition` to <html> for ~360ms around each toggle and then
-   removes it, so this rule stays out of the way of hover/route transitions,
-   transform-based effects (tactile-press, btn-glass-*, Sidebar's motion/react
-   springs), and keyframe animations (capability-marquee, signal-pulse,
-   pft-fade-in) the rest of the time.
+   Two strategies, picked at runtime by Components/Theme/ThemeProvider.tsx:
 
-   Scoped to background-color/color/border-color only — box-shadow and
-   pseudo-elements are deliberately excluded. box-shadow repaints don't
-   composite on the GPU the way color does, so animating it on dozens of
-   cards/panels at once was the actual source of the stutter/flicker (it
-   steps rather than interpolates); shadows are static ambient tokens here
-   anyway (see DESIGN.md "State-Responsive Shadow Rule" — they only react
-   to hover/modal state). Excluding ::before/::after skips the shimmer
-   overlays on pf-btn-primary/-danger and other decorative pseudo-elements,
-   which never carry a themed color and were adding pure recalculation cost
-   to every toggle. */
+   1. View Transitions (Chrome/Edge 111+, Safari 18+, Firefox 139+). The
+      browser snapshots the whole document before and after the `.dark`
+      flip and cross-fades the two snapshots as a single GPU-composited
+      layer. Nothing on the page transitions individually, so gradients,
+      box-shadows, backdrop-filter panels, SVG fills, and scrollbars all
+      cross-fade in perfect lockstep — this is what removes the flicker.
+      Preferred path whenever document.startViewTransition exists.
+
+   2. `.theme-transition` on <html> — the fallback for browsers without
+      the API. Per-element color transitions. Deliberately narrow: only
+      GPU-friendly paint properties, never box-shadow or pseudo-elements
+      (box-shadow steps rather than interpolates across dozens of cards
+      and was a measurable source of stutter; shadows are static ambient
+      tokens anyway, see DESIGN.md "State-Responsive Shadow Rule").
+      The class is added just before the flip and removed right after, so
+      it never fights hover/route transitions, transform effects
+      (tactile-press, btn-glass-*, Sidebar springs) or keyframe animations.
+
+   The previous full-viewport `html.theme-transition::after` wash was
+   removed: a fixed, max-z-index overlay fading from 14% opacity is a
+   literal flash of white/black over the entire page on every toggle, and
+   it forced a full-screen composited layer on top of everything. */
 html.theme-transition,
 html.theme-transition * {
     transition:
-        background-color 300ms var(--ease-out),
-        color 300ms var(--ease-out),
-        border-color 300ms var(--ease-out),
-        fill 300ms var(--ease-out),
-        stroke 300ms var(--ease-out),
-        outline-color 300ms var(--ease-out) !important;
+        background-color 260ms var(--ease-out),
+        color 260ms var(--ease-out),
+        border-color 260ms var(--ease-out),
+        fill 260ms var(--ease-out),
+        stroke 260ms var(--ease-out),
+        outline-color 260ms var(--ease-out) !important;
 }
 
-html.theme-transition::after {
-    content: '';
-    position: fixed;
-    z-index: 2147483647;
-    inset: 0;
-    pointer-events: none;
-    background: #020617;
-    animation: theme-palette-wash 340ms var(--ease-out) both;
+/* View-transition cross-fade. The UA default animates both snapshots with
+   `mix-blend-mode: plus-lighter`, which is tuned for near-identical frames
+   — across a full palette inversion it blows out to a bright flash mid-way.
+   Normal blending with the outgoing snapshot fading over a static incoming
+   one gives a clean dissolve instead. */
+::view-transition-old(root),
+::view-transition-new(root) {
+    mix-blend-mode: normal;
+    animation: none;
 }
 
-html.theme-transition:not(.dark)::after {
-    background: #ffffff;
+::view-transition-new(root) {
+    z-index: 0;
 }
 
-html.theme-transition [aria-label^='Switch to'] svg {
-    animation: theme-icon-change 260ms var(--ease-out) both;
+::view-transition-old(root) {
+    z-index: 1;
+    animation: theme-snapshot-out 280ms var(--ease-out) both;
 }
 
-@keyframes theme-palette-wash {
+@keyframes theme-snapshot-out {
     from {
-        opacity: 0.14;
+        opacity: 1;
     }
 
     to {
@@ -239,10 +247,27 @@ html.theme-transition [aria-label^='Switch to'] svg {
     }
 }
 
+/* The Sun/Moon glyph is a different React element per theme, so it remounts
+   on every toggle and this animation replays on its own — no dependency on
+   the (short-lived) .theme-transition class, which used to make the icon
+   animate only on the fallback path. */
+.pf-theme-icon {
+    display: grid;
+    place-items: center;
+    /* The glyph rotates in from -35deg; without a reserved box the button's
+       other children would shift a pixel as it settles. */
+    line-height: 0;
+}
+
+.pf-theme-icon > * {
+    transform-origin: center;
+    animation: theme-icon-change 320ms var(--ease-out) both;
+}
+
 @keyframes theme-icon-change {
     from {
         opacity: 0;
-        transform: rotate(-24deg) scale(0.78);
+        transform: rotate(-35deg) scale(0.72);
     }
 
     to {
@@ -257,8 +282,12 @@ html.theme-transition [aria-label^='Switch to'] svg {
         transition: none !important;
     }
 
-    html.theme-transition::after {
-        content: none;
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none !important;
+    }
+
+    .pf-theme-icon > * {
         animation: none;
     }
 }
