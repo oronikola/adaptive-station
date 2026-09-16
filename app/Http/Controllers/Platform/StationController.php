@@ -49,46 +49,58 @@ class StationController extends Controller
         $allStations = collect();
         $allStationOptions = collect();
 
-        foreach ($tenants as $tenant) {
+        foreach ($queriedTenants as $tenant) {
             TenantDatabase::use($tenant);
 
-            Station::allTenants()->where('tenant_id', $tenant->id)->orderBy('name')->get()->each(function (Station $station) use ($tenant, $now, $thresholdMinutes, $allStationOptions, $allStations, $queriedTenants) {
-                $station->setRelation('tenant', $tenant);
+            Station::allTenants()
+                ->where('tenant_id', $tenant->id)
+                ->orderBy('name')
+                ->get([
+                    'id',
+                    'tenant_id',
+                    'name',
+                    'station_code',
+                    'status',
+                    'app_version',
+                    'last_pending_count',
+                    'last_seen_at',
+                    'last_scan_at',
+                ])
+                ->each(function (Station $station) use ($tenant, $now, $thresholdMinutes, $allStationOptions, $allStations) {
+                    $station->setRelation('tenant', $tenant);
 
-                $isOnline = $station->status === StationStatus::Active
-                    && $station->last_seen_at !== null
-                    && $station->last_seen_at->gt($now->copy()->subMinutes($thresholdMinutes));
+                    $isOnline = $station->status === StationStatus::Active
+                        && $station->last_seen_at !== null
+                        && $station->last_seen_at->gt($now->copy()->subMinutes($thresholdMinutes));
 
-                $stationData = [
-                    'id' => $station->id,
-                    'tenant_id' => $tenant->id,
-                    'name' => $station->name,
-                    'station_code' => $station->station_code,
-                    'status' => $station->status->value,
-                    'app_version' => $station->app_version,
-                    'last_pending_count' => $station->last_pending_count,
-                    'last_seen_at' => $station->last_seen_at?->toIso8601String(),
-                    'last_scan_at' => $station->last_scan_at?->toIso8601String(),
-                    'is_online' => $isOnline,
-                    'tenant' => [
-                        'id' => $tenant->id,
-                        'name' => $tenant->name,
-                        'code' => $tenant->code,
-                    ],
-                ];
+                    $stationData = [
+                        'id' => $station->id,
+                        'tenant_id' => $tenant->id,
+                        'name' => $station->name,
+                        'station_code' => $station->station_code,
+                        'status' => $station->status->value,
+                        'app_version' => $station->app_version,
+                        'last_pending_count' => $station->last_pending_count,
+                        'last_seen_at' => $station->last_seen_at?->toIso8601String(),
+                        'last_scan_at' => $station->last_scan_at?->toIso8601String(),
+                        'is_online' => $isOnline,
+                        'tenant' => [
+                            'id' => $tenant->id,
+                            'name' => $tenant->name,
+                            'code' => $tenant->code,
+                        ],
+                    ];
 
-                $allStationOptions->push([
-                    'value' => (string) $station->id,
-                    'label' => "{$station->name} ({$station->station_code})",
-                    'tenant_id' => $tenant->id,
-                    'tenant_name' => $tenant->name,
-                    'status' => $station->status->value,
-                ]);
+                    $allStationOptions->push([
+                        'value' => (string) $station->id,
+                        'label' => "{$station->name} ({$station->station_code})",
+                        'tenant_id' => $tenant->id,
+                        'tenant_name' => $tenant->name,
+                        'status' => $station->status->value,
+                    ]);
 
-                if ($queriedTenants->contains('id', $tenant->id)) {
                     $allStations->push($stationData);
-                }
-            });
+                });
         }
 
         if ($selectedStatus && $selectedStatus !== 'all') {
@@ -236,7 +248,7 @@ class StationController extends Controller
         $station = Station::provision($request->validated(), $request->user());
         ['token' => $token] = StationPairingToken::issueFor($station, $request->user());
 
-        return redirect()->route('platform.stations.index')
+        return redirect()->route('platform.stations.index', ['tenant_id' => $station->tenant_id])
             ->with('success', "Station \"{$station->name}\" created.")
             ->with('pairingLink', route('kiosk.pair', $token));
     }
@@ -303,7 +315,8 @@ class StationController extends Controller
 
         Station::remove($station, $request->user());
 
-        return redirect()->route('platform.stations.index')->with('success', "Station \"{$station->name}\" deleted.");
+        return redirect()->route('platform.stations.index', ['tenant_id' => $data['tenant_id']])
+            ->with('success', "Station \"{$station->name}\" deleted.");
     }
 
     /**

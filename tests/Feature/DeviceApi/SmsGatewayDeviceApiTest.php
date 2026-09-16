@@ -112,6 +112,40 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->assertSame(1, $device->fresh()->sent_today);
     }
 
+    public function test_reporting_status_after_gateway_midnight_resets_yesterdays_device_stats_before_incrementing(): void
+    {
+        config(['services.sms_gateway.timezone' => 'Asia/Manila']);
+        $this->travelTo('2026-09-16 16:30:00');
+        ['token' => $token, 'device' => $device] = $this->makeDevice();
+        $tenant = Tenant::factory()->create();
+        $row = $this->makeOutboxRow($tenant, [
+            'status' => SmsOutboxStatus::Claimed,
+            'claimed_by_device_id' => $device->id,
+            'claimed_at' => Date::now(),
+        ]);
+        $device->forceFill([
+            'sent_today' => 449,
+            'stats_date' => '2026-09-16',
+        ])->save();
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/device/sms/messages/{$row->id}/status", [
+                'status' => 'sent',
+                'sim_slot' => 0,
+            ])
+            ->assertOk();
+
+        $freshDevice = $device->fresh();
+        $this->assertSame(1, $freshDevice->sent_today);
+        $this->assertSame('2026-09-17', $freshDevice->stats_date->toDateString());
+        $this->assertDatabaseHas('sms_gateway_device_sim_stats', [
+            'device_id' => $device->id,
+            'sim_slot' => 0,
+            'sent_today' => 1,
+            'stats_date' => '2026-09-17',
+        ]);
+    }
+
     public function test_reporting_sent_with_a_sim_slot_records_it_on_the_message_and_the_per_sim_counter(): void
     {
         ['token' => $token, 'device' => $device] = $this->makeDevice();

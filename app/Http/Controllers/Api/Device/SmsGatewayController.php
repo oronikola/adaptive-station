@@ -60,6 +60,7 @@ class SmsGatewayController extends Controller
         ]);
 
         $device = $this->smsGatewayDevice($request);
+        $device->resetDailyStatsIfNeeded()->save();
         $simSlot = $data['sim_slot'] ?? null;
 
         // Scoped to this device's own claim — a device can never report

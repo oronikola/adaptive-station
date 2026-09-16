@@ -28,7 +28,7 @@ class StationProvisioningTest extends TestCase
             'name' => 'Main Gate',
             'station_code' => 'STN-0001',
         ]);
-        $storeResponse->assertRedirect(route('platform.stations.index'));
+        $storeResponse->assertRedirect(route('platform.stations.index', ['tenant_id' => $tenant->id]));
 
         $station = Station::allTenants()->where('station_code', 'STN-0001')->firstOrFail();
         $this->assertSame(StationStatus::PendingActivation, $station->status);
@@ -61,14 +61,21 @@ class StationProvisioningTest extends TestCase
             'name' => 'Main Gate',
             'station_code' => 'LINK-0001',
         ]);
-        $storeResponse->assertRedirect(route('platform.stations.index'));
+        $storeResponse->assertRedirect(route('platform.stations.index', ['tenant_id' => $tenant->id]));
         $storeResponse->assertSessionHas('pairingLink');
-
-        $station = Station::allTenants()->where('station_code', 'LINK-0001')->firstOrFail();
-        $this->assertSame(StationStatus::PendingActivation, $station->status);
 
         $pairingLink = session('pairingLink');
         $token = last(explode('/', rtrim($pairingLink, '/')));
+
+        $this->actingAs($platformAdmin)
+            ->get(route('platform.stations.index', ['tenant_id' => $tenant->id]))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('stations.data', 1)
+                ->where('stations.data.0.station_code', 'LINK-0001'));
+
+        $station = Station::allTenants()->where('station_code', 'LINK-0001')->firstOrFail();
+        $this->assertSame(StationStatus::PendingActivation, $station->status);
 
         $this->postJson('/api/v1/device/pair', ['pairing_token' => $token])
             ->assertCreated()
@@ -111,12 +118,13 @@ class StationProvisioningTest extends TestCase
         $station = Station::factory()->for($tenant)->create(['station_code' => 'DEL-01']);
         StationCredential::issueFor($station, 'Kiosk 1', $platformAdmin);
 
-        $response = $this->actingAs($platformAdmin)->delete(route('platform.stations.destroy', $station->id), [
+        $response = $this->actingAs($platformAdmin)->post(route('platform.stations.destroy', $station->id), [
+            '_method' => 'delete',
             'tenant_id' => $tenant->id,
             'confirm_code' => 'DEL-01',
         ]);
 
-        $response->assertRedirect(route('platform.stations.index'));
+        $response->assertRedirect(route('platform.stations.index', ['tenant_id' => $tenant->id]));
         $this->assertNull(Station::allTenants()->find($station->id));
         $this->assertSame(0, StationCredential::allTenants()->where('station_id', $station->id)->count());
         $this->assertDatabaseHas('audit_logs', [
@@ -158,7 +166,7 @@ class StationProvisioningTest extends TestCase
             'confirm_code' => 'DEL-04',
         ]);
 
-        $response->assertRedirect(route('platform.stations.index'));
+        $response->assertRedirect(route('platform.stations.index', ['tenant_id' => $tenant->id]));
         $this->assertNull(Station::allTenants()->find($station->id));
     }
 
@@ -172,7 +180,9 @@ class StationProvisioningTest extends TestCase
         $this->actingAs($platformAdmin)->delete(route('platform.stations.destroy', $station->id), [
             'tenant_id' => $tenant->id,
             'confirm_code' => 'DEL-03',
-        ])->assertStatus(409);
+        ])->assertSessionHasErrors([
+            'confirm_code' => 'This station has recorded attendance taps and cannot be deleted. Its history must be preserved.',
+        ]);
 
         $this->assertNotNull(Station::allTenants()->find($station->id));
     }

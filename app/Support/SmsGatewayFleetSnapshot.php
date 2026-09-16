@@ -28,7 +28,7 @@ class SmsGatewayFleetSnapshot
         // next write to it (see SmsGatewayDeviceSimStat::incrementFor()) —
         // filtering to today's stats_date here avoids displaying stale
         // counts as if they were today's.
-        $today = Date::now()->toDateString();
+        $today = SmsGatewayDevice::currentStatsDate();
 
         $devices = SmsGatewayDevice::query()
             ->with(['simStats' => fn ($query) => $query->where('stats_date', $today)])
@@ -40,12 +40,14 @@ class SmsGatewayFleetSnapshot
                 'username' => $device->username,
                 'is_active' => $device->is_active,
                 'last_seen_at' => $device->last_seen_at?->toIso8601String(),
-                'sent_today' => $device->sent_today,
-                'delivered_today' => $device->delivered_today,
-                'failed_today' => $device->failed_today,
+                'sent_today' => $device->stats_date?->toDateString() === $today ? $device->sent_today : 0,
+                'delivered_today' => $device->stats_date?->toDateString() === $today ? $device->delivered_today : 0,
+                'failed_today' => $device->stats_date?->toDateString() === $today ? $device->failed_today : 0,
                 'is_stale' => $device->last_seen_at === null || $device->last_seen_at->lt($staleThreshold),
                 'daily_send_cap' => config('services.sms_gateway.daily_send_cap'),
-                'cap_status' => $device->dailySendCapStatus(),
+                'cap_status' => SmsGatewayDevice::capStatusFor(
+                    $device->stats_date?->toDateString() === $today ? $device->sent_today : 0,
+                ),
                 // Only present once this device's app build has reported at
                 // least one sim_slot-tagged send — an older, not-yet-updated
                 // phone has no rows here yet, so the fleet screen shows

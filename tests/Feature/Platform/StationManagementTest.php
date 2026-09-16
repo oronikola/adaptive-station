@@ -40,6 +40,7 @@ class StationManagementTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Platform/stations/stations-list-screen')
                 ->has('stations.data', 1)
+                ->has('allStationOptions', 1)
                 ->where('stations.data.0.id', $stationA->id)
                 ->where('stations.data.0.tenant_id', $tenantA->id)
                 ->where('filters.tenant_id', (string) $tenantA->id)

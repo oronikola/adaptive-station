@@ -19,7 +19,10 @@ class SmsGatewayFleetCapTest extends TestCase
         // written via increment()/resetDailyStatsIfNeeded()), so create()
         // silently drops it — forceFill() is required to seed it directly.
         $device = SmsGatewayDevice::create(['label' => 'Phone 01']);
-        $device->forceFill(['sent_today' => $sentToday])->save();
+        $device->forceFill([
+            'sent_today' => $sentToday,
+            'stats_date' => SmsGatewayDevice::currentStatsDate(),
+        ])->save();
 
         return $device;
     }
@@ -110,5 +113,30 @@ class SmsGatewayFleetCapTest extends TestCase
         $response = $this->actingAs($platformAdmin)->get(route('platform.sms-gateway.devices.index'));
 
         $response->assertInertia(fn ($page) => $page->where('devices.0.sim_stats', []));
+    }
+
+    public function test_yesterdays_device_totals_are_zero_after_midnight_in_the_gateway_timezone(): void
+    {
+        config([
+            'services.sms_gateway.daily_send_cap' => 450,
+            'services.sms_gateway.timezone' => 'Asia/Manila',
+        ]);
+        $this->travelTo('2026-09-16 16:30:00');
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        $device = SmsGatewayDevice::create(['label' => 'Phone 01']);
+        $device->forceFill([
+            'sent_today' => 450,
+            'delivered_today' => 440,
+            'failed_today' => 10,
+            'stats_date' => '2026-09-16',
+        ])->save();
+
+        $response = $this->actingAs($platformAdmin)->get(route('platform.sms-gateway.devices.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('devices.0.sent_today', 0)
+            ->where('devices.0.delivered_today', 0)
+            ->where('devices.0.failed_today', 0)
+            ->where('devices.0.cap_status', 'ok'));
     }
 }

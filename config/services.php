@@ -71,6 +71,7 @@ return [
     */
     'sms_gateway' => [
         'daily_send_cap' => env('SMS_GATEWAY_DAILY_SEND_CAP', 450),
+        'timezone' => env('SMS_GATEWAY_TIMEZONE', 'Asia/Manila'),
     ],
 
 ];

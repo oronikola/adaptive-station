@@ -6,7 +6,6 @@ use App\Models\Concerns\HasUuidV4;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Date;
 
 /**
  * Per-(device, SIM slot) daily send counters — split out from
@@ -52,7 +51,7 @@ class SmsGatewayDeviceSimStat extends Model
      */
     public static function incrementFor(string $deviceId, int $simSlot, string $counter): self
     {
-        $today = Date::now()->toDateString();
+        $today = SmsGatewayDevice::currentStatsDate();
 
         $stat = static::query()->firstOrNew([
             'device_id' => $deviceId,

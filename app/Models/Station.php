@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 #[Fillable(['tenant_id', 'name', 'station_code', 'status', 'app_version', 'configuration', 'legacy_station_id'])]
 #[ScopedBy(TenantScope::class)]
@@ -161,7 +162,11 @@ class Station extends Model implements TenantScoped
 
         $hasAttendanceHistory = TapEvent::allTenants()->where('station_id', $stationId)->exists();
 
-        abort_if($hasAttendanceHistory, 409, 'This station has recorded attendance taps and cannot be deleted — that history must be preserved. Revoke its credentials instead to take it offline.');
+        if ($hasAttendanceHistory) {
+            throw ValidationException::withMessages([
+                'confirm_code' => 'This station has recorded attendance taps and cannot be deleted. Its history must be preserved.',
+            ]);
+        }
 
         DeviceHeartbeat::allTenants()->where('station_id', $stationId)->delete();
         DeviceSyncCursor::allTenants()->where('station_id', $stationId)->delete();

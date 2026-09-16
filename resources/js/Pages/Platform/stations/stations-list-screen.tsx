@@ -25,12 +25,12 @@ import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
 interface StationRow {
-    id: number;
+    id: string;
     name: string;
     station_code: string;
     status: string;
-    tenant?: { id: number; name: string; code: string } | null;
-    tenant_id: number;
+    tenant?: { id: string; name: string; code: string } | null;
+    tenant_id: string;
     app_version?: string | null;
     last_pending_count?: number | null;
     last_seen_at?: string | null;
@@ -41,7 +41,7 @@ interface StationRow {
 interface StationOption {
     value: string;
     label: string;
-    tenant_id: number;
+    tenant_id: string;
     tenant_name: string;
     status: string;
 }
@@ -199,9 +199,9 @@ export default function StationsListScreen({
     }
 
     const [deletingStation, setDeletingStation] = useState<StationRow | null>(null);
-    const deleteForm = useForm({ confirm_code: '', tenant_id: '' });
+    const deleteForm = useForm({ _method: 'delete', confirm_code: '', tenant_id: '' });
     const deleteConfirmed =
-        deletingStation !== null && deleteForm.data.confirm_code === deletingStation.station_code;
+        deletingStation !== null && deleteForm.data.confirm_code.trim() === deletingStation.station_code;
 
     function openDeleteModal(station: StationRow) {
         setDeletingStation(station);
@@ -215,7 +215,7 @@ export default function StationsListScreen({
             return;
         }
 
-        deleteForm.delete(route('platform.stations.destroy', deletingStation.id), {
+        deleteForm.post(route('platform.stations.destroy', deletingStation.id), {
             onSuccess: () => {
                 setDeletingStation(null);
                 deleteForm.reset();

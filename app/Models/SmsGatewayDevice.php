@@ -111,6 +111,13 @@ class SmsGatewayDevice extends Model
         };
     }
 
+    public static function currentStatsDate(): string
+    {
+        return Date::now()
+            ->setTimezone((string) config('services.sms_gateway.timezone'))
+            ->toDateString();
+    }
+
     /**
      * Rolls sent_today/delivered_today/failed_today over when the calendar
      * day changes, checked on every claim poll — avoids a separate
@@ -119,7 +126,7 @@ class SmsGatewayDevice extends Model
      */
     public function resetDailyStatsIfNeeded(): self
     {
-        $today = Date::now()->toDateString();
+        $today = static::currentStatsDate();
 
         if ($this->stats_date?->toDateString() !== $today) {
             $this->forceFill([
