@@ -1,21 +1,12 @@
 import InputError from '@/Components/InputError';
+import InputLabel from '@/Components/InputLabel';
+import PremiumSelect from '@/Components/PremiumSelect';
+import { ArrowLeftIcon } from '@/Components/icons/arrow-left';
+import { CircleHelpIcon } from '@/Components/icons/circle-help';
+import { UserPlusIcon } from '@/Components/icons/user-plus';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import '../../../../css/platform-dashboard.css';
-import '../../../../css/platform-overview.css';
-
-const ROLE_INFO: Record<string, { label: string; description: string; capabilities: string[] }> = {
-    tenant_operator: {
-        label: 'Operator',
-        description: 'Can view attendance records and monitor station activity.',
-        capabilities: ['View attendance logs', 'View people & RFID cards', 'View station status', 'Cannot edit or create records'],
-    },
-    tenant_admin: {
-        label: 'Admin',
-        description: 'Full access to all school data and settings.',
-        capabilities: ['All Operator capabilities', 'Add and edit people & parents', 'Manage stations and integrations', 'Create and manage user accounts'],
-    },
-};
 
 export default function UsersCreateScreen() {
     const { data, setData, post, processing, errors } = useForm({
@@ -29,153 +20,115 @@ export default function UsersCreateScreen() {
         post(route('portal.users.store'));
     }
 
-    const role = ROLE_INFO[data.role] ?? ROLE_INFO.tenant_operator;
-
     return (
         <AdminLayout>
-            <Head title="Add User" />
+            <Head title="Add User — Access Management" />
 
-            <div className="pf-dashboard pft-page">
-                <Link href={route('portal.users.index')} className="pft-panel-link" style={{ marginBottom: 14 }}>
-                    <svg viewBox="0 0 24 24">
-                        <path d="m15 6-6 6 6 6" />
-                    </svg>
-                    Back to Users
-                </Link>
+            <div className="pf-dashboard max-w-3xl mx-auto">
+                {/* Back Link */}
+                <div className="mb-6">
+                    <Link
+                        href={route('portal.users.index')}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
+                    >
+                        <ArrowLeftIcon size={16} />
+                        Back to Users Directory
+                    </Link>
+                </div>
 
-                <div className="pft-hero">
-                    <div className="pft-hero-main">
-                        <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="12" cy="8.4" r="3.6" />
-                                <path d="M4.5 19.6a7.5 6 0 0 1 15 0z" />
-                            </svg>
-                        </span>
-                        <div>
-                            <h1 className="pft-hero-title">Add User</h1>
-                            <p className="pft-hero-subtitle">
-                                A temporary password will be generated and shown once after creation.
-                                Relay it to the new user — they must set their own password on first login.
-                            </p>
-                        </div>
+                {/* Hero Header */}
+                <div className="pf-dashboard-header mb-6">
+                    <div>
+                        <p className="pf-dashboard-kicker">ACCESS PROVISIONING</p>
+                        <h1 className="pf-dashboard-title">Add Staff User</h1>
+                        <p className="pf-dashboard-subtitle">
+                            Provision a new account for your school workspace. A temporary password will be generated for the user.
+                        </p>
                     </div>
                 </div>
 
+                {/* Information Callout */}
+                <div className="mb-6 flex items-start gap-3.5 rounded-2xl border border-blue-200/80 bg-blue-50/60 p-4 text-xs text-blue-900 shadow-xs dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
+                        <CircleHelpIcon size={16} />
+                    </span>
+                    <div className="leading-relaxed">
+                        <span className="font-bold">Temporary Password Security:</span> A random one-time password will be generated and shown only once after creating this user. Relay it to the user directly — they will be required to set their own permanent password on their first login.
+                    </div>
+                </div>
+
+                {/* Main Form Panel */}
                 <div className="pf-panel">
-                    <form onSubmit={submit} className="pft-form-panel">
-                        <div className="pft-form-grid">
-                            <div className="pf-field">
-                                <label htmlFor="name">Full name <span aria-hidden="true" style={{ color: 'var(--as-danger)' }}>*</span></label>
-                                <input
-                                    id="name"
-                                    type="text"
-                                    value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    autoFocus
-                                    required
-                                    autoComplete="name"
-                                    placeholder="e.g. Maria Santos"
+                    <div className="pf-panel-header">
+                        <h2 className="pf-panel-title">User Account Details</h2>
+                    </div>
+
+                    <form onSubmit={submit} className="p-6 space-y-6">
+                        {/* Name */}
+                        <div>
+                            <InputLabel htmlFor="name" value="Full Name" />
+                            <input
+                                id="name"
+                                type="text"
+                                value={data.name}
+                                onChange={(e) => setData('name', e.target.value)}
+                                placeholder="e.g. Eleanor Vance"
+                                className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-600/15 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                                autoFocus
+                                required
+                            />
+                            <InputError message={errors.name} className="mt-1.5" />
+                        </div>
+
+                        {/* Email */}
+                        <div>
+                            <InputLabel htmlFor="email" value="Email Address" />
+                            <input
+                                id="email"
+                                type="email"
+                                value={data.email}
+                                onChange={(e) => setData('email', e.target.value)}
+                                placeholder="e.g. eleanor@school.edu"
+                                className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-600/15 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                                required
+                            />
+                            <InputError message={errors.email} className="mt-1.5" />
+                        </div>
+
+                        {/* Role */}
+                        <div>
+                            <InputLabel htmlFor="role" value="Portal Access Role" />
+                            <div className="mt-1.5">
+                                <PremiumSelect
+                                    id="role"
+                                    value={data.role}
+                                    onChange={(role) => setData('role', role)}
+                                    options={[
+                                        { value: 'tenant_operator', label: 'Operator (Kiosk & Attendance Management)' },
+                                        { value: 'tenant_admin', label: 'Admin (Full School Management & Billing)' },
+                                    ]}
+                                    invalid={Boolean(errors.role)}
                                 />
-                                <p className="pf-field-hint">Displayed in all screens and activity logs.</p>
-                                <InputError message={errors.name} className="mt-2" />
                             </div>
-
-                            <div className="pf-field">
-                                <label htmlFor="email">Email address <span aria-hidden="true" style={{ color: 'var(--as-danger)' }}>*</span></label>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    value={data.email}
-                                    onChange={(e) => setData('email', e.target.value)}
-                                    required
-                                    autoComplete="email"
-                                    placeholder="e.g. maria@school.edu.ph"
-                                />
-                                <p className="pf-field-hint">Used to log in and receive notifications. Must be unique.</p>
-                                <InputError message={errors.email} className="mt-2" />
-                            </div>
-                        </div>
-
-                        <div className="pf-field">
-                            <label htmlFor="role">Role <span aria-hidden="true" style={{ color: 'var(--as-danger)' }}>*</span></label>
-                            <select
-                                id="role"
-                                value={data.role}
-                                onChange={(e) => setData('role', e.target.value)}
-                            >
-                                <option value="tenant_operator">Operator (view-only)</option>
-                                <option value="tenant_admin">Admin (full access)</option>
-                            </select>
-                            <InputError message={errors.role} className="mt-2" />
-                        </div>
-
-                        {/* Role capability card */}
-                        <div
-                            style={{
-                                padding: '14px 18px',
-                                borderRadius: 16,
-                                border: '1px solid var(--as-border)',
-                                background: 'var(--as-surface)',
-                                marginBottom: 8,
-                            }}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6 }}>
-                                <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--as-text)' }}>{role.label}</span>
-                                <span style={{ fontSize: 12, color: 'var(--as-text-secondary)' }}>{role.description}</span>
-                            </div>
-                            <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                {role.capabilities.map((cap) => (
-                                    <li key={cap} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--as-text-secondary)' }}>
-                                        <svg
-                                            viewBox="0 0 24 24"
-                                            style={{ width: 13, height: 13, flexShrink: 0, fill: 'none', stroke: 'var(--as-success)', strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}
-                                        >
-                                            <polyline points="20 6 9 17 4 12" />
-                                        </svg>
-                                        {cap}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        {/* Temp password notice */}
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'flex-start',
-                                gap: 12,
-                                padding: '12px 16px',
-                                borderRadius: 14,
-                                border: '1px solid #fde68a',
-                                background: '#fffbeb',
-                                marginBottom: 4,
-                            }}
-                        >
-                            <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, flexShrink: 0, fill: 'none', stroke: '#d97706', strokeWidth: 2, strokeLinecap: 'round', marginTop: 1 }}>
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 7v5" />
-                                <circle cx="12" cy="16.5" r=".5" fill="#d97706" />
-                            </svg>
-                            <p style={{ margin: 0, fontSize: 12, color: '#92400e', lineHeight: 1.5 }}>
-                                A system-generated temporary password will be shown <strong>once</strong> after this form is submitted.
-                                Copy and share it with the new user immediately — it cannot be retrieved later.
+                            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                Operators can manage tap stations and attendance. Admins can additionally invite staff and modify school settings.
                             </p>
+                            <InputError message={errors.role} className="mt-1.5" />
                         </div>
 
-                        <div className="pft-form-actions">
+                        {/* Actions */}
+                        <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-gray-800">
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="pf-btn pf-btn-primary"
+                            >
+                                <UserPlusIcon size={16} />
+                                {processing ? 'Creating...' : 'Create User'}
+                            </button>
                             <Link href={route('portal.users.index')} className="pf-btn pf-btn-secondary">
                                 Cancel
                             </Link>
-                            <button
-                                type="submit"
-                                className={'pf-btn pf-btn-primary' + (processing ? ' pf-btn--loading' : '')}
-                                disabled={processing || !data.name.trim() || !data.email.trim()}
-                            >
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 5v14M5 12h14" />
-                                </svg>
-                                Create User
-                            </button>
                         </div>
                     </form>
                 </div>

@@ -1,5 +1,16 @@
 import InputError from '@/Components/InputError';
-import Modal from '@/Components/Modal';
+import { CheckIcon } from '@/Components/icons/check';
+import { CopyIcon } from '@/Components/icons/copy';
+import { EyeIcon } from '@/Components/icons/eye';
+import { EyeOffIcon } from '@/Components/icons/eye-off';
+import { LockIcon } from '@/Components/icons/lock';
+import { PlusIcon } from '@/Components/icons/plus';
+import { ShieldCheckIcon } from '@/Components/icons/shield-check';
+import { UserIcon } from '@/Components/icons/user';
+import { UserPlusIcon } from '@/Components/icons/user-plus';
+import { XIcon } from '@/Components/icons/x';
+import Modal, { ModalHero } from '@/Components/Modal';
+import { useToast } from '@/Components/toast/ToastProvider';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -22,8 +33,10 @@ interface PagePropsWithFlash {
 
 export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[] }) {
     const { flash } = usePage().props as PagePropsWithFlash;
+    const { showToast } = useToast();
     const [createOpen, setCreateOpen] = useState(false);
     const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
+    const [copiedField, setCopiedField] = useState<string | null>(null);
     const [deactivatingAdmin, setDeactivatingAdmin] = useState<AdminRow | null>(null);
     const { data, setData, post, processing, errors, reset } = useForm({ name: '', email: '' });
     const deactivateForm = useForm({});
@@ -55,6 +68,23 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
         setRevealedPasswords((current) => ({ ...current, [adminId]: !current[adminId] }));
     }
 
+    async function copyValue(value: string, label: string, fieldKey: string): Promise<void> {
+        try {
+            await navigator.clipboard.writeText(value);
+            setCopiedField(fieldKey);
+            showToast({ type: 'success', message: `${label} copied.` });
+            window.setTimeout(() => {
+                setCopiedField((current) => (current === fieldKey ? null : current));
+            }, 1800);
+        } catch {
+            showToast({
+                type: 'error',
+                message: `Could not copy ${label.toLowerCase()}.`,
+                description: 'Copy it manually and try again.',
+            });
+        }
+    }
+
     return (
         <PlatformLayout>
             <Head title="Platform Admins" />
@@ -63,18 +93,11 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="12" cy="8" r="3.5" />
-                                <path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7" />
-                            </svg>
+                            <UserIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Platform Admins</h1>
-                            <p className="pft-hero-subtitle">
-                                Read-only, platform-wide staff accounts — they see every
-                                school's stations, SMS delivery log, and audit trail, but
-                                can never create/suspend a school or manage credentials.
-                            </p>
+                            <p className="pft-hero-subtitle">Manage read-only staff access across the platform.</p>
                         </div>
                     </div>
                     <div className="pft-hero-actions">
@@ -83,9 +106,7 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
                             className="pf-btn pf-btn-primary"
                             onClick={() => setCreateOpen(true)}
                         >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
+                            <PlusIcon size={16} />
                             Add Admin
                         </button>
                     </div>
@@ -106,12 +127,12 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
                     </div>
 
                     <div className="pf-table-wrap">
-                        <table className="pf-table">
+                        <table className="pf-table pfa-admin-table">
                             <thead>
                                 <tr>
-                                    <th scope="col">Name</th>
+                                    <th scope="col">Administrator</th>
                                     <th scope="col">Email</th>
-                                    <th scope="col">Password</th>
+                                    <th scope="col">Credentials</th>
                                     <th scope="col">Status</th>
                                     <th scope="col"><span className="sr-only">Actions</span></th>
                                 </tr>
@@ -119,7 +140,13 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
                             <tbody>
                                 {admins.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="pf-empty">No platform admin accounts yet.</td>
+                                        <td colSpan={5} className="pf-empty">
+                                            <div className="pfa-empty-state">
+                                                <span className="pfa-admin-avatar" aria-hidden="true"><ShieldCheckIcon size={18} /></span>
+                                                <strong>No platform admins yet</strong>
+                                                <span>Add an admin to grant read-only oversight access.</span>
+                                            </div>
+                                        </td>
                                     </tr>
                                 )}
 
@@ -127,29 +154,60 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
                                     const revealed = Boolean(revealedPasswords[admin.id]);
                                     return (
                                         <tr key={admin.id}>
-                                            <td className="pf-tenant-name">{admin.name}</td>
-                                            <td>{admin.email}</td>
+                                            <td>
+                                                <div className="pfa-admin-identity">
+                                                    <span className="pfa-admin-avatar" aria-hidden="true">{admin.name.charAt(0).toUpperCase()}</span>
+                                                    <span>
+                                                        <strong>{admin.name}</strong>
+                                                        <small><ShieldCheckIcon size={12} aria-hidden="true" />Read-only oversight</small>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="pfa-data-field pfa-data-field--email">
+                                                    <span className="pfa-data-field-value">
+                                                        <span>{admin.email}</span>
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        className={`pfa-copy-button ${copiedField === `${admin.id}:email` ? 'pfa-copy-button--copied' : ''}`}
+                                                        onClick={() => copyValue(admin.email, 'Email', `${admin.id}:email`)}
+                                                        aria-label={`Copy ${admin.name}'s email address`}
+                                                        title={copiedField === `${admin.id}:email` ? 'Copied' : 'Copy email'}
+                                                    >
+                                                        {copiedField === `${admin.id}:email` ? <CheckIcon size={14} aria-hidden="true" /> : <CopyIcon size={14} aria-hidden="true" />}
+                                                    </button>
+                                                </div>
+                                            </td>
                                             <td>
                                                 {admin.password_plaintext ? (
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                        <code className="font-mono" style={{ fontSize: 12.5 }}>
-                                                            {revealed
-                                                                ? admin.password_plaintext
-                                                                : '•'.repeat(Math.min(admin.password_plaintext.length, 14))}
-                                                        </code>
+                                                    <div className="pfa-credential">
+                                                        <span className="pfa-credential-icon" aria-hidden="true"><LockIcon size={14} /></span>
+                                                        <span className="pfa-data-field-value">
+                                                            <code>{revealed ? admin.password_plaintext : '•'.repeat(Math.min(admin.password_plaintext.length, 12))}</code>
+                                                        </span>
                                                         <button
                                                             type="button"
                                                             onClick={() => togglePasswordReveal(admin.id)}
                                                             aria-label={revealed ? 'Hide password' : 'Show password'}
                                                             aria-pressed={revealed}
-                                                            className="pf-row-action"
-                                                            style={{ padding: '2px 8px' }}
+                                                            title={revealed ? 'Hide password' : 'Show password'}
+                                                            className="pfa-reveal-button"
                                                         >
-                                                            {revealed ? 'Hide' : 'Show'}
+                                                            {revealed ? <EyeOffIcon size={14} aria-hidden="true" /> : <EyeIcon size={14} aria-hidden="true" />}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className={`pfa-copy-button ${copiedField === `${admin.id}:password` ? 'pfa-copy-button--copied' : ''}`}
+                                                            onClick={() => copyValue(admin.password_plaintext as string, 'Password', `${admin.id}:password`)}
+                                                            aria-label={`Copy ${admin.name}'s password`}
+                                                            title={copiedField === `${admin.id}:password` ? 'Copied' : 'Copy password'}
+                                                        >
+                                                            {copiedField === `${admin.id}:password` ? <CheckIcon size={14} aria-hidden="true" /> : <CopyIcon size={14} aria-hidden="true" />}
                                                         </button>
                                                     </div>
                                                 ) : (
-                                                    <span style={{ color: '#94a3b8', fontSize: 12.5 }}>—</span>
+                                                    <span className="pfa-credential-unavailable"><LockIcon size={13} aria-hidden="true" />Not retained</span>
                                                 )}
                                             </td>
                                             <td>
@@ -157,23 +215,26 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
                                                     {admin.is_active ? 'active' : 'inactive'}
                                                 </span>
                                             </td>
-                                            <td>
+                                            <td className="pfa-admin-action-cell">
                                                 <div className="pft-row-actions">
                                                     {admin.is_active ? (
                                                         <button
                                                             type="button"
-                                                            className="pf-row-action pf-row-action--danger"
+                                                            className="pf-row-action pf-row-action--control pf-row-action--danger"
                                                             onClick={() => setDeactivatingAdmin(admin)}
                                                         >
+                                                            <XIcon size={15} aria-hidden="true" />
                                                             Deactivate
                                                         </button>
                                                     ) : (
                                                         <button
                                                             type="button"
-                                                            className="pf-row-action"
+                                                            className="pf-row-action pf-row-action--control pf-row-action--success"
                                                             onClick={() => reactivate(admin)}
+                                                            disabled={reactivateForm.processing}
                                                         >
-                                                            Reactivate
+                                                            <CheckIcon size={15} aria-hidden="true" />
+                                                            {reactivateForm.processing ? 'Reactivating…' : 'Reactivate'}
                                                         </button>
                                                     )}
                                                 </div>
@@ -190,25 +251,14 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
             {/* Add Admin modal */}
             <Modal show={createOpen} onClose={() => setCreateOpen(false)}>
                 <form onSubmit={submit} className="pf-modal">
-                    <div className="pf-modal-header">
-                        <div>
-                            <h3 className="pf-modal-title">Add Platform Admin</h3>
-                            <p className="pf-field-hint">
-                                A read-only oversight account — the password shown next
-                                works immediately, no forced reset.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            className="pf-modal-close"
-                            onClick={() => setCreateOpen(false)}
-                            aria-label="Close"
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                    <ModalHero
+                        tone="blue"
+                        title="Add Platform Admin"
+                        subtitle="Create a read-only oversight account."
+                        onClose={() => setCreateOpen(false)}
+                    >
+                        <UserPlusIcon size={22} />
+                    </ModalHero>
 
                     <div className="pf-field">
                         <label htmlFor="name">Name</label>
@@ -253,25 +303,17 @@ export default function PlatformAdminsListScreen({ admins }: { admins: AdminRow[
             {/* Deactivate modal */}
             <Modal show={deactivatingAdmin !== null} onClose={() => setDeactivatingAdmin(null)}>
                 <form onSubmit={submitDeactivate} className="pf-modal">
-                    <div className="pf-modal-header">
-                        <div>
-                            <h3 className="pf-modal-title">Deactivate Account</h3>
-                        </div>
-                        <button
-                            type="button"
-                            className="pf-modal-close"
-                            onClick={() => setDeactivatingAdmin(null)}
-                            aria-label="Close"
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                    <ModalHero
+                        tone="red"
+                        title="Deactivate Account"
+                        subtitle="Access ends immediately."
+                        onClose={() => setDeactivatingAdmin(null)}
+                    >
+                        <XIcon size={22} />
+                    </ModalHero>
 
                     <p style={{ padding: '0 0 8px' }}>
-                        Deactivate <strong>{deactivatingAdmin?.name}</strong>? They will
-                        immediately lose access to the platform area.
+                        Deactivate <strong>{deactivatingAdmin?.name}</strong>? They will lose platform access.
                     </p>
 
                     <div className="pf-modal-footer">

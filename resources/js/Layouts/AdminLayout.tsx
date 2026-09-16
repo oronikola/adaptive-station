@@ -9,7 +9,7 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ header, children }: AdminLayoutProps) {
     const { props } = usePage<import('@/types').PageProps>();
-    const user = props.auth.user;
+    const user = props.auth?.user;
 
     const visibleNavigationItems = adminNavigationItems
         .filter(

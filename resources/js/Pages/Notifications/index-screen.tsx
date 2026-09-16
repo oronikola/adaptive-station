@@ -1,4 +1,10 @@
 import Pagination from '@/Components/admin/Pagination';
+import PremiumSelect from '@/Components/PremiumSelect';
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
+import { BellIcon } from '@/Components/icons/bell';
+import { CheckIcon } from '@/Components/icons/check';
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { SlidersHorizontalIcon } from '@/Components/icons/sliders-horizontal';
 import AdminLayout from '@/Layouts/AdminLayout';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { PageProps, PaginatedData, WebNotification } from '@/types';
@@ -74,10 +80,7 @@ export default function NotificationsIndex({ notifications, filters, categoryOpt
                 <div className="pft-hero notifications-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-                                <path d="M10 21h4" />
-                            </svg>
+                            <BellIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Notifications</h1>
@@ -91,7 +94,7 @@ export default function NotificationsIndex({ notifications, filters, categoryOpt
                         </span>
                         {(webNotifications?.unread_count ?? 0) > 0 && (
                             <Link href={route('notifications.read-all')} method="patch" as="button" className="pf-btn pf-btn-secondary">
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+                                <CheckIcon size={16} />
                                 <span>Mark all as read</span>
                             </Link>
                         )}
@@ -102,7 +105,7 @@ export default function NotificationsIndex({ notifications, filters, categoryOpt
                     <div className="pf-panel-header notifications-section-header">
                         <div className="notifications-section-heading">
                             <span className="notifications-section-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6" /></svg>
+                                <SlidersHorizontalIcon size={18} />
                             </span>
                             <div>
                                 <h2 id="notification-preferences-title" className="pf-panel-title">Notification preferences</h2>
@@ -144,24 +147,39 @@ export default function NotificationsIndex({ notifications, filters, categoryOpt
                 <form onSubmit={applyFilters} className="pf-filter-bar notifications-filters" role="search">
                     <div className="pf-field">
                         <label htmlFor="notification-category">Category</label>
-                        <select id="notification-category" value={filterForm.data.category} onChange={(event) => filterForm.setData('category', event.target.value)}>
-                                <option value="">All categories</option>
-                                {Object.entries(categoryOptions).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                        </select>
+                        <PremiumSelect
+                            id="notification-category"
+                            value={filterForm.data.category}
+                            onChange={(value) => filterForm.setData('category', value)}
+                            options={[
+                                { value: '', label: 'All categories' },
+                                ...Object.entries(categoryOptions).map(([value, label]) => ({
+                                    value,
+                                    label,
+                                })),
+                            ]}
+                            placeholder="All categories"
+                        />
                     </div>
                     <div className="pf-field">
                         <label htmlFor="notification-severity">Severity</label>
-                        <select id="notification-severity" value={filterForm.data.severity} onChange={(event) => filterForm.setData('severity', event.target.value)}>
-                                <option value="">All severities</option>
-                                <option value="error">Critical</option>
-                                <option value="warning">Warning</option>
-                                <option value="success">Recovered</option>
-                                <option value="info">Information</option>
-                        </select>
+                        <PremiumSelect
+                            id="notification-severity"
+                            value={filterForm.data.severity}
+                            onChange={(value) => filterForm.setData('severity', value)}
+                            options={[
+                                { value: '', label: 'All severities' },
+                                { value: 'error', label: 'Critical' },
+                                { value: 'warning', label: 'Warning' },
+                                { value: 'success', label: 'Recovered' },
+                                { value: 'info', label: 'Information' },
+                            ]}
+                            placeholder="All severities"
+                        />
                     </div>
                     <div className="pf-filter-bar-actions">
                         <button type="submit" className="pf-btn pf-btn-primary">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7v5l-4 2v-7z" /></svg>
+                            <SlidersHorizontalIcon size={16} />
                             <span>Apply filters</span>
                         </button>
                         {(filters.category || filters.severity) && <Link href={route('notifications.index')} className="pf-btn pf-btn-secondary">Reset</Link>}
@@ -180,7 +198,7 @@ export default function NotificationsIndex({ notifications, filters, categoryOpt
 
                     {notifications.data.length === 0 ? (
                         <div className="notifications-empty">
-                            <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg></span>
+                            <span aria-hidden="true"><BellIcon size={28} /></span>
                             <h3>No notifications found</h3>
                             <p>There are no alerts matching your current filters.</p>
                         </div>
@@ -191,9 +209,9 @@ export default function NotificationsIndex({ notifications, filters, categoryOpt
                         >
                             <span className="notifications-row-icon" aria-hidden="true">
                                 {notification.severity === 'success' ? (
-                                    <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg>
+                                    <CheckIcon size={16} />
                                 ) : (
-                                    <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 4.6 2.8 18a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0Z" /></svg>
+                                    <BadgeAlertIcon size={16} />
                                 )}
                             </span>
                             <div className="notifications-row-body">
@@ -216,7 +234,7 @@ export default function NotificationsIndex({ notifications, filters, categoryOpt
                                 className="notifications-row-action"
                             >
                                 <span>View details</span>
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                                <ChevronRightIcon size={16} />
                             </Link>
                         </article>
                     ))}

@@ -184,7 +184,7 @@
 /* ── Global theme transition ───────────────────────────────────────────
    Smooths every color-driven property when the .dark class flips, without
    requiring per-component transition classes. Components/Theme/ThemeProvider.tsx
-   adds `.theme-transition` to <html> for ~260ms around each toggle and then
+   adds `.theme-transition` to <html> for ~360ms around each toggle and then
    removes it, so this rule stays out of the way of hover/route transitions,
    transform-based effects (tactile-press, btn-glass-*, Sidebar's motion/react
    springs), and keyframe animations (capability-marquee, signal-pulse,
@@ -203,15 +203,63 @@
 html.theme-transition,
 html.theme-transition * {
     transition:
-        background-color 220ms ease-in-out,
-        color 220ms ease-in-out,
-        border-color 220ms ease-in-out !important;
+        background-color 300ms var(--ease-out),
+        color 300ms var(--ease-out),
+        border-color 300ms var(--ease-out),
+        fill 300ms var(--ease-out),
+        stroke 300ms var(--ease-out),
+        outline-color 300ms var(--ease-out) !important;
+}
+
+html.theme-transition::after {
+    content: '';
+    position: fixed;
+    z-index: 2147483647;
+    inset: 0;
+    pointer-events: none;
+    background: #020617;
+    animation: theme-palette-wash 340ms var(--ease-out) both;
+}
+
+html.theme-transition:not(.dark)::after {
+    background: #ffffff;
+}
+
+html.theme-transition [aria-label^='Switch to'] svg {
+    animation: theme-icon-change 260ms var(--ease-out) both;
+}
+
+@keyframes theme-palette-wash {
+    from {
+        opacity: 0.14;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes theme-icon-change {
+    from {
+        opacity: 0;
+        transform: rotate(-24deg) scale(0.78);
+    }
+
+    to {
+        opacity: 1;
+        transform: rotate(0) scale(1);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
     html.theme-transition,
     html.theme-transition * {
         transition: none !important;
+    }
+
+    html.theme-transition::after {
+        content: none;
+        animation: none;
     }
 }
 
@@ -223,18 +271,18 @@ html.theme-transition * {
        everything that scrollbar rule doesn't reach). */
     color-scheme: light;
 
-    /* Brand */
-    --as-brand-dark:       #0f172a;
-    --as-brand:            #1e293b;
-    --as-brand-mid:        #334155;
-    --as-brand-blue:       #475569;
-    --as-brand-blue-light: #64748b;
+    /* Brand — royal blue system from 988106e */
+    --as-brand-dark:       #071c44;
+    --as-brand:            #0b2a5b;
+    --as-brand-mid:        #174a96;
+    --as-brand-blue:       #234ef4;
+    --as-brand-blue-light: #2863bd;
 
     /* Surfaces */
-    --as-bg:               #f4f6f9;
+    --as-bg:               #f1f5fb;
     --as-surface:          #ffffff;
-    --as-surface-hover:    #f8fafc;
-    --as-surface-active:   #f1f5f9;
+    --as-surface-hover:    #f8faff;
+    --as-surface-active:   #edf3fc;
 
     /* Borders */
     --as-border:           #e2e8f0;
@@ -261,59 +309,59 @@ html.theme-transition * {
     --as-danger-bg:        #fef2f2;
     --as-danger-bg-alt:    #fdecea;
     --as-danger-border:    #fecaca;
-    --as-info:             #475569;
-    --as-info-bg:          #f1f5f9;
+    --as-info:             #174a96;
+    --as-info-bg:          #edf3fc;
 
     /* Neutral status */
-    --as-neutral:          #475569;
-    --as-neutral-bg:       #eef1f6;
+    --as-neutral:          #174a96;
+    --as-neutral-bg:       #edf3fc;
 
     /* Shadows */
-    --as-shadow-card:       0 8px 24px rgba(15, 35, 70, 0.08);
+    --as-shadow-card:       0 8px 24px -4px rgba(10, 27, 115, 0.12);
     --as-shadow-card-hover: 0 12px 30px rgba(15, 35, 70, 0.12);
     --as-shadow-sm:         0 4px 12px -8px rgba(23, 74, 150, 0.75);
     --as-shadow-overlay:    0 20px 44px -20px rgba(15, 35, 70, 0.55);
     --as-shadow-deep:       0 18px 30px -22px rgba(7, 28, 68, 0.82);
 
-    /* Glass surfaces (shell/sidebar/topbar — see components/navigation.css) */
-    --as-shell-canvas:            linear-gradient(145deg, #0f172a 0%, #1e293b 42%, #334155 100%);
-    --as-panel-glass-bg:          rgba(255, 255, 255, 0.92);
-    --as-topbar-bg:               rgba(255, 255, 255, 0.80);
-    --as-topbar-border:           rgba(0, 0, 0, 0.06);
-    --as-topbar-icon-bg:          rgba(255, 255, 255, 0.70);
-    --as-topbar-icon-bg-hover:    rgba(255, 255, 255, 0.95);
-    --as-topbar-icon-border:      rgba(0, 0, 0, 0.07);
-    --as-topbar-icon-border-hover: rgba(0, 0, 0, 0.12);
-    --as-topbar-divider:          rgba(0, 0, 0, 0.08);
-    --as-topbar-trigger-hover:    rgba(0, 0, 0, 0.04);
-    --as-dropdown-bg:             rgba(255, 255, 255, 0.88);
-    --as-dropdown-border:         rgba(255, 255, 255, 0.60);
-    --as-dropdown-item-hover:     rgba(241, 245, 251, 0.80);
-    --as-dropdown-danger-hover:   rgba(254, 242, 242, 0.80);
-    --as-mobile-topbar-bg:        rgba(255, 255, 255, 0.88);
-    --as-mobile-toggle-bg:        rgba(255, 255, 255, 0.70);
-    --as-mobile-toggle-bg-hover:  rgba(255, 255, 255, 0.90);
-    --as-mobile-toggle-border:    rgba(0, 0, 0, 0.10);
-    --as-sidebar-glass-bg:        rgba(255, 255, 255, 0.10);
-    --as-sidebar-mobile-bg:       rgba(15, 23, 42, 0.88);
-    --as-sidebar-link-hover:      rgba(255, 255, 255, 0.14);
-    --as-sidebar-link-active-bg:  rgba(255, 255, 255, 0.88);
-    --as-sidebar-link-active-fg:  #1e293b;
-    --as-sidebar-logo-text:       #ffffff;
+    /* Glass surfaces (shell/sidebar — see components/navigation.css) */
+    --as-shell-canvas:            #f1f5fb;
+    --as-panel-glass-bg:          rgba(255, 255, 255, 0.94);
+    --as-topbar-bg:               rgba(255, 255, 255, 0.94);
+    --as-topbar-border:           #e7ecf4;
+    --as-topbar-icon-bg:          #ffffff;
+    --as-topbar-icon-bg-hover:    #f8faff;
+    --as-topbar-icon-border:      #e7ecf4;
+    --as-topbar-icon-border-hover: #b9c9df;
+    --as-topbar-divider:          #e7ecf4;
+    --as-topbar-trigger-hover:    #f8faff;
+    --as-dropdown-bg:             rgba(255, 255, 255, 0.96);
+    --as-dropdown-border:         #e2e8f0;
+    --as-dropdown-item-hover:     #edf3fc;
+    --as-dropdown-danger-hover:   #fef2f2;
+    --as-mobile-topbar-bg:        #ffffff;
+    --as-mobile-toggle-bg:        #ffffff;
+    --as-mobile-toggle-bg-hover:  #f8faff;
+    --as-mobile-toggle-border:    #e7ecf4;
+    --as-sidebar-glass-bg:        rgba(255, 255, 255, 0.94);
+    --as-sidebar-mobile-bg:       #ffffff;
+    --as-sidebar-link-hover:      #edf3fc;
+    --as-sidebar-link-active-bg:  #234ef4;
+    --as-sidebar-link-active-fg:  #ffffff;
+    --as-sidebar-logo-text:       #071c44;
 
     /* Solid brand badges (icon chips paired with hardcoded white icons/text
        — e.g. .pft-hero-icon, .pf-page-link--active, .auth-school-mark).
        These intentionally do NOT flip in dark mode: they're a fixed navy
        chip the white foreground always contrasts against, unlike
        --as-brand/--as-brand-blue which flip for use as accent text. */
-    --as-brand-solid:      #1e293b;
-    --as-brand-blue-solid: #475569;
+    --as-brand-solid:      #234ef4;
+    --as-brand-blue-solid: #234ef4;
     --as-success-solid:    #1a8a4c;
     --as-warning-solid:    #c1791f;
     --as-danger-solid:     #dc2626;
     --as-violet-solid:     #6c47c9;
-    --as-brand-blue-light-solid: #64748b;
-    --as-brand-mid-solid:  #334155;
+    --as-brand-blue-light-solid: #2863bd;
+    --as-brand-mid-solid:  #1b36c8;
 
     /* Panel glass edge highlight + sidebar active-badge (flip together with
        --as-panel-glass-bg / --as-sidebar-link-active-bg so contrast holds) */
@@ -343,9 +391,9 @@ html.theme-transition * {
        it flips to a bright value here rather than getting darker. */
     --as-brand-dark:       #f8fafc;
     --as-brand:            #e2e8f0;
-    --as-brand-mid:        #93b4e6;
-    --as-brand-blue:       #7fa6e0;
-    --as-brand-blue-light: #a8c3ec;
+    --as-brand-mid:        #9db4ff;
+    --as-brand-blue:       #9db4ff;
+    --as-brand-blue-light: #d5deff;
 
     /* Surfaces */
     --as-bg:               #0b1220;
@@ -393,7 +441,7 @@ html.theme-transition * {
     --as-shadow-deep:       0 18px 30px -22px rgba(0, 0, 0, 0.8);
 
     /* Glass surfaces */
-    --as-shell-canvas:            linear-gradient(145deg, #05070d 0%, #0b1220 42%, #131c2e 100%);
+    --as-shell-canvas:            #0b1220;
     --as-panel-glass-bg:          rgba(11, 18, 32, 0.92);
     --as-topbar-bg:               rgba(11, 18, 32, 0.80);
     --as-topbar-border:           rgba(255, 255, 255, 0.06);
@@ -428,4 +476,740 @@ html.theme-transition * {
     --as-icon-blue-bg:  rgba(40, 99, 189, 0.22);
     --as-icon-violet-bg: rgba(108, 71, 201, 0.24);
     --as-icon-violet-fg: #b79ae3;
+}
+
+:root {
+    /* Token ease-out: default easing for nearly all transitions. */
+    --ease-emil-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+    /* Transitions.dev — avatar group hover */
+    --avatar-lift: -4px;
+    --avatar-dur: 320ms;
+    --avatar-scale: 1.05;
+    --avatar-falloff: 0.45;
+    --avatar-ease-in: cubic-bezier(0.22, 1, 0.36, 1);
+    --avatar-ease-out: cubic-bezier(0.34, 3.85, 0.64, 1);
+}
+
+@layer utilities {
+    /* Small dot texture for royal-blue surfaces. */
+    .bg-dot-grid {
+        background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1.4px);
+        background-size: 14px 14px;
+    }
+}
+
+/* Hover-spring transition only — bring your own avatar/chip
+   styling (size, shape, border, stacking, background). */
+.t-avatar {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    transform-origin: center;
+    /* translateY before scale so scale doesn't amplify the lift offset. */
+    transform:
+        translateY(var(--shift, 0px))
+        scale(var(--scale-active, 1));
+    transition: transform var(--avatar-dur) var(--avatar-ease-in);
+    will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .t-avatar {
+        transition: none !important;
+        transform: none !important;
+    }
+}
+
+/*
+ * Landing page theme tokens. Dark (the existing royal drench) is the
+ * default. Light swaps the canvas and copy while leaving product islands
+ * marked `.lp-keep-dark` and the royal capability ribbon unchanged.
+ */
+.landing-page {
+    --lp-canvas: #234ef4;
+    --lp-ink: #ffffff;
+    --lp-muted: rgb(255 255 255 / 0.78);
+    --lp-faint: rgb(255 255 255 / 0.55);
+    --lp-glass-bg: rgb(255 255 255 / 0.1);
+    --lp-border: rgb(255 255 255 / 0.16);
+    --lp-dot: rgb(255 255 255 / 0.18);
+    color-scheme: dark;
+}
+
+.landing-page[data-theme='light'] {
+    --lp-canvas: #e8eef8;
+    --lp-ink: #071c44;
+    --lp-muted: #3d5270;
+    --lp-faint: #64748b;
+    --lp-glass-bg: rgb(255 255 255 / 0.78);
+    --lp-border: rgb(7 28 68 / 0.1);
+    --lp-dot: rgb(7 28 68 / 0.1);
+    color-scheme: light;
+}
+
+.lp-canvas {
+    background-color: var(--lp-canvas);
+    color: var(--lp-ink);
+}
+
+.lp-orb-tl {
+    background: radial-gradient(circle, rgb(255 255 255 / 0.16) 0%, rgb(255 255 255 / 0) 70%);
+}
+
+.lp-orb-br {
+    background: radial-gradient(circle, rgb(10 27 115 / 0.35) 0%, rgb(10 27 115 / 0) 70%);
+}
+
+.lp-hero-accent {
+    background-image: linear-gradient(to right, #fff, #fff, #d5deff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.landing-page::selection,
+.landing-page *::selection {
+    background: #fff;
+    color: #234ef4;
+}
+
+.landing-page[data-theme='light']::selection,
+.landing-page[data-theme='light'] *::selection {
+    background: rgb(35 78 244 / 0.22);
+    color: #071c44;
+}
+
+.landing-page,
+.lp-canvas {
+    transition:
+        background-color 280ms var(--ease-emil-out),
+        color 280ms var(--ease-emil-out);
+}
+
+.landing-page[data-theme='light'] .bg-dot-grid {
+    background-image: radial-gradient(var(--lp-dot) 1px, transparent 1.4px);
+}
+
+.landing-page[data-theme='light'] .lp-orb-tl {
+    background: radial-gradient(circle, rgb(35 78 244 / 0.14) 0%, rgb(35 78 244 / 0) 70%);
+}
+
+.landing-page[data-theme='light'] .lp-orb-br {
+    background: radial-gradient(circle, rgb(7 28 68 / 0.1) 0%, rgb(7 28 68 / 0) 70%);
+}
+
+.landing-page[data-theme='light'] .lp-hero-accent {
+    background-image: none;
+    color: #174a96;
+    -webkit-text-fill-color: #174a96;
+}
+
+.landing-page[data-theme='light'] .eyebrow-badge {
+    color: #071c44;
+    background: rgb(7 28 68 / 0.06);
+    border-color: rgb(7 28 68 / 0.1);
+}
+
+.landing-page[data-theme='light'] .eyebrow-badge::before {
+    background: #188352;
+}
+
+.landing-page[data-theme='light'] .lp-canvas .text-white {
+    color: var(--lp-ink);
+}
+
+.landing-page[data-theme='light'] .lp-canvas [class*='text-white/'] {
+    color: var(--lp-muted);
+}
+
+.landing-page[data-theme='light'] .lp-canvas [class*='text-white/3'],
+.landing-page[data-theme='light'] .lp-canvas [class*='text-white/4'],
+.landing-page[data-theme='light'] .lp-canvas [class*='text-white/5'] {
+    color: var(--lp-faint);
+}
+
+.landing-page[data-theme='light'] .lp-canvas [class*='border-white/'] {
+    border-color: var(--lp-border);
+}
+
+.landing-page[data-theme='light'] .lp-canvas [class*='bg-white/']:not(.btn-glass-secondary):not(.ds-btn-hero) {
+    background-color: var(--lp-glass-bg);
+}
+
+.landing-page[data-theme='light'] .lp-canvas [class*='text-[#bcd4f7]'] {
+    color: var(--lp-muted);
+}
+
+.landing-page[data-theme='light'] .glass-hover {
+    background-color: rgb(255 255 255 / 0.92);
+    border-color: #dbe3ef;
+    color: #071c44;
+}
+
+.landing-page[data-theme='light'] .faq-hover {
+    background-color: rgb(255 255 255 / 0.78);
+    border-color: #dbe3ef;
+}
+
+.landing-page[data-theme='light'] .faq-hover[class*='bg-white/15'] {
+    background-color: #fff;
+}
+
+.landing-page[data-theme='light'] .faq-hover span,
+.landing-page[data-theme='light'] .faq-hover p,
+.landing-page[data-theme='light'] .glass-hover blockquote,
+.landing-page[data-theme='light'] .glass-hover figcaption {
+    color: inherit;
+}
+
+.landing-page[data-theme='light'] .lp-keep-dark,
+.landing-page[data-theme='light'] .lp-keep-dark .text-white,
+.landing-page[data-theme='light'] .lp-keep-dark [class*='text-white'] {
+    color: #fff;
+}
+
+.landing-page[data-theme='light'] .lp-keep-dark [class*='text-white/'] {
+    color: rgb(255 255 255 / 0.75);
+}
+
+.landing-page[data-theme='light'] .lp-keep-dark [class*='border-white/'] {
+    border-color: rgb(255 255 255 / 0.12);
+}
+
+.landing-page[data-theme='light'] .lp-keep-dark [class*='bg-white/'] {
+    background-color: rgb(255 255 255 / 0.08);
+}
+
+.landing-page[data-theme='light'] .lp-keep-dark [class*='text-[#bcd4f7]'] {
+    color: #bcd4f7;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .landing-page[data-theme='light'] .glass-hover:hover {
+        background-color: #fff;
+        box-shadow: 0 18px 38px -18px rgb(10 27 115 / 0.22);
+    }
+
+    .landing-page[data-theme='light'] .faq-hover:hover {
+        background-color: #fff;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing-page,
+    .lp-canvas {
+        transition: none;
+    }
+}
+
+@layer components {
+    /*
+     * Emil-style interaction system for the landing page.
+     * Exact transitioned properties (never `all`), sub-300ms timings,
+     * press feedback on pressables, hover lift gated to fine pointers.
+     */
+    .pressable {
+        transition:
+            transform 160ms var(--ease-emil-out),
+            background-color 160ms ease,
+            border-color 160ms ease,
+            box-shadow 200ms var(--ease-emil-out),
+            color 160ms ease;
+    }
+
+    .card-hover {
+        transition:
+            transform 200ms var(--ease-emil-out),
+            box-shadow 250ms var(--ease-emil-out),
+            background-color 200ms ease;
+    }
+
+    .card-hover-dark {
+        transition:
+            transform 200ms var(--ease-emil-out),
+            box-shadow 250ms var(--ease-emil-out);
+    }
+
+    .glass-hover {
+        transition:
+            transform 200ms var(--ease-emil-out),
+            box-shadow 250ms var(--ease-emil-out),
+            background-color 200ms ease;
+    }
+
+    .faq-hover {
+        transition: background-color 160ms ease;
+    }
+
+    .icon-nudge {
+        transition: transform 200ms var(--ease-emil-out);
+    }
+
+    /*
+     * Token: Hero CTA Button — full-pill marketing CTA, vibrant gradient
+     * with convex top highlight + ambient blue shadow. Matches design reference.
+     */
+    .ds-btn-hero {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border-radius: 9999px;
+        padding: 14px 28px;
+        min-height: 52px;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: #fff;
+        background: linear-gradient(180deg, #5b7cee 0%, #3e66ea 50%, #2247cc 100%);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow:
+            inset 0 1px 1px rgba(255, 255, 255, 0.45),
+            0 10px 24px -4px rgba(35, 78, 225, 0.42),
+            0 4px 10px -2px rgba(35, 78, 225, 0.25);
+        transition:
+            transform 200ms var(--ease-emil-out),
+            filter 200ms var(--ease-emil-out),
+            box-shadow 200ms var(--ease-emil-out);
+        cursor: pointer;
+    }
+
+    .ds-btn-hero:active {
+        transform: scale(0.97);
+    }
+
+    /*
+     * Token: Secondary CTA / Glass Pill Button (.btn-glass-secondary, .ds-btn-ghost)
+     * Layered convex glass pill border + inner highlight with top gradient sheen.
+     */
+    .btn-glass-secondary {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid rgba(226, 232, 240, 0.9) !important;
+        box-shadow:
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+            inset 0 -1px 0 0 rgba(0, 0, 0, 0.04),
+            0 1px 2px 0 rgba(0, 0, 0, 0.05),
+            0 2px 6px 0 rgba(0, 0, 0, 0.02);
+    }
+
+    .btn-glass-secondary::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.75) 0%,
+            rgba(255, 255, 255, 0.15) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+        pointer-events: none;
+        z-index: 1;
+        transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .btn-glass-secondary:hover::before {
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(255, 255, 255, 0.25) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+    }
+
+    /*
+     * Token: Tactile press feedback
+     */
+    .tactile-press {
+        transition:
+            transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+            box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1),
+            opacity 160ms cubic-bezier(0.23, 1, 0.32, 1),
+            filter 160ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .tactile-press:active {
+        transform: scale(0.97);
+    }
+
+    .ds-btn-ghost {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 9999px;
+        padding: 16px 32px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(226, 232, 240, 0.9) !important;
+        box-shadow:
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+            inset 0 -1px 0 0 rgba(0, 0, 0, 0.04),
+            0 1px 2px 0 rgba(0, 0, 0, 0.05),
+            0 2px 6px 0 rgba(0, 0, 0, 0.02);
+        transition:
+            transform 200ms cubic-bezier(0.23, 1, 0.32, 1),
+            background-color 200ms cubic-bezier(0.23, 1, 0.32, 1),
+            color 200ms cubic-bezier(0.23, 1, 0.32, 1),
+            box-shadow 200ms cubic-bezier(0.23, 1, 0.32, 1);
+        cursor: pointer;
+    }
+
+    .ds-btn-ghost::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.75) 0%,
+            rgba(255, 255, 255, 0.15) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+        pointer-events: none;
+        z-index: 1;
+        transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .ds-btn-ghost span,
+    .ds-btn-ghost svg {
+        position: relative;
+        z-index: 10;
+    }
+
+    .ds-btn-ghost:hover {
+        transform: translateY(-2px);
+        background-color: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .ds-btn-ghost:hover::before {
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(255, 255, 255, 0.25) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+    }
+
+    .ds-btn-ghost:active {
+        transform: scale(0.97);
+    }
+
+    /*
+     * Token: two-tone pill badge with leading dot, tuned for blue canvas.
+     */
+    .eyebrow-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 9999px;
+        padding: 6px 14px 6px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .eyebrow-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: #8ff0c6;
+    }
+
+    /*
+     * Token: scroll-triggered fade + lift entrance. Always
+     * translateY(14px) -> 0 over 600ms, stagger via transition-delay.
+     */
+    .reveal {
+        opacity: 0;
+        transform: translateY(14px);
+        transition:
+            opacity 600ms ease,
+            transform 600ms var(--ease-emil-out);
+    }
+
+    .reveal-visible {
+        opacity: 1;
+        transform: none;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        .hover-lift:hover {
+            transform: translateY(-1px);
+        }
+
+        .ds-btn-hero:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+            box-shadow:
+                inset 0 1px 1.5px rgba(255, 255, 255, 0.5),
+                0 14px 30px -4px rgba(35, 78, 225, 0.52),
+                0 6px 14px -2px rgba(35, 78, 225, 0.3);
+        }
+
+        .ds-btn-ghost:hover {
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+            background-color: #ffffff;
+            box-shadow:
+                0 4px 12px -2px rgba(0, 0, 0, 0.06),
+                0 2px 4px -1px rgba(0, 0, 0, 0.04);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+                inset 0 -1px 0 0 rgba(15, 23, 42, 0.03),
+                0 20px 44px -20px rgba(7, 28, 68, 0.32),
+                0 8px 20px -12px rgba(7, 28, 68, 0.22);
+        }
+
+        .card-hover-dark:hover {
+            transform: translateY(-3px);
+            box-shadow:
+                0 22px 46px -20px rgba(3, 10, 35, 0.55),
+                0 10px 24px -14px rgba(3, 10, 35, 0.4);
+        }
+
+        .glass-hover:hover {
+            transform: translateY(-3px);
+            background-color: rgba(255, 255, 255, 0.14);
+            box-shadow: 0 18px 38px -18px rgba(10, 27, 115, 0.4);
+        }
+
+        .faq-hover:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .group:hover .icon-nudge {
+            transform: translateY(-2px);
+        }
+    }
+
+    /* Press must win over hover: snappy 120ms confirmation. */
+    .pressable:active {
+        transform: translateY(-1px) scale(0.97);
+        transition-duration: 120ms;
+    }
+
+    /*
+     * Token: tactile press + glass secondary (shared with the Help Center
+     * system). Gives pasted glass buttons their press and gloss behavior.
+     */
+    .tactile-press {
+        position: relative;
+        transition:
+            transform 160ms var(--ease-emil-out),
+            box-shadow 160ms var(--ease-emil-out),
+            opacity 160ms var(--ease-emil-out),
+            filter 160ms var(--ease-emil-out);
+    }
+
+    .tactile-press:active {
+        transform: scale(0.97);
+    }
+
+    .btn-glass-secondary {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        box-shadow:
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+            inset 0 -1px 0 0 rgba(0, 0, 0, 0.04),
+            0 1px 2px 0 rgba(0, 0, 0, 0.05),
+            0 2px 6px 0 rgba(0, 0, 0, 0.02);
+    }
+
+    .btn-glass-secondary::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.75) 0%,
+            rgba(255, 255, 255, 0.15) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+        pointer-events: none;
+        z-index: 1;
+        transition: opacity 180ms var(--ease-emil-out);
+    }
+
+    .btn-glass-secondary:hover::before {
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(255, 255, 255, 0.25) 50%,
+            rgba(0, 0, 0, 0.02) 100%
+        );
+    }
+
+    /*
+     * Token: Global Dropdown Select styling
+     * Aligns native <select> elements and .pf-select with the design system
+     * from commit 988106e: 12px radius, slate hairline border, brand focus halo,
+     * tactile hover, custom SVG chevron indicator, and dark mode support.
+     */
+    select,
+    .pf-select {
+        display: inline-flex;
+        align-items: center;
+        width: 100%;
+        height: 44px;
+        padding: 0 38px 0 14px;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.5;
+        color: #162033;
+        background-color: #ffffff;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 14px center;
+        background-repeat: no-repeat;
+        background-size: 16px 16px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border: 1px solid #d7dde7;
+        border-radius: 12px;
+        outline: none;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        cursor: pointer;
+        transition:
+            border-color 160ms cubic-bezier(0.23, 1, 0.32, 1),
+            box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1),
+            background-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    select:hover,
+    .pf-select:hover {
+        border-color: #b9c9df;
+    }
+
+    select:focus,
+    .pf-select:focus {
+        border-color: #234ef4;
+        box-shadow: 0 0 0 4px rgba(35, 78, 244, 0.12);
+        outline: none;
+    }
+
+    select:disabled,
+    .pf-select:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        background-color: #f8fafc;
+    }
+
+    /* Compact select variant for toolbars, inline filters, and tables */
+    select.pf-select-sm,
+    select.select-sm {
+        height: 34px;
+        padding: 0 30px 0 10px;
+        font-size: 12px;
+        border-radius: 10px;
+        background-position: right 10px center;
+        background-size: 14px 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        select,
+        .pf-select {
+            background-color: #0f172a;
+            border-color: #334155;
+            color: #e2e8f0;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        select:hover,
+        .pf-select:hover {
+            border-color: #475569;
+        }
+
+        select:focus,
+        .pf-select:focus {
+            border-color: #234ef4;
+            box-shadow: 0 0 0 4px rgba(35, 78, 244, 0.25);
+        }
+
+        select:disabled,
+        .pf-select:disabled {
+            background-color: #1e293b;
+        }
+    }
+
+    :root.dark select,
+    :root.dark .pf-select {
+        background-color: #0f172a;
+        border-color: #334155;
+        color: #e2e8f0;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    :root.dark select:hover,
+    :root.dark .pf-select:hover {
+        border-color: #475569;
+    }
+
+    :root.dark select:focus,
+    :root.dark .pf-select:focus {
+        border-color: #234ef4;
+        box-shadow: 0 0 0 4px rgba(35, 78, 244, 0.25);
+    }
+
+    :root.dark select:disabled,
+    :root.dark .pf-select:disabled {
+        background-color: #1e293b;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .pressable,
+        .tactile-press,
+        .hover-lift,
+        .card-hover,
+        .card-hover-dark,
+        .glass-hover,
+        .faq-hover,
+        .icon-nudge,
+        .ds-btn-hero,
+        .ds-btn-ghost,
+        .reveal,
+        select,
+        .pf-select {
+            transition: none;
+        }
+
+        .reveal {
+            opacity: 1;
+            transform: none;
+        }
+
+        .pressable:active,
+        .hover-lift:hover,
+        .card-hover:hover,
+        .card-hover-dark:hover,
+        .glass-hover:hover,
+        .group:hover .icon-nudge {
+            transform: none;
+        }
+    }
 }

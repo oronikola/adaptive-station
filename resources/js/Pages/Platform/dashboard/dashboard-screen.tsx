@@ -1,6 +1,22 @@
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { ClockIcon } from '@/Components/icons/clock';
+import { HomeIcon } from '@/Components/icons/home';
+import { LayoutGridIcon } from '@/Components/icons/layout-grid';
+import { MonitorCogIcon } from '@/Components/icons/monitor-cog';
+import { PlusIcon } from '@/Components/icons/plus';
+import { ZapIcon } from '@/Components/icons/zap';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link } from '@inertiajs/react';
 import { Tenant } from '@/types';
+import {
+    Area,
+    AreaChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -9,37 +25,17 @@ interface StatCardProps {
     value: number;
     icon: string;
     tone: string;
-    meta?: string;
+    pills: Array<{ label: string; value: number | string; tone?: string }>;
 }
 
 const STAT_ICONS: Record<string, React.ReactNode> = {
-    tenants: (
-        <svg viewBox="0 0 24 24">
-            <polygon points="12,3 19,9 5,9" />
-            <rect x="4" y="9" width="16" height="12" rx="1.6" />
-        </svg>
-    ),
-    activeTenants: (
-        <svg viewBox="0 0 24 24">
-            <polygon points="12,3 19,9 5,9" />
-            <rect x="4" y="9" width="16" height="12" rx="1.6" />
-        </svg>
-    ),
-    stations: (
-        <svg viewBox="0 0 24 24">
-            <rect x="4" y="5" width="16" height="10" rx="1.6" />
-            <rect x="9.5" y="17" width="5" height="2" rx="1" />
-            <rect x="7" y="19.4" width="10" height="1.6" rx="0.8" />
-        </svg>
-    ),
-    activeStations: (
-        <svg viewBox="0 0 24 24">
-            <path d="M7 2v11h3v9l7-12h-4l4-8z" />
-        </svg>
-    ),
+    tenants: <HomeIcon size={19} />,
+    activeTenants: <HomeIcon size={19} />,
+    stations: <MonitorCogIcon size={19} />,
+    activeStations: <ZapIcon size={19} />,
 };
 
-function StatCard({ label, value, icon, tone, meta }: StatCardProps) {
+function StatCard({ label, value, icon, tone, pills }: StatCardProps) {
     return (
         <div className="pft-stat-card">
             <div className="pft-stat-card-top">
@@ -49,7 +45,13 @@ function StatCard({ label, value, icon, tone, meta }: StatCardProps) {
                 </span>
             </div>
             <p className="pft-stat-value">{value}</p>
-            {meta && <p className="pft-stat-meta">{meta}</p>}
+            <div className="pft-stat-pills">
+                {pills.map((pill) => (
+                    <span key={pill.label} className={`pft-stat-pill pft-stat-pill--${pill.tone ?? 'neutral'}`}>
+                        <strong>{pill.value}</strong> {pill.label}
+                    </span>
+                ))}
+            </div>
         </div>
     );
 }
@@ -60,70 +62,196 @@ function ActivationGauge({
     label,
     value,
     total,
+    pending,
+    disabled,
 }: {
     label: string;
     value: number;
     total: number;
+    pending: number;
+    disabled: number;
 }) {
     const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-    const radius = 54;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (Math.min(100, pct) / 100) * circumference;
 
     return (
         <div className="pft-gauge-card">
-            <div className="pft-gauge">
-                <svg viewBox="0 0 130 130" className="pft-gauge-svg" aria-hidden="true">
-                    <circle cx="65" cy="65" r={radius} className="pft-gauge-track" />
-                    <circle
-                        cx="65"
-                        cy="65"
-                        r={radius}
-                        className="pft-gauge-value"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={offset}
-                    />
-                </svg>
-                <div className="pft-gauge-center">
+            <div className="pft-gauge-summary">
+                <div>
                     <span className="pft-gauge-pct">{pct}%</span>
+                    <p className="pft-gauge-caption">{label}</p>
                 </div>
+                <strong>{value}<span> / {total}</span></strong>
             </div>
-            <p className="pft-gauge-caption">{label}</p>
-            <p className="pft-gauge-meta">
-                {value} of {total} active
-            </p>
+            <div className="pft-activation-track" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={total || 1} aria-valuenow={value}>
+                <span style={{ width: `${Math.min(100, pct)}%` }} />
+            </div>
+            <div className="pft-activation-pills">
+                <span><i className="pft-dot pft-dot--pending" />{pending} awaiting activation</span>
+                <span><i className="pft-dot pft-dot--disabled" />{disabled} disabled or retired</span>
+            </div>
         </div>
     );
 }
 
-/** Two-category bar comparison (active vs. inactive clients) — the closest
- * real equivalent we have to a categorical bar chart; there's no per-day
- * usage data yet to power a "most active day" style breakdown. */
-function StatusBarChart({ active, inactive }: { active: number; inactive: number }) {
-    const max = Math.max(active, inactive, 1);
+interface GrowthPoint {
+    date: string;
+    total: number;
+    active: number;
+}
+
+interface StatusCounts {
+    active: number;
+    suspended: number;
+    archived: number;
+}
+
+interface TooltipEntry {
+    dataKey: string;
+    name: string;
+    value: number;
+    color: string;
+}
+
+function ChartTooltip({
+    active,
+    payload,
+    label,
+}: {
+    active?: boolean;
+    payload?: TooltipEntry[];
+    label?: string;
+}) {
+    if (!active || !payload || payload.length === 0) {
+        return null;
+    }
 
     return (
-        <div className="pft-bars">
-            <div className="pft-bar-col">
-                <span className="pft-bar-value">{active}</span>
-                <div className="pft-bar-track">
-                    <div
-                        className="pft-bar pft-bar--active"
-                        style={{ height: `${(active / max) * 100}%` }}
-                    />
+        <div className="pf-chart-tooltip">
+            <p className="pf-chart-tooltip-label">{label}</p>
+            {payload.map((entry) => (
+                <div key={entry.dataKey} className="pf-chart-tooltip-row">
+                    <span style={{ color: entry.color }}>
+                        <span className="pf-chart-tooltip-swatch" />
+                        {entry.name}
+                    </span>
+                    <span>{entry.value.toLocaleString()}</span>
                 </div>
-                <span className="pft-bar-label">Active</span>
+            ))}
+        </div>
+    );
+}
+
+function ClientGrowthChart({ growth }: { growth: GrowthPoint[] }) {
+    const chartData = growth.map((point) => ({
+        ...point,
+        label: new Date(`${point.date}T12:00:00`).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+        }),
+    }));
+
+    if (chartData.length === 0) {
+        return <p className="pf-empty pft-panel-empty">No clients onboarded yet.</p>;
+    }
+
+    return (
+        <>
+            <div className="pf-chart-legend">
+                <span className="pf-chart-legend-item pf-chart-legend-item--blue">
+                    <span className="pf-chart-legend-dot" />
+                    Clients onboarded
+                </span>
+                <span className="pf-chart-legend-item pf-chart-legend-item--green">
+                    <span className="pf-chart-legend-dot" />
+                    Active clients
+                </span>
             </div>
-            <div className="pft-bar-col">
-                <span className="pft-bar-value">{inactive}</span>
-                <div className="pft-bar-track">
-                    <div
-                        className="pft-bar pft-bar--muted"
-                        style={{ height: `${(inactive / max) * 100}%` }}
-                    />
-                </div>
-                <span className="pft-bar-label">Inactive</span>
+            <div className="pf-chart-body pft-growth-chart">
+                <ResponsiveContainer width="100%" height={260}>
+                    <AreaChart data={chartData} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
+                        <defs>
+                            <linearGradient id="growthTotalFill" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#234ef4" stopOpacity={0.28} />
+                                <stop offset="100%" stopColor="#234ef4" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="growthActiveFill" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#188352" stopOpacity={0.26} />
+                                <stop offset="100%" stopColor="#188352" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid stroke="var(--as-border-light)" vertical={false} />
+                        <XAxis
+                            dataKey="label"
+                            tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                            axisLine={false}
+                            tickLine={false}
+                        />
+                        <YAxis
+                            tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                            axisLine={false}
+                            tickLine={false}
+                            allowDecimals={false}
+                        />
+                        <Tooltip content={<ChartTooltip />} />
+                        <Area
+                            type="monotone"
+                            dataKey="total"
+                            name="Clients onboarded"
+                            stroke="#234ef4"
+                            strokeWidth={2.5}
+                            fill="url(#growthTotalFill)"
+                            activeDot={{ r: 5, strokeWidth: 0 }}
+                        />
+                        <Area
+                            type="monotone"
+                            dataKey="active"
+                            name="Active clients"
+                            stroke="#188352"
+                            strokeWidth={2.5}
+                            fill="url(#growthActiveFill)"
+                            activeDot={{ r: 5, strokeWidth: 0 }}
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
             </div>
+        </>
+    );
+}
+
+function ClientStatusChart({ counts }: { counts: StatusCounts }) {
+    const total = counts.active + counts.suspended + counts.archived;
+    const segments = [
+        { key: 'active', label: 'Active', value: counts.active },
+        { key: 'suspended', label: 'Suspended', value: counts.suspended },
+        { key: 'archived', label: 'Archived', value: counts.archived },
+    ];
+
+    if (total === 0) {
+        return <p className="pf-empty pft-panel-empty">No client workspaces yet.</p>;
+    }
+
+    return (
+        <div className="pft-status-chart">
+            <div className="pft-status-track" role="img" aria-label={`Active ${counts.active}, suspended ${counts.suspended}, archived ${counts.archived}`}>
+                {segments.map((segment) => (
+                    segment.value > 0 ? (
+                        <div
+                            key={segment.key}
+                            className={`pft-status-seg pft-status-seg--${segment.key}`}
+                            style={{ flexGrow: segment.value, flexBasis: 0 }}
+                        />
+                    ) : null
+                ))}
+            </div>
+            <ul className="pft-status-legend">
+                {segments.map((segment) => (
+                    <li key={segment.key} className={`pft-status-legend-item pft-status-legend-item--${segment.key}`}>
+                        <span className="pft-status-legend-dot" />
+                        <span>{segment.label}</span>
+                        <strong>{segment.value} <small>{Math.round((segment.value / total) * 100)}%</small></strong>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
@@ -172,28 +300,30 @@ interface DashboardScreenProps {
     stats: {
         tenant_count: number;
         active_tenant_count: number;
+        inactive_tenant_count: number;
+        new_tenant_count: number;
         station_count: number;
         active_station_count: number;
+        pending_station_count: number;
+        disabled_station_count: number;
+        retired_station_count: number;
     };
+    statusCounts: StatusCounts;
+    growth: GrowthPoint[];
     recentActivity: ActivityLog[];
     recentClients: Tenant[];
 }
 
-export default function DashboardScreen({ stats, recentActivity, recentClients }: DashboardScreenProps) {
+export default function DashboardScreen({ stats, statusCounts, growth, recentActivity, recentClients }: DashboardScreenProps) {
     return (
         <PlatformLayout>
             <Head title="Dashboard" />
 
-            <div className="pf-dashboard pft-page">
+            <div className="pf-dashboard pft-page pft-dashboard">
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                                <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                                <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                                <rect x="14" y="14" width="7" height="7" rx="1.5" />
-                            </svg>
+                            <LayoutGridIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Dashboard</h1>
@@ -205,16 +335,11 @@ export default function DashboardScreen({ stats, recentActivity, recentClients }
                     </div>
                     <div className="pft-hero-actions">
                         <span className="pft-hero-updated">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 7v5l3.2 2" />
-                            </svg>
+                            <ClockIcon size={13} />
                             Live directory
                         </span>
-                        <Link href={route('platform.tenants.index')} className="pf-btn pf-btn-primary">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
+                        <Link href={route('platform.tenants.index', { add: 1 })} className="pf-btn pf-btn-primary">
+                            <PlusIcon size={16} />
                             Add Client
                         </Link>
                     </div>
@@ -226,30 +351,51 @@ export default function DashboardScreen({ stats, recentActivity, recentClients }
                         value={stats.tenant_count}
                         icon="tenants"
                         tone="blue"
+                        pills={[
+                            { label: 'new in 30 days', value: stats.new_tenant_count, tone: 'blue' },
+                            { label: 'inactive', value: stats.inactive_tenant_count },
+                        ]}
                     />
                     <StatCard
                         label="Active Clients"
                         value={stats.active_tenant_count}
                         icon="activeTenants"
                         tone="green"
-                        meta={
-                            stats.tenant_count > 0
-                                ? `${Math.round((stats.active_tenant_count / stats.tenant_count) * 100)}% of all clients`
-                                : undefined
-                        }
+                        pills={[
+                            { label: 'of all clients', value: `${stats.tenant_count > 0 ? Math.round((stats.active_tenant_count / stats.tenant_count) * 100) : 0}%`, tone: 'green' },
+                            { label: 'need review', value: stats.inactive_tenant_count },
+                        ]}
                     />
                     <StatCard
                         label="Stations"
                         value={stats.station_count}
                         icon="stations"
                         tone="violet"
+                        pills={[
+                            { label: 'active', value: stats.active_station_count, tone: 'green' },
+                            { label: 'awaiting setup', value: stats.pending_station_count, tone: 'amber' },
+                        ]}
                     />
                     <StatCard
                         label="Active Stations"
                         value={stats.active_station_count}
                         icon="activeStations"
                         tone="amber"
+                        pills={[
+                            { label: 'activation rate', value: `${stats.station_count > 0 ? Math.round((stats.active_station_count / stats.station_count) * 100) : 0}%`, tone: 'green' },
+                            { label: 'disabled or retired', value: stats.disabled_station_count + stats.retired_station_count },
+                        ]}
                     />
+                </div>
+
+                <div className="pf-panel pft-growth-panel">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 className="pf-panel-title">Client growth</h2>
+                            <p className="pf-panel-count">Cumulative onboarded vs active, last 8 weeks</p>
+                        </div>
+                    </div>
+                    <ClientGrowthChart growth={growth} />
                 </div>
 
                 <div className="pft-widgets-grid">
@@ -261,9 +407,9 @@ export default function DashboardScreen({ stats, recentActivity, recentClients }
                                     <p className="pf-panel-count">Latest platform-level events</p>
                                 </div>
                             </div>
-                            <div style={{ padding: '4px 24px 20px' }}>
+                            <div className="pft-panel-body">
                                 {recentActivity.length === 0 ? (
-                                    <p className="pf-empty" style={{ padding: '32px 0' }}>
+                                    <p className="pf-empty pft-panel-empty">
                                         No activity recorded yet.
                                     </p>
                                 ) : (
@@ -293,14 +439,12 @@ export default function DashboardScreen({ stats, recentActivity, recentClients }
                                 </div>
                                 <Link href={route('platform.tenants.index')} className="pft-panel-link">
                                     Manage all clients
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M9 6l6 6-6 6" />
-                                    </svg>
+                                    <ChevronRightIcon size={14} />
                                 </Link>
                             </div>
-                            <div style={{ padding: '4px 24px 20px' }}>
+                            <div className="pft-panel-body">
                                 {recentClients.length === 0 ? (
-                                    <p className="pf-empty" style={{ padding: '32px 0' }}>
+                                    <p className="pf-empty pft-panel-empty">
                                         No client workspaces registered yet.
                                     </p>
                                 ) : (
@@ -315,7 +459,7 @@ export default function DashboardScreen({ stats, recentActivity, recentClients }
                                                         <span className="pft-tenant-avatar">
                                                             {tenant.name.charAt(0).toUpperCase()}
                                                         </span>
-                                                        <div style={{ minWidth: 0 }}>
+                                                        <div className="pft-recent-copy">
                                                             <p className="pft-recent-name">{tenant.name}</p>
                                                             <p className="pft-recent-meta">{tenant.timezone}</p>
                                                         </div>
@@ -344,6 +488,8 @@ export default function DashboardScreen({ stats, recentActivity, recentClients }
                                 label="Stations active"
                                 value={stats.active_station_count}
                                 total={stats.station_count}
+                                pending={stats.pending_station_count}
+                                disabled={stats.disabled_station_count + stats.retired_station_count}
                             />
                         </div>
 
@@ -354,10 +500,7 @@ export default function DashboardScreen({ stats, recentActivity, recentClients }
                                     <p className="pf-panel-count">Active vs. inactive workspaces</p>
                                 </div>
                             </div>
-                            <StatusBarChart
-                                active={stats.active_tenant_count}
-                                inactive={Math.max(0, stats.tenant_count - stats.active_tenant_count)}
-                            />
+                            <ClientStatusChart counts={statusCounts} />
                         </div>
                     </div>
                 </div>

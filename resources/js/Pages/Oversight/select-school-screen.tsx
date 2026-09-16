@@ -1,3 +1,8 @@
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
+import { CheckIcon } from '@/Components/icons/check';
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
+import { SearchIcon } from '@/Components/icons/search';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import '../../../css/platform-dashboard.css';
@@ -41,32 +46,11 @@ function StatCard({ label, value, icon, tone }: StatCardProps) {
     );
 }
 
-const ICON_SCHOOLS = (
-    <svg viewBox="0 0 24 24">
-        <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
-    </svg>
-);
-const ICON_ACTIVE = (
-    <svg viewBox="0 0 24 24">
-        <path d="M20 6L9 17l-5-5" />
-    </svg>
-);
-const ICON_SUSPENDED = (
-    <svg viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M9.5 9.5v5M14.5 9.5v5" />
-    </svg>
-);
-const ICON_ARROW = (
-    <svg viewBox="0 0 24 24">
-        <path d="M9 6l6 6-6 6" />
-    </svg>
-);
-const ICON_CHECK = (
-    <svg viewBox="0 0 24 24">
-        <path d="M20 6L9 17l-5-5" />
-    </svg>
-);
+const ICON_SCHOOLS = <GraduationCapIcon size={19} />;
+const ICON_ACTIVE = <CheckIcon size={19} />;
+const ICON_SUSPENDED = <BadgeAlertIcon size={19} />;
+const ICON_ARROW = <ChevronRightIcon size={15} />;
+const ICON_CHECK = <CheckIcon size={15} />;
 
 /** Consistent per-school color from its own code, not a random per-render
  * pick — the same school always gets the same avatar tint. */
@@ -124,9 +108,7 @@ export default function SelectSchoolScreen({
             <div className="pft-hero">
                 <div className="pft-hero-main">
                     <span className="pft-hero-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M4 11h16" />
-                        </svg>
+                        <GraduationCapIcon size={22} />
                     </span>
                     <div>
                         <h1 className="pft-hero-title">Select a School</h1>
@@ -153,10 +135,7 @@ export default function SelectSchoolScreen({
 
             <div className="pf-field pft-search-field" style={{ marginBottom: 20 }}>
                 <label htmlFor="school-search">Search</label>
-                <svg viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="m20 20-3.5-3.5" />
-                </svg>
+                <SearchIcon size={15} aria-hidden="true" />
                 <input
                     id="school-search"
                     type="text"

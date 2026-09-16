@@ -1,5 +1,9 @@
-import AdminLayout from '@/Layouts/AdminLayout';
 import Pagination from '@/Components/admin/Pagination';
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
+import { CheckIcon } from '@/Components/icons/check';
+import { ChevronLeftIcon } from '@/Components/icons/chevron-left';
+import { XIcon } from '@/Components/icons/x';
+import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import type { PaginatedData } from '@/types';
 import '../../../../css/platform-dashboard.css';
@@ -46,10 +50,7 @@ export default function ImportsExceptionsListScreen({ batch, exceptions, filters
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="5" y="3" width="2" height="18" rx="1" />
-                                <path d="M7 4h11l-3 4 3 4H7z" />
-                            </svg>
+                            <BadgeAlertIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">
@@ -63,9 +64,7 @@ export default function ImportsExceptionsListScreen({ batch, exceptions, filters
                 </div>
 
                 <Link href={route('portal.imports.show', batch.id)} className="pft-panel-link" style={{ marginBottom: 14 }}>
-                    <svg viewBox="0 0 24 24">
-                        <path d="m15 6-6 6 6 6" />
-                    </svg>
+                    <ChevronLeftIcon size={14} />
                     Back to Import
                 </Link>
 
@@ -123,9 +122,7 @@ export default function ImportsExceptionsListScreen({ batch, exceptions, filters
                                                         onClick={() => resolve(exception, 'resolved')}
                                                         className="pf-row-action"
                                                     >
-                                                        <svg viewBox="0 0 24 24">
-                                                            <path d="M20 6 9 17l-5-5" />
-                                                        </svg>
+                                                        <CheckIcon size={14} />
                                                         Resolve
                                                     </button>
                                                     <button
@@ -133,9 +130,7 @@ export default function ImportsExceptionsListScreen({ batch, exceptions, filters
                                                         onClick={() => resolve(exception, 'ignored')}
                                                         className="pf-row-action"
                                                     >
-                                                        <svg viewBox="0 0 24 24">
-                                                            <path d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
+                                                        <XIcon size={14} />
                                                         Ignore
                                                     </button>
                                                 </div>

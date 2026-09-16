@@ -1,3 +1,5 @@
+import PremiumSelect from '@/Components/PremiumSelect';
+import { CalendarCheckIcon } from '@/Components/icons/calendar-check';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import type { Person } from '@/types';
@@ -26,14 +28,6 @@ export default function AttendanceStudentSummaryScreen({
     months,
     totalDaysPresent,
 }: AttendanceStudentSummaryScreenProps) {
-    function changeYear(e: React.ChangeEvent<HTMLSelectElement>) {
-        router.get(
-            route('portal.attendance.students.show', personRouteKey(person)),
-            { year: e.target.value },
-            { preserveState: true },
-        );
-    }
-
     return (
         <AdminLayout>
             <Head title={`Attendance Summary — ${person.display_name}`} />
@@ -42,11 +36,7 @@ export default function AttendanceStudentSummaryScreen({
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="4" y="5.4" width="16" height="14.6" rx="2" />
-                                <rect x="7.2" y="3" width="2.2" height="4" rx="1" />
-                                <rect x="14.6" y="3" width="2.2" height="4" rx="1" />
-                            </svg>
+                            <CalendarCheckIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">Attendance Summary — {person.display_name}</h1>
@@ -77,14 +67,26 @@ export default function AttendanceStudentSummaryScreen({
                         </div>
                         <div className="pf-field" style={{ marginBottom: 0, minWidth: 120 }}>
                             <label htmlFor="year">Year</label>
-                            <select id="year" value={year} onChange={changeYear}>
-                                {years.length === 0 && <option value={year}>{year}</option>}
-                                {years.map((y) => (
-                                    <option key={y} value={y}>
-                                        {y}
-                                    </option>
-                                ))}
-                            </select>
+                            <PremiumSelect
+                                id="year"
+                                value={String(year)}
+                                onChange={(val) => {
+                                    router.get(
+                                        route('portal.attendance.students.show', personRouteKey(person)),
+                                        { year: val },
+                                        { preserveState: true },
+                                    );
+                                }}
+                                options={
+                                    years.length === 0
+                                        ? [{ value: String(year), label: String(year) }]
+                                        : years.map((y) => ({
+                                              value: String(y),
+                                              label: String(y),
+                                          }))
+                                }
+                                className="w-32"
+                            />
                         </div>
                     </div>
 

@@ -63,15 +63,17 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
         <AdminLayout>
             <Head title="Dashboard" />
             <div className="pf-dashboard school-dashboard">
-                <header className="school-heading">
-                    <div>
-                        <p className="school-eyebrow">{formatDay(today)} · {timezone}</p>
-                        <h1>Today at your school</h1>
-                        <p>Attendance, station health, and what needs your attention.</p>
+                <header className="pft-hero">
+                    <div className="pft-hero-main">
+                        <div>
+                            <p className="school-eyebrow">{formatDay(today)} · {timezone}</p>
+                            <h1 className="pft-hero-title">Today at your school</h1>
+                            <p className="pft-hero-subtitle">Attendance, station health, and what needs your attention.</p>
+                        </div>
                     </div>
-                    <div className="school-heading-actions">
+                    <div className="pft-hero-actions">
+                        <span className="pft-hero-updated">Updated {formatTime(updatedAt)} · refreshes every 30s</span>
                         <Link href={attendanceHref} className="pf-btn pf-btn-primary">View today's attendance</Link>
-                        <span className="school-updated">Updated {formatTime(updatedAt)} · refreshes every 30s</span>
                     </div>
                 </header>
 
@@ -143,8 +145,13 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
                     </section>
                 </div>
 
-                <section className="school-inventory" aria-labelledby="inventory-title">
-                    <h2 id="inventory-title" className="school-eyebrow">School inventory</h2>
+                <section className="pf-panel school-inventory" aria-labelledby="inventory-title">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 id="inventory-title" className="pf-panel-title">School inventory</h2>
+                            <p className="pf-panel-count">People, cards, and stations in this school</p>
+                        </div>
+                    </div>
                     <dl>
                         <div><dt>People</dt><dd>{stats.person_count.toLocaleString()} <span>{stats.active_person_count.toLocaleString()} active</span></dd></div>
                         <div><dt>RFID cards</dt><dd>{stats.rfid_card_count.toLocaleString()} <span>{stats.active_rfid_card_count.toLocaleString()} active</span></dd></div>

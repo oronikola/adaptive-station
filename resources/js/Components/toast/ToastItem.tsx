@@ -1,3 +1,9 @@
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
+import { CheckIcon } from '@/Components/icons/check';
+import { CircleHelpIcon } from '@/Components/icons/circle-help';
+import { DeleteIcon } from '@/Components/icons/delete';
+import { SquarePenIcon } from '@/Components/icons/square-pen';
+import { XIcon } from '@/Components/icons/x';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ToastType } from '@/types';
 
@@ -12,40 +18,14 @@ export interface ToastItemData {
 const EXIT_ANIMATION_MS = 200;
 
 const icons: Record<ToastType, React.ReactNode> = {
-    success: (
-        <svg viewBox="0 0 24 24">
-            <path d="m5 12 4.5 4.5L19 7" />
-        </svg>
-    ),
-    update: (
-        <svg viewBox="0 0 24 24">
-            <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-        </svg>
-    ),
-    delete: (
-        <svg viewBox="0 0 24 24">
-            <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" />
-        </svg>
-    ),
-    error: (
-        <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 8v5M12 16h.01" />
-        </svg>
-    ),
-    info: (
-        <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 10.5v5.5M12 7.5h.01" />
-        </svg>
-    ),
+    success: <CheckIcon size={18} />,
+    update: <SquarePenIcon size={18} />,
+    delete: <DeleteIcon size={18} />,
+    error: <BadgeAlertIcon size={18} />,
+    info: <CircleHelpIcon size={18} />,
 };
 
-const closeIcon = (
-    <svg viewBox="0 0 24 24">
-        <path d="M6 18L18 6M6 6l12 12" />
-    </svg>
-);
+const closeIcon = <XIcon size={16} />;
 
 export function isToastType(type: ToastType): boolean {
     return type in icons;

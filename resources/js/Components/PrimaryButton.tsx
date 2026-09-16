@@ -8,8 +8,8 @@ export default function PrimaryButton({
         <button
             {...props}
             className={
-                `inline-flex items-center rounded-md border border-transparent bg-[#334155] px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-[#1e293b] focus:bg-[#1e293b] focus:outline-none focus:ring-2 focus:ring-[#475569] focus:ring-offset-2 active:bg-[#1e293b] dark:bg-[#475569] dark:hover:bg-[#334155] dark:focus:bg-[#334155] dark:focus:ring-offset-gray-800 dark:active:bg-[#334155] ${
-                    disabled && 'opacity-25'
+                `pressable inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-gradient-to-b from-[#5b7cee] via-[#3e66ea] to-[#2247cc] px-5 py-2.5 text-sm font-semibold text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),0_10px_24px_-4px_rgba(35,78,225,0.42),0_4px_10px_-2px_rgba(35,78,225,0.25)] transition-[transform,filter,box-shadow,background-color,border-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-px hover:brightness-[1.05] hover:shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.5),0_14px_30px_-4px_rgba(35,78,225,0.52),0_6px_14px_-2px_rgba(35,78,225,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#234EF4] focus-visible:ring-offset-2 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-55 ${
+                    disabled && 'opacity-55'
                 } ` + className
             }
             disabled={disabled}

@@ -9,6 +9,7 @@ use App\Models\ImportBatch;
 use App\Models\ImportException;
 use App\Models\Person;
 use App\Models\Station;
+use App\Models\TapEvent;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -29,8 +30,7 @@ class TapHistoryImporter
         protected ImportBatch $batch,
         protected bool $commit,
         protected ?User $actor = null,
-    ) {
-    }
+    ) {}
 
     public function run(Carbon $from, Carbon $to): array
     {
@@ -41,7 +41,7 @@ class TapHistoryImporter
         foreach ($this->connector->fetchTapHistory($from, $to) as $row) {
             $counters['source']++;
 
-            $existing = \App\Models\TapEvent::allTenants()
+            $existing = TapEvent::allTenants()
                 ->where('tenant_id', $tenantId)
                 ->where('source_system', static::SOURCE_SYSTEM)
                 ->where('source_record_id', $row['source_record_id'])
@@ -95,7 +95,7 @@ class TapHistoryImporter
                 default => $person->person_type,
             };
 
-            $inserted = \App\Models\TapEvent::importOne($tenantId, [
+            $inserted = TapEvent::importOne($tenantId, [
                 'station_id' => $station->id,
                 'person_id' => $person->id,
                 'card_uid' => $person->rfidCards()->where('is_active', true)->value('card_uid') ?? 'UNKNOWN',

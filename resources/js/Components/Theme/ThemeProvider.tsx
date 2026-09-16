@@ -50,14 +50,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const root = document.documentElement;
 
-        // Briefly enable the global color-transition rule (see app.css)
+        // Briefly enable the global theme-transition rule (see app.css)
         // so this toggle animates, then remove it — keeping the rule off
         // the rest of the time avoids it fighting hover/route transitions.
         root.classList.add('theme-transition');
         root.classList.toggle('dark', theme === 'dark');
         const timeout = window.setTimeout(() => {
             root.classList.remove('theme-transition');
-        }, 260);
+        }, 360);
 
         try {
             localStorage.setItem(THEME_STORAGE_KEY, theme);

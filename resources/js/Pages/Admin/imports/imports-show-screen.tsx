@@ -1,3 +1,6 @@
+import { ChevronLeftIcon } from '@/Components/icons/chevron-left';
+import { ChevronRightIcon } from '@/Components/icons/chevron-right';
+import { DownloadIcon } from '@/Components/icons/download';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
 import '../../../../css/platform-dashboard.css';
@@ -49,20 +52,14 @@ export default function ImportsShowScreen({ batch, openExceptionCount }: { batch
 
             <div className="pf-dashboard pft-page">
                 <Link href={route('portal.imports.index')} className="pft-panel-link" style={{ marginBottom: 14 }}>
-                    <svg viewBox="0 0 24 24">
-                        <path d="m15 6-6 6 6 6" />
-                    </svg>
+                    <ChevronLeftIcon size={14} />
                     Back to Imports
                 </Link>
 
                 <div className="pft-hero">
                     <div className="pft-hero-main">
                         <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="4" y="15.4" width="16" height="4.6" rx="1.4" />
-                                <rect x="10.6" y="4" width="2.8" height="7.4" rx="1.2" />
-                                <polygon points="7.4,11 16.6,11 12,15.6" />
-                            </svg>
+                            <DownloadIcon size={22} />
                         </span>
                         <div>
                             <h1 className="pft-hero-title">
@@ -122,9 +119,7 @@ export default function ImportsShowScreen({ batch, openExceptionCount }: { batch
                         </div>
                         <Link href={route('portal.imports.exceptions.index', batch.id)} className="pft-panel-link">
                             View Exceptions
-                            <svg viewBox="0 0 24 24">
-                                <path d="M9 6l6 6-6 6" />
-                            </svg>
+                            <ChevronRightIcon size={14} />
                         </Link>
                     </div>
                 </div>

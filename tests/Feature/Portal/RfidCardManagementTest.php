@@ -83,6 +83,24 @@ class RfidCardManagementTest extends TestCase
         $this->assertDatabaseHas('master_data_changes', ['entity_id' => $newCard->id, 'operation' => 'upsert'], 'tenant');
     }
 
+    public function test_replace_supports_json_response_for_modal_management(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $person = Person::factory()->for($tenant)->create();
+        $oldCard = RfidCard::factory()->for($tenant)->for($person)->create(['card_uid' => 'OLDJSON']);
+
+        $response = $this->actingAs($admin)->postJson(route('portal.rfid-cards.replace', $oldCard), [
+            'card_uid' => 'NEWJSON',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Card replaced successfully.')
+            ->assertJsonPath('card.card_uid', 'NEWJSON');
+
+        $this->assertFalse($oldCard->fresh()->is_active);
+    }
+
     public function test_person_id_from_a_different_tenant_is_rejected(): void
     {
         $tenantA = Tenant::factory()->create();
@@ -109,5 +127,49 @@ class RfidCardManagementTest extends TestCase
 
         $this->actingAs($operator)->patch(route('portal.rfid-cards.deactivate', $card))
             ->assertForbidden();
+    }
+
+    public function test_tenant_admin_can_view_rfid_cards_with_stats_and_filters(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $person = Person::factory()->for($tenant)->create(['display_name' => 'John Doe']);
+        $activeCard = RfidCard::factory()->for($tenant)->for($person)->create(['card_uid' => 'CARD-001', 'is_active' => true]);
+        $inactiveCard = RfidCard::factory()->for($tenant)->create(['card_uid' => 'CARD-002', 'is_active' => false]);
+
+        $response = $this->actingAs($admin)->get(route('portal.rfid-cards.index'));
+
+        $response->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Admin/rfid-cards/rfid-cards-list-screen')
+                ->has('rfidCards.data', 2)
+                ->where('stats.total_cards', 2)
+                ->where('stats.active_cards', 1)
+                ->where('stats.inactive_cards', 1)
+                ->where('stats.assigned_cards', 1)
+            );
+    }
+
+    public function test_tenant_admin_can_search_rfid_cards_by_uid_or_person_name(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $person = Person::factory()->for($tenant)->create(['display_name' => 'Alice Wonder']);
+        $cardA = RfidCard::factory()->for($tenant)->for($person)->create(['card_uid' => 'UID-ALICE']);
+        $cardB = RfidCard::factory()->for($tenant)->create(['card_uid' => 'UID-BOB']);
+
+        $response = $this->actingAs($admin)->get(route('portal.rfid-cards.index', ['search' => 'Alice']));
+        $response->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('rfidCards.data', 1)
+                ->where('rfidCards.data.0.card_uid', 'UID-ALICE')
+            );
+
+        $responseUid = $this->actingAs($admin)->get(route('portal.rfid-cards.index', ['search' => 'BOB']));
+        $responseUid->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('rfidCards.data', 1)
+                ->where('rfidCards.data.0.card_uid', 'UID-BOB')
+            );
     }
 }

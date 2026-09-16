@@ -1,3 +1,7 @@
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
+import { CheckIcon } from '@/Components/icons/check';
+import { ClockIcon } from '@/Components/icons/clock';
+import { SmartphoneNfcIcon } from '@/Components/icons/smartphone-nfc';
 import { Head } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -86,44 +90,6 @@ function speak(text: string) {
     } catch {
         /* speech is a nice-to-have, never block the kiosk on it */
     }
-}
-
-function ContactlessIcon({ size = 56 }: { size?: number }) {
-    return (
-        <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2.5" y="5.5" width="13" height="14" rx="2.6" />
-            <circle cx="9" cy="12.5" r="1.6" fill="currentColor" stroke="none" />
-            <path d="M16.8 8.8a5.2 5.2 0 0 1 0 7.4" strokeWidth={1.9} />
-            <path d="M19.4 6.2a9 9 0 0 1 0 13" strokeWidth={1.9} opacity={0.55} />
-        </svg>
-    );
-}
-
-function CheckIcon({ size = 30 }: { size?: number }) {
-    return (
-        <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 12.5 9.5 18 20 6" />
-        </svg>
-    );
-}
-
-function ClockIcon({ size = 30 }: { size?: number }) {
-    return (
-        <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 7.5V12l3.2 2" />
-        </svg>
-    );
-}
-
-function ErrorIcon({ size = 30 }: { size?: number }) {
-    return (
-        <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 9v4.5" />
-            <path d="M12 17h.01" />
-            <path d="M10.3 3.9 2.7 17.3A1.8 1.8 0 0 0 4.3 20h15.4a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z" />
-        </svg>
-    );
 }
 
 const RESULT_THEME = {
@@ -684,7 +650,7 @@ export default function KioskScreen({
                         color: 'rgba(255,255,255,.25)',
                     }}
                 >
-                    <ContactlessIcon size={13} />
+                    <SmartphoneNfcIcon size={13} />
                     Adaptive Station
                 </div>
 
@@ -728,7 +694,7 @@ export default function KioskScreen({
                                 boxShadow: '0 10px 24px -8px rgba(37,99,235,.6)',
                             }}
                         >
-                            <ContactlessIcon size={28} />
+                            <SmartphoneNfcIcon size={28} />
                         </div>
                         <h1 style={{ margin: '0 0 8px', fontSize: 21, fontWeight: 800, letterSpacing: '-.01em' }}>
                             Activate This Kiosk
@@ -823,9 +789,9 @@ export default function KioskScreen({
                                         border: `1px solid ${theme.border}`,
                                     }}
                                 >
-                                    {result.kind === 'success' && <CheckIcon />}
-                                    {(result.kind === 'duplicate' || result.kind === 'checking') && <ClockIcon />}
-                                    {result.kind === 'error' && <ErrorIcon />}
+                                    {result.kind === 'success' && <CheckIcon size={30} />}
+                                    {(result.kind === 'duplicate' || result.kind === 'checking') && <ClockIcon size={30} />}
+                                    {result.kind === 'error' && <BadgeAlertIcon size={30} />}
                                 </div>
 
                                 {result.photoUrl && (
@@ -898,7 +864,7 @@ export default function KioskScreen({
                                 >
                                     <span className="kiosk-pulse-ring" style={{ color: 'rgba(96,165,250,.6)' }} />
                                     <span className="kiosk-pulse-ring kiosk-pulse-ring--delay" style={{ color: 'rgba(96,165,250,.6)' }} />
-                                    <ContactlessIcon size={60} />
+                                    <SmartphoneNfcIcon size={60} />
                                 </div>
                                 <h1
                                     style={{

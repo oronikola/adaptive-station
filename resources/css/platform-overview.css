@@ -27,11 +27,12 @@
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    padding: 22px clamp(18px, 2.6vw, 28px);
-    margin-bottom: 26px;
+    padding: 22px 24px;
+    margin-bottom: 24px;
     border-radius: 24px;
     border: 1px solid var(--as-border);
-    background: linear-gradient(180deg, var(--as-surface-hover) 0%, var(--as-surface) 60%);
+    background: var(--as-surface);
+    box-shadow: var(--as-shadow-card);
 }
 
 .pft-hero-main {
@@ -43,11 +44,11 @@
 
 .pft-hero-icon {
     display: grid;
-    flex: 0 0 46px;
-    width: 46px;
-    height: 46px;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
     place-items: center;
-    border-radius: 18px;
+    border-radius: 14px;
     background: var(--as-brand-solid);
     color: #ffffff;
 }
@@ -55,8 +56,12 @@
 .pft-hero-icon svg {
     width: 22px;
     height: 22px;
-    fill: currentColor;
-    stroke: none;
+    fill: none;
+    stroke: currentColor;
+}
+
+.pft-hero .school-eyebrow {
+    margin: 0 0 6px;
 }
 
 .pft-hero-title {
@@ -127,7 +132,8 @@
     border: 1px solid var(--as-border);
     border-radius: 24px;
     background: var(--as-surface);
-    transition: transform 180ms ease, border-color 180ms ease;
+    box-shadow: var(--as-shadow-card);
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
     animation: pft-fade-in 320ms ease both;
 }
 
@@ -137,7 +143,8 @@
 
 .pft-stat-card:hover {
     transform: translateY(-2px);
-    border-color: var(--as-border-active);
+    border-color: var(--as-border-mid);
+    box-shadow: var(--as-shadow-card-hover);
 }
 
 .pft-stat-card-top {
@@ -161,8 +168,8 @@
 .pft-stat-icon svg {
     width: 19px;
     height: 19px;
-    fill: currentColor;
-    stroke: none;
+    fill: none;
+    stroke: currentColor;
 }
 
 /* Flat full-color badges with a solid white glyph — same tones used for
@@ -195,6 +202,26 @@
     font-size: 11.5px;
 }
 
+.pft-stat-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.pft-stat-pill { display: inline-flex; align-items: baseline; gap: 4px; min-height: 25px; padding: 5px 9px; border: 1px solid var(--as-border); border-radius: 999px; background: var(--as-surface-active); color: var(--as-text-secondary); font-size: 10.5px; line-height: 1.2; }
+.pft-stat-pill strong { color: var(--as-text); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.pft-stat-pill--blue,
+.pft-stat-pill--green,
+.pft-stat-pill--amber { border-color: var(--as-border-mid); color: var(--as-text-secondary); }
+
+/* Keep metric pills and the growth legend in one monotone vocabulary. */
+.pft-stat-pill,
+.pf-chart-legend-item,
+.pf-chart-legend-item--blue,
+.pf-chart-legend-item--green {
+    border-color: var(--as-border);
+    background: var(--as-surface-active);
+    color: var(--as-text-secondary);
+}
+
+.pf-chart-legend-item--blue .pf-chart-legend-dot { background: var(--as-text); }
+.pf-chart-legend-item--green .pf-chart-legend-dot { background: var(--as-text-muted); }
+
 /* ── Filter bar tweaks ───────────────────────────────────────────────── */
 
 .pft-page .pf-filter-bar {
@@ -224,6 +251,279 @@
 
 /* ── Table row polish ────────────────────────────────────────────────── */
 
+.pft-client-directory {
+    border-color: var(--as-border-mid);
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.03),
+        0 12px 30px -18px rgba(10, 27, 115, 0.24);
+}
+
+.pft-client-directory > .pf-panel-header {
+    padding: 22px 24px;
+    background: linear-gradient(180deg, var(--as-surface) 0%, var(--as-surface-hover) 100%);
+}
+
+.pft-client-table-wrap {
+    scrollbar-width: thin;
+    scrollbar-color: var(--as-border-mid) transparent;
+}
+
+.pft-client-table {
+    min-width: 760px;
+}
+
+.pft-client-table thead th {
+    height: 44px;
+    padding-block: 0;
+    border-bottom-color: var(--as-border);
+    background: var(--as-surface-active);
+    color: var(--as-text-secondary);
+    font-size: 10.5px;
+    letter-spacing: 0.075em;
+}
+
+.pft-client-table thead th:first-child,
+.pft-client-table tbody td:first-child {
+    padding-left: 28px;
+}
+
+.pft-client-table thead th:last-child,
+.pft-client-table tbody td:last-child {
+    padding-right: 28px;
+}
+
+.pft-client-table tbody tr {
+    position: relative;
+    background: var(--as-surface);
+    box-shadow: inset 3px 0 0 transparent;
+    transition:
+        background-color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.pft-client-table tbody tr:hover {
+    background: var(--as-surface-hover);
+    box-shadow: inset 3px 0 0 var(--as-brand-blue);
+}
+
+.pft-client-table tbody tr + tr td {
+    border-top-color: var(--as-border-light);
+}
+
+.pft-client-table tbody td {
+    height: 68px;
+    padding-block: 14px;
+    vertical-align: middle;
+}
+
+.pft-client-table .pf-tenant-name {
+    max-width: 32ch;
+    overflow: hidden;
+    color: var(--as-text);
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-overflow: ellipsis;
+}
+
+.pft-client-table .pf-tenant-code {
+    margin-top: 3px;
+    color: var(--as-text-muted);
+    font-size: 11px;
+    letter-spacing: 0.015em;
+}
+
+.pft-client-table .pft-tenant-avatar {
+    border: 1px solid rgba(255, 255, 255, 0.42);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.24),
+        0 6px 14px -8px rgba(35, 78, 244, 0.72);
+}
+
+.pft-client-action-cell {
+    width: 1%;
+    text-align: right;
+}
+
+.pft-client-action-cell .pf-row-action {
+    min-width: 92px;
+    justify-content: center;
+}
+
+.pft-client-table tbody tr:hover .pft-client-action-cell .pf-row-action {
+    border-color: var(--as-border-mid);
+    background: var(--as-surface);
+}
+
+.pfs-station-directory {
+    border-color: var(--as-border-mid);
+    box-shadow: 0 12px 30px -18px rgba(10, 27, 115, 0.24);
+}
+
+.pfs-station-directory > .pf-panel-header {
+    padding: 22px 24px;
+    background: linear-gradient(180deg, var(--as-surface) 0%, var(--as-surface-hover) 100%);
+}
+
+.pfs-station-table-shell {
+    scrollbar-width: thin;
+    scrollbar-color: var(--as-border-mid) transparent;
+}
+
+.pfs-station-table-shell > div {
+    overflow: visible;
+    min-width: 1120px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.pfs-station-table-shell table,
+.pfs-station-table-shell tbody tr {
+    background: var(--as-surface);
+}
+
+.pfs-station-table-shell thead {
+    background: var(--as-surface-active);
+}
+
+.pfs-station-table-shell thead th {
+    height: 44px;
+    padding-block: 0;
+    color: var(--as-text-secondary);
+    font-size: 10.5px;
+    letter-spacing: 0.075em;
+}
+
+.pfs-station-table-shell tbody tr {
+    box-shadow: inset 3px 0 0 transparent;
+    transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.pfs-station-table-shell tbody tr:hover {
+    background: var(--as-surface-hover);
+    box-shadow: inset 3px 0 0 var(--as-brand-blue);
+}
+
+.pfs-station-table-shell tbody td {
+    height: 70px;
+    padding-block: 14px;
+    vertical-align: middle;
+}
+
+.pfs-station-identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pfs-station-avatar {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--as-brand-blue) 18%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--as-brand-blue) 10%, var(--as-surface));
+    color: var(--as-brand-blue);
+    box-shadow: 0 6px 14px -10px rgba(35, 78, 244, 0.65);
+}
+
+.pfs-station-name {
+    max-width: 22ch;
+    overflow: hidden;
+    color: var(--as-text);
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-overflow: ellipsis;
+}
+
+.pfs-code-pill,
+.pfs-version-pill,
+.pfs-meta-pill,
+.pfs-connectivity-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 5px 10px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 650;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.pfs-code-pill {
+    border-color: var(--as-border);
+    background: var(--as-surface-active);
+    color: var(--as-text-secondary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: 0.02em;
+}
+
+.pfs-version-pill {
+    border-color: color-mix(in srgb, var(--as-violet-solid) 18%, transparent);
+    background: color-mix(in srgb, var(--as-violet-solid) 8%, var(--as-surface));
+    color: var(--as-violet-solid);
+}
+
+.pfs-meta-pill svg,
+.pfs-connectivity-pill svg {
+    flex: 0 0 auto;
+}
+
+.pfs-meta-pill--school {
+    max-width: 24ch;
+    overflow: hidden;
+    border-color: color-mix(in srgb, var(--as-brand-blue) 18%, transparent);
+    background: color-mix(in srgb, var(--as-brand-blue) 8%, var(--as-surface));
+    color: var(--as-brand-blue-light);
+    text-overflow: ellipsis;
+}
+
+.pfs-meta-pill--seen {
+    border-color: var(--as-border);
+    background: var(--as-surface-active);
+    color: var(--as-text-secondary);
+}
+
+.pfs-connectivity-pill--online {
+    border-color: color-mix(in srgb, var(--as-success) 22%, transparent);
+    background: var(--as-success-bg);
+    color: var(--as-success);
+}
+
+.pfs-connectivity-pill--offline {
+    border-color: var(--as-border);
+    background: var(--as-neutral-bg);
+    color: var(--as-text-muted);
+}
+
+.pfs-station-action-cell {
+    text-align: right;
+}
+
+.pfs-station-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.pfs-issue-code-action {
+    color: var(--as-warning);
+}
+
+.pfs-station-table-shell tbody tr:hover .pf-row-action {
+    border-color: var(--as-border-mid);
+    background: var(--as-surface);
+}
+
 .pft-tenant-avatar {
     position: relative;
     display: grid;
@@ -238,9 +538,39 @@
     font-weight: 700;
 }
 
-.pft-created {
-    color: var(--as-text-secondary);
-    font-size: 12.5px;
+.pft-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 30px;
+    padding: 5px 11px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 650;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.pft-meta-pill svg {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.pft-meta-pill--timezone {
+    border-color: color-mix(in srgb, var(--as-brand-blue) 20%, transparent);
+    background: color-mix(in srgb, var(--as-brand-blue) 9%, var(--as-surface));
+    color: var(--as-brand-blue-light);
+}
+
+.pft-meta-pill--created {
+    border-color: color-mix(in srgb, var(--as-violet-solid) 20%, transparent);
+    background: color-mix(in srgb, var(--as-violet-solid) 8%, var(--as-surface));
+    color: var(--as-violet-solid);
 }
 
 .pft-pill--suspended {
@@ -281,27 +611,34 @@
 
 .pft-tabs {
     display: inline-flex;
-    gap: 4px;
+    flex-shrink: 0;
+    gap: 2px;
     padding: 4px;
-    margin-bottom: 20px;
-    border-radius: 18px;
-    background: var(--as-border-light);
+    margin: 0;
+    border: 1px solid var(--as-border);
+    border-radius: 14px;
+    background: var(--as-surface-active);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .pft-tab {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    height: 36px;
-    padding: 0 16px;
-    border: none;
-    border-radius: 14px;
+    height: 34px;
+    padding: 0 14px;
+    border: 1px solid transparent;
+    border-radius: 10px;
     background: transparent;
     color: var(--as-text-secondary);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 650;
     cursor: pointer;
-    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+    transition:
+        background-color 160ms ease,
+        color 160ms ease,
+        box-shadow 160ms ease,
+        border-color 160ms ease;
 }
 
 .pft-tab svg {
@@ -315,12 +652,61 @@
 }
 
 .pft-tab:hover {
-    color: var(--as-text-slate);
+    color: var(--as-text);
+    background: rgba(255, 255, 255, 0.55);
 }
 
 .pft-tab--active {
     background: var(--as-surface);
-    color: var(--as-brand);
+    border-color: rgba(226, 232, 240, 0.95);
+    color: #234ef4;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.05),
+        0 6px 14px -8px rgba(35, 78, 244, 0.35);
+}
+
+.pft-tab:focus-visible {
+    outline: 2px solid #234ef4;
+    outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+    .pf-panel-header .pft-tabs {
+        width: 100%;
+    }
+
+    .pf-panel-header .pft-tab {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}
+
+.pft-school-picker {
+    margin: 8px 0 0;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px;
+    list-style: none;
+    border: 1px solid var(--as-border);
+    border-radius: 12px;
+    background: var(--as-surface);
+    box-shadow: var(--as-shadow-card);
+}
+
+.pft-school-picker button {
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--as-text);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.pft-school-picker button:hover {
+    background: var(--as-surface-hover);
 }
 
 /* ── Inline "Add Client" form panel ──────────────────────────────────── */
@@ -518,18 +904,29 @@
 
 .pft-gauge-card {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 6px 24px 26px;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 24px 28px;
+    min-height: 240px;
 }
 
 .pft-gauge {
     position: relative;
     display: grid;
-    width: 148px;
-    height: 148px;
+    width: 188px;
+    height: 188px;
     place-items: center;
+}
+
+.pft-gauge-glow {
+    position: absolute;
+    inset: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(35, 78, 244, 0.16) 0%, rgba(24, 131, 82, 0.06) 48%, transparent 72%);
+    pointer-events: none;
 }
 
 .pft-gauge-svg {
@@ -634,6 +1031,84 @@
     font-weight: 600;
 }
 
+.pft-status-chart {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px 24px 28px;
+    min-height: 180px;
+}
+
+.pft-status-track {
+    display: flex;
+    width: 100%;
+    overflow: hidden;
+    height: 52px;
+    border-radius: 999px;
+    background: var(--as-border-light);
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.pft-status-seg {
+    min-width: 8px;
+    height: 100%;
+}
+
+.pft-status-seg--active { background: #234ef4; }
+
+.pft-status-seg--suspended { background: #c1791f; }
+
+.pft-status-seg--archived { background: #64748b; }
+
+.pft-status-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pft-status-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    border: 1px solid var(--as-border);
+    background: var(--as-surface);
+    color: var(--as-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pft-status-legend-item strong {
+    color: var(--as-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.pft-status-legend-dot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 8px;
+    border-radius: 999px;
+}
+
+.pft-status-legend-item--active .pft-status-legend-dot { background: #234ef4; }
+.pft-status-legend-item--suspended .pft-status-legend-dot { background: #c1791f; }
+.pft-status-legend-item--archived .pft-status-legend-dot { background: #64748b; }
+
+.pft-growth-chart {
+    height: 300px;
+}
+
+.pft-dashboard .pft-growth-panel {
+    flex: 0 0 auto;
+    overflow: hidden;
+}
+
 /* ── Responsive (scoped to .pft-page so other pf- screens are untouched) ── */
 
 .pft-page .pf-panel-header {
@@ -643,6 +1118,133 @@
 
 .pft-page .pf-filter-bar {
     row-gap: 12px;
+}
+
+/* ── Superadmin dashboard fill layout ──────────────────────────────────
+   After the global header was removed, this page has to own the remaining
+   shell height: equal-height stat cards, stretched widget columns, and
+   inner lists that scroll instead of leaving a ragged empty canvas. */
+
+.pft-dashboard {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 0;
+    width: 100%;
+}
+
+.pft-dashboard .pft-hero,
+.pft-dashboard .pft-stat-grid,
+.pft-dashboard .pft-growth-panel,
+.pft-dashboard .pft-widgets-grid {
+    margin-bottom: 0;
+}
+
+.pft-dashboard .pft-stat-grid {
+    align-items: stretch;
+}
+
+.pft-dashboard .pft-stat-card {
+    height: 100%;
+    min-height: 132px;
+}
+
+.pft-dashboard .pft-stat-meta {
+    min-height: 1.35em;
+}
+
+.pft-dashboard .pft-widgets-grid {
+    flex: 1 1 auto;
+    align-items: stretch;
+    min-height: 560px;
+    grid-template-columns: minmax(0, 1.45fr) minmax(340px, 1fr);
+}
+
+.pft-dashboard .pft-widgets-main,
+.pft-dashboard .pft-widgets-side {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+}
+
+.pft-dashboard .pft-widgets-main > .pf-panel,
+.pft-dashboard .pft-widgets-side > .pf-panel {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-height: 240px;
+    margin-top: 0;
+}
+
+.pft-dashboard .pft-widgets-main > .pf-panel + .pf-panel,
+.pft-dashboard .pft-widgets-side > .pf-panel + .pf-panel {
+    margin-top: 0;
+}
+
+.pft-panel-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 8px 24px 20px;
+}
+
+.pft-panel-empty {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+    padding: 32px 0;
+    margin: 0;
+}
+
+.pft-recent-copy {
+    min-width: 0;
+}
+
+.pft-dashboard .pft-gauge-card,
+.pft-dashboard .pft-status-chart {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 0;
+}
+
+/* Compact dashboard progress summaries stay inside their half-height panels. */
+.pft-dashboard .pft-gauge-card { align-items: stretch; gap: 18px; min-height: 0; padding: 22px 24px 26px; }
+.pft-gauge-summary { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.pft-gauge-summary > strong { color: var(--as-text); font-size: 20px; font-variant-numeric: tabular-nums; }
+.pft-gauge-summary > strong span { color: var(--as-text-muted); font-size: 13px; font-weight: 600; }
+.pft-gauge-summary .pft-gauge-caption { max-width: none; margin: 2px 0 0; text-align: left; }
+.pft-activation-track { width: 100%; height: 14px; overflow: hidden; border: 1px solid var(--as-border); border-radius: 999px; background: var(--as-surface-active); box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08); }
+.pft-activation-track > span { display: block; height: 100%; border-radius: inherit; background: var(--as-brand-blue-solid); transition: width 500ms ease; }
+.pft-activation-pills { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.pft-activation-pills > span { display: inline-flex; align-items: center; gap: 7px; color: var(--as-text-secondary); font-size: 11.5px; }
+.pft-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--as-text-muted); }
+.pft-dot--pending { background: var(--as-warning-solid); }
+.pft-status-track { gap: 3px; height: 28px; padding: 3px; border: 1px solid var(--as-border); border-radius: 10px; }
+.pft-status-seg { min-width: 6px; border-radius: 6px; }
+.pft-status-legend-item strong { display: inline-flex; align-items: baseline; gap: 5px; }
+.pft-status-legend-item strong small { color: var(--as-text-muted); font-size: 10px; font-weight: 650; }
+
+@media (max-width: 1024px) {
+    .pft-dashboard {
+        min-height: 0;
+    }
+
+    .pft-dashboard .pft-widgets-grid {
+        flex: none;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pft-dashboard .pft-widgets-main > .pf-panel,
+    .pft-dashboard .pft-widgets-side > .pf-panel {
+        flex: none;
+    }
+
+    .pft-panel-body {
+        overflow: visible;
+    }
 }
 
 @media (max-width: 640px) {
@@ -749,7 +1351,168 @@
     }
 }
 
+:root.dark .pft-status-track {
+    background: #1c2740;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+:root.dark .pft-status-legend-item {
+    background: #182338;
+    border-color: #263244;
+}
+
+:root.dark .pft-gauge-glow {
+    background: radial-gradient(circle, rgba(35, 78, 244, 0.22) 0%, rgba(24, 131, 82, 0.08) 48%, transparent 72%);
+}
+
 /* ── Section labels above a stat grid (SMS Gateway Fleet) ─────────────── */
+
+.pal-audit-filters {
+    padding: 18px;
+    border-color: var(--as-border-mid);
+    border-radius: 20px;
+    background: linear-gradient(180deg, var(--as-surface) 0%, var(--as-surface-hover) 100%);
+    box-shadow: 0 10px 28px -22px rgba(10, 27, 115, 0.28);
+}
+
+.pal-audit-filter {
+    min-width: 168px;
+}
+
+.pal-audit-filter--action {
+    flex: 1 1 260px !important;
+}
+
+.pal-audit-select button {
+    min-height: 42px;
+    border-radius: 12px;
+    border-color: var(--as-border);
+    background: var(--as-surface);
+    color: var(--as-text);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.pal-audit-panel {
+    border-color: var(--as-border-mid);
+    box-shadow: 0 12px 30px -18px rgba(10, 27, 115, 0.24);
+}
+
+.pal-audit-panel > .pf-panel-header {
+    padding: 22px 24px;
+    background: linear-gradient(180deg, var(--as-surface) 0%, var(--as-surface-hover) 100%);
+}
+
+.pal-audit-table {
+    min-width: 940px;
+}
+
+.pal-audit-table thead th {
+    height: 44px;
+    padding-block: 0;
+    border-bottom-color: var(--as-border);
+    background: var(--as-surface-active);
+    font-size: 10.5px;
+    letter-spacing: 0.075em;
+}
+
+.pal-audit-table tbody tr {
+    background: var(--as-surface);
+    box-shadow: inset 3px 0 0 transparent;
+    transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.pal-audit-table tbody tr:hover {
+    background: var(--as-surface-hover);
+    box-shadow: inset 3px 0 0 var(--as-brand-blue);
+}
+
+.pal-audit-table tbody td {
+    height: 66px;
+    vertical-align: middle;
+}
+
+.pal-audit-meta,
+.pal-actor-pill,
+.pal-action-pill,
+.pal-entity-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 30px;
+    padding: 5px 11px;
+    border: 1px solid var(--as-border);
+    border-radius: 999px;
+    background: var(--as-surface-active);
+    color: var(--as-text-secondary);
+    font-size: 11.5px;
+    font-weight: 650;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.pal-audit-meta--time {
+    color: var(--as-brand-blue-light);
+}
+
+.pal-audit-meta--client {
+    max-width: 25ch;
+    overflow: hidden;
+    border-color: color-mix(in srgb, var(--as-brand-blue) 18%, transparent);
+    background: color-mix(in srgb, var(--as-brand-blue) 8%, var(--as-surface));
+    color: var(--as-brand-blue-light);
+    text-overflow: ellipsis;
+}
+
+.pal-actor-pill {
+    text-transform: capitalize;
+}
+
+.pal-actor-pill--user,
+.pal-actor-pill--parent_account {
+    border-color: color-mix(in srgb, var(--as-success) 20%, transparent);
+    background: var(--as-success-bg);
+    color: var(--as-success);
+}
+
+.pal-actor-pill--station {
+    border-color: color-mix(in srgb, var(--as-violet-solid) 20%, transparent);
+    background: color-mix(in srgb, var(--as-violet-solid) 8%, var(--as-surface));
+    color: var(--as-violet-solid);
+}
+
+.pal-action-pill {
+    max-width: 32ch;
+    overflow: hidden;
+    color: var(--as-text);
+    text-overflow: ellipsis;
+    text-transform: capitalize;
+}
+
+.pal-action-pill--station,
+.pal-action-pill--sms_gateway_device {
+    border-color: color-mix(in srgb, var(--as-violet-solid) 18%, transparent);
+    background: color-mix(in srgb, var(--as-violet-solid) 8%, var(--as-surface));
+    color: var(--as-violet-solid);
+}
+
+.pal-action-pill--tenant,
+.pal-action-pill--user {
+    border-color: color-mix(in srgb, var(--as-brand-blue) 18%, transparent);
+    background: color-mix(in srgb, var(--as-brand-blue) 8%, var(--as-surface));
+    color: var(--as-brand-blue-light);
+}
+
+.pal-entity-pill {
+    gap: 8px;
+    text-transform: capitalize;
+}
+
+.pal-entity-pill code {
+    padding-left: 8px;
+    border-left: 1px solid var(--as-border-mid);
+    color: var(--as-text-muted);
+    font-size: 10.5px;
+}
 
 .pft-section-title {
     margin: 0 2px 12px;
@@ -782,8 +1545,8 @@
 .pft-device-avatar svg {
     width: 18px;
     height: 18px;
-    fill: currentColor;
-    stroke: none;
+    fill: none;
+    stroke: currentColor;
 }
 
 .pft-device-info {
@@ -804,6 +1567,176 @@
     margin: 1px 0 0;
     color: var(--as-text-secondary);
     font-size: 11.5px;
+}
+
+.pft-fleet-table {
+    min-width: 900px;
+}
+
+.pft-fleet-table tbody td {
+    height: 68px;
+    vertical-align: middle;
+}
+
+/* ── SMS delivery log table ─────────────────────────────────────────── */
+.sms-log-table { min-width: 980px; }
+.sms-log-table tbody td { height: 64px; vertical-align: middle; }
+
+.sms-log-meta,
+.sms-log-phone,
+.sms-log-sim {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 5px 10px;
+    border: 1px solid var(--as-border);
+    border-radius: 999px;
+    background: var(--as-surface-active);
+    color: var(--as-text-secondary);
+    font-size: 11.5px;
+    font-weight: 650;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.sms-log-meta svg,
+.sms-log-phone svg { width: 14px; height: 14px; flex: 0 0 auto; }
+.sms-log-phone { color: var(--as-text-body); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.01em; }
+.sms-log-sim { min-width: 54px; justify-content: center; background: var(--as-surface); color: var(--as-text-body); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.sms-log-device { display: inline-flex; align-items: center; gap: 9px; min-width: 0; color: var(--as-text-body); font-size: 12.5px; font-weight: 650; }
+.sms-log-device-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 10px; background: var(--as-surface-active); color: var(--as-text-secondary); }
+.sms-log-device-icon svg { width: 15px; height: 15px; }
+.sms-log-empty-value { color: var(--as-text-muted); font-size: 12px; }
+
+.sms-log-error { display: flex; align-items: flex-start; gap: 7px; max-width: 240px; color: var(--as-danger); font-size: 11.5px; font-weight: 600; line-height: 1.4; white-space: normal; }
+.sms-log-error svg { width: 14px; height: 14px; flex: 0 0 14px; margin-top: 1px; }
+.sms-log-action-cell { text-align: right; }
+
+/* ── Platform administrator accounts ────────────────────────────────── */
+.pfa-admin-table { min-width: 840px; }
+.pfa-admin-table tbody td { height: 70px; vertical-align: middle; }
+.pfa-admin-identity { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.pfa-admin-identity > span:last-child { display: grid; gap: 3px; min-width: 0; }
+.pfa-admin-identity strong { overflow: hidden; color: var(--as-text); font-size: 13.5px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.pfa-admin-identity small { display: inline-flex; align-items: center; gap: 5px; color: var(--as-text-secondary); font-size: 11px; font-weight: 600; }
+.pfa-admin-avatar { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; border-radius: 12px; background: linear-gradient(145deg, var(--as-brand-blue-solid), var(--as-brand-solid)); color: #fff; font-size: 13px; font-weight: 800; }
+.pfa-data-field,
+.pfa-credential { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0; border: 0; background: transparent; }
+.pfa-data-field--email { min-width: 270px; }
+.pfa-data-field-value { display: grid; flex: 1 1 auto; gap: 2px; min-width: 0; }
+.pfa-data-field-value small { color: var(--as-text-muted); font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; line-height: 1; text-transform: uppercase; }
+.pfa-data-field-value > span { overflow: hidden; color: var(--as-text-body); font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.pfa-credential-icon { display: grid; color: var(--as-text-secondary); }
+.pfa-credential code { min-width: 104px; color: var(--as-text-body); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; letter-spacing: 0.04em; }
+.pfa-reveal-button { display: inline-grid; width: 24px; height: 24px; flex: 0 0 24px; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--as-text-secondary); cursor: pointer; transition: color 150ms ease, transform 150ms ease; }
+.pfa-reveal-button:hover { background: transparent; color: var(--as-text); }
+.pfa-reveal-button:active { transform: scale(0.96); }
+.pfa-reveal-button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--as-surface), 0 0 0 4px var(--as-brand-blue); }
+.pfa-copy-button { display: inline-grid; width: 24px; height: 24px; flex: 0 0 24px; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--as-text-secondary); cursor: pointer; transition: transform 150ms ease, color 150ms ease; }
+.pfa-copy-button:hover { border-color: transparent; background: transparent; color: var(--as-text); transform: translateY(-1px); }
+.pfa-copy-button:active { transform: scale(0.96); }
+.pfa-copy-button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--as-surface), 0 0 0 4px var(--as-brand-blue); }
+.pfa-copy-button--copied { border-color: transparent; background: transparent; color: var(--as-success); }
+.pfa-credential-unavailable { display: inline-flex; align-items: center; gap: 6px; color: var(--as-text-muted); font-size: 11.5px; font-weight: 600; }
+.pfa-admin-action-cell { text-align: right; }
+.pf-row-action--success { border-color: color-mix(in srgb, var(--as-success) 28%, transparent); background: var(--as-success-bg); color: var(--as-success); }
+.pf-row-action--success:hover { border-color: color-mix(in srgb, var(--as-success) 42%, transparent); background: color-mix(in srgb, var(--as-success-bg) 82%, #fff); color: #12683a; }
+.pf-row-action--control:disabled { cursor: not-allowed; opacity: 0.55; transform: none; }
+.pfa-empty-state { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.pfa-empty-state strong { color: var(--as-text); font-size: 13.5px; }
+.pfa-empty-state > span:last-child { color: var(--as-text-secondary); font-size: 12px; }
+
+.pft-fleet-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 30px;
+    padding: 5px 11px;
+    border: 1px solid var(--as-border);
+    border-radius: 999px;
+    background: var(--as-surface-active);
+    color: var(--as-text-secondary);
+    font-size: 11.5px;
+    font-weight: 650;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.pft-fleet-metric svg {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 13px;
+}
+
+.pft-fleet-metric--seen:not(.pft-fleet-metric--stale) {
+    border-color: color-mix(in srgb, var(--as-brand-blue) 18%, transparent);
+    background: color-mix(in srgb, var(--as-brand-blue) 8%, var(--as-surface));
+    color: var(--as-brand-blue-light);
+}
+
+.pft-fleet-metric--stale {
+    border-color: color-mix(in srgb, var(--as-warning) 22%, transparent);
+    background: var(--as-warning-bg);
+    color: var(--as-warning);
+}
+
+.pft-fleet-metric--today {
+    min-width: 154px;
+    color: var(--as-brand-blue-light);
+}
+
+.pft-fleet-metric--cap-near {
+    border-color: color-mix(in srgb, var(--as-warning) 24%, transparent);
+    background: var(--as-warning-bg);
+    color: var(--as-warning);
+}
+
+.pft-fleet-metric--cap-at {
+    border-color: color-mix(in srgb, var(--as-danger) 24%, transparent);
+    background: var(--as-danger-bg);
+    color: var(--as-danger);
+}
+
+.pft-fleet-metric-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+
+.pft-fleet-metric-value span {
+    color: var(--as-text-muted);
+    font-weight: 600;
+}
+
+.pft-fleet-cap-track {
+    width: 36px;
+    height: 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--as-border);
+}
+
+.pft-fleet-cap-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    transition: width 400ms ease;
+}
+
+.pft-fleet-metric--failed {
+    min-width: 54px;
+    justify-content: center;
+    border-color: color-mix(in srgb, var(--as-success) 18%, transparent);
+    background: var(--as-success-bg);
+    color: var(--as-success);
+}
+
+.pft-fleet-metric--has-failures {
+    border-color: color-mix(in srgb, var(--as-danger) 24%, transparent);
+    background: var(--as-danger-bg);
+    color: var(--as-danger);
 }
 
 /* ── Per-SIM capacity bar + badges ─────────────────────────────────────── */
@@ -842,6 +1775,267 @@
     font-weight: 700;
     color: var(--as-text-secondary);
     white-space: nowrap;
+}
+
+.pf-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 280px;
+    padding: 56px 28px;
+    text-align: center;
+}
+
+.pf-empty-state-icon {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    place-items: center;
+    border-radius: 18px;
+    background: var(--as-surface-active);
+    color: var(--as-text-muted);
+}
+
+.pf-empty-state-icon svg {
+    width: 26px;
+    height: 26px;
+}
+
+.pf-empty-state strong {
+    display: block;
+    color: var(--as-text);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.pf-empty-state p {
+    margin: 0;
+    max-width: 36ch;
+    color: var(--as-text-secondary);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.sms-device-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 28px 20px;
+    justify-items: center;
+    padding: 28px 24px 32px;
+}
+
+.sms-phone-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    max-width: 240px;
+}
+
+.sms-phone {
+    position: relative;
+    width: 198px;
+    padding: 12px 10px 16px;
+    border-radius: 32px;
+    background: #111827;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 18px 36px -18px rgba(15, 23, 42, 0.55);
+}
+
+.sms-phone-island {
+    width: 72px;
+    height: 8px;
+    margin: 0 auto 10px;
+    border-radius: 999px;
+    background: #020617;
+}
+
+.sms-phone-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 292px;
+    padding: 12px 12px 14px;
+    border-radius: 22px;
+    background: var(--as-surface);
+    color: var(--as-text);
+}
+
+.sms-phone-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--as-text-secondary);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.sms-phone-signal--online { color: var(--as-success); }
+.sms-phone-signal--offline { color: var(--as-warning); }
+.sms-phone-signal--deactivated { color: var(--as-text-muted); }
+
+.sms-phone-app {
+    margin: 4px 0 0;
+    color: var(--as-text-secondary);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.sms-phone-name {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.sms-phone-user {
+    margin: 0;
+    color: var(--as-text-secondary);
+    font-size: 11px;
+}
+
+.sms-phone-chip {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.sms-phone-chip--online {
+    background: var(--as-success-bg);
+    color: var(--as-success);
+}
+
+.sms-phone-chip--offline {
+    background: var(--as-warning-bg);
+    color: var(--as-warning);
+}
+
+.sms-phone-chip--deactivated {
+    background: var(--as-neutral-bg);
+    color: var(--as-text-secondary);
+}
+
+.sms-phone-sims {
+    display: grid;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.sms-phone-sim-row {
+    display: flex;
+    justify-content: space-between;
+    color: var(--as-text-secondary);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.sms-phone-sim-bar {
+    height: 5px;
+    margin-top: 4px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--as-border-light);
+}
+
+.sms-phone-sim-bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--as-brand-blue);
+}
+
+.sms-phone-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid var(--as-border-light);
+}
+
+.sms-phone-metrics div {
+    display: grid;
+    gap: 2px;
+    text-align: center;
+}
+
+.sms-phone-metrics strong {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.sms-phone-metrics span {
+    color: var(--as-text-secondary);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.sms-phone-home {
+    width: 88px;
+    height: 4px;
+    margin: 10px auto 0;
+    border-radius: 999px;
+    background: #334155;
+}
+
+.sms-phone-meta {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    text-align: center;
+}
+
+.sms-phone-cap {
+    margin: 0;
+    color: var(--as-text-secondary);
+    font-size: 11px;
+}
+
+.sms-phone-cap-bar {
+    display: block;
+    height: 4px;
+    margin-top: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--as-border-light);
+}
+
+.sms-phone-cap-bar span {
+    display: block;
+    height: 100%;
+    background: var(--as-brand-blue);
+}
+
+.sms-phone-secret {
+    margin: 0;
+    padding: 4px 8px;
+    border: 1px solid var(--as-warning);
+    border-radius: 8px;
+    background: var(--as-warning-bg);
+    color: var(--as-warning);
+    font-size: 11px;
+}
+
+.sms-phone-card--deactivated .sms-phone-screen {
+    opacity: 0.62;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sms-phone-card {
+        animation: none;
+    }
 }
 
 /* ── School picker card grid (Oversight) ─────────────────────────────── */
@@ -958,4 +2152,3 @@
         transition: none !important;
     }
 }
-

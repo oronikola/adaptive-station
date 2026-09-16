@@ -22,6 +22,7 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
         // below, or Laravel tries to resolve "legacy-schools" as a tenant code.
         Route::get('tenants/legacy-schools', [TenantController::class, 'legacySchools'])->name('tenants.legacy-schools');
         Route::get('tenants/{tenant:code}', [TenantController::class, 'show'])->name('tenants.show');
+        Route::patch('tenants/{tenant:code}', [TenantController::class, 'update'])->name('tenants.update');
         Route::patch('tenants/{tenant:code}/status', [TenantController::class, 'updateStatus'])->name('tenants.status');
         Route::post('tenants/{tenant:code}/admins', [TenantController::class, 'storeAdmin'])->name('tenants.admins.store');
         Route::patch('tenants/{tenant:code}/admins/{admin}', [TenantController::class, 'updateAdmin'])->name('tenants.admins.update');
@@ -31,6 +32,13 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
 
         Route::get('stations', [StationController::class, 'index'])->name('stations.index');
         Route::post('stations', [StationController::class, 'store'])->name('stations.store');
+        Route::get('stations/{station}', [StationController::class, 'show'])->name('stations.show');
+        Route::patch('stations/{station}/configuration', [StationController::class, 'updateConfiguration'])
+            ->name('stations.configuration');
+        Route::post('stations/{station}/credentials', [StationController::class, 'issueCredential'])
+            ->name('stations.credentials.store');
+        Route::patch('stations/{station}/credentials/{credential}/revoke', [StationController::class, 'revokeCredential'])
+            ->name('stations.credentials.revoke');
         Route::post('stations/{station}/activation-code', [StationController::class, 'issueActivationCode'])
             ->name('stations.activation-code');
         Route::post('stations/{station}/pairing-link', [StationController::class, 'issuePairingLink'])

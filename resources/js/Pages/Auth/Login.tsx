@@ -2,29 +2,12 @@ import InputError from '@/Components/InputError';
 import StationLogo from '@/Components/Branding/StationLogo';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import { EyeIcon } from '@/Components/icons/eye';
+import { EyeOffIcon } from '@/Components/icons/eye-off';
+import { WifiIcon } from '@/Components/icons/wifi';
+import { CheckIcon } from '@/Components/icons/check';
 import '../../../css/pages/login.css';
 
-interface EyeIconProps {
-    isVisible: boolean;
-}
-
-function EyeIcon({ isVisible }: EyeIconProps) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
-            <circle cx="12" cy="12" r="2.5" />
-            {isVisible && <path d="m4 4 16 16" />}
-        </svg>
-    );
-}
-
-function TapIcon() {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M8.5 8.5a5 5 0 0 1 0 7M12 5a10 10 0 0 1 0 14M5 11a1.5 1.5 0 0 1 0 2" />
-        </svg>
-    );
-}
 
 interface LoginProps {
     status?: string;
@@ -76,7 +59,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                                     <div className="auth-reader-prompt">
                                         <span className="auth-reader-rings">
-                                            <TapIcon />
+                                            <WifiIcon size={20} />
                                         </span>
                                         <span>
                                             <strong>Hold your card</strong>
@@ -113,15 +96,13 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                                     <div className="auth-student-footer">
                                         <span>BSIT · 1A</span>
-                                        <TapIcon />
+                                        <WifiIcon size={20} />
                                     </div>
                                 </div>
 
                                 <div className="auth-tap-confirmation">
                                     <span className="auth-confirmation-icon">
-                                        <svg viewBox="0 0 20 20" fill="none">
-                                            <path d="m5 10 3.2 3.2L15 6.8" />
-                                        </svg>
+                                        <CheckIcon size={20} />
                                     </span>
                                     <span>
                                         <strong>Tap recorded</strong>
@@ -207,7 +188,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                             onClick={() => setShowPassword((isVisible) => !isVisible)}
                                             aria-label={showPassword ? 'Hide password' : 'Show password'}
                                         >
-                                            <EyeIcon isVisible={showPassword} />
+                                            {showPassword ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
                                         </button>
                                     </div>
                                     <InputError id="password-error" message={errors.password} className="auth-field-error" />
@@ -234,7 +215,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                             <div className="auth-secondary-actions">
                                 <Link href="/" className="auth-secondary-button">
-                                    <TapIcon />
+                                    <WifiIcon size={20} />
                                     Open tapping station
                                 </Link>
                                 <Link href={route('register')} className="auth-secondary-button">

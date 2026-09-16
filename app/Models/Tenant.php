@@ -125,16 +125,29 @@ class Tenant extends Model
      */
     public static function platformStationTotals(): array
     {
-        $total = 0;
-        $active = 0;
+        $totals = [
+            'total' => 0,
+            'active' => 0,
+            'pending_activation' => 0,
+            'disabled' => 0,
+            'retired' => 0,
+        ];
 
         foreach (static::all() as $tenant) {
             TenantDatabase::use($tenant);
-            $total += Station::allTenants()->count();
-            $active += Station::allTenants()->where('status', 'active')->count();
+            $statusCounts = Station::allTenants()
+                ->where('tenant_id', $tenant->id)
+                ->selectRaw('status, count(*) as aggregate')
+                ->groupBy('status')
+                ->pluck('aggregate', 'status');
+
+            foreach ($statusCounts as $status => $count) {
+                $totals['total'] += $count;
+                $totals[$status] += $count;
+            }
         }
 
-        return ['total' => $total, 'active' => $active];
+        return $totals;
     }
 
     public static function updateStatus(self $tenant, TenantStatus $status, ?User $actor = null): self

@@ -8,6 +8,7 @@ use App\Models\Station;
 use App\Models\StationActivationCode;
 use App\Models\StationCredential;
 use App\Models\StationPairingToken;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -45,9 +46,30 @@ class StationController extends Controller
         ]);
     }
 
-    public function show(Station $station): Response
+    public function show(Request $request, Station $station): Response|JsonResponse
     {
         Gate::authorize('view', $station);
+
+        if ($request->expectsJson()) {
+            $thresholdMinutes = (int) config('device.station_offline_threshold_minutes');
+
+            return response()->json([
+                'station' => [
+                    'id' => $station->id,
+                    'name' => $station->name,
+                    'station_code' => $station->station_code,
+                    'status' => $station->status->value,
+                    'app_version' => $station->app_version,
+                    'configuration' => $station->configuration,
+                    'last_pending_count' => $station->last_pending_count,
+                    'last_seen_at' => $station->last_seen_at?->toIso8601String(),
+                    'is_online' => $station->status === StationStatus::Active
+                        && $station->last_seen_at !== null
+                        && $station->last_seen_at->gt(Date::now()->subMinutes($thresholdMinutes)),
+                ],
+                'credentials' => $station->credentials()->orderByDesc('created_at')->get(),
+            ]);
+        }
 
         return Inertia::render('Admin/stations/station-detail-screen', [
             'station' => $station,
@@ -56,7 +78,7 @@ class StationController extends Controller
         ]);
     }
 
-    public function updateConfiguration(Request $request, Station $station): RedirectResponse
+    public function updateConfiguration(Request $request, Station $station): RedirectResponse|JsonResponse
     {
         Gate::authorize('update', $station);
 
@@ -65,6 +87,13 @@ class StationController extends Controller
         ]);
 
         Station::updateConfiguration($station, $data['configuration'] ?? [], $request->user());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Configuration updated.',
+                'station' => $station->fresh(),
+            ]);
+        }
 
         return redirect()->route('portal.stations.show', $station)->with('success', 'Configuration updated.');
     }
@@ -79,7 +108,7 @@ class StationController extends Controller
             ->with('success', 'Station reset to pending activation. Existing credentials were revoked — issue a new activation code to re-provision it.');
     }
 
-    public function issueCredential(Request $request, Station $station): RedirectResponse
+    public function issueCredential(Request $request, Station $station): RedirectResponse|JsonResponse
     {
         Gate::authorize('create', StationCredential::class);
 
@@ -89,12 +118,20 @@ class StationController extends Controller
 
         ['token' => $token] = StationCredential::issueFor($station, $data['label'] ?? null, $request->user());
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Credential issued.',
+                'deviceToken' => $token,
+                'credentials' => $station->credentials()->orderByDesc('created_at')->get(),
+            ]);
+        }
+
         return redirect()->route('portal.stations.show', $station)
             ->with('success', 'Credential issued.')
             ->with('deviceToken', $token);
     }
 
-    public function revokeCredential(Request $request, Station $station, StationCredential $credential): RedirectResponse
+    public function revokeCredential(Request $request, Station $station, StationCredential $credential): RedirectResponse|JsonResponse
     {
         Gate::authorize('update', $credential);
 
@@ -102,27 +139,34 @@ class StationController extends Controller
 
         StationCredential::revoke($credential, $request->user());
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Credential revoked.',
+                'credentials' => $station->credentials()->orderByDesc('created_at')->get(),
+            ]);
+        }
+
         return redirect()->route('portal.stations.show', $station)->with('success', 'Credential revoked.');
     }
 
-    public function issueActivationCode(Request $request, Station $station): RedirectResponse
+    public function issueActivationCode(Request $request, Station $station): RedirectResponse|JsonResponse
     {
         Gate::authorize('create', StationActivationCode::class);
 
         ['code' => $code] = StationActivationCode::issueFor($station, $request->user());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Activation code issued.',
+                'activationCode' => $code,
+            ]);
+        }
 
         return redirect()->route('portal.stations.show', $station)
             ->with('success', 'Activation code issued.')
             ->with('activationCode', $code);
     }
 
-    /**
-     * The station's single "Reset Link" action — also used the first time a
-     * station (created before this table existed) has never had one. Always
-     * revokes whatever link preceded it (see StationPairingToken::issueFor),
-     * so there is no separate "revoke" action to reason about: resetting is
-     * how you invalidate a leaked link too.
-     */
     public function issuePairingLink(Request $request, Station $station): RedirectResponse
     {
         Gate::authorize('create', StationPairingToken::class);

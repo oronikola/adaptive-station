@@ -11,6 +11,7 @@ use App\Http\Requests\Platform\DestroyTenantRequest;
 use App\Http\Requests\Platform\StoreTenantAdminRequest;
 use App\Http\Requests\Platform\StoreTenantRequest;
 use App\Http\Requests\Platform\UpdateTenantAdminRequest;
+use App\Http\Requests\Platform\UpdateTenantRequest;
 use App\Models\AuditLog;
 use App\Models\IntegrationProfile;
 use App\Models\Station;
@@ -156,7 +157,7 @@ class TenantController extends Controller
         return null;
     }
 
-    public function show(Request $request, Tenant $tenant): Response
+    public function show(Request $request, Tenant $tenant): Response|JsonResponse
     {
         Gate::authorize('view', $tenant);
 
@@ -182,21 +183,56 @@ class TenantController extends Controller
             $admins->makeVisible('password_plaintext');
         }
 
+        $stations = Station::allTenants()->orderBy('name')->get();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'tenant' => $tenant,
+                'admins' => $admins,
+                'stations' => $stations,
+            ]);
+        }
+
         return Inertia::render('Platform/tenants/tenant-detail-screen', [
             'tenant' => $tenant,
             'admins' => $admins,
-            'stations' => Station::allTenants()->orderBy('name')->get(),
+            'stations' => $stations,
         ]);
     }
 
-    public function storeAdmin(StoreTenantAdminRequest $request, Tenant $tenant): RedirectResponse
+    public function update(UpdateTenantRequest $request, Tenant $tenant): RedirectResponse|JsonResponse
     {
-        User::provisionForTenant(
+        $data = $request->validated();
+        $tenant->update($data);
+
+        AuditLog::record('tenant.updated', $request->user(), $tenant->id, 'tenant', $tenant->id, $data);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'School updated successfully.',
+                'tenant' => $tenant->fresh(),
+            ]);
+        }
+
+        return redirect()->route('platform.tenants.show', $tenant)->with('success', 'School updated.');
+    }
+
+    public function storeAdmin(StoreTenantAdminRequest $request, Tenant $tenant): RedirectResponse|JsonResponse
+    {
+        $result = User::provisionForTenant(
             $tenant,
             UserRole::TenantAdmin,
             $request->validated(),
             $request->user(),
         );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Admin account created.',
+                'temporaryPassword' => $result['temporary_password'],
+                'admin' => $result['user'],
+            ]);
+        }
 
         return redirect()->route('platform.tenants.show', $tenant)
             ->with('success', 'Admin account created. A password was generated — reveal it from the table.');
@@ -252,7 +288,7 @@ class TenantController extends Controller
         return redirect()->route('platform.tenants.show', $tenant)->with('success', 'Admin account reactivated.');
     }
 
-    public function updateStatus(Request $request, Tenant $tenant): RedirectResponse
+    public function updateStatus(Request $request, Tenant $tenant): RedirectResponse|JsonResponse
     {
         Gate::authorize('update', $tenant);
 
@@ -262,12 +298,26 @@ class TenantController extends Controller
 
         Tenant::updateStatus($tenant, TenantStatus::from($data['status']), $request->user());
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'School status updated.',
+                'status' => $tenant->fresh()->status->value,
+                'tenant' => $tenant->fresh(),
+            ]);
+        }
+
         return redirect()->route('platform.tenants.show', $tenant)->with('success', 'Tenant status updated.');
     }
 
-    public function destroy(DestroyTenantRequest $request, Tenant $tenant): RedirectResponse
+    public function destroy(DestroyTenantRequest $request, Tenant $tenant): RedirectResponse|JsonResponse
     {
         Tenant::purge($tenant, $request->user());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'School permanently deleted.',
+            ]);
+        }
 
         return redirect()->route('platform.tenants.index')->with('success', 'Tenant permanently deleted.');
     }

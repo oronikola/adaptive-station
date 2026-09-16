@@ -1,28 +1,26 @@
+import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
 import SecretOnceCallout from '@/Components/SecretOnceCallout';
+import StatusBadge from '@/Components/admin/StatusBadge';
+import Table from '@/Components/admin/Table';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { Station, StationCredential } from '@/types';
+import IssueActivationCodeModal from './IssueActivationCodeModal';
+import { LockIcon } from '@/Components/icons/lock';
+import { XIcon } from '@/Components/icons/x';
+import { KeyIcon } from '@/Components/icons/key';
+import { ChevronLeftIcon } from '@/Components/icons/chevron-left';
 import '../../../../css/platform-dashboard.css';
-import '../../../../css/platform-overview.css';
 
-const STATUS_LABELS: Record<string, string> = {
+const statusLabels: Record<string, string> = {
     pending_activation: 'Pending Activation',
     active: 'Active',
     disabled: 'Disabled',
     retired: 'Retired',
 };
 
-const STATUS_PILL_CLASS: Record<string, string> = {
-    active: 'pf-pill--active',
-    pending_activation: 'pf-pill--suspended',
-    disabled: 'pf-pill--archived',
-    retired: 'pf-pill--archived',
-};
-
-// last_used_at is a full UTC timestamp — displayed in GMT+8 (Asia/Manila, no
-// DST) since that's the timezone every tenant in this system runs on today.
 function formatDateTime(value: string): string {
     return new Date(value).toLocaleString('en-US', {
         month: 'short',
@@ -47,9 +45,14 @@ export default function StationDetailScreen({
     const { props } = usePage<import('@/types').PageProps>();
     const flash = props.flash;
 
-    const [configValue, setConfigValue] = useState(JSON.stringify(station.configuration ?? {}, null, 2));
+    const [issueActivationCodeOpen, setIssueActivationCodeOpen] = useState(false);
+    const [issueCredentialOpen, setIssueCredentialOpen] = useState(false);
+    const [isResettingLink, setIsResettingLink] = useState(false);
+
+    const configForm = useForm({
+        configuration: JSON.stringify(station.configuration ?? {}, null, 2),
+    });
     const [configError, setConfigError] = useState<string | null>(null);
-    const [configProcessing, setConfigProcessing] = useState(false);
 
     function submitConfiguration(e: React.FormEvent) {
         e.preventDefault();
@@ -57,242 +60,334 @@ export default function StationDetailScreen({
 
         let parsed: Record<string, unknown>;
         try {
-            parsed = JSON.parse(configValue || '{}');
+            parsed = JSON.parse(configForm.data.configuration || '{}');
         } catch {
-            setConfigError('Must be valid JSON.');
+            setConfigError('Configuration must be valid JSON syntax.');
             return;
         }
 
-        setConfigProcessing(true);
-        router.patch(
-            route('portal.stations.configuration', station.station_code),
-            { configuration: parsed as unknown as string },
-            { onFinish: () => setConfigProcessing(false) },
-        );
+        router.patch(route('portal.stations.configuration', station.id), {
+            configuration: parsed as unknown as string,
+        });
     }
 
-    const [revokingCredential, setRevokingCredential] = useState<StationCredential | null>(null);
-    const [isRevoking, setIsRevoking] = useState(false);
+    function formatJson() {
+        try {
+            const parsed = JSON.parse(configForm.data.configuration || '{}');
+            configForm.setData('configuration', JSON.stringify(parsed, null, 2));
+            setConfigError(null);
+        } catch {
+            setConfigError('Cannot format: Text is not valid JSON.');
+        }
+    }
 
-    function submitRevokeCredential() {
-        if (!revokingCredential) { return; }
-        setIsRevoking(true);
-        router.patch(
-            route('portal.stations.credentials.revoke', [station.station_code, revokingCredential.id] as unknown as Record<string, unknown>),
-            {},
-            {
-                preserveScroll: true,
-                onFinish: () => {
-                    setIsRevoking(false);
-                    setRevokingCredential(null);
-                },
+    const credentialForm = useForm({ label: '' });
+
+    function submitIssueCredential(e: React.FormEvent) {
+        e.preventDefault();
+        credentialForm.post(route('portal.stations.credentials.store', station.id), {
+            onSuccess: () => {
+                setIssueCredentialOpen(false);
+                credentialForm.reset();
             },
-        );
+        });
     }
 
-    const [isResettingLink, setIsResettingLink] = useState(false);
+    function revokeCredential(credentialId: number) {
+        if (confirm('Revoke this credential? The kiosk using it will lose access immediately.')) {
+            router.patch(
+                route('portal.stations.credentials.revoke', [
+                    station.id,
+                    credentialId,
+                ] as unknown as Record<string, unknown>),
+            );
+        }
+    }
 
     function resetLink() {
         setIsResettingLink(true);
-        router.post(route('portal.stations.pairing-link', station.station_code), {}, {
+        router.post(route('portal.stations.pairing-link', station.id), {}, {
             onFinish: () => setIsResettingLink(false),
         });
     }
 
     return (
         <AdminLayout>
-            <Head title={station.name} />
+            <Head title={`${station.name} — Station Details`} />
 
-            <div className="pf-dashboard pft-page">
-                <Link href={route('portal.stations.index')} className="pft-panel-link" style={{ marginBottom: 14 }}>
-                    <svg viewBox="0 0 24 24">
-                        <path d="m15 6-6 6 6 6" />
-                    </svg>
-                    Back to Stations
-                </Link>
+            <div className="pf-dashboard max-w-4xl mx-auto">
+                {/* Back navigation */}
+                <div className="mb-6">
+                    <Link
+                        href={route('portal.stations.index')}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                    >
+                        <ChevronLeftIcon size={16} />
+                        Back to Stations
+                    </Link>
+                </div>
 
-                <div className="pft-hero">
-                    <div className="pft-hero-main">
-                        <span className="pft-hero-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="4" y="5" width="16" height="10" rx="1.6" />
-                                <rect x="9.5" y="17" width="5" height="2" rx="1" />
-                                <rect x="7" y="19.4" width="10" height="1.6" rx="0.8" />
-                            </svg>
-                        </span>
-                        <div>
-                            <h1 className="pft-hero-title">{station.name}</h1>
-                            <p className="pft-hero-subtitle">
-                                <span className="font-mono">{station.station_code}</span>
-                            </p>
+                {/* Hero Header */}
+                <div className="pf-dashboard-header">
+                    <div>
+                        <div className="pf-dashboard-kicker">Hardware Station</div>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <h1 className="pf-dashboard-title">{station.name}</h1>
+                            <span className="font-mono text-xs px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md border border-slate-200 dark:border-slate-700">
+                                {station.station_code}
+                            </span>
+                            <StatusBadge
+                                color={
+                                    station.status === 'active'
+                                        ? 'green'
+                                        : station.status === 'pending_activation'
+                                          ? 'yellow'
+                                          : 'red'
+                                }
+                            >
+                                {statusLabels[station.status] ?? station.status}
+                            </StatusBadge>
                         </div>
+                        <p className="pf-dashboard-subtitle mt-2">
+                            Manage station configuration, activation pairing codes, and authorized kiosk device tokens.
+                        </p>
                     </div>
-                    <div className="pft-hero-actions">
-                        <span
-                            className={
-                                'pf-pill ' + (STATUS_PILL_CLASS[station.status] ?? 'pf-pill--inactive')
-                            }
-                        >
-                            {STATUS_LABELS[station.status] ?? station.status}
-                        </span>
+
+                    <div className="flex flex-wrap items-center gap-3">
                         <button
                             type="button"
-                            className={'pf-btn pf-btn-primary' + (isResettingLink ? ' pf-btn--loading' : '')}
+                            className={'pf-btn pf-btn-secondary' + (isResettingLink ? ' pf-btn--loading' : '')}
                             onClick={resetLink}
                             disabled={isResettingLink}
                         >
                             {hasPairingLink ? 'Reset Link' : 'Create Link'}
                         </button>
+                        {station.status === 'pending_activation' && (
+                            <button
+                                type="button"
+                                onClick={() => setIssueActivationCodeOpen(true)}
+                                className="pf-btn pf-btn-primary !bg-gradient-to-r !from-amber-600 !to-orange-600 hover:!from-amber-500 hover:!to-orange-500 !text-white !border-amber-500/40 shadow-lg shadow-amber-500/20"
+                            >
+                                <KeyIcon size={18} />
+                                Issue Activation Code
+                            </button>
+                        )}
                     </div>
                 </div>
 
                 <SecretOnceCallout label="Station link" value={flash?.pairingLink} />
+                <SecretOnceCallout label="Device credential token" value={flash?.deviceToken} />
+                <SecretOnceCallout label="Activation code" value={flash?.activationCode} />
 
-                <div className="pf-panel" style={{ marginBottom: 16 }}>
-                    <div className="pf-panel-header">
-                        <div>
-                            <h2 className="pf-panel-title">Configuration</h2>
-                            <p className="pf-panel-count">
-                                Raw JSON delivered to the kiosk's display/operational
-                                configuration on its next sync.
-                            </p>
+                <div className="space-y-6">
+                    {/* Activation Pending Card */}
+                    {station.status === 'pending_activation' && (
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-amber-200/90 bg-amber-50/70 p-5 dark:border-amber-900/50 dark:bg-amber-950/30">
+                            <div className="flex items-start gap-3">
+                                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
+                                    <KeyIcon size={20} />
+                                </span>
+                                <div>
+                                    <h3 className="text-sm font-bold text-amber-900 dark:text-amber-100">
+                                        Pending Hardware Activation
+                                    </h3>
+                                    <p className="mt-1 text-xs text-amber-800/90 dark:text-amber-300/90">
+                                        This station has not yet completed setup. Generate a one-time activation code to enter on the physical kiosk terminal.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIssueActivationCodeOpen(true)}
+                                className="pf-btn pf-btn-primary !bg-gradient-to-r !from-amber-600 !to-orange-600 hover:!from-amber-500 hover:!to-orange-500 !text-white self-start sm:self-auto !text-xs !h-9"
+                            >
+                                <KeyIcon size={16} />
+                                Issue Activation Code
+                            </button>
                         </div>
+                    )}
+
+                    {/* Configuration Form Card */}
+                    <div className="pf-panel p-6">
+                        <form onSubmit={submitConfiguration} className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                                        Runtime Configuration
+                                    </h3>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                        Raw JSON delivered to the kiosk display &amp; operational configuration on its next sync.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={formatJson}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                                >
+                                    Format JSON
+                                </button>
+                            </div>
+
+                            <div>
+                                <textarea
+                                    id="configuration"
+                                    rows={8}
+                                    value={configForm.data.configuration}
+                                    onChange={(e) => configForm.setData('configuration', e.target.value)}
+                                    className="mt-1 block w-full rounded-2xl border-slate-200 bg-slate-900 p-4 font-mono text-xs text-emerald-400 shadow-inner focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700"
+                                    spellCheck={false}
+                                />
+                                <InputError message={configError ?? configForm.errors.configuration} className="mt-2" />
+                            </div>
+
+                            <div className="flex justify-end pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={configForm.processing}
+                                    className="pf-btn pf-btn-primary"
+                                >
+                                    {configForm.processing ? 'Saving...' : 'Save Configuration'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
 
-                    <form onSubmit={submitConfiguration} style={{ padding: '20px 24px 24px' }}>
-                        <div className="pf-field">
-                            <label htmlFor="configuration">Configuration (JSON)</label>
-                            <textarea
-                                id="configuration"
-                                rows={8}
-                                value={configValue}
-                                onChange={(e) => setConfigValue(e.target.value)}
-                                className="font-mono"
-                                style={{
-                                    width: '100%',
-                                    padding: '12px 14px',
-                                    border: '1px solid var(--as-border)',
-                                    borderRadius: 12,
-                                    fontSize: 12.5,
-                                    lineHeight: 1.6,
-                                    color: 'var(--as-brand-dark)',
-                                }}
-                            />
-                            {configError && (
-                                <p style={{ color: '#dc2626', fontSize: 13, marginTop: 8 }}>{configError}</p>
-                            )}
+                    {/* Device Credentials Card */}
+                    <div className="pf-panel p-6">
+                        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                                    Authorized Device Credentials
+                                </h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    Cryptographic tokens assigned to hardware kiosks running this station profile.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIssueCredentialOpen(true)}
+                                className="pf-btn pf-btn-primary !h-9 !text-xs"
+                            >
+                                <LockIcon size={16} />
+                                Issue New Credential
+                            </button>
                         </div>
 
-                        <button
-                            type="submit"
-                            className={'pf-btn pf-btn-primary' + (configProcessing ? ' pf-btn--loading' : '')}
-                            disabled={configProcessing}
-                        >
-                            Save Configuration
-                        </button>
-                    </form>
-                </div>
-
-                <div className="pf-panel">
-                    <div className="pf-panel-header">
-                        <div>
-                            <h2 className="pf-panel-title">Paired Devices</h2>
-                            <p className="pf-panel-count">
-                                {credentials.length} device{credentials.length === 1 ? '' : 's'} paired to this station via its link
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="pf-table-wrap">
-                        <table className="pf-table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Label</th>
-                                    <th scope="col">Last Used</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">
-                                        <span className="sr-only">Actions</span>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                        <Table>
+                            <Table.Head>
+                                <Table.Th>Label</Table.Th>
+                                <Table.Th>Last Used</Table.Th>
+                                <Table.Th>Status</Table.Th>
+                                <Table.Th>
+                                    <span className="sr-only">Actions</span>
+                                </Table.Th>
+                            </Table.Head>
+                            <Table.Body>
                                 {credentials.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="pf-empty">
-                                            No device has paired yet.
-                                        </td>
-                                    </tr>
+                                    <Table.Empty colSpan={4}>No credentials issued yet.</Table.Empty>
                                 )}
 
                                 {credentials.map((credential: StationCredential) => (
                                     <tr key={credential.id}>
-                                        <td className="pf-tenant-name">{credential.label ?? '—'}</td>
-                                        <td>
+                                        <Table.Td>{credential.label ?? '—'}</Table.Td>
+                                        <Table.Td>
                                             {credential.last_used_at
                                                 ? formatDateTime(credential.last_used_at)
                                                 : 'Never'}
-                                        </td>
-                                        <td>
-                                            <span
-                                                className={
-                                                    'pf-pill ' +
-                                                    (credential.revoked_at ? 'pf-pill--archived' : 'pf-pill--active')
-                                                }
-                                            >
+                                        </Table.Td>
+                                        <Table.Td>
+                                            <StatusBadge color={credential.revoked_at ? 'gray' : 'green'}>
                                                 {credential.revoked_at ? 'Revoked' : 'Active'}
-                                            </span>
-                                        </td>
-                                        <td>
+                                            </StatusBadge>
+                                        </Table.Td>
+                                        <Table.Td className="text-right">
                                             {!credential.revoked_at && (
-                                                <div className="pft-row-actions">
-                                                    <button
-                                                        type="button"
-                                                        className="pf-row-action pf-row-action--danger"
-                                                        onClick={() => setRevokingCredential(credential)}
-                                                    >
-                                                        <svg viewBox="0 0 24 24">
-                                                            <path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-7 0v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7" />
-                                                        </svg>
-                                                        Revoke
-                                                    </button>
-                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => revokeCredential(credential.id)}
+                                                    className="font-bold text-red-600 hover:text-red-700 hover:underline dark:text-red-400 text-xs"
+                                                >
+                                                    Revoke
+                                                </button>
                                             )}
-                                        </td>
+                                        </Table.Td>
                                     </tr>
                                 ))}
-                            </tbody>
-                        </table>
+                            </Table.Body>
+                        </Table>
                     </div>
                 </div>
             </div>
 
-            <Modal show={revokingCredential !== null} onClose={() => setRevokingCredential(null)}>
-                <div className="pf-modal">
-                    <div className="pf-modal-header">
-                        <h2 className="pf-modal-title">Revoke this device?</h2>
-                        <p className="pf-modal-desc">
-                            <strong>{revokingCredential?.label ?? 'Untitled'}</strong> — this device will lose access immediately. It can re-pair using the station link again.
-                        </p>
+            {/* Issue Activation Code Modal */}
+            <IssueActivationCodeModal
+                station={station}
+                show={issueActivationCodeOpen}
+                onClose={() => setIssueActivationCodeOpen(false)}
+            />
+
+            {/* Issue Credential Modal */}
+            <Modal show={issueCredentialOpen} onClose={() => setIssueCredentialOpen(false)} maxWidth="md">
+                <form onSubmit={submitIssueCredential} className="pf-modal relative p-6 sm:p-8">
+                    <div className="pf-modal-header mb-5">
+                        <div className="pf-modal-hero">
+                            <span className="pf-modal-hero-icon pf-modal-hero-icon--amber" aria-hidden="true">
+                                <LockIcon size={20} />
+                            </span>
+                            <div className="pf-modal-hero-text">
+                                <h3 className="pf-modal-title text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                                    Issue New Credential
+                                </h3>
+                                <p className="pf-modal-subtitle text-xs text-slate-500 dark:text-slate-400">
+                                    Token shown once — enter it on the kiosk immediately.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            className="pf-modal-close"
+                            onClick={() => setIssueCredentialOpen(false)}
+                            aria-label="Close"
+                        >
+                            <XIcon size={20} />
+                        </button>
                     </div>
-                    <div className="pf-modal-footer">
+
+                    <div className="space-y-4">
+                        <div>
+                            <label htmlFor="label" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                Credential Label (Optional)
+                            </label>
+                            <input
+                                id="label"
+                                type="text"
+                                value={credentialForm.data.label}
+                                onChange={(e) => credentialForm.setData('label', e.target.value)}
+                                placeholder="e.g. Front Gate Terminal 01"
+                                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                autoFocus
+                            />
+                            <InputError message={credentialForm.errors.label} className="mt-2" />
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3">
                         <button
                             type="button"
                             className="pf-btn pf-btn-secondary"
-                            onClick={() => setRevokingCredential(null)}
-                            disabled={isRevoking}
+                            onClick={() => setIssueCredentialOpen(false)}
                         >
                             Cancel
                         </button>
                         <button
-                            type="button"
-                            className={'pf-btn pf-btn-danger' + (isRevoking ? ' pf-btn--loading' : '')}
-                            onClick={submitRevokeCredential}
-                            disabled={isRevoking}
+                            type="submit"
+                            className="pf-btn pf-btn-primary"
+                            disabled={credentialForm.processing}
                         >
-                            Revoke
+                            {credentialForm.processing ? 'Issuing...' : 'Issue Credential'}
                         </button>
                     </div>
-                </div>
+                </form>
             </Modal>
         </AdminLayout>
     );
