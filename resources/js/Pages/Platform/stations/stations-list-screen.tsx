@@ -199,7 +199,7 @@ export default function StationsListScreen({
     }
 
     const [deletingStation, setDeletingStation] = useState<StationRow | null>(null);
-    const deleteForm = useForm({ _method: 'delete', confirm_code: '', tenant_id: '' });
+    const deleteForm = useForm({ confirm_code: '', tenant_id: '' });
     const deleteConfirmed =
         deletingStation !== null && deleteForm.data.confirm_code.trim() === deletingStation.station_code;
 
@@ -215,7 +215,7 @@ export default function StationsListScreen({
             return;
         }
 
-        deleteForm.post(route('platform.stations.destroy', deletingStation.id), {
+        deleteForm.delete(route('platform.stations.destroy', deletingStation.id), {
             onSuccess: () => {
                 setDeletingStation(null);
                 deleteForm.reset();
