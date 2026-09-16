@@ -139,6 +139,59 @@ class Station extends Model implements TenantScoped
     }
 
     /**
+     * Retires a station that can't be deleted outright (it has recorded
+     * attendance — see remove() below) — the non-destructive alternative:
+     * hides it from active use while preserving every tap_event, credential
+     * record, and audit trail tied to it. Revokes any still-active
+     * credential so a retired station's kiosk can no longer authenticate.
+     *
+     * Queries StationCredential via allTenants() rather than the
+     * $station->credentials() relation — this is reachable from a
+     * platform-level actor (no ambient TenantContext), under which
+     * StationCredential's own TenantScope would otherwise fail closed to an
+     * empty result, same reasoning as remove() below.
+     */
+    public static function retire(self $station, ?User $actor = null): self
+    {
+        return DB::transaction(function () use ($station, $actor) {
+            $station->forceFill(['status' => StationStatus::Retired])->save();
+
+            StationCredential::allTenants()->where('station_id', $station->id)->whereNull('revoked_at')->get()->each(
+                fn (StationCredential $credential) => StationCredential::revoke($credential, $actor),
+            );
+
+            MasterDataChange::record(
+                $station->tenant_id, MasterDataEntityType::StationConfig, $station->id,
+                MasterDataOperation::Upsert, ['id' => $station->id, 'status' => $station->status->value],
+            );
+            AuditLog::record('station.retired', $actor, $station->tenant_id, 'station', $station->id);
+
+            return $station;
+        });
+    }
+
+    /**
+     * Brings a retired station back into active service. Returns it to
+     * pending_activation rather than active directly — its credentials were
+     * revoked on retirement, so it still needs a fresh activation code or
+     * pairing link before a kiosk can use it again.
+     */
+    public static function reactivate(self $station, ?User $actor = null): self
+    {
+        return DB::transaction(function () use ($station, $actor) {
+            $station->forceFill(['status' => StationStatus::PendingActivation])->save();
+
+            MasterDataChange::record(
+                $station->tenant_id, MasterDataEntityType::StationConfig, $station->id,
+                MasterDataOperation::Upsert, ['id' => $station->id, 'status' => $station->status->value],
+            );
+            AuditLog::record('station.reactivated', $actor, $station->tenant_id, 'station', $station->id);
+
+            return $station;
+        });
+    }
+
+    /**
      * Permanently removes a station — only possible when it has never
      * recorded real attendance (tap_events, which carries a real FK to
      * stations and is the actual history worth protecting). device_heartbeats

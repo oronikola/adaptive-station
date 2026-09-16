@@ -186,4 +186,52 @@ class StationProvisioningTest extends TestCase
 
         $this->assertNotNull(Station::allTenants()->find($station->id));
     }
+
+    /**
+     * The alternative to deletion for a station whose attendance history
+     * must be preserved — see Station::retire()'s docblock.
+     */
+    public function test_a_station_with_recorded_tap_activity_can_be_retired_instead(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create(['station_code' => 'RET-01']);
+        TapEvent::factory()->for($tenant)->for($station)->create();
+        ['credential' => $credential] = StationCredential::issueFor($station, 'Kiosk 1', $platformAdmin);
+
+        $response = $this->actingAs($platformAdmin)->patch(route('platform.stations.retire', $station->id), [
+            'tenant_id' => $tenant->id,
+        ]);
+
+        $response->assertRedirect(route('platform.stations.index', ['tenant_id' => $tenant->id]));
+        $this->assertSame(StationStatus::Retired, $station->fresh()->status);
+        $this->assertNotNull($credential->fresh()->revoked_at);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'station.retired',
+            'entity_id' => $station->id,
+        ]);
+        // The tap history that blocked deletion is still there, untouched.
+        $this->assertSame(1, TapEvent::allTenants()->where('station_id', $station->id)->count());
+    }
+
+    public function test_a_retired_station_can_be_reactivated_and_returns_to_pending_activation(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create([
+            'station_code' => 'RET-02',
+            'status' => StationStatus::Retired,
+        ]);
+
+        $response = $this->actingAs($platformAdmin)->patch(route('platform.stations.reactivate', $station->id), [
+            'tenant_id' => $tenant->id,
+        ]);
+
+        $response->assertRedirect(route('platform.stations.index', ['tenant_id' => $tenant->id]));
+        $this->assertSame(StationStatus::PendingActivation, $station->fresh()->status);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'station.reactivated',
+            'entity_id' => $station->id,
+        ]);
+    }
 }

@@ -296,6 +296,32 @@ class StationController extends Controller
             ->with('pairingLink', route('kiosk.pair', $token));
     }
 
+    public function retire(Request $request, string $station): RedirectResponse
+    {
+        $data = $request->validate(['tenant_id' => ['required', 'uuid']]);
+        [$stationModel] = $this->resolveStation($station, $data['tenant_id']);
+
+        Gate::authorize('update', $stationModel);
+
+        Station::retire($stationModel, $request->user());
+
+        return redirect()->route('platform.stations.index', ['tenant_id' => $data['tenant_id']])
+            ->with('success', "Station \"{$stationModel->name}\" retired.");
+    }
+
+    public function reactivate(Request $request, string $station): RedirectResponse
+    {
+        $data = $request->validate(['tenant_id' => ['required', 'uuid']]);
+        [$stationModel] = $this->resolveStation($station, $data['tenant_id']);
+
+        Gate::authorize('update', $stationModel);
+
+        Station::reactivate($stationModel, $request->user());
+
+        return redirect()->route('platform.stations.index', ['tenant_id' => $data['tenant_id']])
+            ->with('success', "Station \"{$stationModel->name}\" reactivated — issue it a new activation code or pairing link.");
+    }
+
     public function destroy(Request $request, string $station): RedirectResponse
     {
         $data = $request->validate([

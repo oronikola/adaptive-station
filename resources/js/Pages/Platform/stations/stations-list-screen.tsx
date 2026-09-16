@@ -21,6 +21,8 @@ import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
 import { WifiIcon } from '@/Components/icons/wifi';
 import { KeyIcon } from '@/Components/icons/key';
 import { WrenchIcon } from '@/Components/icons/wrench';
+import { ArchiveIcon } from '@/Components/icons/archive';
+import { RotateCWIcon } from '@/Components/icons/rotate-cw';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -195,6 +197,31 @@ export default function StationsListScreen({
     function resetLink(station: StationRow) {
         router.post(route('platform.stations.pairing-link', station.id), {
             tenant_id: station.tenant_id,
+        });
+    }
+
+    function reactivateStation(station: StationRow) {
+        router.patch(route('platform.stations.reactivate', station.id), { tenant_id: station.tenant_id }, { preserveScroll: true });
+    }
+
+    const [retiringStation, setRetiringStation] = useState<StationRow | null>(null);
+    const retireForm = useForm({ tenant_id: '' });
+
+    function openRetireModal(station: StationRow) {
+        setRetiringStation(station);
+        retireForm.setData('tenant_id', String(station.tenant_id));
+    }
+
+    function submitRetireStation(e: React.FormEvent) {
+        e.preventDefault();
+        if (!retiringStation) return;
+
+        retireForm.patch(route('platform.stations.retire', retiringStation.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setRetiringStation(null);
+                retireForm.reset();
+            },
         });
     }
 
@@ -404,6 +431,26 @@ export default function StationsListScreen({
                                                         Reset Link
                                                     </button>
                                                 )}
+                                                {canManage && station.status === 'retired' && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => reactivateStation(station)}
+                                                        className="pf-row-action pf-row-action--control"
+                                                    >
+                                                        <RotateCWIcon size={15} aria-hidden="true" />
+                                                        Reactivate
+                                                    </button>
+                                                )}
+                                                {canManage && station.status !== 'retired' && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openRetireModal(station)}
+                                                        className="pf-row-action pf-row-action--warning"
+                                                    >
+                                                        <ArchiveIcon size={15} aria-hidden="true" />
+                                                        Retire
+                                                    </button>
+                                                )}
                                                 {canManage && (
                                                     <button
                                                         type="button"
@@ -523,6 +570,26 @@ export default function StationsListScreen({
                                                             Reset Link
                                                         </button>
                                                     )}
+                                                    {canManage && station.status === 'retired' && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => reactivateStation(station)}
+                                                            className="pf-row-action pf-row-action--control"
+                                                        >
+                                                            <RotateCWIcon size={15} aria-hidden="true" />
+                                                            Reactivate
+                                                        </button>
+                                                    )}
+                                                    {canManage && station.status !== 'retired' && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openRetireModal(station)}
+                                                            className="pf-row-action pf-row-action--warning"
+                                                        >
+                                                            <ArchiveIcon size={15} aria-hidden="true" />
+                                                            Retire
+                                                        </button>
+                                                    )}
                                                     {canManage && (
                                                         <button
                                                             type="button"
@@ -631,6 +698,45 @@ export default function StationsListScreen({
                 </form>
             </Modal>
             <Modal
+                show={retiringStation !== null}
+                onClose={() => {
+                    setRetiringStation(null);
+                    retireForm.reset();
+                }}
+            >
+                <form onSubmit={submitRetireStation} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <h2 className="pf-modal-title">Retire station?</h2>
+                        <p className="pf-modal-desc">
+                            <strong>{retiringStation?.name}</strong> will stop accepting taps and its device
+                            credentials will be revoked, but its attendance history and audit trail are kept.
+                            It can be reactivated later.
+                        </p>
+                    </div>
+
+                    <div className="pf-modal-footer">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-secondary"
+                            onClick={() => {
+                                setRetiringStation(null);
+                                retireForm.reset();
+                            }}
+                            disabled={retireForm.processing}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className={'pf-btn pf-btn-danger' + (retireForm.processing ? ' pf-btn--loading' : '')}
+                            disabled={retireForm.processing}
+                        >
+                            Retire station
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+            <Modal
                 show={deletingStation !== null}
                 onClose={() => {
                     setDeletingStation(null);
@@ -642,7 +748,8 @@ export default function StationsListScreen({
                         <h2 className="pf-modal-title">Delete station?</h2>
                         <p className="pf-modal-desc">
                             <strong>{deletingStation?.name}</strong> will be permanently deleted, along with its
-                            device credentials and station link. Stations with attendance history must be retained.
+                            device credentials and station link. Stations with attendance history can't be deleted —
+                            use Retire instead to keep their history while taking them out of service.
                         </p>
                     </div>
 

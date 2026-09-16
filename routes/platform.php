@@ -43,6 +43,8 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
             ->name('stations.activation-code');
         Route::post('stations/{station}/pairing-link', [StationController::class, 'issuePairingLink'])
             ->name('stations.pairing-link');
+        Route::patch('stations/{station}/retire', [StationController::class, 'retire'])->name('stations.retire');
+        Route::patch('stations/{station}/reactivate', [StationController::class, 'reactivate'])->name('stations.reactivate');
         Route::delete('stations/{station}', [StationController::class, 'destroy'])->name('stations.destroy');
 
         Route::get('sms-gateway/devices', [SmsGatewayDeviceController::class, 'index'])->name('sms-gateway.devices.index');
