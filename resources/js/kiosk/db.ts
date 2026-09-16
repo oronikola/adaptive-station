@@ -124,10 +124,39 @@ export async function setMeta(patch: Partial<Omit<MetaRecord, 'id'>>): Promise<v
     await requestToPromise(s.put({ ...current, ...patch, id: 'meta' }));
 }
 
-/** Called on a 401 from any device-API call — the credential was revoked. */
+/**
+ * Called on a 401 from any device-API call (credential revoked) and on the
+ * kiosk's own "deactivate" admin action — clears the credential and every
+ * locally-cached person/card/tap record, so the device starts genuinely
+ * blank rather than possibly re-activating into stale data.
+ */
 export async function clearCredential(): Promise<void> {
     const s = await store('meta', 'readwrite');
     await requestToPromise(s.put({ id: 'meta', masterDataCursor: 0 } satisfies MetaRecord));
+    await resetKioskCache();
+}
+
+/**
+ * Wipes every locally-cached person/card/tap record — everything the
+ * master-data sync built up, plus anything still queued to upload. This
+ * IndexedDB database is scoped to the browser's *origin*, not to a tenant
+ * or station, so re-pairing this same browser to a different station
+ * (different tenant) without this would leave the previous tenant's
+ * card_uid → person mappings sitting in `cards`/`people` — a card that
+ * happens to share a UID with a prior tenant's (e.g. the same physical
+ * test card reused across schools) would then resolve instantly from that
+ * stale entry instead of ever asking the newly-paired station's own
+ * tenant. Called on every successful pairing/activation, and on the
+ * kiosk's own "deactivate" admin action, so a fresh credential always
+ * starts from a genuinely empty cache.
+ */
+export async function resetKioskCache(): Promise<void> {
+    await Promise.all(
+        (['people', 'cards', 'pending_events', 'last_tap'] as const).map(async (name) => {
+            const s = await store(name, 'readwrite');
+            await requestToPromise(s.clear());
+        }),
+    );
 }
 
 // ── people ──────────────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ import {
     setLastTap,
     addPendingEvent,
     clearCredential,
+    resetKioskCache,
     upsertPerson,
     upsertCard,
     type TapEventType,
@@ -183,6 +184,11 @@ export default function KioskScreen({
                 setPhase('pairing');
                 try {
                     const response = await pairViaLink(pairingToken);
+                    // This browser may have been paired to a different
+                    // station/tenant before — see resetKioskCache()'s
+                    // docblock for why a fresh pairing must never inherit
+                    // that stale cache.
+                    await resetKioskCache();
                     await setMeta({
                         credentialToken: response.credential_token,
                         stationId: response.station.id,
@@ -317,6 +323,9 @@ export default function KioskScreen({
 
         try {
             const response = await activate(activationCode.trim());
+            // Same reasoning as the pairing-link branch above — never
+            // inherit another tenant's cached people/cards.
+            await resetKioskCache();
             await setMeta({
                 credentialToken: response.credential_token,
                 stationId: response.station.id,
