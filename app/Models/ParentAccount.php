@@ -49,16 +49,19 @@ class ParentAccount extends Authenticatable implements TenantScoped
      * Provisions a guardian account with a generated password, mirroring
      * User::provisionForTenant()/SmsGatewayDevice::provision(). Used by the
      * CSV roster importer, which has no human typing in a password for a
-     * guardian it just discovered in a spreadsheet row.
+     * guardian it just discovered in a spreadsheet row — and by
+     * findOrProvisionByPhone() for a guardian auto-discovered from an
+     * essentiel tap response, tagged with its own $source so the two
+     * origins stay distinguishable in the audit log.
      *
      * @return array{account: self, temporary_password: string}
      */
-    public static function provision(string $tenantId, array $attributes, ?User $actor = null): array
+    public static function provision(string $tenantId, array $attributes, ?User $actor = null, string $source = 'csv_import'): array
     {
         $password = $attributes['password'] ?? Str::password(16);
         unset($attributes['password'], $attributes['password_confirmation']);
 
-        return DB::transaction(function () use ($tenantId, $attributes, $password, $actor) {
+        return DB::transaction(function () use ($tenantId, $attributes, $password, $actor, $source) {
             $account = static::create([
                 ...$attributes,
                 'tenant_id' => $tenantId,
@@ -68,10 +71,35 @@ class ParentAccount extends Authenticatable implements TenantScoped
                 'is_active' => true,
             ]);
 
-            AuditLog::record('parent.created', $actor, $tenantId, 'parent_account', $account->id, ['source' => 'csv_import']);
+            AuditLog::record('parent.created', $actor, $tenantId, 'parent_account', $account->id, ['source' => $source]);
 
             return ['account' => $account, 'temporary_password' => $password];
         });
+    }
+
+    /**
+     * Finds an existing guardian by phone number within this tenant, or
+     * provisions a new one with no email — essentiel's tap response only
+     * ever gives a guardian's name and phone (see EssentielTapResolver),
+     * unlike the CSV importer's email-keyed resolveGuardianAccount().
+     *
+     * @return array{account: self, created: bool, temporary_password: ?string}
+     */
+    public static function findOrProvisionByPhone(string $tenantId, string $phoneNumber, string $name): array
+    {
+        $existing = static::query()->where('tenant_id', $tenantId)->where('phone_number', $phoneNumber)->first();
+
+        if ($existing !== null) {
+            return ['account' => $existing, 'created' => false, 'temporary_password' => null];
+        }
+
+        $result = static::provision($tenantId, [
+            'name' => $name,
+            'phone_number' => $phoneNumber,
+            'notification_preferences' => ['notify_in' => true, 'notify_out' => true, 'notify_sms' => true],
+        ], source: 'tap_resolve_auto_link');
+
+        return ['account' => $result['account'], 'created' => true, 'temporary_password' => $result['temporary_password']];
     }
 
     /**

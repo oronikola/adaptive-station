@@ -91,7 +91,7 @@ class PushTapEventToEssentielJobTest extends TestCase
         Http::assertSent(fn ($request) => $request->url() === 'https://app-hcb.essentiel.test/api/v1/tapping/record'
             && $request['rfid'] === '0006711996');
 
-        $sms = SmsOutboxMessage::query()->where('tap_event_id', $event->id)->sole();
+        $sms = SmsOutboxMessage::query()->where('tap_event_id', $event->id)->whereNull('parent_account_id')->sole();
         $this->assertSame('+639101603448', $sms->phone_number);
         $this->assertStringContainsString('IVAN MASTER', $sms->message);
     }
@@ -137,7 +137,7 @@ class PushTapEventToEssentielJobTest extends TestCase
         // The original tap is backfilled after Essentiel resolves the card so
         // portal attendance recognizes this first tap immediately.
         $this->assertSame($person->id, $event->fresh()->person_id);
-        $sms = SmsOutboxMessage::query()->where('tap_event_id', $event->id)->sole();
+        $sms = SmsOutboxMessage::query()->where('tap_event_id', $event->id)->whereNull('parent_account_id')->sole();
         $this->assertSame($person->id, $sms->person_id);
     }
 
@@ -202,6 +202,7 @@ class PushTapEventToEssentielJobTest extends TestCase
 
         $this->assertSame(1, Person::allTenants()->where('tenant_id', $tenant->id)->count());
         $this->assertSame(1, RfidCard::allTenants()->where('tenant_id', $tenant->id)->count());
+        $this->assertSame(1, ParentAccount::query()->where('tenant_id', $tenant->id)->count());
     }
 
     public function test_a_tenant_with_no_essentiel_profile_is_a_silent_no_op(): void
@@ -242,7 +243,15 @@ class PushTapEventToEssentielJobTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_local_guardian_phone_number_is_synced_when_exactly_one_link_exists(): void
+    /**
+     * The guardian data essentiel already sends on every resolve
+     * (previously read only for the sms_recipient field) now auto-creates
+     * a ParentAccount with a generated login_id/password and links it to
+     * the resolved student, exactly like ParentAccount::provision() already
+     * does for a CSV-imported guardian — and texts the new guardian their
+     * login details since essentiel gives no email to send them to.
+     */
+    public function test_an_unlinked_guardian_in_the_response_auto_provisions_a_parent_account(): void
     {
         $tenant = Tenant::factory()->create();
         $admin = User::factory()->tenantAdmin($tenant)->create();
@@ -251,20 +260,24 @@ class PushTapEventToEssentielJobTest extends TestCase
         $this->makeProfile($tenant, $admin);
         $this->fakeRecordResponse();
 
-        ['account' => $parent] = ParentAccount::provision($tenant->id, [
-            'name' => 'Old Guardian Name', 'email' => 'guardian@example.test', 'phone_number' => '+639000000000',
-        ]);
-        $parent->studentLinks()->create(['person_id' => $person->id, 'approved_by' => $admin->id]);
-
         (new PushTapEventToEssentielJob($tenant->id, $event->id))->handle(app(EssentielTapResolver::class));
 
-        $this->assertSame('+639101603448', $parent->fresh()->phone_number);
-        $this->assertTrue(
-            AuditLog::allTenants()->where('action', 'parent_account.phone_number_synced')->where('entity_id', $parent->id)->exists()
-        );
+        $parent = ParentAccount::query()->where('tenant_id', $tenant->id)->where('phone_number', '+639101603448')->sole();
+        $this->assertSame('TEST GUARDIAN', $parent->name);
+        $this->assertNull($parent->email);
+        $this->assertNotNull($parent->login_id);
+        $this->assertTrue($parent->studentLinks()->where('person_id', $person->id)->exists());
+
+        $credentialsSms = SmsOutboxMessage::query()->where('parent_account_id', $parent->id)->sole();
+        $this->assertSame('+639101603448', $credentialsSms->phone_number);
+        $this->assertStringContainsString($parent->login_id, $credentialsSms->message);
+
+        $audit = AuditLog::allTenants()->where('action', 'parent.created')->where('entity_id', $parent->id)->sole();
+        $this->assertSame('tap_resolve_auto_link', $audit->metadata['source']);
     }
 
-    public function test_local_guardian_phone_number_is_left_alone_when_multiple_links_exist(): void
+    /** A guardian phone that already has an account (e.g. from CSV import, or a sibling's earlier tap) gets linked to this student too, without a duplicate account or a repeat credentials text. */
+    public function test_a_guardian_phone_matching_an_existing_account_is_linked_without_duplicating_it(): void
     {
         $tenant = Tenant::factory()->create();
         $admin = User::factory()->tenantAdmin($tenant)->create();
@@ -273,19 +286,30 @@ class PushTapEventToEssentielJobTest extends TestCase
         $this->makeProfile($tenant, $admin);
         $this->fakeRecordResponse();
 
-        ['account' => $mother] = ParentAccount::provision($tenant->id, [
-            'name' => 'Mother', 'email' => 'mother@example.test', 'phone_number' => '+639000000001',
+        ['account' => $existing] = ParentAccount::provision($tenant->id, [
+            'name' => 'Existing Guardian', 'email' => 'existing@example.test', 'phone_number' => '+639101603448',
         ]);
-        ['account' => $father] = ParentAccount::provision($tenant->id, [
-            'name' => 'Father', 'email' => 'father@example.test', 'phone_number' => '+639000000002',
-        ]);
-        $mother->studentLinks()->create(['person_id' => $person->id, 'approved_by' => $admin->id]);
-        $father->studentLinks()->create(['person_id' => $person->id, 'approved_by' => $admin->id]);
 
         (new PushTapEventToEssentielJob($tenant->id, $event->id))->handle(app(EssentielTapResolver::class));
 
-        $this->assertSame('+639000000001', $mother->fresh()->phone_number);
-        $this->assertSame('+639000000002', $father->fresh()->phone_number);
+        $this->assertSame(1, ParentAccount::query()->where('tenant_id', $tenant->id)->count());
+        $this->assertTrue($existing->studentLinks()->where('person_id', $person->id)->exists());
+        $this->assertSame(0, SmsOutboxMessage::query()->where('parent_account_id', $existing->id)->count());
+    }
+
+    /** A guardian entry with no phone number is skipped rather than crashing the whole resolve. */
+    public function test_a_guardian_with_no_phone_number_is_skipped(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $person = Person::factory()->for($tenant)->create();
+        $event = $this->seedTapEvent($tenant, $person);
+        $this->makeProfile($tenant, $admin);
+        $this->fakeRecordResponse(['guardians' => [['relation' => 'guardian', 'name' => 'NO PHONE GUARDIAN', 'msisdn' => null]]]);
+
+        (new PushTapEventToEssentielJob($tenant->id, $event->id))->handle(app(EssentielTapResolver::class));
+
+        $this->assertSame(0, ParentAccount::query()->where('tenant_id', $tenant->id)->count());
     }
 
     /**

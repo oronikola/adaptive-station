@@ -4,9 +4,8 @@ namespace App\Services\Integrations;
 
 use App\Enums\PersonType;
 use App\Events\SmsGatewayWakeUp;
-use App\Models\AuditLog;
 use App\Models\IntegrationProfile;
-use App\Models\ParentStudentLink;
+use App\Models\ParentAccount;
 use App\Models\Person;
 use App\Models\RfidCard;
 use App\Models\SmsOutboxMessage;
@@ -103,8 +102,8 @@ class EssentielTapResolver
             broadcast(new SmsGatewayWakeUp);
         }
 
-        if ($personId !== null && filled($smsRecipient)) {
-            $this->syncLocalGuardianPhone($tenant->id, $personId, $smsRecipient);
+        if ($personId !== null && filled($response['guardians'] ?? null)) {
+            $this->syncGuardians($tenant, $event, $personId, $response['guardians'], $response['person']['name']['full'] ?? null);
         }
 
         return [
@@ -182,35 +181,76 @@ class EssentielTapResolver
     }
 
     /**
-     * Best-effort local refresh: only touches a student's guardian phone
-     * number when exactly one active ParentAccount is linked, so we never
-     * risk guessing wrong and overwriting a specific parent's own distinct
-     * record when a student has multiple linked guardians.
+     * Auto-provisions a ParentAccount (and links it to the resolved
+     * student) for every guardian essentiel's tap response lists — that
+     * guardian data was previously read only for the sms_recipient field
+     * and otherwise discarded. Runs once per unrecognized-card resolve, not
+     * on every routine tap: an already-cached card resolves through the
+     * kiosk's local lookup instead and never reaches this method again
+     * (see TapEvent::acceptBatch()).
+     *
+     * Matched by phone number rather than email, since essentiel never
+     * gives a guardian email — findOrProvisionByPhone() finds an existing
+     * account with that phone, or creates one. An unrecognized phone always
+     * becomes its own separate ParentAccount rather than overwriting an
+     * existing guardian's record, since there is no reliable way to tell
+     * "the same guardian's number changed" apart from "a different
+     * guardian entirely" from this payload alone.
      */
-    protected function syncLocalGuardianPhone(string $tenantId, string $personId, string $smsRecipient): void
+    protected function syncGuardians(Tenant $tenant, TapEvent $event, string $personId, array $guardians, ?string $studentName): void
     {
-        $links = ParentStudentLink::where('person_id', $personId)
-            ->whereHas('parentAccount', fn ($query) => $query->where('is_active', true))
-            ->with('parentAccount')
-            ->get();
+        foreach ($guardians as $guardian) {
+            $phone = $this->normalizeGuardianPhone($guardian);
 
-        if ($links->count() !== 1) {
-            return;
+            if ($phone === null) {
+                continue;
+            }
+
+            $name = trim((string) ($guardian['name'] ?? '')) ?: 'Guardian';
+
+            ['account' => $account, 'created' => $created] = ParentAccount::findOrProvisionByPhone($tenant->id, $phone, $name);
+
+            $account->studentLinks()->firstOrCreate(['person_id' => $personId]);
+
+            if ($created) {
+                $this->sendGuardianCredentialsSms($tenant, $event, $personId, $account, $studentName ?? 'your child');
+            }
         }
+    }
 
-        $parent = $links->first()->parentAccount;
+    protected function normalizeGuardianPhone(array $guardian): ?string
+    {
+        $phone = $guardian['msisdn'] ?? $guardian['msisdn_local'] ?? null;
+        $phone = is_string($phone) ? trim($phone) : null;
 
-        if ($parent->phone_number === $smsRecipient) {
-            return;
-        }
+        return filled($phone) ? $phone : null;
+    }
 
-        $previous = $parent->phone_number;
-        $parent->forceFill(['phone_number' => $smsRecipient])->save();
+    /** Delivers a brand-new guardian's generated login_id/password the same way the attendance alert above is sent — via the SMS outbox, picked up by the fleet-phone poller. */
+    protected function sendGuardianCredentialsSms(Tenant $tenant, TapEvent $event, string $personId, ParentAccount $account, string $studentName): void
+    {
+        SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => $personId,
+            'parent_account_id' => $account->id,
+            'station_id' => $event->station_id,
+            'tap_event_id' => $event->id,
+            'phone_number' => $account->phone_number,
+            'message' => $this->formatCredentialsSmsMessage($tenant, $account, $studentName),
+            'status' => 'pending',
+            'expires_at' => Date::now()->addMinutes(30),
+        ]);
 
-        AuditLog::record('parent_account.phone_number_synced', null, $tenantId, 'parent_account', $parent->id, [
-            'previous_phone_number' => $previous,
-            'new_phone_number' => $smsRecipient,
-            'source' => self::SOURCE_SYSTEM,
+        broadcast(new SmsGatewayWakeUp);
+    }
+
+    private function formatCredentialsSmsMessage(Tenant $tenant, ParentAccount $account, string $studentName): string
+    {
+        return implode("\n", [
+            strtoupper($tenant->name),
+            "A parent portal account was created for you as {$studentName}'s guardian.",
+            "Login ID: {$account->login_id}",
+            "Password: {$account->password_plaintext}",
         ]);
     }
 

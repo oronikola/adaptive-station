@@ -26,7 +26,8 @@ class ParentAccountController extends Controller
                 ->where('name', 'like', '%'.$search.'%')
                 ->orWhere('email', 'like', '%'.$search.'%')
                 ->orWhere('login_id', 'like', '%'.$search.'%')))
-            ->withCount('studentLinks')->orderBy('name')->orderBy('id')->paginate(25)->withQueryString();
+            ->withCount('studentLinks')->orderBy('name')->orderBy('id')->paginate(25)->withQueryString()
+            ->through(fn (ParentAccount $parent) => tap($parent)->makeVisible('password_plaintext'));
 
         return Inertia::render('Admin/parents/parents-list-screen', ['parents' => $parents, 'filters' => ['search' => $search]]);
     }

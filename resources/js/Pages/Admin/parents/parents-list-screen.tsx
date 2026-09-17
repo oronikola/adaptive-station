@@ -10,6 +10,7 @@ interface ParentAccount {
     name: string;
     email: string;
     login_id: string | null;
+    password_plaintext: string | null;
     is_active: boolean;
     student_links_count: number;
 }
@@ -43,13 +44,14 @@ export default function ParentsListScreen({ parents, filters }: {
                 <div className="pf-panel">
                     <div className="pf-table-wrap">
                         <table className="pf-table">
-                            <thead><tr><th scope="col">Parent</th><th scope="col">Login ID</th><th scope="col">Email</th><th scope="col">Linked students</th><th scope="col">Status</th><th scope="col">Manage</th></tr></thead>
+                            <thead><tr><th scope="col">Parent</th><th scope="col">Login ID</th><th scope="col">Password</th><th scope="col">Email</th><th scope="col">Linked students</th><th scope="col">Status</th><th scope="col">Manage</th></tr></thead>
                             <tbody>
-                                {parents.data.length === 0 && <tr><td colSpan={6} className="pf-empty">{filters.search ? 'No parents match your search.' : 'No parent accounts yet. Add a parent to begin linking their children.'}</td></tr>}
+                                {parents.data.length === 0 && <tr><td colSpan={7} className="pf-empty">{filters.search ? 'No parents match your search.' : 'No parent accounts yet. Add a parent to begin linking their children.'}</td></tr>}
                                 {parents.data.map((parent) => (
                                     <tr key={parent.id}>
                                         <td className="pf-tenant-name">{parent.name}</td>
                                         <td style={{ fontFamily: 'monospace' }}>{parent.login_id ?? '—'}</td>
+                                        <td style={{ fontFamily: 'monospace' }}>{parent.password_plaintext ?? '—'}</td>
                                         <td>{parent.email}</td>
                                         <td>{parent.student_links_count}</td>
                                         <td><span className={`pf-pill ${parent.is_active ? 'pf-pill--active' : 'pf-pill--inactive'}`}>{parent.is_active ? 'Active' : 'Inactive'}</span></td>
