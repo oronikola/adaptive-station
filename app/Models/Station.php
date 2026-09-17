@@ -139,6 +139,33 @@ class Station extends Model implements TenantScoped
     }
 
     /**
+     * Renames a station — display name only, never station_code (that's
+     * the kiosk-facing identifier baked into its pairing/activation flow
+     * and depended on for uniqueness; renaming it here would silently break
+     * an already-paired device). Records a master_data_changes row for
+     * consistency with updateConfiguration() above, even though the kiosk
+     * sync loop doesn't currently act on station_config entries.
+     */
+    public static function rename(self $station, string $name, ?User $actor = null): self
+    {
+        return DB::transaction(function () use ($station, $name, $actor) {
+            $previousName = $station->name;
+            $station->forceFill(['name' => $name])->save();
+
+            MasterDataChange::record(
+                $station->tenant_id, MasterDataEntityType::StationConfig, $station->id,
+                MasterDataOperation::Upsert, ['id' => $station->id, 'name' => $name],
+            );
+            AuditLog::record('station.renamed', $actor, $station->tenant_id, 'station', $station->id, [
+                'previous_name' => $previousName,
+                'new_name' => $name,
+            ]);
+
+            return $station;
+        });
+    }
+
+    /**
      * Retires a station that can't be deleted outright (it has recorded
      * attendance — see remove() below) — the non-destructive alternative:
      * hides it from active use while preserving every tap_event, credential

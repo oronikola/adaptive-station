@@ -35,6 +35,7 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
         Route::get('stations/{station}', [StationController::class, 'show'])->name('stations.show');
         Route::patch('stations/{station}/configuration', [StationController::class, 'updateConfiguration'])
             ->name('stations.configuration');
+        Route::patch('stations/{station}/rename', [StationController::class, 'rename'])->name('stations.rename');
         Route::post('stations/{station}/credentials', [StationController::class, 'issueCredential'])
             ->name('stations.credentials.store');
         Route::patch('stations/{station}/credentials/{credential}/revoke', [StationController::class, 'revokeCredential'])

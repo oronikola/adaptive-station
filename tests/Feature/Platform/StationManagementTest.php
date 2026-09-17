@@ -125,6 +125,36 @@ class StationManagementTest extends TestCase
         $this->assertSame(['theme' => 'dark', 'sync_frequency' => 30], $station->fresh()->configuration);
     }
 
+    public function test_platform_super_admin_can_rename_a_station(): void
+    {
+        $superAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create(['name' => 'Old Name', 'station_code' => 'GATE-01', 'status' => StationStatus::Active]);
+
+        $this->actingAs($superAdmin)->patch(route('platform.stations.rename', $station->id), [
+            'tenant_id' => $tenant->id,
+            'name' => 'Main Gate',
+        ])->assertRedirect(route('platform.stations.show', ['station' => $station->id, 'tenant_id' => $tenant->id]));
+
+        $fresh = $station->fresh();
+        $this->assertSame('Main Gate', $fresh->name);
+        $this->assertSame('GATE-01', $fresh->station_code);
+    }
+
+    public function test_renaming_a_station_requires_a_name(): void
+    {
+        $superAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create(['name' => 'Old Name', 'status' => StationStatus::Active]);
+
+        $this->actingAs($superAdmin)->patch(route('platform.stations.rename', $station->id), [
+            'tenant_id' => $tenant->id,
+            'name' => '',
+        ])->assertSessionHasErrors('name');
+
+        $this->assertSame('Old Name', $station->fresh()->name);
+    }
+
     public function test_platform_super_admin_can_issue_and_revoke_credentials(): void
     {
         $superAdmin = User::factory()->platformSuperAdmin()->create();

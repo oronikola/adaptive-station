@@ -18,6 +18,7 @@ import { CircleHelpIcon } from '@/Components/icons/circle-help';
 import { DollarSignIcon } from '@/Components/icons/dollar-sign';
 import { ActivityIcon } from '@/Components/icons/activity';
 import { LockIcon } from '@/Components/icons/lock';
+import { PencilIcon } from '@/Components/icons/pencil';
 import { XIcon } from '@/Components/icons/x';
 import { PlusIcon } from '@/Components/icons/plus';
 import '../../../../css/platform-dashboard.css';
@@ -78,6 +79,18 @@ export default function StationDetailScreen({
 
     const [issueCredentialOpen, setIssueCredentialOpen] = useState(false);
     const credentialForm = useForm({ label: '' });
+
+    const [renameOpen, setRenameOpen] = useState(false);
+    const renameForm = useForm({ name: station.name });
+
+    function submitRename(e: React.FormEvent) {
+        e.preventDefault();
+        renameForm.transform((data) => ({ ...data, tenant_id: tenant.id }));
+        renameForm.patch(route('platform.stations.rename', station.id), {
+            preserveScroll: true,
+            onSuccess: () => setRenameOpen(false),
+        });
+    }
 
     const configForm = useForm({
         configuration: JSON.stringify(station.configuration ?? {}, null, 2),
@@ -207,6 +220,14 @@ export default function StationDetailScreen({
                         <div className="pf-dashboard-kicker">Station Overview</div>
                         <div className="flex flex-wrap items-center gap-3">
                             <h1 className="pf-dashboard-title">{station.name}</h1>
+                            <button
+                                type="button"
+                                onClick={() => { renameForm.setData('name', station.name); setRenameOpen(true); }}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                aria-label={`Rename ${station.name}`}
+                            >
+                                <PencilIcon size={16} />
+                            </button>
                             <span className="font-mono text-xs px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md border border-slate-200 dark:border-slate-700">
                                 {station.station_code}
                             </span>
@@ -490,6 +511,55 @@ export default function StationDetailScreen({
                         </SecondaryButton>
                         <PrimaryButton disabled={credentialForm.processing}>
                             {credentialForm.processing ? 'Generating...' : 'Issue Credential'}
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Modal for Renaming the Station */}
+            <Modal show={renameOpen} onClose={() => setRenameOpen(false)}>
+                <form onSubmit={submitRename} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <div className="pf-modal-hero">
+                            <span className="pf-modal-hero-icon pf-modal-hero-icon--amber" aria-hidden="true">
+                                <PencilIcon size={20} />
+                            </span>
+                            <div className="pf-modal-hero-text">
+                                <h3 className="pf-modal-title">Rename Station</h3>
+                                <p className="pf-modal-subtitle">
+                                    Only the display name changes — the station code kiosks pair with stays the same.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            className="pf-modal-close"
+                            onClick={() => setRenameOpen(false)}
+                            aria-label="Close"
+                        >
+                            <XIcon size={20} />
+                        </button>
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="station-name" value="Station Name" />
+                        <TextInput
+                            id="station-name"
+                            value={renameForm.data.name}
+                            onChange={(e) => renameForm.setData('name', e.target.value)}
+                            className="mt-1 block w-full"
+                            placeholder="e.g. Main Gate"
+                            isFocused
+                        />
+                        <InputError message={renameForm.errors.name} className="mt-2" />
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <SecondaryButton type="button" onClick={() => setRenameOpen(false)}>
+                            Cancel
+                        </SecondaryButton>
+                        <PrimaryButton disabled={renameForm.processing}>
+                            {renameForm.processing ? 'Saving...' : 'Save Name'}
                         </PrimaryButton>
                     </div>
                 </form>

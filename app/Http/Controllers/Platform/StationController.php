@@ -208,6 +208,22 @@ class StationController extends Controller
             ->with('success', 'Configuration updated.');
     }
 
+    public function rename(Request $request, string $station): RedirectResponse
+    {
+        [$stationModel, $tenant] = $this->resolveStation($station, $request->input('tenant_id'));
+
+        Gate::authorize('update', $stationModel);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+        ]);
+
+        Station::rename($stationModel, $data['name'], $request->user());
+
+        return redirect()->route('platform.stations.show', ['station' => $stationModel->id, 'tenant_id' => $tenant->id])
+            ->with('success', 'Station renamed.');
+    }
+
     public function issueCredential(Request $request, string $station): RedirectResponse
     {
         Gate::authorize('create', StationCredential::class);
