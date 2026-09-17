@@ -202,6 +202,16 @@ class Tenant extends Model
             StationActivationCode::allTenants()->whereIn('station_id', $stationIds)->delete();
             StationCredential::allTenants()->whereIn('station_id', $stationIds)->delete();
             User::where('tenant_id', $tenantId)->delete();
+
+            // ParentAccount's own tenant_id FK has no cascade (unlike its
+            // dependents below), so it must go before $tenant->delete() or
+            // that delete fails outright on a tenant with any linked
+            // guardians. parent_access_tokens/parent_device_tokens/
+            // parent_student_links all cascade off parent_account_id, so
+            // deleting the accounts here is enough to take those with them.
+            ParentAccount::allTenants()->where('tenant_id', $tenantId)->delete();
+            DB::connection('mysql')->table('parent_login_sequences')->where('tenant_id', $tenantId)->delete();
+
             AuditLog::allTenants()->where('tenant_id', $tenantId)->delete();
 
             $tenant->delete();

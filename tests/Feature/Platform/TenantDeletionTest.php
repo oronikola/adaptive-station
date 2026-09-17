@@ -12,6 +12,9 @@ use App\Models\ImportBatch;
 use App\Models\ImportException;
 use App\Models\IntegrationProfile;
 use App\Models\MasterDataChange;
+use App\Models\ParentAccessToken;
+use App\Models\ParentAccount;
+use App\Models\ParentDeviceToken;
 use App\Models\Person;
 use App\Models\RfidCard;
 use App\Models\Station;
@@ -65,7 +68,20 @@ class TenantDeletionTest extends TestCase
         $batch = ImportBatch::start($tenant->id, $profile->id, 'legacy_mysql', 'Test batch', $admin);
         ImportException::record($tenant->id, $batch->id, 'tap_event', '1', ImportExceptionType::MissingReference, []);
 
-        return compact('tenant', 'admin', 'person', 'card', 'station', 'credential', 'profile', 'batch');
+        ['account' => $parentAccount] = ParentAccount::provision($tenant->id, [
+            'name' => 'Test Guardian', 'email' => 'guardian-'.$tenant->id.'@example.test',
+        ], $admin);
+        $parentAccount->studentLinks()->create(['person_id' => $person->id, 'approved_by' => $admin->id]);
+        ['credential' => $parentAccessToken] = ParentAccessToken::issueFor($parentAccount);
+        $parentDeviceToken = ParentDeviceToken::create([
+            'tenant_id' => $tenant->id, 'parent_account_id' => $parentAccount->id,
+            'fcm_token' => 'fcm-'.$parentAccount->id, 'platform' => 'android',
+        ]);
+
+        return compact(
+            'tenant', 'admin', 'person', 'card', 'station', 'credential', 'profile', 'batch',
+            'parentAccount', 'parentAccessToken', 'parentDeviceToken',
+        );
     }
 
     public function test_deleting_a_tenant_removes_every_owned_row_across_all_tables(): void
@@ -96,6 +112,11 @@ class TenantDeletionTest extends TestCase
         $this->assertDatabaseMissing('import_batches', ['tenant_id' => $tenantId], 'tenant');
         $this->assertDatabaseMissing('import_exceptions', ['tenant_id' => $tenantId], 'tenant');
         $this->assertDatabaseMissing('audit_logs', ['tenant_id' => $tenantId]);
+        $this->assertDatabaseMissing('parent_accounts', ['tenant_id' => $tenantId]);
+        $this->assertDatabaseMissing('parent_login_sequences', ['tenant_id' => $tenantId]);
+        $this->assertDatabaseMissing('parent_student_links', ['parent_account_id' => $graph['parentAccount']->id]);
+        $this->assertDatabaseMissing('parent_access_tokens', ['id' => $graph['parentAccessToken']->id]);
+        $this->assertDatabaseMissing('parent_device_tokens', ['id' => $graph['parentDeviceToken']->id]);
 
         // The one record of the deletion itself lives at the platform level.
         $this->assertDatabaseHas('audit_logs', [
@@ -153,5 +174,6 @@ class TenantDeletionTest extends TestCase
         $this->assertDatabaseHas('tenants', ['id' => $graphToKeep['tenant']->id]);
         $this->assertDatabaseHas('people', ['id' => $graphToKeep['person']->id], 'tenant');
         $this->assertDatabaseHas('stations', ['id' => $graphToKeep['station']->id], 'tenant');
+        $this->assertDatabaseHas('parent_accounts', ['id' => $graphToKeep['parentAccount']->id]);
     }
 }
