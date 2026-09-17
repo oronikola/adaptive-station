@@ -1,6 +1,16 @@
-.school-dashboard { display: grid; gap: 24px; color: var(--as-text); font-size: 14px; }
-.school-dashboard.pf-dashboard { padding: 0; }
+.school-dashboard {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 0;
+    width: 100%;
+    color: var(--as-text);
+    font-size: 14px;
+}
+.school-dashboard.pf-dashboard { padding: 0 0 8px; }
 .school-dashboard .pft-hero { margin-bottom: 0; }
+.school-dashboard > .pf-panel { margin-top: 0; margin-bottom: 0; }
 .school-heading {
     display: flex;
     align-items: center;
@@ -17,32 +27,37 @@
 .school-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--as-text-secondary); }
 .school-heading-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
 .school-updated { color: var(--as-text-secondary); font-size: 12px; }
-.school-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.school-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 900px) {
+    .school-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.school-dashboard .pft-stat-grid { align-items: stretch; margin-bottom: 0; }
+.school-dashboard .pft-stat-card { height: 100%; min-height: 132px; }
 .school-metric {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 20px 22px;
-    border: 1px solid var(--as-border);
-    border-radius: 24px;
-    background: var(--as-surface);
-    box-shadow: var(--as-shadow-card);
     color: var(--as-text);
     text-decoration: none;
-    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
-.school-metric:hover { transform: translateY(-2px); border-color: var(--as-border-mid); }
-.school-metric-value { font-size: 40px; letter-spacing: -0.04em; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.school-metric-detail { display: flex; justify-content: space-between; gap: 12px; color: var(--as-text-secondary); }
-.school-metric--warning .school-metric-value { color: var(--as-warning); }
+.school-metric:hover { color: var(--as-text); }
+.school-metric--warning .pft-stat-value { color: var(--as-warning); }
 .school-dashboard .pf-panel { margin-bottom: 0; min-width: 0; }
+.school-dashboard .pft-growth-panel { margin-bottom: 0; }
+.school-dashboard .pft-widgets-grid { margin-bottom: 0; }
+.school-dashboard .pft-widgets-main > .pf-panel,
+.school-dashboard .pft-widgets-side > .pf-panel {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-height: 240px;
+    margin-top: 0;
+}
 .school-dashboard .pf-panel-header { gap: 16px; flex-wrap: wrap; }
 .school-status { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--as-text-secondary); background: var(--as-surface-hover); white-space: nowrap; }
 .school-status--warning { background: var(--as-warning-bg); color: var(--as-warning); }
 .school-alert-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 24px; border-top: 1px solid var(--as-border); }
 .school-alert-row p { margin: 4px 0 0; color: var(--as-text-secondary); line-height: 1.5; }
 .school-alert-row .pf-btn { flex-shrink: 0; }
-.school-content-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
+.school-content-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 18px; align-items: stretch; }
+.school-content-grid > .pf-panel { height: 100%; }
 .school-text-link, .school-panel-footer { color: var(--as-text); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
 .school-week-chart { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: clamp(6px, 1.5vw, 18px); padding: 16px 24px 24px; }
 .school-chart-column { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
@@ -55,19 +70,21 @@
 .school-chart-details { border-top: 1px solid var(--as-border); }
 .school-chart-details summary { padding: 16px 24px; cursor: pointer; font-weight: 600; }
 .school-chart-details tbody th { text-align: left; padding: 14px 24px; font-weight: 500; font-size: 14px; }
-.school-health-facts { margin: 0; padding: 0 24px; }
+.school-health-facts { margin: 0; padding: 0; }
+.school-dashboard .pft-panel-body .school-health-facts { padding: 0; }
 .school-health-facts > div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--as-border); }
 .school-health-facts dt { color: var(--as-text-secondary); }
 .school-health-facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
 .school-health-facts .school-sync-fact { flex-direction: column; gap: 6px; }
 .school-sync-fact dd { text-align: left; }
-.school-health-note { color: var(--as-text-secondary); padding: 12px 24px; margin: 0; font-size: 12px; line-height: 1.6; }
-.school-station-list, .school-activity-list { padding: 0 24px; margin: 0; list-style: none; }
+.school-health-note { color: var(--as-text-secondary); padding: 12px 0; margin: 0; font-size: 12px; line-height: 1.6; }
+.school-station-list, .school-activity-list { padding: 0; margin: 0; list-style: none; }
 .school-station-list li { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-top: 1px solid var(--as-border); }
 .school-station-list a { color: var(--as-text); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .school-station-list span { color: var(--as-text-secondary); font-size: 12px; }
-.school-panel-footer { display: block; padding: 18px 24px; }
+.school-panel-footer { display: block; padding: 18px 0 0; }
 .school-empty { padding: 56px 24px; color: var(--as-text-secondary); margin: 0; text-align: center; }
+.school-dashboard .pft-panel-empty { min-height: 120px; padding: 24px 0; }
 .school-inventory { padding: 0; }
 .school-inventory h2 { margin: 0; }
 .school-inventory dl {
@@ -86,7 +103,9 @@
 .school-activity-list li + li { border-top: 1px solid var(--as-border); }
 .school-activity-list time { color: var(--as-text-secondary); font-size: 12px; white-space: nowrap; }
 .school-dashboard a:focus-visible, .school-chart-details summary:focus-visible { outline: 2px solid var(--as-brand); outline-offset: 4px; }
-@media (max-width: 1199px) { .school-content-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1199px) {
+    .school-content-grid { grid-template-columns: minmax(0, 1fr); }
+}
 @media (max-width: 700px) {
     .school-heading,
     .school-dashboard .pft-hero { align-items: flex-start; flex-direction: column; }

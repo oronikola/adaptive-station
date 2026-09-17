@@ -177,32 +177,19 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                         ) : (
                             <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 sm:p-6">
                                 {people.data.map((person: Person) => {
-                                    const initials =
-                                        (person.first_name?.[0] || '') +
-                                        (person.last_name?.[0] || '');
                                     const isStudent = person.person_type === 'student';
 
                                     return (
                                         <div
                                             key={person.id}
-                                            className="group relative flex flex-col justify-between overflow-hidden rounded-[22px] border border-slate-200/90 bg-white p-5 shadow-[0_4px_20px_-4px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-1 hover:border-blue-300/90 hover:shadow-[0_12px_28px_-8px_rgba(35,78,244,0.12)] dark:border-slate-800 dark:bg-slate-900/90 dark:hover:border-blue-700"
+                                            className="group relative flex flex-col justify-between overflow-hidden rounded-[22px] border border-slate-200/90 bg-white p-5 shadow-[0_4px_8px_-4px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/90 dark:hover:border-slate-600"
                                         >
                                             {/* Top badges */}
                                             <div className="flex items-center justify-between gap-2">
                                                 <span
-                                                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                                                        isStudent
-                                                            ? 'border border-blue-200/80 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
-                                                            : 'border border-purple-200/80 bg-purple-50 text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
-                                                    }`}
+                                                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-slate-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300"
                                                 >
-                                                    <span
-                                                        className={`h-1.5 w-1.5 rounded-full ${
-                                                            isStudent
-                                                                ? 'bg-blue-600'
-                                                                : 'bg-purple-600'
-                                                        }`}
-                                                    />
+                                                    <UserIcon size={11} aria-hidden="true" />
                                                     {person.person_type}
                                                 </span>
 
@@ -224,20 +211,17 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                                     <img
                                                         src={person.photo_url}
                                                         alt={person.display_name}
-                                                        className="h-16 w-16 rounded-2xl object-cover shadow-sm ring-2 ring-blue-500/20"
+                                                        className="h-16 w-16 rounded-2xl object-cover shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
                                                         onError={(e) => {
                                                             (e.target as HTMLElement).style.display = 'none';
                                                         }}
                                                     />
                                                 ) : (
                                                     <div
-                                                        className={`flex h-16 w-16 items-center justify-center rounded-2xl text-lg font-extrabold text-white shadow-sm ${
-                                                            isStudent
-                                                                ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
-                                                                : 'bg-gradient-to-br from-purple-500 to-indigo-600'
-                                                        }`}
+                                                        className="pf-person-avatar-glass flex h-16 w-16 items-center justify-center rounded-2xl"
+                                                        aria-hidden="true"
                                                     >
-                                                        {initials || '?'}
+                                                        <UserIcon size={28} />
                                                     </div>
                                                 )}
 
@@ -323,18 +307,48 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
 
                                     {people.data.map((person: Person) => (
                                         <tr key={person.id}>
-                                            <td className="pf-tenant-name">
-                                                {person.display_name}
-                                            </td>
-                                            <td className="capitalize">
-                                                {person.person_type}
+                                            <td>
+                                                <div className="flex items-center gap-3">
+                                                    <span
+                                                        className="pf-person-avatar-glass flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                                                        aria-hidden="true"
+                                                    >
+                                                        <UserIcon size={17} />
+                                                    </span>
+                                                    <span className="pf-tenant-name">
+                                                        {person.display_name}
+                                                    </span>
+                                                </div>
                                             </td>
                                             <td>
-                                                {[person.grade_level, person.section]
-                                                    .filter(Boolean)
-                                                    .join(' / ') || '—'}
+                                                <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold capitalize text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                                    <UserIcon size={12} aria-hidden="true" />
+                                                    {person.person_type}
+                                                </span>
                                             </td>
-                                            <td>{person.external_id ?? '—'}</td>
+                                            <td>
+                                                {person.grade_level || person.section ? (
+                                                    <div className="flex flex-wrap items-center gap-1.5">
+                                                        {person.grade_level && (
+                                                            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                                                                {person.grade_level}
+                                                            </span>
+                                                        )}
+                                                        {person.section && (
+                                                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                                                {person.section}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-slate-400">—</span>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                                    {person.external_id ?? '—'}
+                                                </span>
+                                            </td>
                                             <td>
                                                 <span
                                                     className={
@@ -348,13 +362,13 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                                 </span>
                                             </td>
                                             <td>
-                                                <div style={{ display: 'flex', gap: 14 }}>
+                                                <div className="flex items-center justify-end gap-2">
                                                     <Link
                                                         href={route(
                                                             'portal.people.edit',
                                                             personRouteKey(person),
                                                         )}
-                                                        className="pf-row-action"
+                                                        className="pf-row-action rounded-full border border-slate-200 px-3 py-1.5 text-xs dark:border-slate-700"
                                                     >
                                                         View
                                                         <ChevronRightIcon size={20} />
@@ -364,7 +378,7 @@ export default function PeopleListScreen({ people, filters }: { people: Paginate
                                                             'portal.attendance.students.show',
                                                             personRouteKey(person),
                                                         )}
-                                                        className="pf-row-action"
+                                                        className="pf-row-action rounded-full border border-slate-200 px-3 py-1.5 text-xs dark:border-slate-700"
                                                     >
                                                         Attendance
                                                         <ChevronRightIcon size={20} />

@@ -24,6 +24,7 @@ class UserManagementTest extends TestCase
         ]);
 
         $response->assertRedirect(route('portal.users.index'));
+        $response->assertSessionHas('success', 'User created.');
         $response->assertSessionHas('temporaryPassword');
 
         $temporaryPassword = session('temporaryPassword');

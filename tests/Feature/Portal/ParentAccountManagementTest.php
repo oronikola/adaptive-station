@@ -19,6 +19,17 @@ class ParentAccountManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_admin_can_open_the_parent_creation_screen(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+
+        $this->actingAs($admin)->get(route('portal.parents.create'))->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/parents/parent-form-screen')
+            ->where('parent', null)
+            ->has('linkedStudents', 0));
+    }
+
     public function test_admin_creates_a_separate_parent_with_multiple_approved_students(): void
     {
         $tenant = Tenant::factory()->create();

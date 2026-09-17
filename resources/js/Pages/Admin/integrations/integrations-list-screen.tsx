@@ -3,6 +3,8 @@ import { ConnectIcon } from '@/Components/icons/connect';
 import { PlusIcon } from '@/Components/icons/plus';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
+import NewIntegrationModal from './NewIntegrationModal';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -35,6 +37,8 @@ const DIRECTION_LABELS: Record<string, string> = {
 };
 
 export default function IntegrationsListScreen({ profiles }: { profiles: IntegrationProfile[] }) {
+    const [newIntegrationOpen, setNewIntegrationOpen] = useState(false);
+
     return (
         <AdminLayout>
             <Head title="Integrations" />
@@ -53,10 +57,14 @@ export default function IntegrationsListScreen({ profiles }: { profiles: Integra
                         </div>
                     </div>
                     <div className="pft-hero-actions">
-                        <Link href={route('portal.integrations.create')} className="pf-btn pf-btn-primary">
+                        <button
+                            type="button"
+                            className="pf-btn pf-btn-primary"
+                            onClick={() => setNewIntegrationOpen(true)}
+                        >
                             <PlusIcon size={16} />
                             New Integration Profile
-                        </Link>
+                        </button>
                     </div>
                 </div>
 
@@ -136,6 +144,11 @@ export default function IntegrationsListScreen({ profiles }: { profiles: Integra
                     </div>
                 </div>
             </div>
+
+            <NewIntegrationModal
+                show={newIntegrationOpen}
+                onClose={() => setNewIntegrationOpen(false)}
+            />
         </AdminLayout>
     );
 }

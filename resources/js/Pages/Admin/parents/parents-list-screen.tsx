@@ -1,7 +1,10 @@
 import Pagination from '@/Components/admin/Pagination';
+import { UserPlusIcon } from '@/Components/icons/user-plus';
 import AdminLayout from '@/Layouts/AdminLayout';
 import type { PaginatedData } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useState } from 'react';
+import { AddParentModal } from './parent-form-screen';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -19,6 +22,8 @@ export default function ParentsListScreen({ parents, filters }: {
     filters: { search: string };
 }) {
     const { data, setData, get, processing } = useForm({ search: filters.search });
+    const [isAddParentOpen, setIsAddParentOpen] = useState(false);
+
     return (
         <AdminLayout>
             <Head title="Parents" />
@@ -28,7 +33,14 @@ export default function ParentsListScreen({ parents, filters }: {
                         <h1 className="pft-hero-title">Parents</h1>
                         <p className="pft-hero-subtitle">Manage parent accounts and approve which students they can access.</p>
                     </div>
-                    <Link href={route('portal.parents.create')} className="pf-btn pf-btn-primary">Add parent</Link>
+                    <button
+                        type="button"
+                        className="pf-btn pf-btn-primary"
+                        onClick={() => setIsAddParentOpen(true)}
+                    >
+                        <UserPlusIcon size={16} />
+                        Add parent
+                    </button>
                 </div>
                 <form className="pf-filter-bar" onSubmit={(event) => { event.preventDefault(); get(route('portal.parents.index')); }}>
                     <div className="pf-field">
@@ -62,6 +74,12 @@ export default function ParentsListScreen({ parents, filters }: {
                     <Pagination links={parents.links} />
                 </div>
             </div>
+            {isAddParentOpen && (
+                <AddParentModal
+                    show
+                    onClose={() => setIsAddParentOpen(false)}
+                />
+            )}
         </AdminLayout>
     );
 }

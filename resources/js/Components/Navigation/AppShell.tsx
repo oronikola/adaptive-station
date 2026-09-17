@@ -16,6 +16,7 @@ interface AppShellProps {
     brand?: string;
     brandHref: string;
     items: NavItem[];
+    surface?: 'admin' | 'platform';
     header?: React.ReactNode;
     children: React.ReactNode;
 }
@@ -52,6 +53,7 @@ export default function AppShell({
     brand = 'Adaptive Station',
     brandHref,
     items,
+    surface = 'platform',
     header,
     children,
 }: AppShellProps) {
@@ -140,7 +142,7 @@ export default function AppShell({
     }, [flash?.error]);
 
     return (
-        <div className="pf-shell">
+        <div className={`pf-shell pf-shell--${surface}`}>
             <a href="#main-content" className="pf-skip-link">
                 Skip to content
             </a>
