@@ -110,7 +110,7 @@ class ParentCredentialLookupController extends Controller
             'person_id' => $personId,
             'parent_account_id' => $account->id,
             'phone_number' => $account->phone_number,
-            'message' => $this->formatCredentialsSmsMessage($account),
+            'message' => $this->formatCredentialsSmsMessage($account->load('tenant')),
             'status' => SmsOutboxStatus::Pending,
             'expires_at' => Date::now()->addMinutes(30),
         ]);
@@ -122,11 +122,16 @@ class ParentCredentialLookupController extends Controller
 
     private function formatCredentialsSmsMessage(ParentAccount $account): string
     {
+        $requestedAt = Date::now()->setTimezone($account->tenant->timezone);
+
         return implode("\n", [
             'Adaptive Station',
+            $account->tenant->name,
             'Your parent portal login:',
             "Login ID: {$account->login_id}",
             "Password: {$account->password_plaintext}",
+            'Requested '.$requestedAt->format('M j, Y g:i A'),
+            "Didn't request this? Contact your school.",
         ]);
     }
 

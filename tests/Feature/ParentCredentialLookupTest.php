@@ -66,6 +66,9 @@ class ParentCredentialLookupTest extends TestCase
         $this->assertSame('+639101603448', $sms->phone_number);
         $this->assertStringContainsString($parent->login_id, $sms->message);
         $this->assertStringContainsString($parent->password_plaintext, $sms->message);
+        $this->assertStringContainsString($tenant->name, $sms->message);
+        $this->assertStringContainsString('Requested ', $sms->message);
+        $this->assertStringContainsString("Didn't request this? Contact your school.", $sms->message);
         Event::assertDispatched(SmsGatewayWakeUp::class);
     }
 
