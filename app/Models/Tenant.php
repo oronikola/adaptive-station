@@ -198,9 +198,14 @@ class Tenant extends Model
         Person::allTenants()->where('tenant_id', $tenantId)->forceDelete();
         Station::allTenants()->where('tenant_id', $tenantId)->delete();
 
-        DB::transaction(function () use ($tenant, $tenantId, $stationIds, $actor, $snapshot) {
-            StationActivationCode::allTenants()->whereIn('station_id', $stationIds)->delete();
-            StationCredential::allTenants()->whereIn('station_id', $stationIds)->delete();
+        DB::transaction(function () use ($tenant, $tenantId, $actor, $snapshot) {
+            // By tenant_id, not station_id: both tables carry their own
+            // tenant_id independently of the station join (see the migration
+            // that added it), and a station_id-only filter misses any row
+            // whose station was already removed by some other path — which
+            // still blocks the User delete below via created_by_user_id.
+            StationActivationCode::allTenants()->where('tenant_id', $tenantId)->delete();
+            StationCredential::allTenants()->where('tenant_id', $tenantId)->delete();
             User::where('tenant_id', $tenantId)->delete();
 
             // ParentAccount's own tenant_id FK has no cascade (unlike its

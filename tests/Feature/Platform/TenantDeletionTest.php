@@ -25,6 +25,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class TenantDeletionTest extends TestCase
@@ -124,6 +125,35 @@ class TenantDeletionTest extends TestCase
             'tenant_id' => null,
             'entity_id' => $tenantId,
         ]);
+    }
+
+    /**
+     * A station_id-based delete for station_activation_codes/
+     * station_credentials misses a row whose station was already removed
+     * by some other path (e.g. a reset/replace flow) — this reproduces that
+     * exact production failure: created_by_user_id still points at a real,
+     * about-to-be-deleted tenant user, but station_id points nowhere.
+     */
+    public function test_deletion_succeeds_with_an_activation_code_orphaned_from_its_station(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        $graph = $this->buildFullTenantGraph();
+        $tenant = $graph['tenant'];
+
+        StationActivationCode::allTenants()->create([
+            'tenant_id' => $tenant->id,
+            'station_id' => (string) Str::uuid(),
+            'code_hash' => hash('sha256', 'orphaned-code'),
+            'expires_at' => now()->addHours(24),
+            'created_by_user_id' => $graph['admin']->id,
+        ]);
+
+        $this->actingAs($platformAdmin)->delete(route('platform.tenants.destroy', $tenant), [
+            'confirm_code' => $tenant->code,
+        ])->assertRedirect(route('platform.tenants.index'));
+
+        $this->assertDatabaseMissing('tenants', ['id' => $tenant->id]);
+        $this->assertDatabaseMissing('station_activation_codes', ['tenant_id' => $tenant->id]);
     }
 
     public function test_wrong_confirmation_code_blocks_deletion(): void
