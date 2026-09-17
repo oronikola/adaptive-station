@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Device\TapEventResolveController;
 use App\Http\Controllers\Api\ParentPortal\AttendanceController as ParentAttendanceController;
 use App\Http\Controllers\Api\ParentPortal\AuthController as ParentAuthController;
 use App\Http\Controllers\Api\ParentPortal\ChildrenController as ParentChildrenController;
+use App\Http\Controllers\Api\ParentPortal\CredentialRecoveryController;
 use App\Http\Controllers\Api\ParentPortal\DeviceTokenController as ParentDeviceTokenController;
 use App\Http\Controllers\Api\ParentPortal\NotificationPreferenceController as ParentNotificationPreferenceController;
 use App\Http\Controllers\HealthController;
@@ -61,6 +62,7 @@ Route::prefix('v1/parent')->name('api.parent.')->group(function () {
     Route::middleware(AuthenticateParent::class)->group(function () {
         Route::post('logout', [ParentAuthController::class, 'logout'])->name('logout');
         Route::get('children', [ParentChildrenController::class, 'index'])->name('children');
+        Route::post('children/{person}/credentials', [CredentialRecoveryController::class, 'store'])->name('children.credentials.store');
         Route::get('children/{person}/attendance', [ParentAttendanceController::class, 'index'])->name('children.attendance');
         Route::post('device-tokens', [ParentDeviceTokenController::class, 'store'])->name('device-tokens.store');
         Route::delete('device-tokens', [ParentDeviceTokenController::class, 'destroy'])->name('device-tokens.destroy');

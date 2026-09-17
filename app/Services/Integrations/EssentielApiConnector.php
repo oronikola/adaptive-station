@@ -4,6 +4,7 @@ namespace App\Services\Integrations;
 
 use App\Models\IntegrationProfile;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -47,6 +48,16 @@ class EssentielApiConnector
             ])
             ->throw()
             ->json();
+    }
+
+    public function credentialSmsPayload(string $personId, string $idempotencyKey): Response
+    {
+        return $this->client()
+            ->withHeaders(['Idempotency-Key' => $idempotencyKey])
+            ->post("{$this->baseUrl}/api/v1/credentials/sms-payload", [
+                'person_id' => (int) $personId,
+                'purpose' => 'parent_credential_recovery',
+            ]);
     }
 
     protected function client(): PendingRequest
