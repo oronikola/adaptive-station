@@ -37,10 +37,16 @@ class CredentialRecoveryController extends Controller
             ->credentialSmsPayload($student->source_record_id, $idempotencyKey);
 
         if (! $response->successful()) {
+            $status = in_array($response->status(), [401, 403], true)
+                ? 502
+                : $response->status();
+
             return response()->json([
-                'message' => $response->json('message') ?? 'Could not prepare credentials. Please try again later.',
-                'error' => $response->json('error'),
-            ], $response->status());
+                'message' => $status === 502
+                    ? 'Credential recovery is temporarily unavailable. Please contact your school.'
+                    : ($response->json('message') ?? 'Could not prepare credentials. Please try again later.'),
+                'error' => $status === 502 ? 'credential_service_unavailable' : $response->json('error'),
+            ], $status);
         }
 
         if ($response->json('idempotent_replay') === true) {
