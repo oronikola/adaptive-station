@@ -5,6 +5,8 @@ import { PlusIcon } from '@/Components/icons/plus';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
 import type { PaginatedData } from '@/types';
+import { useState } from 'react';
+import NewLegacyImportModal, { ImportIntegrationProfile } from './NewLegacyImportModal';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 
@@ -34,7 +36,9 @@ const STATUS_LABELS: Record<string, string> = {
     draft: 'Draft',
 };
 
-export default function ImportsListScreen({ batches }: { batches: PaginatedData<ImportBatch> }) {
+export default function ImportsListScreen({ batches, profiles }: { batches: PaginatedData<ImportBatch>; profiles: ImportIntegrationProfile[] }) {
+    const [newImportOpen, setNewImportOpen] = useState(false);
+
     return (
         <AdminLayout>
             <Head title="Imports" />
@@ -57,10 +61,10 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                             <PlusIcon size={16} />
                             Upload CSV
                         </Link>
-                        <Link href={route('portal.imports.create')} className="pf-btn pf-btn-primary">
+                        <button type="button" className="pf-btn pf-btn-primary" onClick={() => setNewImportOpen(true)}>
                             <PlusIcon size={16} />
                             New Import
-                        </Link>
+                        </button>
                     </div>
                 </div>
 
@@ -91,9 +95,9 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                                     <tr>
                                         <td colSpan={4} className="pf-empty">
                                             No imports run yet.{' '}
-                                            <Link href={route('portal.imports.create')} className="pf-row-action" style={{ display: 'inline', marginLeft: 4 }}>
+                                            <button type="button" onClick={() => setNewImportOpen(true)} className="pf-row-action" style={{ display: 'inline', marginLeft: 4 }}>
                                                 Start your first import →
-                                            </Link>
+                                            </button>
                                         </td>
                                     </tr>
                                 )}
@@ -134,6 +138,12 @@ export default function ImportsListScreen({ batches }: { batches: PaginatedData<
                     <Pagination links={batches.links} />
                 </div>
             </div>
+
+            <NewLegacyImportModal
+                show={newImportOpen}
+                profiles={profiles}
+                onClose={() => setNewImportOpen(false)}
+            />
         </AdminLayout>
     );
 }

@@ -39,6 +39,8 @@ class DashboardTest extends TestCase
         $this->actingAs($admin)->get(route('portal.dashboard'))->assertInertia(fn ($page) => $page
             ->component('Admin/dashboard/dashboard-screen')
             ->where('today', '2026-09-15')
+            ->where('timezone', 'Asia/Manila')
+            ->where('stats.station_count', 1)
             ->where('stats.taps_today', 3)->where('stats.people_today', 1)
             ->has('weeklyAttendance', 7)
             ->where('weeklyAttendance.0.attendance_date_local', '2026-09-09')

@@ -84,4 +84,31 @@ class IntegrationTenantIsolationTest extends TestCase
                 ->has('profiles', 1)
                 ->where('profiles.0.name', 'Tenant A Legacy'));
     }
+
+    public function test_imports_index_provides_only_the_current_tenants_profiles_for_the_new_import_modal(): void
+    {
+        $tenantA = Tenant::factory()->create();
+        $tenantB = Tenant::factory()->create();
+        $adminA = User::factory()->tenantAdmin($tenantA)->create();
+        $adminB = User::factory()->tenantAdmin($tenantB)->create();
+
+        IntegrationProfile::createForTenant($tenantA->id, [
+            'name' => 'Tenant A Source',
+            'driver' => 'legacy_mysql',
+            'direction' => 'import_only',
+            'config_encrypted' => ['host' => 'db-a'],
+        ], $adminA);
+        IntegrationProfile::createForTenant($tenantB->id, [
+            'name' => 'Tenant B Source',
+            'driver' => 'legacy_mysql',
+            'direction' => 'import_only',
+            'config_encrypted' => ['host' => 'db-b'],
+        ], $adminB);
+
+        $this->actingAs($adminA)->get(route('portal.imports.index'))
+            ->assertInertia(fn ($page) => $page
+                ->component('Admin/imports/imports-list-screen')
+                ->has('profiles', 1)
+                ->where('profiles.0.name', 'Tenant A Source'));
+    }
 }

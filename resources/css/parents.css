@@ -10,8 +10,54 @@
 .parent-student-list span { display: block; color: var(--as-text-secondary); font-size: 12px; margin-top: 4px; }
 .parent-student-list .pf-btn { flex-shrink: 0; }
 .parent-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.parent-create-modal { padding: 28px; }
+.parent-create-progress { margin: 0 -28px 24px; padding: 18px 28px; border-block: 1px solid var(--as-border); background: var(--as-surface-hover); }
+.parent-create-form { min-height: 350px; }
+.parent-stepper { display: flex; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0; list-style: none; }
+.parent-step { display: flex; flex: 1; align-items: center; gap: 10px; min-width: 0; color: var(--as-text-muted); }
+.parent-step:last-child { flex: 0 1 auto; }
+.parent-step-number { display: inline-flex; width: 34px; height: 34px; flex: 0 0 34px; align-items: center; justify-content: center; border: 1px solid var(--as-border-mid); border-radius: 999px; background: #fff; color: var(--as-text-secondary); font-size: 12px; font-weight: 700; transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }
+.parent-step-copy { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.parent-step-copy strong { color: inherit; font-size: 12px; font-weight: 700; }
+.parent-step-copy span { margin-top: 2px; color: var(--as-text-muted); font-size: 10px; white-space: nowrap; }
+.parent-step-connector { display: flex; flex: 1; align-items: center; min-width: 24px; }
+.parent-step-connector::before { width: 5px; height: 5px; border-radius: 999px; background: var(--as-border-mid); content: ''; }
+.parent-step-connector span { width: 100%; height: 1px; background: var(--as-border-mid); }
+.parent-step--active { color: var(--as-text); }
+.parent-step--active .parent-step-number { border-color: var(--as-brand-mid); background: var(--as-brand); color: #fff; box-shadow: 0 0 0 4px rgba(71, 85, 105, 0.12); transform: scale(1.04); }
+.parent-step--done { color: var(--as-text-body); }
+.parent-step--done .parent-step-number { border-color: var(--as-brand-mid); background: var(--as-brand-mid); color: #fff; }
+.parent-step--done .parent-step-connector::before, .parent-step--done .parent-step-connector span { background: var(--as-brand-mid); }
+.parent-step-intro { margin-bottom: 20px; }
+.parent-step-intro h4 { margin: 0; color: var(--as-text); font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+.parent-step-intro p { max-width: 68ch; margin: 5px 0 0; color: var(--as-text-secondary); font-size: 12px; line-height: 1.6; }
+.parent-create-form .pf-field > label span { color: var(--as-danger); }
+.parent-create-form .pf-field input::placeholder { color: var(--as-text-secondary); opacity: 1; }
+.parent-create-form .pf-field-error-msg { margin-top: 5px; color: var(--as-danger); font-size: 11px; }
+.parent-create-actions { margin: 24px -28px -28px; padding: 18px 28px; border-top: 1px solid var(--as-border); background: var(--as-surface-hover); }
+.parent-review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.parent-review-grid > div { min-width: 0; padding: 13px 14px; border: 1px solid var(--as-border); border-radius: 14px; background: var(--as-surface-hover); }
+.parent-review-grid span { display: block; margin-bottom: 4px; color: var(--as-text-secondary); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.parent-review-grid strong { display: block; color: var(--as-text); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.parent-review-students { margin-bottom: 16px; padding: 14px; border: 1px solid var(--as-border); border-radius: 14px; }
+.parent-review-students h5 { margin: 0 0 10px; color: var(--as-text-secondary); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.parent-review-students > div { display: flex; flex-direction: column; gap: 7px; }
+.parent-review-students > div > div { display: flex; align-items: baseline; gap: 8px; color: var(--as-text); font-size: 12px; }
+.parent-review-students span { color: var(--as-text-secondary); font-size: 11px; }
 @media (max-width: 600px) {
     .parent-fields { grid-template-columns: minmax(0, 1fr); }
     .parent-section { padding: 18px; }
     .parent-student-list li { align-items: flex-start; flex-direction: column; gap: 10px; }
+    .parent-create-modal { padding: 20px; }
+    .parent-create-progress { margin-inline: -20px; padding-inline: 20px; }
+    .parent-stepper { align-items: flex-start; gap: 6px; }
+    .parent-step { gap: 6px; }
+    .parent-step-copy span { display: none; }
+    .parent-step-connector { min-width: 10px; }
+    .parent-create-actions { margin-inline: -20px; margin-bottom: -20px; padding-inline: 20px; }
+    .parent-review-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .parent-step-number { transition: none; }
 }

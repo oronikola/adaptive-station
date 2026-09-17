@@ -13,6 +13,7 @@ import { MenuIcon } from '@/Components/icons/menu';
 import { CircleHelpIcon } from '@/Components/icons/circle-help';
 import { CheckIcon } from '@/Components/icons/check';
 import { LayoutGridIcon } from '@/Components/icons/layout-grid';
+import AddUserModal from './AddUserModal';
 import '../../../../css/platform-dashboard.css';
 
 interface UserListItem extends User {
@@ -96,6 +97,7 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
     }, [viewMode]);
 
     const [search, setSearch] = useState('');
+    const [addUserOpen, setAddUserOpen] = useState(false);
     const [roleFilter, setRoleFilter] = useState<'all' | 'tenant_admin' | 'tenant_operator'>('all');
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
@@ -152,10 +154,10 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                         </p>
                     </div>
                     {canManage && (
-                        <Link href={route('portal.users.create')} className="pf-btn pf-btn-primary">
+                        <button type="button" className="pf-btn pf-btn-primary" onClick={() => setAddUserOpen(true)}>
                             <UserPlusIcon size={16} />
                             Add User
-                        </Link>
+                        </button>
                     )}
                 </div>
 
@@ -322,12 +324,13 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                                                             : 'Get started by inviting your first school administrator or operator.'}
                                                     </p>
                                                     {canManage && (
-                                                        <Link
-                                                            href={route('portal.users.create')}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setAddUserOpen(true)}
                                                             className="pf-btn pf-btn-secondary text-xs mt-3.5"
                                                         >
                                                             Add User
-                                                        </Link>
+                                                        </button>
                                                     )}
                                                 </div>
                                             </td>
@@ -543,6 +546,13 @@ export default function UsersListScreen({ users }: { users: PaginatedData<UserLi
                     <PaginationBar links={users.links} />
                 </div>
             </div>
+
+            {canManage && (
+                <AddUserModal
+                    show={addUserOpen}
+                    onClose={() => setAddUserOpen(false)}
+                />
+            )}
         </AdminLayout>
     );
 }

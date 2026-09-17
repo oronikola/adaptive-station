@@ -1,4 +1,5 @@
 import InputError from '@/Components/InputError';
+import Modal, { ModalHero } from '@/Components/Modal';
 import { CheckIcon } from '@/Components/icons/check';
 import { ChevronLeftIcon } from '@/Components/icons/chevron-left';
 import { ChevronRightIcon } from '@/Components/icons/chevron-right';
@@ -24,6 +25,14 @@ interface Student {
 
 interface ParentAccount { id: string; name: string; email: string; login_id: string | null; is_active: boolean }
 
+interface ParentFormScreenProps {
+    parent: ParentAccount | null;
+    linkedStudents: Student[];
+    embedded?: boolean;
+    show?: boolean;
+    onClose?: () => void;
+}
+
 const CREATE_STEPS = [
     { label: 'Account', hint: 'Name & credentials' },
     { label: 'Students', hint: 'Link approvals' },
@@ -32,54 +41,55 @@ const CREATE_STEPS = [
 
 function StepIndicator({ current, steps }: { current: number; steps: typeof CREATE_STEPS }) {
     return (
-        <div
-            style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 28 }}
-            role="list"
-            aria-label="Form steps"
-        >
+        <ol className="parent-stepper" aria-label="Parent account setup progress">
             {steps.map((step, i) => {
                 const done = i < current;
                 const active = i === current;
+
                 return (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', flex: i < steps.length - 1 ? 1 : undefined }}>
-                        <div
-                            role="listitem"
-                            aria-current={active ? 'step' : undefined}
-                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
-                        >
-                            <div
-                                style={{
-                                    width: 32, height: 32, borderRadius: '50%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: 13, fontWeight: 700, flexShrink: 0,
-                                    background: done || active ? 'var(--as-brand)' : 'var(--as-surface-active)',
-                                    color: done || active ? '#fff' : 'var(--as-text-muted)',
-                                    border: active ? '2px solid var(--as-brand-mid)' : done ? 'none' : '1.5px solid var(--as-border-mid)',
-                                    transition: 'background 200ms',
-                                }}
-                            >
-                                {done ? (
-                                    <CheckIcon size={14} />
-                                ) : i + 1}
-                            </div>
-                            <div style={{ textAlign: 'center', lineHeight: 1.2 }}>
-                                <div style={{ fontSize: 11, fontWeight: active ? 700 : 500, color: active ? 'var(--as-text)' : 'var(--as-text-muted)' }}>
-                                    {step.label}
-                                </div>
-                                <div style={{ fontSize: 10, color: 'var(--as-text-muted)' }}>{step.hint}</div>
-                            </div>
-                        </div>
+                    <li
+                        key={step.label}
+                        className={`parent-step${active ? ' parent-step--active' : ''}${done ? ' parent-step--done' : ''}`}
+                        aria-current={active ? 'step' : undefined}
+                    >
+                        <span className="parent-step-number" aria-hidden="true">
+                            {done ? <CheckIcon size={14} /> : i + 1}
+                        </span>
+                        <span className="parent-step-copy">
+                            <strong>{step.label}</strong>
+                            <span>{step.hint}</span>
+                        </span>
                         {i < steps.length - 1 && (
-                            <div style={{ flex: 1, height: 2, background: done ? 'var(--as-brand-mid)' : 'var(--as-border)', margin: '0 8px', marginBottom: 28, flexShrink: 0 }} />
+                            <span className="parent-step-connector" aria-hidden="true">
+                                <span />
+                            </span>
                         )}
-                    </div>
+                    </li>
                 );
             })}
-        </div>
+        </ol>
     );
 }
 
-export default function ParentFormScreen({ parent, linkedStudents }: { parent: ParentAccount | null; linkedStudents: Student[] }) {
+export function AddParentModal({ show, onClose }: { show: boolean; onClose: () => void }) {
+    return (
+        <ParentFormScreen
+            parent={null}
+            linkedStudents={[]}
+            embedded
+            show={show}
+            onClose={onClose}
+        />
+    );
+}
+
+export default function ParentFormScreen({
+    parent,
+    linkedStudents,
+    embedded = false,
+    show = true,
+    onClose,
+}: ParentFormScreenProps) {
     const form = useForm({ name: parent?.name ?? '', email: parent?.email ?? '', password: '', password_confirmation: '', student_ids: linkedStudents.map((student) => student.id) });
     const statusForm = useForm({ is_active: parent?.is_active ?? true });
     const [selected, setSelected] = useState(linkedStudents);
@@ -127,7 +137,15 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
 
     function submit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        const options = { preserveScroll: true, onFinish: () => form.reset('password', 'password_confirmation') };
+        const options = {
+            preserveScroll: true,
+            onFinish: () => form.reset('password', 'password_confirmation'),
+            onError: (errors: Record<string, string>) => {
+                if (!parent) {
+                    setStep(Object.keys(errors).some((key) => key.startsWith('student_ids')) ? 1 : 0);
+                }
+            },
+        };
         if (parent) form.put(route('portal.parents.update', parent.id), options);
         else form.post(route('portal.parents.store'), options);
     }
@@ -140,6 +158,19 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
 
     function canAdvanceStep1() {
         return form.data.name.trim() !== '' && form.data.email.trim() !== '' && form.data.password.length >= 12 && form.data.password_confirmation === form.data.password;
+    }
+
+    function closeCreateModal() {
+        if (form.processing) {
+            return;
+        }
+
+        if (onClose) {
+            onClose();
+            return;
+        }
+
+        router.visit(route('portal.parents.index'));
     }
 
     // ── Edit mode: flat form (no stepper) ─────────────────────────────────
@@ -233,30 +264,28 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
         );
     }
 
-    // ── Create mode: stepped form ─────────────────────────────────────────
-    return (
-        <AdminLayout>
-            <Head title="Add parent" />
-            <div className="pf-dashboard pft-page">
-                <Link href={route('portal.parents.index')} className="pft-panel-link">Back to parents</Link>
-                <div className="pft-hero">
-                    <div className="pft-hero-main">
-                        <span className="pft-hero-icon" aria-hidden="true">
-                            <UserPlusIcon size={22} />
-                        </span>
-                        <div>
-                            <h1 className="pft-hero-title">Add parent</h1>
-                            <p className="pft-hero-subtitle">Approve this parent's student connections for your school.</p>
-                        </div>
-                    </div>
-                </div>
+    // ── Create mode: stepped modal ────────────────────────────────────────
+    const createModal = (
+            <Modal
+                show={show}
+                maxWidth="3xl"
+                closeable={!form.processing}
+                onClose={closeCreateModal}
+            >
+                <div className="pf-modal parent-create-modal">
+                    <ModalHero
+                        title="Add parent"
+                        subtitle="Create secure access, then approve the students this parent can view."
+                        onClose={closeCreateModal}
+                    >
+                        <UserPlusIcon size={20} />
+                    </ModalHero>
 
-                <div className="pf-panel">
-                    <div style={{ padding: '28px 28px 0' }}>
+                    <div className="parent-create-progress">
                         <StepIndicator current={step} steps={CREATE_STEPS} />
                     </div>
 
-                    <form onSubmit={submit} className="pft-form-panel">
+                    <form onSubmit={submit} className="parent-create-form">
 
                         {/* ── Step 1: Account details ─────────────────────── */}
                         {step === 0 && (
@@ -271,6 +300,7 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                                             maxLength={150}
                                             autoComplete="name"
                                             autoFocus
+                                            placeholder="e.g. Maria Santos"
                                             onChange={(event) => form.setData('name', event.target.value)}
                                         />
                                         <InputError message={form.errors.name} />
@@ -284,6 +314,7 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                                             required
                                             maxLength={255}
                                             autoComplete="email"
+                                            placeholder="e.g. maria.santos@example.com"
                                             onChange={(event) => form.setData('email', event.target.value)}
                                         />
                                         <InputError message={form.errors.email} />
@@ -298,6 +329,7 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                                             minLength={12}
                                             maxLength={128}
                                             autoComplete="new-password"
+                                            placeholder="Enter at least 12 characters"
                                             onChange={(event) => form.setData('password', event.target.value)}
                                         />
                                         <p className="pf-field-hint">At least 12 characters. Share this directly with the parent — it is not emailed automatically.</p>
@@ -311,6 +343,7 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                                             value={form.data.password_confirmation}
                                             required
                                             autoComplete="new-password"
+                                            placeholder="Re-enter the initial password"
                                             onChange={(event) => form.setData('password_confirmation', event.target.value)}
                                         />
                                         {form.data.password_confirmation && form.data.password !== form.data.password_confirmation && (
@@ -319,7 +352,7 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                                     </div>
                                 </div>
 
-                                <div className="pft-form-actions">
+                                <div className="pf-modal-footer parent-create-actions">
                                     <Link href={route('portal.parents.index')} className="pf-btn pf-btn-secondary">Cancel</Link>
                                     <button
                                         type="button"
@@ -337,10 +370,13 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                         {/* ── Step 2: Link students ───────────────────────── */}
                         {step === 1 && (
                             <>
-                                <p className="parent-help">
+                                <div className="parent-step-intro">
+                                    <h4>Approve student access</h4>
+                                    <p>
                                     Only link students after verifying the parent's relationship with the school.
                                     Inactive students retain their links but grant no attendance access until reactivated.
-                                </p>
+                                    </p>
+                                </div>
 
                                 <h2 className="parent-subtitle">Linked students ({selected.length}/20)</h2>
                                 {selected.length === 0 && <p className="parent-help">No students selected yet. Search below to add students.</p>}
@@ -416,7 +452,7 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                                     )}
                                 </div>
 
-                                <div className="pft-form-actions">
+                                <div className="pf-modal-footer parent-create-actions">
                                     <button type="button" className="pf-btn pf-btn-secondary" onClick={() => setStep(0)}>
                                         <ChevronLeftIcon size={16} />
                                         Back
@@ -432,35 +468,33 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                         {/* ── Step 3: Review & Submit ─────────────────────── */}
                         {step === 2 && (
                             <>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                                <div className="parent-step-intro">
+                                    <h4>Review parent access</h4>
+                                    <p>Confirm these details before creating the account. Access can be managed later.</p>
+                                </div>
+                                <div className="parent-review-grid">
                                     {[
                                         ['Full name', form.data.name || '—'],
                                         ['Email', form.data.email || '—'],
                                         ['Password', '••••••••••••'],
                                         ['Linked students', selected.length === 0 ? 'None — account has no student access' : `${selected.length} student${selected.length !== 1 ? 's' : ''}`],
                                     ].map(([label, value]) => (
-                                        <div
-                                            key={label}
-                                            style={{
-                                                padding: '10px 14px', borderRadius: 12,
-                                                border: '1px solid var(--as-border)', background: 'var(--as-surface)',
-                                            }}
-                                        >
-                                            <div style={{ fontSize: 10, color: 'var(--as-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</div>
-                                            <div style={{ fontSize: 13, color: 'var(--as-text)', fontWeight: 500 }}>{value}</div>
+                                        <div key={label}>
+                                            <span>{label}</span>
+                                            <strong>{value}</strong>
                                         </div>
                                     ))}
                                 </div>
 
                                 {selected.length > 0 && (
-                                    <div style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--as-border)', background: 'var(--as-surface)', marginBottom: 16 }}>
-                                        <div style={{ fontSize: 10, color: 'var(--as-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Linked students</div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                    <div className="parent-review-students">
+                                        <h5>Linked students</h5>
+                                        <div>
                                             {selected.map((s) => (
-                                                <div key={s.id} style={{ fontSize: 13, color: 'var(--as-text)', display: 'flex', gap: 8, alignItems: 'center' }}>
-                                                    <span style={{ fontWeight: 500 }}>{s.display_name}</span>
+                                                <div key={s.id}>
+                                                    <strong>{s.display_name}</strong>
                                                     {(s.grade_level || s.section) && (
-                                                        <span style={{ color: 'var(--as-text-muted)', fontSize: 11 }}>
+                                                        <span>
                                                             {[s.grade_level, s.section].filter(Boolean).join(' · ')}
                                                         </span>
                                                     )}
@@ -470,7 +504,7 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                                     </div>
                                 )}
 
-                                <div className="pft-form-actions">
+                                <div className="pf-modal-footer parent-create-actions">
                                     <button type="button" className="pf-btn pf-btn-secondary" onClick={() => setStep(1)}>
                                         <ChevronLeftIcon size={16} />
                                         Back
@@ -488,7 +522,17 @@ export default function ParentFormScreen({ parent, linkedStudents }: { parent: P
                         )}
                     </form>
                 </div>
-            </div>
+            </Modal>
+    );
+
+    if (embedded) {
+        return createModal;
+    }
+
+    return (
+        <AdminLayout>
+            <Head title="Add parent" />
+            {createModal}
         </AdminLayout>
     );
 }

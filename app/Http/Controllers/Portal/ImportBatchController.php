@@ -29,6 +29,9 @@ class ImportBatchController extends Controller
 
         return Inertia::render('Admin/imports/imports-list-screen', [
             'batches' => $batches,
+            'profiles' => IntegrationProfile::query()
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 

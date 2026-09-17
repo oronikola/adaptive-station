@@ -1,5 +1,21 @@
 import AdminLayout from '@/Layouts/AdminLayout';
+import { ClockIcon } from '@/Components/icons/clock';
+import { CreditCardIcon } from '@/Components/icons/credit-card';
+import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
+import { LayoutGridIcon } from '@/Components/icons/layout-grid';
+import { MessageSquareIcon } from '@/Components/icons/message-square';
+import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
+import { UsersIcon } from '@/Components/icons/users';
 import { Head, Link, usePoll } from '@inertiajs/react';
+import {
+    Area,
+    AreaChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
 import '../../../../css/school-dashboard.css';
@@ -36,15 +52,147 @@ function formatDay(value: string, short = false): string {
         : { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-function Metric({ label, value, detail, href, warning = false }: {
-    label: string; value: number; detail: string; href: string; warning?: boolean;
+interface MetricPill {
+    value: number | string;
+    label: string;
+    tone?: 'green' | 'amber' | 'neutral';
+}
+
+function Metric({ label, value, pills, href, icon, tone, warning = false }: {
+    label: string;
+    value: number;
+    pills: MetricPill[];
+    href: string;
+    icon: React.ReactNode;
+    tone: 'blue' | 'green' | 'violet' | 'amber';
+    warning?: boolean;
 }) {
+    const iconTone = warning ? 'amber' : tone;
+
     return (
-        <Link href={href} className={`school-metric${warning ? ' school-metric--warning' : ''}`}>
-            <span className="school-eyebrow">{label}</span>
-            <strong className="school-metric-value">{value.toLocaleString()}</strong>
-            <span className="school-metric-detail">{detail}<span aria-hidden="true">↗</span></span>
+        <Link href={href} className="pft-stat-card school-metric">
+            <span className="pft-stat-card-top">
+                <span className="pft-stat-label">{label}</span>
+                <span className={`pft-stat-icon pft-stat-icon--${iconTone}`} aria-hidden="true">{icon}</span>
+            </span>
+            <strong className="pft-stat-value">{value.toLocaleString()}</strong>
+            <span className="pft-stat-pills">
+                {pills.map((pill) => (
+                    <span key={`${pill.label}-${pill.value}`} className={`pft-stat-pill pft-stat-pill--${pill.tone ?? 'neutral'}`}>
+                        <strong>{typeof pill.value === 'number' ? pill.value.toLocaleString() : pill.value}</strong> {pill.label}
+                    </span>
+                ))}
+            </span>
         </Link>
+    );
+}
+
+interface AttendanceTooltipEntry {
+    dataKey: string;
+    name: string;
+    value: number;
+    color: string;
+}
+
+function AttendanceTooltip({
+    active,
+    payload,
+    label,
+}: {
+    active?: boolean;
+    payload?: AttendanceTooltipEntry[];
+    label?: string;
+}) {
+    if (!active || !payload || payload.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="pf-chart-tooltip">
+            <p className="pf-chart-tooltip-label">{label}</p>
+            {payload.map((entry) => (
+                <div key={entry.dataKey} className="pf-chart-tooltip-row">
+                    <span style={{ color: entry.color }}>
+                        <span className="pf-chart-tooltip-swatch" />
+                        {entry.name}
+                    </span>
+                    <span>{entry.value.toLocaleString()}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function AttendanceChart({ weeklyAttendance }: { weeklyAttendance: DashboardScreenProps['weeklyAttendance'] }) {
+    const chartData = weeklyAttendance.map((day) => ({
+        ...day,
+        label: new Date(`${day.attendance_date_local}T12:00:00`).toLocaleDateString(undefined, {
+            weekday: 'short',
+            day: 'numeric',
+        }),
+    }));
+
+    return (
+        <>
+            <div className="pf-chart-legend">
+                <span className="pf-chart-legend-item pf-chart-legend-item--blue">
+                    <span className="pf-chart-legend-dot" />
+                    Taps
+                </span>
+                <span className="pf-chart-legend-item pf-chart-legend-item--green">
+                    <span className="pf-chart-legend-dot" />
+                    Unique people
+                </span>
+            </div>
+            <div className="pf-chart-body pft-growth-chart">
+                <ResponsiveContainer width="100%" height={260}>
+                    <AreaChart data={chartData} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
+                        <defs>
+                            <linearGradient id="attendanceTapsFill" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#234ef4" stopOpacity={0.28} />
+                                <stop offset="100%" stopColor="#234ef4" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="attendancePeopleFill" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#188352" stopOpacity={0.26} />
+                                <stop offset="100%" stopColor="#188352" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid stroke="var(--as-border-light)" vertical={false} />
+                        <XAxis
+                            dataKey="label"
+                            tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                            axisLine={false}
+                            tickLine={false}
+                        />
+                        <YAxis
+                            tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                            axisLine={false}
+                            tickLine={false}
+                            allowDecimals={false}
+                        />
+                        <Tooltip content={<AttendanceTooltip />} />
+                        <Area
+                            type="monotone"
+                            dataKey="total"
+                            name="Taps"
+                            stroke="#234ef4"
+                            strokeWidth={2.5}
+                            fill="url(#attendanceTapsFill)"
+                            activeDot={{ r: 5, strokeWidth: 0 }}
+                        />
+                        <Area
+                            type="monotone"
+                            dataKey="unique_people"
+                            name="Unique people"
+                            stroke="#188352"
+                            strokeWidth={2.5}
+                            fill="url(#attendancePeopleFill)"
+                            activeDot={{ r: 5, strokeWidth: 0 }}
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
+        </>
     );
 }
 
@@ -52,8 +200,9 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
     usePoll(30000, { only: ['today', 'timezone', 'updatedAt', 'stats', 'stationHealth', 'recentActivity', 'weeklyAttendance'] });
     const attendanceHref = route('portal.attendance.index', { date_from: today, date_to: today });
     const stationsHref = route('portal.stations.index');
-    const maxTaps = Math.max(1, ...weeklyAttendance.map((day) => day.total));
+    const peopleHref = route('portal.people.index');
     const weekTotal = weeklyAttendance.reduce((sum, day) => sum + day.total, 0);
+    const weekPeople = weeklyAttendance.reduce((sum, day) => sum + day.unique_people, 0);
     const attentionCount = stats.offline_station_count + (stats.sms_failures ?? 0);
     const formatTime = (value: string) => new Date(value).toLocaleString(undefined, {
         timeZone: timezone, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
@@ -62,25 +211,82 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
     return (
         <AdminLayout>
             <Head title="Dashboard" />
-            <div className="pf-dashboard school-dashboard">
+            <div className="pf-dashboard pft-page pft-dashboard school-dashboard">
                 <header className="pft-hero">
                     <div className="pft-hero-main">
+                        <span className="pft-hero-icon" aria-hidden="true"><LayoutGridIcon size={22} /></span>
                         <div>
-                            <p className="school-eyebrow">{formatDay(today)} · {timezone}</p>
-                            <h1 className="pft-hero-title">Today at your school</h1>
-                            <p className="pft-hero-subtitle">Attendance, station health, and what needs your attention.</p>
+                            <h1 className="pft-hero-title">School dashboard</h1>
+                            <p className="pft-hero-subtitle">Attendance, station health, and operational alerts for {formatDay(today)}.</p>
                         </div>
                     </div>
                     <div className="pft-hero-actions">
-                        <span className="pft-hero-updated">Updated {formatTime(updatedAt)} · refreshes every 30s</span>
+                        <span className="pft-hero-updated"><ClockIcon size={13} />Updated {formatTime(updatedAt)} · every 30s</span>
                         <Link href={attendanceHref} className="pf-btn pf-btn-primary">View today's attendance</Link>
                     </div>
                 </header>
 
-                <section className="school-metrics" aria-label="Today's overview">
-                    <Metric label="People recorded today" value={stats.people_today} detail={`${stats.taps_today.toLocaleString()} attendance taps today`} href={attendanceHref} />
-                    <Metric label="Stations online" value={stats.online_station_count} detail={`${stats.active_station_count} enabled · ${stats.offline_station_count} offline`} href={stationsHref} warning={stats.offline_station_count > 0} />
-                    {stats.sms_failures !== null && <Metric label="Failed SMS" value={stats.sms_failures} detail="Messages currently marked failed" href={route('portal.sms-log.index', { status: 'failed' })} warning={stats.sms_failures > 0} />}
+                <section className="pft-stat-grid" aria-label="Today's overview">
+                    <Metric
+                        label="People today"
+                        value={stats.people_today}
+                        tone="blue"
+                        href={attendanceHref}
+                        icon={<UsersIcon size={19} />}
+                        pills={[
+                            { value: stats.taps_today, label: 'taps', tone: 'green' },
+                            { value: timezone, label: '' },
+                        ]}
+                    />
+                    <Metric
+                        label="Stations online"
+                        value={stats.online_station_count}
+                        tone="violet"
+                        href={stationsHref}
+                        icon={<MonitorCheckIcon size={19} />}
+                        warning={stats.offline_station_count > 0}
+                        pills={[
+                            { value: stats.active_station_count, label: 'enabled', tone: 'green' },
+                            { value: stats.offline_station_count, label: 'offline', tone: stats.offline_station_count > 0 ? 'amber' : 'neutral' },
+                        ]}
+                    />
+                    <Metric
+                        label="Total people"
+                        value={stats.person_count}
+                        tone="green"
+                        href={peopleHref}
+                        icon={<GraduationCapIcon size={19} />}
+                        pills={[
+                            { value: stats.active_person_count, label: 'active', tone: 'green' },
+                            { value: stats.person_count - stats.active_person_count, label: 'inactive' },
+                        ]}
+                    />
+                    {stats.sms_failures !== null ? (
+                        <Metric
+                            label="Failed SMS"
+                            value={stats.sms_failures}
+                            tone="amber"
+                            href={route('portal.sms-log.index', { status: 'failed' })}
+                            icon={<MessageSquareIcon size={19} />}
+                            warning={stats.sms_failures > 0}
+                            pills={[
+                                { value: stats.sms_failures > 0 ? 'Needs review' : 'All clear', label: '', tone: stats.sms_failures > 0 ? 'amber' : 'green' },
+                                { value: 'Delivery', label: 'log' },
+                            ]}
+                        />
+                    ) : (
+                        <Metric
+                            label="RFID cards"
+                            value={stats.rfid_card_count}
+                            tone="amber"
+                            href={peopleHref}
+                            icon={<CreditCardIcon size={19} />}
+                            pills={[
+                                { value: stats.active_rfid_card_count, label: 'active', tone: 'green' },
+                                { value: stats.station_count, label: 'stations' },
+                            ]}
+                        />
+                    )}
                 </section>
 
                 <section className="pf-panel school-attention" aria-labelledby="attention-title">
@@ -102,47 +308,59 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
                     {stats.station_count === 0 && <p className="school-empty">No stations have been added to this school yet.</p>}
                 </section>
 
-                <div className="school-content-grid">
-                    <section className="pf-panel" aria-labelledby="week-title">
-                        <div className="pf-panel-header">
-                            <div><h2 id="week-title" className="pf-panel-title">Attendance over 7 days</h2><p className="pf-panel-count">{weekTotal.toLocaleString()} taps · includes today</p></div>
-                            <Link href={route('portal.attendance.summary')} className="school-text-link">Full summary →</Link>
+                <section className="pf-panel pft-growth-panel" aria-labelledby="week-title">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 id="week-title" className="pf-panel-title">Attendance over 7 days</h2>
+                            <p className="pf-panel-count">{weekTotal.toLocaleString()} taps · {weekPeople.toLocaleString()} unique check-ins · includes today</p>
                         </div>
-                        {weekTotal === 0 && <p className="school-empty">No attendance recorded in the last 7 days.</p>}
-                        <div className="school-week-chart" role="img" aria-label={`Attendance taps over seven days: ${weeklyAttendance.map((day) => `${formatDay(day.attendance_date_local)}: ${day.total}`).join('; ')}. Exact values follow below.`}>
-                            {weeklyAttendance.map((day) => <div key={day.attendance_date_local} className="school-chart-column" aria-hidden="true">
-                                <span className="school-chart-value">{day.total.toLocaleString()}</span>
-                                <div className="school-chart-track"><div className={`school-chart-bar${day.attendance_date_local === today ? ' school-chart-bar--today' : ''}`} style={{ height: `${day.total / maxTaps * 100}%` }} /></div>
-                                <span className="school-chart-label">{day.attendance_date_local === today ? 'Today' : formatDay(day.attendance_date_local, true)}</span>
-                            </div>)}
-                        </div>
-                        <details className="school-chart-details">
-                            <summary>View exact daily totals</summary>
-                            <div className="pf-table-wrap"><table className="pf-table">
-                                <caption className="sr-only">Daily attendance taps and distinct identified people</caption>
-                                <thead><tr><th scope="col">Date</th><th scope="col">Taps</th><th scope="col">Unique people</th></tr></thead>
-                                <tbody>{weeklyAttendance.map((day) => <tr key={day.attendance_date_local}><th scope="row">{formatDay(day.attendance_date_local)}</th><td>{day.total.toLocaleString()}</td><td>{day.unique_people.toLocaleString()}</td></tr>)}</tbody>
-                            </table></div>
-                        </details>
-                    </section>
+                        <Link href={route('portal.attendance.summary')} className="pft-panel-link">Full summary →</Link>
+                    </div>
+                    {weekTotal === 0 && <p className="pf-empty pft-panel-empty">No attendance recorded in the last 7 days.</p>}
+                    <AttendanceChart weeklyAttendance={weeklyAttendance} />
+                    <details className="school-chart-details">
+                        <summary>View exact daily totals</summary>
+                        <div className="pf-table-wrap"><table className="pf-table">
+                            <caption className="sr-only">Daily attendance taps and distinct identified people</caption>
+                            <thead><tr><th scope="col">Date</th><th scope="col">Taps</th><th scope="col">Unique people</th></tr></thead>
+                            <tbody>{weeklyAttendance.map((day) => <tr key={day.attendance_date_local}><th scope="row">{formatDay(day.attendance_date_local)}</th><td>{day.total.toLocaleString()}</td><td>{day.unique_people.toLocaleString()}</td></tr>)}</tbody>
+                        </table></div>
+                    </details>
+                </section>
 
-                    <section className="pf-panel" aria-labelledby="health-title">
-                        <div className="pf-panel-header"><div><h2 id="health-title" className="pf-panel-title">Station health</h2><p className="pf-panel-count">Online means a heartbeat within {stationHealth.threshold_minutes} minutes.</p></div></div>
-                        <dl className="school-health-facts">
-                            <div><dt>Enabled</dt><dd>{stats.active_station_count} / {stats.station_count}</dd></div>
-                            <div><dt>Online</dt><dd>{stats.online_station_count}</dd></div>
-                            <div><dt>Offline among enabled</dt><dd>{stats.offline_station_count}</dd></div>
-                            <div className="school-sync-fact"><dt>Last attendance sync</dt><dd>{stationHealth.last_attendance_sync_at ? <time dateTime={stationHealth.last_attendance_sync_at}>{formatTime(stationHealth.last_attendance_sync_at)}</time> : 'No attendance received yet'}</dd></div>
-                        </dl>
-                        <p className="school-health-note">Latest attendance record received from a station. A heartbeat does not confirm that attendance has synced.</p>
-                        {stationHealth.offline_stations.length > 0 && <ul className="school-station-list" aria-label="Offline stations">
-                            {stationHealth.offline_stations.map((station) => <li key={station.id}>
-                                <Link href={route('portal.stations.show', station.station_code)}>{station.name}</Link>
-                                <span>{station.last_seen_at ? `Last seen ${formatTime(station.last_seen_at)}` : 'No heartbeat received yet'}</span>
-                            </li>)}
-                        </ul>}
-                        <Link href={stationsHref} className="school-panel-footer">View all {stats.station_count} stations →</Link>
-                    </section>
+                <div className="pft-widgets-grid">
+                    <div className="pft-widgets-main">
+                        <section className="pf-panel" aria-labelledby="activity-title">
+                            <div className="pf-panel-header"><div><h2 id="activity-title" className="pf-panel-title">Recent activity</h2><p className="pf-panel-count">Latest changes in your school</p></div></div>
+                            <div className="pft-panel-body">
+                                {recentActivity.length === 0 ? <p className="pf-empty pft-panel-empty">No activity recorded yet.</p> : <ul className="school-activity-list">
+                                    {recentActivity.map((log) => <li key={log.id}><span>{log.action.replace(/[._]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())}</span><time dateTime={log.created_at}>{formatTime(log.created_at)}</time></li>)}
+                                </ul>}
+                            </div>
+                        </section>
+                    </div>
+
+                    <div className="pft-widgets-side">
+                        <section className="pf-panel" aria-labelledby="health-title">
+                            <div className="pf-panel-header"><div><h2 id="health-title" className="pf-panel-title">Station health</h2><p className="pf-panel-count">Online means a heartbeat within {stationHealth.threshold_minutes} minutes.</p></div></div>
+                            <div className="pft-panel-body">
+                                <dl className="school-health-facts">
+                                    <div><dt>Enabled</dt><dd>{stats.active_station_count} / {stats.station_count}</dd></div>
+                                    <div><dt>Online</dt><dd>{stats.online_station_count}</dd></div>
+                                    <div><dt>Offline among enabled</dt><dd>{stats.offline_station_count}</dd></div>
+                                    <div className="school-sync-fact"><dt>Last attendance sync</dt><dd>{stationHealth.last_attendance_sync_at ? <time dateTime={stationHealth.last_attendance_sync_at}>{formatTime(stationHealth.last_attendance_sync_at)}</time> : 'No attendance received yet'}</dd></div>
+                                </dl>
+                                <p className="school-health-note">Latest attendance record received from a station. A heartbeat does not confirm that attendance has synced.</p>
+                                {stationHealth.offline_stations.length > 0 && <ul className="school-station-list" aria-label="Offline stations">
+                                    {stationHealth.offline_stations.map((station) => <li key={station.id}>
+                                        <Link href={route('portal.stations.show', station.station_code)}>{station.name}</Link>
+                                        <span>{station.last_seen_at ? `Last seen ${formatTime(station.last_seen_at)}` : 'No heartbeat received yet'}</span>
+                                    </li>)}
+                                </ul>}
+                                <Link href={stationsHref} className="school-panel-footer">View all {stats.station_count} stations →</Link>
+                            </div>
+                        </section>
+                    </div>
                 </div>
 
                 <section className="pf-panel school-inventory" aria-labelledby="inventory-title">
@@ -157,13 +375,6 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
                         <div><dt>RFID cards</dt><dd>{stats.rfid_card_count.toLocaleString()} <span>{stats.active_rfid_card_count.toLocaleString()} active</span></dd></div>
                         <div><dt>Stations</dt><dd>{stats.station_count.toLocaleString()} <span>{stats.active_station_count.toLocaleString()} enabled</span></dd></div>
                     </dl>
-                </section>
-
-                <section className="pf-panel" aria-labelledby="activity-title">
-                    <div className="pf-panel-header"><div><h2 id="activity-title" className="pf-panel-title">Recent activity</h2><p className="pf-panel-count">Latest changes in your school</p></div></div>
-                    {recentActivity.length === 0 ? <p className="school-empty">No activity recorded yet.</p> : <ul className="school-activity-list">
-                        {recentActivity.map((log) => <li key={log.id}><span>{log.action.replace(/[._]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())}</span><time dateTime={log.created_at}>{formatTime(log.created_at)}</time></li>)}
-                    </ul>}
                 </section>
             </div>
         </AdminLayout>

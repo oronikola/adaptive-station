@@ -18,6 +18,7 @@ export default function PlatformLayout({ header, children }: PlatformLayoutProps
         <AppShell
             brandHref={route('platform.dashboard')}
             items={navigationItems}
+            surface="platform"
             header={header}
         >
             {children}

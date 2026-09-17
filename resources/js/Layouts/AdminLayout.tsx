@@ -25,6 +25,7 @@ export default function AdminLayout({ header, children }: AdminLayoutProps) {
         <AppShell
             brandHref={route('portal.dashboard')}
             items={visibleNavigationItems}
+            surface="admin"
             header={header}
         >
             {children}
