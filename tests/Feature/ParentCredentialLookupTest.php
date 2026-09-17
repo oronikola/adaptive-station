@@ -52,9 +52,9 @@ class ParentCredentialLookupTest extends TestCase
     public function test_sending_credentials_queues_an_sms_to_the_phone_on_file(): void
     {
         Event::fake([SmsGatewayWakeUp::class]);
-        $tenant = Tenant::factory()->create();
+        $tenant = Tenant::factory()->create(['name' => 'Holy Cross Of Bunawan']);
         $student = Person::factory()->create(['tenant_id' => $tenant->id]);
-        $parent = ParentAccount::factory()->create(['tenant_id' => $tenant->id, 'phone_number' => '+639101603448', 'password_plaintext' => 'test-parent-password']);
+        $parent = ParentAccount::factory()->create(['tenant_id' => $tenant->id, 'phone_number' => '+639101603448', 'password_plaintext' => 'TestPass1234567!']);
         $parent->studentLinks()->create(['person_id' => $student->id]);
 
         $this->postJson(route('parents.credentials.send', $parent), ['tenant_id' => $tenant->id])
@@ -67,9 +67,29 @@ class ParentCredentialLookupTest extends TestCase
         $this->assertStringContainsString($parent->login_id, $sms->message);
         $this->assertStringContainsString($parent->password_plaintext, $sms->message);
         $this->assertStringContainsString($tenant->name, $sms->message);
-        $this->assertStringContainsString('Requested ', $sms->message);
         $this->assertStringContainsString("Didn't request this? Contact your school.", $sms->message);
+        // Must stay within one SMS segment — a longer, concatenated message
+        // was the actual cause of a real "generic failure" send on a
+        // gateway phone (see the message-length incident this guards).
+        $this->assertLessThanOrEqual(160, strlen($sms->message));
         Event::assertDispatched(SmsGatewayWakeUp::class);
+    }
+
+    /** A school name long enough to otherwise blow past one SMS segment gets trimmed, instead of reintroducing the same multi-part-SMS failure for any school with a longer name. */
+    public function test_a_long_school_name_is_trimmed_to_keep_the_message_within_one_segment(): void
+    {
+        $tenant = Tenant::factory()->create(['name' => 'Northern Mindanao State University Integrated Laboratory High School']);
+        $student = Person::factory()->create(['tenant_id' => $tenant->id]);
+        $parent = ParentAccount::factory()->create(['tenant_id' => $tenant->id, 'phone_number' => '+639101603448', 'password_plaintext' => 'TestPass1234567!']);
+        $parent->studentLinks()->create(['person_id' => $student->id]);
+
+        $this->postJson(route('parents.credentials.send', $parent), ['tenant_id' => $tenant->id])->assertOk();
+
+        $sms = SmsOutboxMessage::query()->where('parent_account_id', $parent->id)->sole();
+        $this->assertLessThanOrEqual(160, strlen($sms->message));
+        $this->assertStringContainsString('...', $sms->message);
+        $this->assertStringContainsString($parent->login_id, $sms->message);
+        $this->assertStringContainsString($parent->password_plaintext, $sms->message);
     }
 
     public function test_a_second_send_within_five_minutes_is_treated_as_the_same_request(): void
@@ -96,6 +116,30 @@ class ParentCredentialLookupTest extends TestCase
         $this->postJson(route('parents.credentials.send', $noLinks), ['tenant_id' => $tenant->id])->assertStatus(422);
 
         $this->assertSame(0, SmsOutboxMessage::query()->count());
+    }
+
+    public function test_a_fourth_send_in_one_day_is_rate_limited(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $student = Person::factory()->create(['tenant_id' => $tenant->id]);
+        $parent = ParentAccount::factory()->create(['tenant_id' => $tenant->id, 'phone_number' => '+639101603448']);
+        $parent->studentLinks()->create(['person_id' => $student->id]);
+
+        // Each send travels past the 5-minute "already requested" dedup
+        // window so it counts as a genuinely new request against the daily
+        // cap, not a replay of the previous one.
+        for ($i = 0; $i < 3; $i++) {
+            $this->travel(6)->minutes();
+            $this->postJson(route('parents.credentials.send', $parent), ['tenant_id' => $tenant->id])
+                ->assertOk()->assertJsonPath('status', 'queued');
+        }
+
+        $this->travel(6)->minutes();
+        $this->postJson(route('parents.credentials.send', $parent), ['tenant_id' => $tenant->id])
+            ->assertStatus(429)
+            ->assertJsonPath('status', 'rate_limited');
+
+        $this->assertSame(3, SmsOutboxMessage::query()->where('parent_account_id', $parent->id)->count());
     }
 
     public function test_a_parent_cannot_be_sent_credentials_under_a_different_school(): void

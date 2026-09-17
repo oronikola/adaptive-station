@@ -12,6 +12,7 @@ use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -105,6 +106,21 @@ class ParentCredentialLookupController extends Controller
             return response()->json(['status' => 'already_requested', 'masked_phone' => $this->maskPhone($account->phone_number)]);
         }
 
+        // Capped per account, not per IP: the scarce resource an attacker
+        // could abuse here is a specific parent's phone (and the school's
+        // SMS budget), and every attempt still has to name a real account —
+        // rotating IPs doesn't get around this the way it would a per-IP cap.
+        $dailyLimitKey = "parent-credentials-send:{$account->id}";
+
+        if (RateLimiter::tooManyAttempts($dailyLimitKey, 3)) {
+            return response()->json([
+                'status' => 'rate_limited',
+                'message' => 'Daily limit reached for this account. Please contact your school directly.',
+            ], 429);
+        }
+
+        RateLimiter::hit($dailyLimitKey, 86400);
+
         SmsOutboxMessage::create([
             'tenant_id' => $account->tenant_id,
             'person_id' => $personId,
@@ -120,19 +136,40 @@ class ParentCredentialLookupController extends Controller
         return response()->json(['status' => 'queued', 'masked_phone' => $this->maskPhone($account->phone_number)]);
     }
 
+    /**
+     * Kept to a single 160-character SMS segment on purpose — a longer,
+     * concatenated (multi-part) message was the actual cause of "generic
+     * failure" sends on at least one gateway phone, since not every
+     * device/carrier combination sends multi-part SMS reliably. No
+     * timestamp line: it was the easiest line to drop to stay under that
+     * limit, and this text isn't time-sensitive attendance data.
+     *
+     * The school name is the only field here with no fixed shape — unlike
+     * login_id/password, which are generated to a predictable length — so
+     * it's the one trimmed if a long name would otherwise push the whole
+     * message over the limit again.
+     */
     private function formatCredentialsSmsMessage(ParentAccount $account): string
     {
-        $requestedAt = Date::now()->setTimezone($account->tenant->timezone);
-
-        return implode("\n", [
+        $schoolName = $account->tenant->name;
+        $lines = [
             'Adaptive Station',
-            $account->tenant->name,
+            $schoolName,
             'Your parent portal login:',
             "Login ID: {$account->login_id}",
             "Password: {$account->password_plaintext}",
-            'Requested '.$requestedAt->format('M j, Y g:i A'),
             "Didn't request this? Contact your school.",
-        ]);
+        ];
+
+        $overBy = strlen(implode("\n", $lines)) - 160;
+
+        if ($overBy > 0) {
+            // "..." itself costs 3 of the bytes being reclaimed, so it's
+            // included in what's trimmed off the name, not added on top.
+            $lines[1] = substr($schoolName, 0, max(0, strlen($schoolName) - $overBy - 3)).'...';
+        }
+
+        return implode("\n", $lines);
     }
 
     private function maskPhone(?string $phone): string
