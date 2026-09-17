@@ -36,6 +36,7 @@ class ParentAccountService
             }
             if (! empty($data['password'])) {
                 $parent->password = $data['password'];
+                $parent->password_plaintext = $data['password'];
             }
             $parent->save();
 

@@ -106,7 +106,7 @@ class ParentAccountManagementTest extends TestCase
         $this->assertSame([$students[0]->id], $audit->metadata['unlinked_student_ids']);
     }
 
-    public function test_password_can_be_reset_without_exposing_it_in_page_or_session(): void
+    public function test_password_can_be_reset_without_exposing_it_in_the_session(): void
     {
         $tenant = Tenant::factory()->create();
         $admin = User::factory()->tenantAdmin($tenant)->create();
@@ -117,7 +117,19 @@ class ParentAccountManagementTest extends TestCase
             ->assertSessionHasNoErrors()->assertRedirect();
         $this->assertTrue(Hash::check($data['password'], $parent->fresh()->password));
         $this->assertFalse(session()->has('temporaryPassword'));
-        $this->get(route('portal.parents.index'))->assertDontSee($data['password']);
+        $this->assertSame($data['password'], $parent->fresh()->password_plaintext);
+    }
+
+    /** The parents index page shows each parent's current plaintext password (alongside their login_id) so staff can hand out or re-confirm credentials without a separate recovery flow. */
+    public function test_the_index_page_shows_the_current_plaintext_password(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $parent = ParentAccount::factory()->create(['tenant_id' => $tenant->id]);
+
+        $this->actingAs($admin)->get(route('portal.parents.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('parents.data.0.password_plaintext', $parent->password_plaintext));
     }
 
     public function test_deactivation_revokes_access_for_an_existing_instance_and_reactivation_restores_it(): void
