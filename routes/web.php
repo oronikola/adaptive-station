@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\KioskController;
+use App\Http\Controllers\ParentCredentialLookupController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WebNotificationController;
 use Illuminate\Support\Facades\Route;
@@ -9,6 +10,16 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('Landing/LandingPage');
 })->name('home');
+
+// Public and unauthenticated by design (a parent hasn't logged in yet —
+// that's the whole point) — every action is rate-limited since, unlike the
+// rest of the app, nothing here requires a session to slow an abuser down.
+Route::prefix('parents/credentials')->name('parents.credentials.')->group(function () {
+    Route::get('/', [ParentCredentialLookupController::class, 'index'])->name('index');
+    Route::get('/schools', [ParentCredentialLookupController::class, 'schools'])->middleware('throttle:30,1')->name('schools');
+    Route::get('/search', [ParentCredentialLookupController::class, 'search'])->middleware('throttle:20,1')->name('search');
+    Route::post('/{parent}/send', [ParentCredentialLookupController::class, 'send'])->middleware('throttle:5,1')->name('send');
+});
 
 Route::get('/landing', function () {
     return Inertia::render('Landing/LandingPage');

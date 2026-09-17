@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from '@inertiajs/react';
+import { IdCardIcon } from '@/Components/icons/id-card';
 import { MenuIcon } from '@/Components/icons/menu';
 import { MoonIcon } from '@/Components/icons/moon';
 import { SunIcon } from '@/Components/icons/sun';
@@ -19,6 +20,7 @@ interface FloatingHeaderProps {
     ctaLabel: string;
     theme: LandingTheme;
     onToggleTheme: () => void;
+    parentCredentialsHref: string;
 }
 
 export default function FloatingHeader({
@@ -28,6 +30,7 @@ export default function FloatingHeader({
     ctaLabel,
     theme,
     onToggleTheme,
+    parentCredentialsHref,
 }: FloatingHeaderProps) {
     const isLight = theme === 'light';
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -137,6 +140,18 @@ export default function FloatingHeader({
                         ))}
                     </nav>
 
+                    <Link
+                        href={parentCredentialsHref}
+                        className={`pressable hover-lift ml-1 hidden h-11 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-sm font-semibold lg:inline-flex focus:outline-none focus-visible:ring-2 ${
+                            isLight
+                                ? 'text-station-navy/70 hover:bg-station-navy/5 hover:text-station-navy focus-visible:ring-royal'
+                                : 'text-white/75 hover:bg-white/10 hover:text-white focus-visible:ring-white/60'
+                        }`}
+                    >
+                        <IdCardIcon size={16} />
+                        Parent credentials
+                    </Link>
+
                     <button
                         type="button"
                         onClick={onToggleTheme}
@@ -235,12 +250,32 @@ export default function FloatingHeader({
                                     </a>
                                 ))}
                             </nav>
+                            <Link
+                                href={parentCredentialsHref}
+                                onClick={() => setIsMenuOpen(false)}
+                                style={{
+                                    transitionDelay: isMenuOpen
+                                        ? `${80 + navItems.length * 60}ms`
+                                        : '0ms',
+                                }}
+                                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-[transform,background-color,color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none ${
+                                    isLight
+                                        ? 'text-station-navy/80 hover:bg-station-navy/5 hover:text-station-navy'
+                                        : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                } ${
+                                    isMenuOpen
+                                        ? 'opacity-100'
+                                        : '-translate-y-1 opacity-0'
+                                }`}
+                            >
+                                Parent credentials
+                            </Link>
                             <button
                                 type="button"
                                 onClick={onToggleTheme}
                                 style={{
                                     transitionDelay: isMenuOpen
-                                        ? `${80 + navItems.length * 60}ms`
+                                        ? `${80 + (navItems.length + 1) * 60}ms`
                                         : '0ms',
                                 }}
                                 className={`pressable mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold ${
@@ -256,7 +291,7 @@ export default function FloatingHeader({
                                 href={ctaHref}
                                 style={{
                                     transitionDelay: isMenuOpen
-                                        ? `${80 + (navItems.length + 1) * 60}ms`
+                                        ? `${80 + (navItems.length + 2) * 60}ms`
                                         : '0ms',
                                 }}
                                 className={`pressable mt-2 flex h-11 items-center justify-center rounded-full px-5 text-sm font-bold transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${

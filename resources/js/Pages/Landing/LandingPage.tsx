@@ -1222,6 +1222,7 @@ export default function LandingPage({ auth }: LandingPageProps) {
                 navItems={primaryNavItems}
                 ctaHref={workspaceHref}
                 ctaLabel={workspaceLabel}
+                parentCredentialsHref={route('parents.credentials.index')}
             />
 
             <main id="main-content">
@@ -1340,6 +1341,12 @@ export default function LandingPage({ auth }: LandingPageProps) {
                                 >
                                     FAQ
                                 </a>
+                                <Link
+                                    href={route('parents.credentials.index')}
+                                    className="transition-colors hover:text-royal focus:outline-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-royal"
+                                >
+                                    Parent credentials
+                                </Link>
                             </div>
                             <Link
                                 href={workspaceHref}
