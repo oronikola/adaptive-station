@@ -66,7 +66,7 @@ export default function StationDetailScreen({
             return;
         }
 
-        router.patch(route('portal.stations.configuration', station.id), {
+        router.patch(route('portal.stations.configuration', station.station_code), {
             configuration: parsed as unknown as string,
         });
     }
@@ -85,7 +85,7 @@ export default function StationDetailScreen({
 
     function submitIssueCredential(e: React.FormEvent) {
         e.preventDefault();
-        credentialForm.post(route('portal.stations.credentials.store', station.id), {
+        credentialForm.post(route('portal.stations.credentials.store', station.station_code), {
             onSuccess: () => {
                 setIssueCredentialOpen(false);
                 credentialForm.reset();
@@ -97,7 +97,7 @@ export default function StationDetailScreen({
         if (confirm('Revoke this credential? The kiosk using it will lose access immediately.')) {
             router.patch(
                 route('portal.stations.credentials.revoke', [
-                    station.id,
+                    station.station_code,
                     credentialId,
                 ] as unknown as Record<string, unknown>),
             );
@@ -106,7 +106,7 @@ export default function StationDetailScreen({
 
     function resetLink() {
         setIsResettingLink(true);
-        router.post(route('portal.stations.pairing-link', station.id), {}, {
+        router.post(route('portal.stations.pairing-link', station.station_code), {}, {
             onFinish: () => setIsResettingLink(false),
         });
     }

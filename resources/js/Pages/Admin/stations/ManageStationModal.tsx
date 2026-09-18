@@ -79,7 +79,7 @@ export default function ManageStationModal({
         setIssuedDeviceToken(null);
 
         axios
-            .get(route('portal.stations.show', station.id), {
+            .get(route('portal.stations.show', station.station_code), {
                 headers: { Accept: 'application/json' },
             })
             .then((res) => {
@@ -136,7 +136,7 @@ export default function ManageStationModal({
         setIsSavingConfig(true);
         try {
             const res = await axios.patch(
-                route('portal.stations.configuration', currentStation.id),
+                route('portal.stations.configuration', currentStation.station_code),
                 { configuration: parsed },
                 { headers: { Accept: 'application/json' } },
             );
@@ -178,7 +178,7 @@ export default function ManageStationModal({
         setIsIssuingCredential(true);
         try {
             const res = await axios.post(
-                route('portal.stations.credentials.store', currentStation.id),
+                route('portal.stations.credentials.store', currentStation.station_code),
                 { label: credentialLabel.trim() || null },
                 { headers: { Accept: 'application/json' } },
             );
@@ -220,7 +220,7 @@ export default function ManageStationModal({
         setRevokingId(credentialId);
         try {
             const res = await axios.patch(
-                route('portal.stations.credentials.revoke', [currentStation.id, credentialId]),
+                route('portal.stations.credentials.revoke', [currentStation.station_code, credentialId]),
                 {},
                 { headers: { Accept: 'application/json' } },
             );
@@ -495,7 +495,7 @@ export default function ManageStationModal({
                                     <span className="text-slate-500 dark:text-slate-400">Dedicated Detail Page:</span>
                                     <p className="mt-0.5">
                                         <Link
-                                            href={route('portal.stations.show', currentStation.id)}
+                                            href={route('portal.stations.show', currentStation.station_code)}
                                             className="font-semibold text-blue-600 hover:text-blue-500 hover:underline dark:text-blue-400"
                                         >
                                             View Full Screen Details &rarr;

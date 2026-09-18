@@ -61,7 +61,7 @@ export default function IssueActivationCodeModal({
 
         try {
             const res = await axios.post(
-                route('portal.stations.activation-code', station.id),
+                route('portal.stations.activation-code', station.station_code),
                 {},
                 { headers: { Accept: 'application/json' } },
             );
