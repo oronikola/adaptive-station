@@ -226,13 +226,13 @@ export default function StationsListScreen({
     }
 
     const [deletingStation, setDeletingStation] = useState<StationRow | null>(null);
-    const deleteForm = useForm({ confirm_code: '', tenant_id: '' });
+    const deleteForm = useForm({ confirm_code: '', tenant_id: '', purge_attendance: false });
     const deleteConfirmed =
         deletingStation !== null && deleteForm.data.confirm_code.trim() === deletingStation.station_code;
 
     function openDeleteModal(station: StationRow) {
         setDeletingStation(station);
-        deleteForm.setData({ confirm_code: '', tenant_id: String(station.tenant_id) });
+        deleteForm.setData({ confirm_code: '', tenant_id: String(station.tenant_id), purge_attendance: false });
     }
 
     function submitDeleteStation(e: React.FormEvent) {
@@ -754,9 +754,26 @@ export default function StationsListScreen({
                         <h2 className="pf-modal-title">Delete station?</h2>
                         <p className="pf-modal-desc">
                             <strong>{deletingStation?.name}</strong> will be permanently deleted, along with its
-                            device credentials and station link. Stations with attendance history can't be deleted —
-                            use Retire instead to keep their history while taking them out of service.
+                            device credentials and station link. Stations with attendance history can't be deleted
+                            unless you also purge that attendance data below — use Retire instead if you want to keep
+                            the history while taking the station out of service.
                         </p>
+                    </div>
+
+                    <div className="pf-field">
+                        <label className="flex items-start gap-2 text-sm font-normal">
+                            <input
+                                type="checkbox"
+                                className="mt-0.5"
+                                checked={deleteForm.data.purge_attendance}
+                                onChange={(e) => deleteForm.setData('purge_attendance', e.target.checked)}
+                            />
+                            <span>
+                                This is a test station — also delete its attendance (tap) records from our
+                                database. This only affects our own database, nothing is sent to Essentiel, and it
+                                cannot be undone.
+                            </span>
+                        </label>
                     </div>
 
                     <div className="pf-field">

@@ -343,6 +343,7 @@ class StationController extends Controller
         $data = $request->validate([
             'tenant_id' => ['required', 'uuid'],
             'confirm_code' => ['required', 'string'],
+            'purge_attendance' => ['nullable', 'boolean'],
         ]);
         TenantDatabase::use(Tenant::findOrFail($data['tenant_id']));
 
@@ -355,7 +356,7 @@ class StationController extends Controller
             }
         })->validate();
 
-        Station::remove($station, $request->user());
+        Station::remove($station, $request->user(), (bool) ($data['purge_attendance'] ?? false));
 
         return redirect()->route('platform.stations.index', ['tenant_id' => $data['tenant_id']])
             ->with('success', "Station \"{$station->name}\" deleted.");

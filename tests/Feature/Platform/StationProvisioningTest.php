@@ -181,10 +181,39 @@ class StationProvisioningTest extends TestCase
             'tenant_id' => $tenant->id,
             'confirm_code' => 'DEL-03',
         ])->assertSessionHasErrors([
-            'confirm_code' => 'This station has recorded attendance taps and cannot be deleted. Its history must be preserved.',
+            'confirm_code' => 'This station has recorded attendance taps and cannot be deleted. Its history must be preserved, or confirm purging its attendance data.',
         ]);
 
         $this->assertNotNull(Station::allTenants()->find($station->id));
+    }
+
+    /**
+     * The escape hatch for deleting a test station that picked up real
+     * tap_events during setup/QA — purge_attendance explicitly opts into
+     * wiping those rows from this tenant's own database alongside the
+     * station. Purely local; there is no delete-sync to Essentiel to worry
+     * about (see Station::remove()'s docblock).
+     */
+    public function test_a_station_with_tap_activity_can_be_deleted_when_purging_attendance_is_confirmed(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create(['station_code' => 'DEL-05']);
+        TapEvent::factory()->for($tenant)->for($station)->create();
+
+        $response = $this->actingAs($platformAdmin)->delete(route('platform.stations.destroy', $station->id), [
+            'tenant_id' => $tenant->id,
+            'confirm_code' => 'DEL-05',
+            'purge_attendance' => true,
+        ]);
+
+        $response->assertRedirect(route('platform.stations.index', ['tenant_id' => $tenant->id]));
+        $this->assertNull(Station::allTenants()->find($station->id));
+        $this->assertSame(0, TapEvent::allTenants()->where('station_id', $station->id)->count());
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'station.deleted',
+            'entity_id' => $station->id,
+        ]);
     }
 
     /**

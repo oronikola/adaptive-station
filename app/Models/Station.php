@@ -233,19 +233,32 @@ class Station extends Model implements TenantScoped
      * happens first (its own statement, not part of the transaction below —
      * a different physical database can't share one), then the central-DB
      * cleanup + audit log commit together.
+     *
+     * $purgeAttendance is an explicit escape hatch for deleting a test
+     * station that accumulated real tap_events during setup/QA — it wipes
+     * those rows from this tenant's own database only. It never touches
+     * Essentiel: tap events only ever get pushed out to Essentiel
+     * (PushTapEventToEssentielJob, fire-and-forget on creation), there is no
+     * delete-sync back to it, so purging local rows cannot desync anything
+     * there.
      */
-    public static function remove(self $station, ?User $actor = null): void
+    public static function remove(self $station, ?User $actor = null, bool $purgeAttendance = false): void
     {
         $tenantId = $station->tenant_id;
         $stationId = $station->id;
         $snapshot = ['id' => $stationId, 'name' => $station->name, 'station_code' => $station->station_code];
 
-        $hasAttendanceHistory = TapEvent::allTenants()->where('station_id', $stationId)->exists();
+        $tapEventCount = TapEvent::allTenants()->where('station_id', $stationId)->count();
 
-        if ($hasAttendanceHistory) {
+        if ($tapEventCount > 0 && ! $purgeAttendance) {
             throw ValidationException::withMessages([
-                'confirm_code' => 'This station has recorded attendance taps and cannot be deleted. Its history must be preserved.',
+                'confirm_code' => 'This station has recorded attendance taps and cannot be deleted. Its history must be preserved, or confirm purging its attendance data.',
             ]);
+        }
+
+        if ($tapEventCount > 0) {
+            TapEvent::allTenants()->where('station_id', $stationId)->delete();
+            $snapshot['purged_tap_event_count'] = $tapEventCount;
         }
 
         DeviceHeartbeat::allTenants()->where('station_id', $stationId)->delete();
