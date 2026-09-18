@@ -155,6 +155,70 @@ class StationManagementTest extends TestCase
         $this->assertSame('Old Name', $station->fresh()->name);
     }
 
+    public function test_platform_super_admin_can_edit_a_stations_code(): void
+    {
+        $superAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create(['station_code' => 'GATE-01', 'status' => StationStatus::Active]);
+
+        $this->actingAs($superAdmin)->patch(route('platform.stations.update-code', $station->id), [
+            'tenant_id' => $tenant->id,
+            'station_code' => 'main-gate-01',
+        ])->assertRedirect(route('platform.stations.show', ['station' => $station->id, 'tenant_id' => $tenant->id]));
+
+        $this->assertSame('main-gate-01', $station->fresh()->station_code);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'station.code_updated',
+            'entity_id' => $station->id,
+        ]);
+    }
+
+    public function test_editing_a_stations_code_requires_a_value(): void
+    {
+        $superAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create(['station_code' => 'GATE-01', 'status' => StationStatus::Active]);
+
+        $this->actingAs($superAdmin)->patch(route('platform.stations.update-code', $station->id), [
+            'tenant_id' => $tenant->id,
+            'station_code' => '',
+        ])->assertSessionHasErrors('station_code');
+
+        $this->assertSame('GATE-01', $station->fresh()->station_code);
+    }
+
+    public function test_a_stations_code_must_stay_unique_within_its_tenant(): void
+    {
+        $superAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create();
+        $stationA = Station::factory()->for($tenant)->create(['station_code' => 'GATE-01', 'status' => StationStatus::Active]);
+        $stationB = Station::factory()->for($tenant)->create(['station_code' => 'GATE-02', 'status' => StationStatus::Active]);
+
+        $this->actingAs($superAdmin)->patch(route('platform.stations.update-code', $stationB->id), [
+            'tenant_id' => $tenant->id,
+            'station_code' => 'GATE-01',
+        ])->assertSessionHasErrors('station_code');
+
+        $this->assertSame('GATE-02', $stationB->fresh()->station_code);
+        $this->assertNotNull($stationA->fresh());
+    }
+
+    public function test_the_same_station_code_is_allowed_across_two_different_tenants_when_editing(): void
+    {
+        $superAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenantA = Tenant::factory()->create();
+        $tenantB = Tenant::factory()->create();
+        Station::factory()->for($tenantA)->create(['station_code' => 'SHARED-01']);
+        $stationB = Station::factory()->for($tenantB)->create(['station_code' => 'GATE-02']);
+
+        $this->actingAs($superAdmin)->patch(route('platform.stations.update-code', $stationB->id), [
+            'tenant_id' => $tenantB->id,
+            'station_code' => 'SHARED-01',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('SHARED-01', $stationB->fresh()->station_code);
+    }
+
     public function test_platform_super_admin_can_issue_and_revoke_credentials(): void
     {
         $superAdmin = User::factory()->platformSuperAdmin()->create();

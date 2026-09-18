@@ -166,6 +166,37 @@ class Station extends Model implements TenantScoped
     }
 
     /**
+     * Changes a station's code — a platform-only correction tool for fixing
+     * a typo/duplicate made at provisioning time, deliberately separate from
+     * rename() above (which still refuses to touch station_code) since this
+     * one is meant to be reached for rarely and with more friction. Safe to
+     * change post-pairing: a kiosk authenticates via its StationCredential
+     * bearer token, never by station_code (see AuthenticateStation), and no
+     * device API route resolves a station by it — it is purely a
+     * human-facing label plus this app's own tenant-scoped portal route key.
+     * Uniqueness (per tenant) is the caller's responsibility to validate
+     * before calling this, same as provision()'s station_code.
+     */
+    public static function updateCode(self $station, string $stationCode, ?User $actor = null): self
+    {
+        return DB::transaction(function () use ($station, $stationCode, $actor) {
+            $previousCode = $station->station_code;
+            $station->forceFill(['station_code' => $stationCode])->save();
+
+            MasterDataChange::record(
+                $station->tenant_id, MasterDataEntityType::StationConfig, $station->id,
+                MasterDataOperation::Upsert, ['id' => $station->id, 'station_code' => $stationCode],
+            );
+            AuditLog::record('station.code_updated', $actor, $station->tenant_id, 'station', $station->id, [
+                'previous_station_code' => $previousCode,
+                'new_station_code' => $stationCode,
+            ]);
+
+            return $station;
+        });
+    }
+
+    /**
      * Retires a station that can't be deleted outright (it has recorded
      * attendance — see remove() below) — the non-destructive alternative:
      * hides it from active use while preserving every tap_event, credential

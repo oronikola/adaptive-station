@@ -92,6 +92,18 @@ export default function StationDetailScreen({
         });
     }
 
+    const [editCodeOpen, setEditCodeOpen] = useState(false);
+    const editCodeForm = useForm({ station_code: station.station_code });
+
+    function submitEditCode(e: React.FormEvent) {
+        e.preventDefault();
+        editCodeForm.transform((data) => ({ ...data, tenant_id: tenant.id }));
+        editCodeForm.patch(route('platform.stations.update-code', station.id), {
+            preserveScroll: true,
+            onSuccess: () => setEditCodeOpen(false),
+        });
+    }
+
     const configForm = useForm({
         configuration: JSON.stringify(station.configuration ?? {}, null, 2),
     });
@@ -228,8 +240,18 @@ export default function StationDetailScreen({
                             >
                                 <PencilIcon size={16} />
                             </button>
-                            <span className="font-mono text-xs px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md border border-slate-200 dark:border-slate-700">
-                                {station.station_code}
+                            <span className="inline-flex items-center gap-1">
+                                <span className="font-mono text-xs px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md border border-slate-200 dark:border-slate-700">
+                                    {station.station_code}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => { editCodeForm.setData('station_code', station.station_code); setEditCodeOpen(true); }}
+                                    className="inline-flex h-6 w-6 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                    aria-label={`Edit code for ${station.name}`}
+                                >
+                                    <PencilIcon size={13} />
+                                </button>
                             </span>
                             <StatusBadge
                                 color={
@@ -560,6 +582,56 @@ export default function StationDetailScreen({
                         </SecondaryButton>
                         <PrimaryButton disabled={renameForm.processing}>
                             {renameForm.processing ? 'Saving...' : 'Save Name'}
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Modal for Editing the Station Code */}
+            <Modal show={editCodeOpen} onClose={() => setEditCodeOpen(false)}>
+                <form onSubmit={submitEditCode} className="pf-modal">
+                    <div className="pf-modal-header">
+                        <div className="pf-modal-hero">
+                            <span className="pf-modal-hero-icon pf-modal-hero-icon--amber" aria-hidden="true">
+                                <PencilIcon size={20} />
+                            </span>
+                            <div className="pf-modal-hero-text">
+                                <h3 className="pf-modal-title">Edit Station Code</h3>
+                                <p className="pf-modal-subtitle">
+                                    Safe to change even after the kiosk is paired — the device authenticates with its
+                                    own credential token, not this code. Must stay unique within this school.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            className="pf-modal-close"
+                            onClick={() => setEditCodeOpen(false)}
+                            aria-label="Close"
+                        >
+                            <XIcon size={20} />
+                        </button>
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="station-code" value="Station Code" />
+                        <TextInput
+                            id="station-code"
+                            value={editCodeForm.data.station_code}
+                            onChange={(e) => editCodeForm.setData('station_code', e.target.value)}
+                            className="mt-1 block w-full font-mono"
+                            placeholder="e.g. main-gate-01"
+                            isFocused
+                        />
+                        <InputError message={editCodeForm.errors.station_code} className="mt-2" />
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <SecondaryButton type="button" onClick={() => setEditCodeOpen(false)}>
+                            Cancel
+                        </SecondaryButton>
+                        <PrimaryButton disabled={editCodeForm.processing}>
+                            {editCodeForm.processing ? 'Saving...' : 'Save Code'}
                         </PrimaryButton>
                     </div>
                 </form>

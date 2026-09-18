@@ -17,6 +17,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -222,6 +223,27 @@ class StationController extends Controller
 
         return redirect()->route('platform.stations.show', ['station' => $stationModel->id, 'tenant_id' => $tenant->id])
             ->with('success', 'Station renamed.');
+    }
+
+    public function updateCode(Request $request, string $station): RedirectResponse
+    {
+        [$stationModel, $tenant] = $this->resolveStation($station, $request->input('tenant_id'));
+
+        Gate::authorize('update', $stationModel);
+
+        $data = $request->validate([
+            'station_code' => [
+                'required', 'string', 'max:50',
+                Rule::unique('tenant.stations', 'station_code')
+                    ->where('tenant_id', $tenant->id)
+                    ->ignore($stationModel->id),
+            ],
+        ]);
+
+        Station::updateCode($stationModel, $data['station_code'], $request->user());
+
+        return redirect()->route('platform.stations.show', ['station' => $stationModel->id, 'tenant_id' => $tenant->id])
+            ->with('success', 'Station code updated.');
     }
 
     public function issueCredential(Request $request, string $station): RedirectResponse
