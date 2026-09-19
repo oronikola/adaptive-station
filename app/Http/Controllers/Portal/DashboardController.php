@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Enums\SmsOutboxStatus;
 use App\Enums\StationStatus;
 use App\Http\Controllers\Controller;
+use App\Models\AttendanceException;
 use App\Models\AuditLog;
 use App\Models\Person;
 use App\Models\RfidCard;
@@ -76,6 +77,8 @@ class DashboardController extends Controller
                 'taps_today' => $weeklyAttendance->last()['total'],
                 'people_today' => $weeklyAttendance->last()['unique_people'],
                 'sms_failures' => $smsFailures,
+                'open_attendance_exception_count' => AttendanceException::query()->where('status', 'open')->count(),
+                'pending_station_event_count' => (int) (clone $enabledStations)->sum('last_pending_count'),
             ],
             'stationHealth' => [
                 'threshold_minutes' => $thresholdMinutes,

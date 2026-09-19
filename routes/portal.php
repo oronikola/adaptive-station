@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Portal\AttendanceController;
+use App\Http\Controllers\Portal\AttendanceOperationsController;
 use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\ImportBatchController;
 use App\Http\Controllers\Portal\ImportExceptionController;
@@ -51,6 +52,10 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
             ->name('stations.pairing-link');
 
         Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('attendance/operations', [AttendanceOperationsController::class, 'index'])->name('attendance.operations.index');
+        Route::post('attendance/calendar-days', [AttendanceOperationsController::class, 'storeCalendarDay'])->name('attendance.calendar-days.store');
+        Route::post('attendance/exceptions', [AttendanceOperationsController::class, 'storeException'])->name('attendance.exceptions.store');
+        Route::patch('attendance/exceptions/{exception}/resolve', [AttendanceOperationsController::class, 'resolveException'])->name('attendance.exceptions.resolve');
         Route::get('attendance/people-search', [AttendanceController::class, 'peopleSearch'])->name('attendance.people-search');
         Route::get('attendance/summary', [AttendanceController::class, 'summary'])->name('attendance.summary');
         Route::get('attendance/students/{person}', [AttendanceController::class, 'studentSummary'])->name('attendance.students.show');

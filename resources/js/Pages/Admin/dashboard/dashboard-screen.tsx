@@ -36,6 +36,8 @@ interface DashboardScreenProps {
         taps_today: number;
         people_today: number;
         sms_failures: number | null;
+        open_attendance_exception_count: number;
+        pending_station_event_count: number;
     };
     stationHealth: {
         threshold_minutes: number;
@@ -203,7 +205,7 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
     const peopleHref = route('portal.people.index');
     const weekTotal = weeklyAttendance.reduce((sum, day) => sum + day.total, 0);
     const weekPeople = weeklyAttendance.reduce((sum, day) => sum + day.unique_people, 0);
-    const attentionCount = stats.offline_station_count + (stats.sms_failures ?? 0);
+    const attentionCount = stats.offline_station_count + (stats.sms_failures ?? 0) + stats.open_attendance_exception_count + stats.pending_station_event_count;
     const formatTime = (value: string) => new Date(value).toLocaleString(undefined, {
         timeZone: timezone, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
     });
@@ -304,6 +306,14 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
                     {stats.sms_failures !== null && stats.sms_failures > 0 && <div className="school-alert-row">
                         <div><strong>{stats.sms_failures} failed SMS message{stats.sms_failures === 1 ? '' : 's'}</strong><p>Review delivery errors and resend eligible messages.</p></div>
                         <Link href={route('portal.sms-log.index', { status: 'failed' })} className="pf-btn pf-btn-secondary">Review failed SMS</Link>
+                    </div>}
+                    {stats.pending_station_event_count > 0 && <div className="school-alert-row">
+                        <div><strong>{stats.pending_station_event_count} tap{stats.pending_station_event_count === 1 ? '' : 's'} waiting to sync</strong><p>These taps are safely stored on kiosks. Review the affected station and its connection.</p></div>
+                        <Link href={stationsHref} className="pf-btn pf-btn-secondary">Review station sync</Link>
+                    </div>}
+                    {stats.open_attendance_exception_count > 0 && <div className="school-alert-row">
+                        <div><strong>{stats.open_attendance_exception_count} attendance exception{stats.open_attendance_exception_count === 1 ? '' : 's'} open</strong><p>Resolve verified absences, late arrivals, or missing exit records.</p></div>
+                        <Link href={route('portal.attendance.operations.index')} className="pf-btn pf-btn-secondary">Review exceptions</Link>
                     </div>}
                     {stats.station_count === 0 && <p className="school-empty">No stations have been added to this school yet.</p>}
                 </section>

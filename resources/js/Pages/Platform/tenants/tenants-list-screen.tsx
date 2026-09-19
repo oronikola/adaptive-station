@@ -529,17 +529,17 @@ export default function TenantsListScreen({ tenants, filters }: TenantsListScree
 
                                 <div className="pf-field">
                                     <label htmlFor="timezone">Timezone</label>
-                                    <select
+                                    <PremiumSelect
                                         id="timezone"
                                         value={data.timezone}
-                                        onChange={(e) => setData('timezone', e.target.value)}
+                                        onChange={(timezone) => setData('timezone', timezone)}
+                                        options={TIMEZONES.map((timezone) => ({
+                                            value: timezone,
+                                            label: timezone,
+                                        }))}
+                                        invalid={Boolean(errors.timezone)}
                                         className="font-mono"
-                                        required
-                                    >
-                                        {TIMEZONES.map((tz) => (
-                                            <option key={tz} value={tz}>{tz}</option>
-                                        ))}
-                                    </select>
+                                    />
                                     <p className="pf-field-hint">Select the school's local timezone (IANA name).</p>
                                     <InputError message={errors.timezone} className="mt-2" />
                                 </div>

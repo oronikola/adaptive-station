@@ -1,5 +1,6 @@
 import { BellIcon } from '@/Components/icons/bell';
 import { CalendarCheckIcon } from '@/Components/icons/calendar-check';
+import { CalendarDaysIcon } from '@/Components/icons/calendar-days';
 import { ConnectIcon } from '@/Components/icons/connect';
 import { CreditCardIcon } from '@/Components/icons/credit-card';
 import { DownloadIcon } from '@/Components/icons/download';
@@ -55,8 +56,15 @@ export const adminNavigationItems: NavItem[] = [
         name: 'attendance',
         label: 'Attendance',
         route: 'portal.attendance.index',
-        activePattern: 'portal.attendance.*',
+        activePattern: 'portal.attendance.index',
         icon: <CalendarCheckIcon {...icon} />,
+    },
+    {
+        name: 'attendance-operations',
+        label: 'Attendance Operations',
+        route: 'portal.attendance.operations.index',
+        activePattern: 'portal.attendance.operations.*',
+        icon: <CalendarDaysIcon {...icon} />,
     },
     {
         name: 'parents',

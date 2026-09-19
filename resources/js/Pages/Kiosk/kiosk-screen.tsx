@@ -171,6 +171,17 @@ export default function KioskScreen({
         return () => clearInterval(clockInterval);
     }, []);
 
+    // Cache the kiosk shell and its built assets after the first successful
+    // load. Tap data itself remains in IndexedDB; this only lets an already
+    // provisioned browser reopen its kiosk UI during a network outage.
+    useEffect(() => {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/kiosk-service-worker.js').catch(() => {
+                // Offline capture remains available without a service worker.
+            });
+        }
+    }, []);
+
     // ── Boot: opening a station's pairing link is a deliberate action to
     // bind *this* device to *that* station, so it always takes priority over
     // whatever credential this browser happened to have cached already —
