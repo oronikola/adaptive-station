@@ -128,7 +128,7 @@ export interface ResolveTapResponse {
     reason?: string | null;
     person_id?: string | null;
     person?: ResolveTapPerson | null;
-    tapstate?: string | null;
+    tapstate?: string | number | null;
 }
 
 /**

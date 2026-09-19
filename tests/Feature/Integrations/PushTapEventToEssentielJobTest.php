@@ -96,6 +96,21 @@ class PushTapEventToEssentielJobTest extends TestCase
         $this->assertStringContainsString('IVAN MASTER', $sms->message);
     }
 
+    public function test_a_numeric_essentiel_out_tapstate_creates_a_tapped_out_sms(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $person = Person::factory()->for($tenant)->create();
+        $event = $this->seedTapEvent($tenant, $person);
+        $this->makeProfile($tenant, $admin);
+        $this->fakeRecordResponse(['tap' => ['tapstate' => 0]]);
+
+        (new PushTapEventToEssentielJob($tenant->id, $event->id))->handle(app(EssentielTapResolver::class));
+
+        $sms = SmsOutboxMessage::query()->where('tap_event_id', $event->id)->whereNull('parent_account_id')->sole();
+        $this->assertStringContainsString('Status: TAPPED OUT', $sms->message);
+    }
+
     public function test_an_unknown_card_does_not_send_an_sms(): void
     {
         $tenant = Tenant::factory()->create();

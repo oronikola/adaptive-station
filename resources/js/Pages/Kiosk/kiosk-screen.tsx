@@ -415,9 +415,9 @@ export default function KioskScreen({
             [response.person?.name?.first, response.person?.name?.last].filter(Boolean).join(' ') ||
             'Student';
 
-        // essentiel reports '0' for an OUT tap, anything else for IN — see
-        // EssentielTapResolver::formatSmsMessage() for the same convention.
-        const eventType: TapEventType = response.tapstate === '0' ? 'OUT' : 'IN';
+        // Essentiel returns either string '0' or numeric 0 for an OUT tap,
+        // depending on the deployment. Anything else represents an IN tap.
+        const eventType: TapEventType = String(response.tapstate ?? '') === '0' ? 'OUT' : 'IN';
         const photoUrl = response.person?.photo_url ?? response.person?.photo_path ?? null;
 
         // Cache it locally now, so this same card's *next* tap resolves the

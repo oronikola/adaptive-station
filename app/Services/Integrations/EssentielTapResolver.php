@@ -28,7 +28,7 @@ class EssentielTapResolver
     public const SOURCE_SYSTEM = 'essentiel_api';
 
     /**
-     * @return array{found: bool, reason?: ?string, person_id?: ?string, person?: ?array, tapstate?: ?string}
+     * @return array{found: bool, reason?: ?string, person_id?: ?string, person?: ?array, tapstate?: string|int|null}
      */
     public function resolve(Tenant $tenant, IntegrationProfile $profile, TapEvent $event): array
     {
@@ -258,7 +258,9 @@ class EssentielTapResolver
     private function formatSmsMessage(Tenant $tenant, TapEvent $event, array $response): string
     {
         $studentName = $response['person']['name']['full'] ?? 'Your child';
-        $tapstate = $response['tap']['tapstate'] ?? null;
+        // Essentiel deployments encode this as either string "0" or numeric
+        // 0. Normalize it before determining the guardian-facing status.
+        $tapstate = (string) ($response['tap']['tapstate'] ?? '');
         $verb = $tapstate === '0' ? 'tapped out' : 'tapped in';
         $localOccurredAt = $event->occurred_at->clone()->setTimezone($tenant->timezone);
 
