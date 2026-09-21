@@ -174,4 +174,17 @@ class ParentAccount extends Authenticatable implements TenantScoped
             ->where('is_active', true)
             ->whereIn('id', $allowed ? $this->studentLinks()->pluck('person_id')->all() : []);
     }
+
+    /**
+     * Shared by ParentCredentialLookupController (masking a search result's
+     * phone before it ever reaches the browser) and
+     * BackfillCredentialRequestMetadataCommand (reconstructing the same
+     * masked form for a historical audit log row) — kept as one function so
+     * a log entry's masked_phone always matches what the lookup screen
+     * itself would have shown at send time.
+     */
+    public static function maskedPhone(?string $phone): string
+    {
+        return $phone === null || strlen($phone) < 5 ? '' : substr($phone, 0, 3).'••••'.substr($phone, -4);
+    }
 }

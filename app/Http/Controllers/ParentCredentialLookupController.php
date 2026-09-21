@@ -68,7 +68,7 @@ class ParentCredentialLookupController extends Controller
             'parents' => $parents->map(fn (ParentAccount $parent) => [
                 'id' => $parent->id,
                 'name' => $parent->name,
-                'masked_phone' => $this->maskPhone($parent->phone_number),
+                'masked_phone' => ParentAccount::maskedPhone($parent->phone_number),
                 'has_phone' => filled($parent->phone_number),
             ]),
         ]);
@@ -112,7 +112,7 @@ class ParentCredentialLookupController extends Controller
         if ($recentlySent) {
             $this->logOutcome('duplicate', $account);
 
-            return response()->json(['status' => 'already_requested', 'masked_phone' => $this->maskPhone($account->phone_number)]);
+            return response()->json(['status' => 'already_requested', 'masked_phone' => ParentAccount::maskedPhone($account->phone_number)]);
         }
 
         // Capped per account, not per IP: the scarce resource an attacker
@@ -144,7 +144,7 @@ class ParentCredentialLookupController extends Controller
         broadcast(new SmsGatewayWakeUp);
         $this->logOutcome('queued', $account);
 
-        return response()->json(['status' => 'queued', 'masked_phone' => $this->maskPhone($account->phone_number)]);
+        return response()->json(['status' => 'queued', 'masked_phone' => ParentAccount::maskedPhone($account->phone_number)]);
     }
 
     /**
@@ -161,7 +161,7 @@ class ParentCredentialLookupController extends Controller
     {
         AuditLog::record("parent.credentials_self_service_{$outcome}", null, $account->tenant_id, 'parent_account', $account->id, [
             'parent_name' => $account->name,
-            'masked_phone' => $this->maskPhone($account->phone_number),
+            'masked_phone' => ParentAccount::maskedPhone($account->phone_number),
         ]);
     }
 
@@ -199,10 +199,5 @@ class ParentCredentialLookupController extends Controller
         }
 
         return implode("\n", $lines);
-    }
-
-    private function maskPhone(?string $phone): string
-    {
-        return $phone === null || strlen($phone) < 5 ? '' : substr($phone, 0, 3).'••••'.substr($phone, -4);
     }
 }
