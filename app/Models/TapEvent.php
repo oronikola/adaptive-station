@@ -159,6 +159,13 @@ class TapEvent extends Model implements TenantScoped
                 ->with('person')
                 ->first();
 
+            $eventType = static::resolveEventType(
+                $station,
+                $rfidCard?->person_id,
+                $occurredAt,
+                TapEventType::from($data['event_type']),
+            );
+
             try {
                 $tapEvent = static::create([
                     'id' => $data['id'],
@@ -167,7 +174,7 @@ class TapEvent extends Model implements TenantScoped
                     'person_id' => $rfidCard?->person_id,
                     'card_uid' => $cardUid,
                     'person_type' => $rfidCard?->person?->person_type,
-                    'event_type' => $data['event_type'],
+                    'event_type' => $eventType,
                     'occurred_at' => $occurredAt,
                     'occurred_offset_minutes' => $data['occurred_offset_minutes'],
                     'received_at' => Date::now(),
@@ -220,6 +227,42 @@ class TapEvent extends Model implements TenantScoped
         }
 
         return ['accepted' => $accepted, 'rejected' => $rejected, 'resolutions' => $resolutions];
+    }
+
+    /**
+     * The kiosk decides IN/OUT locally by toggling against its own
+     * per-device IndexedDB cache of that person's last tap (see
+     * kiosk-screen.tsx). That cache is scoped to one browser/device, so a
+     * station paired with more than one kiosk device — or a device whose
+     * local cache was reset — has no way to see a tap recorded by another
+     * device, and both submit "IN" for what is really an IN then an OUT.
+     * The server is the only place that can see every device's taps for a
+     * person, so it recomputes the true direction here rather than trusting
+     * whatever the kiosk sent, using it only as a fallback for a person the
+     * server can't yet identify (an unrecognized card, resolved later by
+     * essentiel — see EssentielTapResolver).
+     */
+    private static function resolveEventType(
+        Station $station,
+        ?string $personId,
+        Carbon $occurredAt,
+        TapEventType $requested,
+    ): TapEventType {
+        if ($personId === null) {
+            return $requested;
+        }
+
+        $lastEvent = static::query()
+            ->where('tenant_id', $station->tenant_id)
+            ->where('person_id', $personId)
+            ->where('occurred_at', '<=', $occurredAt)
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('received_at')
+            ->first();
+
+        return $lastEvent === null || $lastEvent->event_type === TapEventType::Out
+            ? TapEventType::In
+            : TapEventType::Out;
     }
 
     /**
