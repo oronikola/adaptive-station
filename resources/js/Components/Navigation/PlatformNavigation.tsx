@@ -5,6 +5,7 @@ import { HomeIcon } from '@/Components/icons/home';
 import { KeyIcon } from '@/Components/icons/key';
 import { LayoutGridIcon } from '@/Components/icons/layout-grid';
 import { MonitorCogIcon } from '@/Components/icons/monitor-cog';
+import { PhoneIcon } from '@/Components/icons/phone';
 import { RadioTowerIcon } from '@/Components/icons/radio-tower';
 import { ShieldCheckIcon } from '@/Components/icons/shield-check';
 import { NavItem } from '@/types';
@@ -53,6 +54,13 @@ export const platformNavigationItems: NavItem[] = [
         route: 'platform.sms-log.index',
         activePattern: 'platform.sms-log.*',
         icon: <HistoryIcon {...icon} />,
+    },
+    {
+        name: 'guardian-phone-lookup',
+        label: 'Guardian Phone Lookup',
+        route: 'platform.guardian-phone-lookup.index',
+        activePattern: 'platform.guardian-phone-lookup.*',
+        icon: <PhoneIcon {...icon} />,
     },
     {
         name: 'audit-log',
