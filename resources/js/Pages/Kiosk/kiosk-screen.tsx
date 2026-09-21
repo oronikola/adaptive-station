@@ -52,13 +52,13 @@ function generateEventId(): string {
 // Keyed per-person (see getLastTap/setLastTap in @/kiosk/db), so this only
 // ever blocks the *same* card retapping too soon — a different student's
 // card is never affected, however close together the two taps happen.
-// 3 minutes rather than a short debounce: this doubles as the client-side
+// 5 minutes rather than a short debounce: this doubles as the client-side
 // half of guarding against a guardian's phone getting hit with a burst of
 // texts a carrier's own spam filter can silently drop — see
 // SmsOutboxMessage::recentlySentTo()'s docblock on the server side for the
 // matching per-phone-number guard (which still applies on its own even
 // here, e.g. two different siblings sharing one guardian's number).
-const RETAP_COOLDOWN_MS = 3 * 60 * 1000;
+const RETAP_COOLDOWN_MS = 5 * 60 * 1000;
 const RESULT_CLEAR_MS = 3_000;
 const MASTER_DATA_SYNC_MS = 15_000;
 const EVENT_FLUSH_MS = 7_000;
