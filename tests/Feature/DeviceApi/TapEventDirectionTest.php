@@ -65,6 +65,62 @@ class TapEventDirectionTest extends TestCase
         $this->assertSame('OUT', TapEvent::allTenants()->find($secondTapId)?->event_type->value);
     }
 
+    /**
+     * The kiosk's on-screen "Checked In/Out" and its local last_tap cache
+     * are both built from the client's own optimistic guess, submitted
+     * before the server responds — a mismatch here is exactly what makes
+     * the portal show one direction while the kiosk told the person
+     * something else. The response must report the server's real, stored
+     * decision per event id so the kiosk can correct itself.
+     */
+    public function test_the_batch_response_reports_the_servers_resolved_direction_not_the_kiosks_guess(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
+        $person = Person::factory()->for($tenant)->create();
+        $card = RfidCard::factory()->for($tenant)->for($person)->create();
+        ['token' => $tokenDeviceA] = StationCredential::issueFor($station);
+        ['token' => $tokenDeviceB] = StationCredential::issueFor($station);
+
+        $firstTapId = (string) Str::uuid();
+        $this->withHeader('Authorization', "Bearer {$tokenDeviceA}")
+            ->postJson('/api/v1/device/events/batch', [
+                'events' => [['id' => $firstTapId, 'card_uid' => $card->card_uid, 'event_type' => 'IN', 'occurred_at' => now()->toIso8601String(), 'occurred_offset_minutes' => 480]],
+            ])->assertOk()
+            ->assertJsonPath("resolved_event_types.{$firstTapId}", 'IN');
+
+        // Device B's own local cache also guesses "IN" for a person it has
+        // never seen tap — the server must correct this to OUT and report
+        // that correction back, not silently store OUT while telling the
+        // kiosk nothing.
+        $secondTapId = (string) Str::uuid();
+        $this->withHeader('Authorization', "Bearer {$tokenDeviceB}")
+            ->postJson('/api/v1/device/events/batch', [
+                'events' => [['id' => $secondTapId, 'card_uid' => $card->card_uid, 'event_type' => 'IN', 'occurred_at' => now()->addSeconds(10)->toIso8601String(), 'occurred_offset_minutes' => 480]],
+            ])->assertOk()
+            ->assertJsonPath("resolved_event_types.{$secondTapId}", 'OUT');
+    }
+
+    /** A kiosk retrying an already-accepted tap (e.g. after a dropped response) must get back what was actually stored the first time, not silently nothing. */
+    public function test_a_duplicate_resubmission_still_reports_the_originally_resolved_direction(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
+        $card = RfidCard::factory()->for($tenant)->create();
+        ['token' => $token] = StationCredential::issueFor($station);
+
+        $payload = [
+            'events' => [['id' => (string) Str::uuid(), 'card_uid' => $card->card_uid, 'event_type' => 'IN', 'occurred_at' => now()->toIso8601String(), 'occurred_offset_minutes' => 480]],
+        ];
+        $eventId = $payload['events'][0]['id'];
+
+        $this->withHeader('Authorization', "Bearer {$token}")->postJson('/api/v1/device/events/batch', $payload)
+            ->assertOk()->assertJsonPath("resolved_event_types.{$eventId}", 'IN');
+
+        $this->withHeader('Authorization', "Bearer {$token}")->postJson('/api/v1/device/events/batch', $payload)
+            ->assertOk()->assertJsonPath("resolved_event_types.{$eventId}", 'IN');
+    }
+
     public function test_direction_still_toggles_normally_within_a_single_batch(): void
     {
         $tenant = Tenant::factory()->create();

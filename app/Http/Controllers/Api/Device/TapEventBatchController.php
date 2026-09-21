@@ -21,6 +21,11 @@ class TapEventBatchController extends Controller
         return response()->json([
             'accepted_event_ids' => $result['accepted'],
             'rejected_events' => $result['rejected'],
+            // What the server actually resolved and stored per event id —
+            // may differ from the event_type the kiosk submitted (its own
+            // local guess). See TapEvent::acceptBatch()'s docblock on
+            // $eventTypes.
+            'resolved_event_types' => $result['eventTypes'],
         ]);
     }
 }

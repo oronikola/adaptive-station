@@ -16,6 +16,7 @@ import {
     countPendingEvents,
     type PersonRecord,
     type CardRecord,
+    type TapEventType,
 } from './db';
 import { fetchMasterData, uploadEventBatch, sendHeartbeat, type MasterDataChangeRow } from './api';
 
@@ -70,12 +71,22 @@ export async function syncMasterData(): Promise<void> {
  * server actually accepted. Rejected events are left queued rather than
  * silently dropped, since they were already validated client-side and a
  * rejection here means something server-side disagrees worth investigating.
+ *
+ * Returns every accepted event's server-resolved direction, keyed by event
+ * id — the server can toggle IN/OUT differently than this kiosk's own
+ * optimistic local guess did (see TapEvent::resolveEventType()'s docblock),
+ * so a caller that just submitted a tap uses this to correct its local
+ * last_tap cache — and, if the tap's toast is still on screen, what it
+ * already told the person — instead of silently drifting out of sync with
+ * what the portal shows for the exact same tap.
  */
 const MAX_BATCH_SIZE = 500;
 
-export async function flushPendingEvents(): Promise<void> {
+export async function flushPendingEvents(): Promise<Record<string, TapEventType>> {
     const pending = await getAllPendingEvents();
-    if (pending.length === 0) return;
+    if (pending.length === 0) return {};
+
+    const resolvedEventTypes: Record<string, TapEventType> = {};
 
     for (let i = 0; i < pending.length; i += MAX_BATCH_SIZE) {
         const chunk = pending.slice(i, i + MAX_BATCH_SIZE);
@@ -83,7 +94,10 @@ export async function flushPendingEvents(): Promise<void> {
         if (result.accepted_event_ids.length > 0) {
             await removePendingEvents(result.accepted_event_ids);
         }
+        Object.assign(resolvedEventTypes, result.resolved_event_types ?? {});
     }
+
+    return resolvedEventTypes;
 }
 
 export async function heartbeat(): Promise<void> {

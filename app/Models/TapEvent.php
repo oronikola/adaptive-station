@@ -109,13 +109,20 @@ class TapEvent extends Model implements TenantScoped
      *                                               ordinary batch-upload path leaves this false, so an essentiel tenant
      *                                               gets its resolution queued (PushTapEventToEssentielJob) instead,
      *                                               never blocking the batch upload response on an external HTTP call.
-     * @return array{accepted: array<int, string>, rejected: array<int, array{id: mixed, errors: array}>, resolutions: array<string, array>}
+     * @return array{accepted: array<int, string>, rejected: array<int, array{id: mixed, errors: array}>, resolutions: array<string, array>, eventTypes: array<string, string>}
      */
     public static function acceptBatch(Station $station, array $events, bool $resolveEssentielSynchronously = false): array
     {
         $accepted = [];
         $rejected = [];
         $resolutions = [];
+        // The kiosk's own submitted event_type is only ever a local guess
+        // (see resolveEventType()'s docblock) — this reports back what the
+        // server actually decided and stored, per event id, so the kiosk
+        // can correct its local last_tap cache (and, if still on screen,
+        // what it already told the person) instead of drifting out of sync
+        // with what the portal shows for the exact same tap.
+        $eventTypes = [];
 
         // Hoisted out of the loop — same tenant for the whole batch, and
         // this is a local table lookup (not the essentiel call itself), so
@@ -201,6 +208,7 @@ class TapEvent extends Model implements TenantScoped
                 });
 
                 $accepted[] = $data['id'];
+                $eventTypes[$tapEvent->id] = $tapEvent->event_type->value;
 
                 // Only for a genuinely new row — the duplicate-key branch
                 // below means this tap already triggered a notification on
@@ -238,13 +246,18 @@ class TapEvent extends Model implements TenantScoped
             } catch (QueryException $e) {
                 if ((int) ($e->errorInfo[1] ?? 0) === 1062) {
                     $accepted[] = $data['id'];
+                    // A kiosk retry of an already-accepted tap still needs
+                    // the real stored value here, not the value it happened
+                    // to resubmit — the first submission is what was
+                    // actually resolved and kept.
+                    $eventTypes[$data['id']] = static::find($data['id'])?->event_type?->value;
                 } else {
                     throw $e;
                 }
             }
         }
 
-        return ['accepted' => $accepted, 'rejected' => $rejected, 'resolutions' => $resolutions];
+        return ['accepted' => $accepted, 'rejected' => $rejected, 'resolutions' => $resolutions, 'eventTypes' => $eventTypes];
     }
 
     /**

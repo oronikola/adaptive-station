@@ -90,6 +90,11 @@ interface TapResult {
     title: string;
     subtitle?: string;
     photoUrl?: string | null;
+    // The pending event id this result is showing feedback for — lets a
+    // later server correction (see handleTapSubmit's flushPendingEvents
+    // callback) find and fix this exact toast in place if it's still the
+    // one on screen, rather than correcting a since-replaced result.
+    eventId?: string;
 }
 
 /** Avatar fallback when a person has no photo synced — first + last initials read far better at kiosk viewing distance than a generic person icon. */
@@ -500,9 +505,10 @@ export default function KioskScreen({
 
         const eventType: TapEventType = lastTap?.event_type === 'IN' ? 'OUT' : 'IN';
         const now = new Date();
+        const eventId = generateEventId();
 
         await addPendingEvent({
-            id: generateEventId(),
+            id: eventId,
             card_uid: cardUid,
             event_type: eventType,
             occurred_at: now.toISOString(),
@@ -516,10 +522,30 @@ export default function KioskScreen({
             title: person.display_name,
             subtitle: eventType === 'IN' ? 'Checked In' : 'Checked Out',
             photoUrl: person.photo_url,
+            eventId,
         });
 
-        // Fire-and-forget: don't make the student wait on the network.
-        flushPendingEvents().catch(() => {});
+        // Fire-and-forget: don't make the student wait on the network. Once
+        // it resolves, though, reconcile against the truth: the server can
+        // toggle IN/OUT differently than this optimistic local guess did
+        // (e.g. another device recorded a tap for this same person in
+        // between — see TapEvent::resolveEventType()'s docblock), and
+        // without this the kiosk would keep toggling off its own now-wrong
+        // guess while the portal shows what actually got stored.
+        flushPendingEvents()
+            .then((resolved) => {
+                const resolvedType = resolved[eventId];
+                if (!resolvedType || resolvedType === eventType) return;
+
+                setLastTap({ person_id: person.id, event_type: resolvedType, at: now.toISOString() }).catch(() => {});
+
+                setResult((current) =>
+                    current?.eventId === eventId
+                        ? { ...current, subtitle: resolvedType === 'IN' ? 'Checked In' : 'Checked Out' }
+                        : current,
+                );
+            })
+            .catch(() => {});
     }
 
     const theme = result ? RESULT_THEME[result.kind] : null;

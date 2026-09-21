@@ -106,6 +106,10 @@ export interface BatchEvent {
 export interface BatchResponse {
     accepted_event_ids: string[];
     rejected_events: Array<{ id: unknown; errors: Record<string, unknown> }>;
+    // What the server actually resolved and stored per event id — may
+    // differ from the event_type this kiosk submitted, which is only ever
+    // its own local guess (see TapEvent::resolveEventType()'s docblock).
+    resolved_event_types: Record<string, TapEventType>;
 }
 
 export interface ResolveTapPersonName {
