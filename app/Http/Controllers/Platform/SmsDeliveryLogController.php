@@ -48,6 +48,7 @@ class SmsDeliveryLogController extends Controller
             'devices' => SmsGatewayDevice::query()->orderBy('label')->get(['id', 'label']),
             'filters' => $filters,
             'stats' => $this->stats(),
+            'failureSummary' => $this->failureSummary(),
         ]);
     }
 
@@ -76,5 +77,20 @@ class SmsDeliveryLogController extends Controller
             'delivered' => $counts['delivered'] ?? 0,
             'failed' => ($counts['failed'] ?? 0) + ($counts['expired'] ?? 0),
         ];
+    }
+
+    /** @return array<int, array{category: string, count: int}> */
+    private function failureSummary(): array
+    {
+        return SmsOutboxMessage::query()
+            ->where('status', SmsOutboxStatus::Failed)
+            ->whereNotNull('failure_category')
+            ->selectRaw('failure_category, count(*) as aggregate')
+            ->groupBy('failure_category')
+            ->orderByDesc('aggregate')
+            ->limit(5)
+            ->get()
+            ->map(fn ($row) => ['category' => $row->failure_category, 'count' => (int) $row->aggregate])
+            ->all();
     }
 }

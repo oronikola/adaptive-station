@@ -159,6 +159,10 @@ class SmsOutboxMessage extends Model
             'status' => SmsOutboxStatus::Sent,
             'sent_at' => Date::now(),
             'sim_slot' => $simSlot ?? $this->sim_slot,
+            'last_error' => null,
+            'failure_category' => null,
+            'android_result_code' => null,
+            'carrier_error_code' => null,
         ])->save();
     }
 
@@ -185,8 +189,14 @@ class SmsOutboxMessage extends Model
      * there's no security reason to erase which SIM attempted the send, and
      * the fleet screen still wants to show it for a failed row.
      */
-    public function markFailed(?string $error = null, ?int $simSlot = null): void
-    {
+    public function markFailed(
+        ?string $error = null,
+        ?int $simSlot = null,
+        ?string $failureCategory = null,
+        ?int $androidResultCode = null,
+        ?int $carrierErrorCode = null,
+        ?string $gatewayAppVersion = null,
+    ): void {
         $deadLetter = $this->attempts >= self::MAX_ATTEMPTS;
 
         $this->forceFill([
@@ -195,6 +205,10 @@ class SmsOutboxMessage extends Model
             'claimed_at' => null,
             'last_error' => $error,
             'sim_slot' => $simSlot ?? $this->sim_slot,
+            'failure_category' => $failureCategory,
+            'android_result_code' => $androidResultCode,
+            'carrier_error_code' => $carrierErrorCode,
+            'gateway_app_version' => $gatewayAppVersion,
         ])->save();
     }
 
@@ -227,6 +241,10 @@ class SmsOutboxMessage extends Model
             'claimed_by_device_id' => null,
             'claimed_at' => null,
             'last_error' => null,
+            'failure_category' => null,
+            'android_result_code' => null,
+            'carrier_error_code' => null,
+            'gateway_app_version' => null,
             'expires_at' => Date::now()->addMinutes(30),
         ])->save();
     }

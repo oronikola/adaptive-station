@@ -230,6 +230,36 @@ class SmsGatewayDeviceApiTest extends TestCase
         ]);
     }
 
+    public function test_a_failed_report_stores_its_structured_failure_details(): void
+    {
+        ['token' => $token] = $this->makeDevice();
+        $tenant = Tenant::factory()->create();
+        $this->makeOutboxRow($tenant);
+
+        $claim = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/device/sms/claim')
+            ->assertOk();
+        $messageId = $claim->json('messages.0.id');
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/device/sms/messages/{$messageId}/status", [
+                'status' => 'failed',
+                'error' => 'carrier rejected SMS (code 42)',
+                'android_result_code' => 1,
+                'carrier_error_code' => 42,
+                'gateway_app_version' => '1.0.2',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('sms_outbox', [
+            'id' => $messageId,
+            'failure_category' => 'Carrier rejected',
+            'android_result_code' => 1,
+            'carrier_error_code' => 42,
+            'gateway_app_version' => '1.0.2',
+        ]);
+    }
+
     public function test_reporting_delivered_after_sent_marks_the_row_delivered_and_updates_device_stats(): void
     {
         ['token' => $token, 'device' => $device] = $this->makeDevice();

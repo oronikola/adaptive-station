@@ -88,6 +88,45 @@ class TapEventDirectionTest extends TestCase
         $this->assertSame('OUT', TapEvent::allTenants()->find($outId)?->event_type->value);
     }
 
+    public function test_a_dangling_in_from_the_previous_day_does_not_toggle_the_next_days_first_tap(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
+        $person = Person::factory()->for($tenant)->create();
+        $card = RfidCard::factory()->for($tenant)->for($person)->create();
+        ['token' => $token] = StationCredential::issueFor($station);
+
+        // Yesterday: tapped IN, never tapped OUT (forgotten card, outage, etc.).
+        $yesterdayInId = (string) Str::uuid();
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/device/events/batch', [
+                'events' => [[
+                    'id' => $yesterdayInId,
+                    'card_uid' => $card->card_uid,
+                    'event_type' => 'IN',
+                    'occurred_at' => now()->subDay()->toIso8601String(),
+                    'occurred_offset_minutes' => 480,
+                ]],
+            ])->assertOk();
+
+        // Today's first tap must still be IN, not toggled to OUT off
+        // yesterday's dangling IN.
+        $todayTapId = (string) Str::uuid();
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/device/events/batch', [
+                'events' => [[
+                    'id' => $todayTapId,
+                    'card_uid' => $card->card_uid,
+                    'event_type' => 'IN',
+                    'occurred_at' => now()->toIso8601String(),
+                    'occurred_offset_minutes' => 480,
+                ]],
+            ])->assertOk();
+
+        $this->assertSame('IN', TapEvent::allTenants()->find($yesterdayInId)?->event_type->value);
+        $this->assertSame('IN', TapEvent::allTenants()->find($todayTapId)?->event_type->value);
+    }
+
     public function test_an_unrecognized_card_falls_back_to_the_requested_event_type(): void
     {
         $tenant = Tenant::factory()->create();

@@ -82,6 +82,7 @@ class SmsDeliveryLogDeviceFilterTest extends TestCase
             'last_error' => 'Insufficient prepaid load.',
             'expires_at' => Date::now()->addMinutes(30),
         ]);
+        $failedMessage->forceFill(['failure_category' => 'Carrier rejected'])->save();
         SmsOutboxMessage::create([
             'tenant_id' => $otherSchool->id,
             'person_id' => (string) Str::uuid(),
@@ -101,6 +102,8 @@ class SmsDeliveryLogDeviceFilterTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->where('messages.total', 1)
             ->where('messages.data.0.id', $failedMessage->id)
-            ->where('messages.data.0.last_error', 'Insufficient prepaid load.'));
+            ->where('messages.data.0.last_error', 'Insufficient prepaid load.')
+            ->where('messages.data.0.failure_category', 'Carrier rejected')
+            ->where('failureSummary.0', ['category' => 'Carrier rejected', 'count' => 1]));
     }
 }

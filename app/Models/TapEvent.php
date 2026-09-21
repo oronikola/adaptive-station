@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -153,34 +154,51 @@ class TapEvent extends Model implements TenantScoped
             $data = $validator->validated();
             $cardUid = RfidCard::normalizeCardUid($data['card_uid']);
             $occurredAt = Carbon::parse($data['occurred_at'])->utc();
+            $attendanceDateLocal = $occurredAt->clone()->setTimezone($station->tenant->timezone)->toDateString();
 
             $rfidCard = RfidCard::where('card_uid', $cardUid)
                 ->where('is_active', true)
                 ->with('person')
                 ->first();
 
-            $eventType = static::resolveEventType(
-                $station,
-                $rfidCard?->person_id,
-                $occurredAt,
-                TapEventType::from($data['event_type']),
-            );
-
             try {
-                $tapEvent = static::create([
-                    'id' => $data['id'],
-                    'tenant_id' => $station->tenant_id,
-                    'station_id' => $station->id,
-                    'person_id' => $rfidCard?->person_id,
-                    'card_uid' => $cardUid,
-                    'person_type' => $rfidCard?->person?->person_type,
-                    'event_type' => $eventType,
-                    'occurred_at' => $occurredAt,
-                    'occurred_offset_minutes' => $data['occurred_offset_minutes'],
-                    'received_at' => Date::now(),
-                    'attendance_date_local' => $occurredAt->clone()->setTimezone($station->tenant->timezone)->toDateString(),
-                    'metadata' => $data['metadata'] ?? null,
-                ]);
+                // The lock+read+insert all happen inside one transaction so
+                // two devices tapping the same person within milliseconds of
+                // each other can't both read "no prior tap yet" before
+                // either has committed — see resolveEventType()'s docblock.
+                // Locking the Person row (rather than a TapEvent row, which
+                // may not exist yet for a first tap) is what actually
+                // serializes the two transactions.
+                $tapEvent = DB::connection('tenant')->transaction(function () use ($station, $rfidCard, $cardUid, $data, $occurredAt, $attendanceDateLocal) {
+                    $personId = $rfidCard?->person_id;
+
+                    if ($personId !== null) {
+                        Person::query()->whereKey($personId)->lockForUpdate()->first();
+                    }
+
+                    $eventType = static::resolveEventType(
+                        $station,
+                        $personId,
+                        $occurredAt,
+                        $attendanceDateLocal,
+                        TapEventType::from($data['event_type']),
+                    );
+
+                    return static::create([
+                        'id' => $data['id'],
+                        'tenant_id' => $station->tenant_id,
+                        'station_id' => $station->id,
+                        'person_id' => $personId,
+                        'card_uid' => $cardUid,
+                        'person_type' => $rfidCard?->person?->person_type,
+                        'event_type' => $eventType,
+                        'occurred_at' => $occurredAt,
+                        'occurred_offset_minutes' => $data['occurred_offset_minutes'],
+                        'received_at' => Date::now(),
+                        'attendance_date_local' => $attendanceDateLocal,
+                        'metadata' => $data['metadata'] ?? null,
+                    ]);
+                });
 
                 $accepted[] = $data['id'];
 
@@ -241,11 +259,18 @@ class TapEvent extends Model implements TenantScoped
      * whatever the kiosk sent, using it only as a fallback for a person the
      * server can't yet identify (an unrecognized card, resolved later by
      * essentiel — see EssentielTapResolver).
+     *
+     * Only toggles against a prior tap on the *same* local attendance date.
+     * A person who never tapped OUT the day before (forgotten card, kiosk
+     * outage, etc.) must still get IN for their first tap the next day,
+     * rather than inheriting yesterday's dangling IN and being toggled
+     * straight to OUT.
      */
     private static function resolveEventType(
         Station $station,
         ?string $personId,
         Carbon $occurredAt,
+        string $attendanceDateLocal,
         TapEventType $requested,
     ): TapEventType {
         if ($personId === null) {
@@ -260,9 +285,27 @@ class TapEvent extends Model implements TenantScoped
             ->orderByDesc('received_at')
             ->first();
 
-        return $lastEvent === null || $lastEvent->event_type === TapEventType::Out
-            ? TapEventType::In
-            : TapEventType::Out;
+        return static::nextEventType(
+            $lastEvent?->attendance_date_local?->toDateString(),
+            $lastEvent?->event_type,
+            $attendanceDateLocal,
+        );
+    }
+
+    /**
+     * The pure toggle rule shared by resolveEventType() (one event at a
+     * time, backed by a DB lookup of the prior event) and the
+     * tap-events:backfill-direction console command (a whole person's
+     * history at once, replayed in memory) — kept as one function so the two
+     * can never drift into computing direction differently.
+     */
+    public static function nextEventType(?string $lastAttendanceDateLocal, ?TapEventType $lastEventType, string $attendanceDateLocal): TapEventType
+    {
+        if ($lastEventType === null || $lastAttendanceDateLocal !== $attendanceDateLocal) {
+            return TapEventType::In;
+        }
+
+        return $lastEventType === TapEventType::Out ? TapEventType::In : TapEventType::Out;
     }
 
     /**

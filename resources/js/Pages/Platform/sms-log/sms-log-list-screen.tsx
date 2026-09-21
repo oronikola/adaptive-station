@@ -25,6 +25,10 @@ interface SmsOutboxRow {
     sent_at: string | null;
     delivered_at: string | null;
     last_error: string | null;
+    failure_category: string | null;
+    android_result_code: number | null;
+    carrier_error_code: number | null;
+    gateway_app_version: string | null;
     created_at: string;
     // 0 or 1 (SIM 1 / SIM 2) — only present once the fleet phone's app
     // build is new enough to report which SIM it sent from; null on an
@@ -53,6 +57,7 @@ interface SmsLogListScreenProps {
     devices: { id: string; label: string }[];
     filters: Filters;
     stats: Stats;
+    failureSummary: { category: string; count: number }[];
 }
 
 const STATUS_PILL_CLASS: Record<string, string> = {
@@ -114,7 +119,7 @@ function failureReason(row: SmsOutboxRow): string {
     return 'No error';
 }
 
-export default function SmsLogListScreen({ messages, tenants, devices, filters, stats }: SmsLogListScreenProps) {
+export default function SmsLogListScreen({ messages, tenants, devices, filters, stats, failureSummary }: SmsLogListScreenProps) {
     const [isFiltering, setIsFiltering] = useState(false);
     const hasFilters = Boolean(filters.tenant_id || filters.device_id || filters.status || filters.phone_number);
     const { data, setData } = useForm({
@@ -160,6 +165,25 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                     <StatCard label="Delivered" value={stats.delivered} icon={ICON_DELIVERED} tone="green" />
                     <StatCard label="Failed" value={stats.failed} icon={ICON_FAILED} tone="red" />
                 </div>
+
+                {failureSummary.length > 0 && (
+                    <div className="pf-panel">
+                        <div className="pf-panel-header">
+                            <div>
+                                <h2 className="pf-panel-title">Current failure reasons</h2>
+                                <p className="pf-panel-count">Dead-lettered messages across all schools</p>
+                            </div>
+                        </div>
+                        <div className="pfs-meta-row">
+                            {failureSummary.map((failure) => (
+                                <span key={failure.category} className="pfs-meta-pill pfs-meta-pill--school">
+                                    <BadgeAlertIcon size={13} aria-hidden="true" />
+                                    {failure.category}: {failure.count}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <form onSubmit={submit} className="pf-filter-bar" role="search">
                     <div className="pf-field">
@@ -301,7 +325,15 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                                                 {row.status}
                                             </span>
                                         </td>
-                                        <td>{row.last_error ? <span className="sms-log-error"><BadgeAlertIcon size={14} aria-hidden="true" />{row.last_error}</span> : <span className="sms-log-empty-value">{failureReason(row)}</span>}</td>
+                                        <td>
+                                            {row.last_error ? (
+                                                <span className="sms-log-error">
+                                                    <BadgeAlertIcon size={14} aria-hidden="true" />
+                                                    {row.failure_category ? `${row.failure_category}: ` : ''}{row.last_error}
+                                                    {row.carrier_error_code !== null ? ` (carrier code ${row.carrier_error_code})` : ''}
+                                                </span>
+                                            ) : <span className="sms-log-empty-value">{failureReason(row)}</span>}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

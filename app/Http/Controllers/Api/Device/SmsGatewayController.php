@@ -53,6 +53,10 @@ class SmsGatewayController extends Controller
         $data = $request->validate([
             'status' => ['required', Rule::in(['sent', 'failed', 'delivered'])],
             'error' => ['nullable', 'string', 'max:255'],
+            'failure_category' => ['nullable', 'string', 'max:50'],
+            'android_result_code' => ['nullable', 'integer'],
+            'carrier_error_code' => ['nullable', 'integer'],
+            'gateway_app_version' => ['nullable', 'string', 'max:50'],
             // Which physical SIM (0 or 1) the device actually sent from —
             // optional so an app build older than this feature keeps
             // working unchanged, just without per-SIM cap tracking.
@@ -92,7 +96,16 @@ class SmsGatewayController extends Controller
                 SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'sent_today');
             }
         } else {
-            $row->markFailed($data['error'] ?? null, $simSlot);
+            $failureCategory = $data['failure_category'] ?? $this->failureCategoryFor($data['error'] ?? null);
+
+            $row->markFailed(
+                error: $data['error'] ?? null,
+                simSlot: $simSlot,
+                failureCategory: $failureCategory,
+                androidResultCode: $data['android_result_code'] ?? null,
+                carrierErrorCode: $data['carrier_error_code'] ?? null,
+                gatewayAppVersion: $data['gateway_app_version'] ?? null,
+            );
             $device->increment('failed_today');
             if ($simSlot !== null) {
                 SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'failed_today');
@@ -100,5 +113,18 @@ class SmsGatewayController extends Controller
         }
 
         return response()->json(['status' => 'ok']);
+    }
+
+    private function failureCategoryFor(?string $error): ?string
+    {
+        return match ($error) {
+            'no mobile service' => 'No mobile service',
+            'SIM radio is turned off' => 'SIM radio off',
+            'no default SIM selected' => 'No default SIM',
+            'SMS sending limit reached' => 'SMS sending limit',
+            'SIM fixed-dialing restriction' => 'SIM dialing restriction',
+            'carrier rejected SMS (no carrier detail)' => 'Carrier rejected',
+            default => str_starts_with($error ?? '', 'carrier rejected SMS') ? 'Carrier rejected' : null,
+        };
     }
 }

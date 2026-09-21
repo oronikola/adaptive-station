@@ -508,6 +508,13 @@
     color: var(--as-text-secondary);
 }
 
+.pfs-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 20px 20px;
+}
+
 .pfs-connectivity-pill--online {
     border-color: color-mix(in srgb, var(--as-success) 22%, transparent);
     background: var(--as-success-bg);
