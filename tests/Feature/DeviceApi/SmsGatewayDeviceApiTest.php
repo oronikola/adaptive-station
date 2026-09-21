@@ -206,6 +206,30 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->assertNull($fresh->claimed_by_device_id);
     }
 
+    public function test_a_failed_report_retains_the_gateway_failure_reason(): void
+    {
+        ['token' => $token] = $this->makeDevice();
+        $tenant = Tenant::factory()->create();
+        $this->makeOutboxRow($tenant);
+
+        $claim = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/device/sms/claim')
+            ->assertOk();
+        $messageId = $claim->json('messages.0.id');
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/device/sms/messages/{$messageId}/status", [
+                'status' => 'failed',
+                'error' => 'Insufficient prepaid load.',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('sms_outbox', [
+            'id' => $messageId,
+            'last_error' => 'Insufficient prepaid load.',
+        ]);
+    }
+
     public function test_reporting_delivered_after_sent_marks_the_row_delivered_and_updates_device_stats(): void
     {
         ['token' => $token, 'device' => $device] = $this->makeDevice();

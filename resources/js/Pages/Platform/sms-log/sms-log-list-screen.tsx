@@ -102,6 +102,18 @@ function formatDateTime(value: string): string {
     });
 }
 
+function failureReason(row: SmsOutboxRow): string {
+    if (row.last_error) {
+        return row.last_error;
+    }
+
+    if (row.status === 'failed' || row.status === 'expired') {
+        return 'The SMS gateway did not provide a reason.';
+    }
+
+    return 'No error';
+}
+
 export default function SmsLogListScreen({ messages, tenants, devices, filters, stats }: SmsLogListScreenProps) {
     const [isFiltering, setIsFiltering] = useState(false);
     const hasFilters = Boolean(filters.tenant_id || filters.device_id || filters.status || filters.phone_number);
@@ -289,7 +301,7 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                                                 {row.status}
                                             </span>
                                         </td>
-                                        <td>{row.last_error ? <span className="sms-log-error"><BadgeAlertIcon size={14} aria-hidden="true" />{row.last_error}</span> : <span className="sms-log-empty-value">No error</span>}</td>
+                                        <td>{row.last_error ? <span className="sms-log-error"><BadgeAlertIcon size={14} aria-hidden="true" />{row.last_error}</span> : <span className="sms-log-empty-value">{failureReason(row)}</span>}</td>
                                     </tr>
                                 ))}
                             </tbody>
