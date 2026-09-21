@@ -49,7 +49,16 @@ function generateEventId(): string {
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-const DOUBLE_TAP_GRACE_MS = 10_000;
+// Keyed per-person (see getLastTap/setLastTap in @/kiosk/db), so this only
+// ever blocks the *same* card retapping too soon — a different student's
+// card is never affected, however close together the two taps happen.
+// 3 minutes rather than a short debounce: this doubles as the client-side
+// half of guarding against a guardian's phone getting hit with a burst of
+// texts a carrier's own spam filter can silently drop — see
+// SmsOutboxMessage::recentlySentTo()'s docblock on the server side for the
+// matching per-phone-number guard (which still applies on its own even
+// here, e.g. two different siblings sharing one guardian's number).
+const RETAP_COOLDOWN_MS = 3 * 60 * 1000;
 const RESULT_CLEAR_MS = 3_000;
 const MASTER_DATA_SYNC_MS = 15_000;
 const EVENT_FLUSH_MS = 7_000;
@@ -475,14 +484,15 @@ export default function KioskScreen({
         }
 
         const lastTap = await getLastTap(person.id);
-        const alreadyTapped =
-            lastTap && Date.now() - new Date(lastTap.at).getTime() < DOUBLE_TAP_GRACE_MS;
+        const msSinceLastTap = lastTap ? Date.now() - new Date(lastTap.at).getTime() : null;
+        const onCooldown = msSinceLastTap !== null && msSinceLastTap < RETAP_COOLDOWN_MS;
 
-        if (alreadyTapped) {
+        if (onCooldown) {
+            const minutesLeft = Math.max(1, Math.ceil((RETAP_COOLDOWN_MS - msSinceLastTap) / 60_000));
             showResult({
                 kind: 'duplicate',
                 title: person.display_name,
-                subtitle: 'Already recorded — please wait a moment before tapping again.',
+                subtitle: `Already recorded — please try again in ${minutesLeft} minute${minutesLeft === 1 ? '' : 's'}.`,
                 photoUrl: person.photo_url,
             });
             return;
