@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Platform;
 
+use App\Enums\SmsOutboxStatus;
 use App\Http\Controllers\Controller;
 use App\Models\SmsGatewayDevice;
 use App\Models\SmsOutboxMessage;

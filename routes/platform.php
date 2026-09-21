@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Platform\AuditLogController;
+use App\Http\Controllers\Platform\CredentialRequestLogController;
 use App\Http\Controllers\Platform\DashboardController;
 use App\Http\Controllers\Platform\PlatformAdminController;
 use App\Http\Controllers\Platform\SmsDeliveryLogController;
@@ -57,6 +58,8 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
         Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
 
         Route::get('sms-log', [SmsDeliveryLogController::class, 'index'])->name('sms-log.index');
+
+        Route::get('credential-requests', [CredentialRequestLogController::class, 'index'])->name('credential-requests.index');
 
         Route::get('platform-admins', [PlatformAdminController::class, 'index'])->name('platform-admins.index');
         Route::post('platform-admins', [PlatformAdminController::class, 'store'])->name('platform-admins.store');

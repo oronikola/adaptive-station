@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Events\SmsGatewayWakeUp;
+use App\Models\AuditLog;
 use App\Models\ParentAccount;
 use App\Models\Person;
 use App\Models\SmsOutboxMessage;
@@ -73,6 +74,11 @@ class ParentCredentialLookupTest extends TestCase
         // gateway phone (see the message-length incident this guards).
         $this->assertLessThanOrEqual(160, strlen($sms->message));
         Event::assertDispatched(SmsGatewayWakeUp::class);
+
+        $log = AuditLog::allTenants()->where('action', 'parent.credentials_self_service_queued')->sole();
+        $this->assertSame($parent->id, $log->entity_id);
+        $this->assertSame($parent->name, $log->metadata['parent_name']);
+        $this->assertSame('+63••••3448', $log->metadata['masked_phone']);
     }
 
     /** A school name long enough to otherwise blow past one SMS segment gets trimmed, instead of reintroducing the same multi-part-SMS failure for any school with a longer name. */
@@ -104,6 +110,7 @@ class ParentCredentialLookupTest extends TestCase
             ->assertOk()->assertJsonPath('status', 'already_requested');
 
         $this->assertSame(1, SmsOutboxMessage::query()->where('parent_account_id', $parent->id)->count());
+        $this->assertSame(1, AuditLog::allTenants()->where('action', 'parent.credentials_self_service_duplicate')->where('entity_id', $parent->id)->count());
     }
 
     public function test_sending_fails_gracefully_without_a_phone_number_or_a_linked_student(): void
@@ -116,6 +123,8 @@ class ParentCredentialLookupTest extends TestCase
         $this->postJson(route('parents.credentials.send', $noLinks), ['tenant_id' => $tenant->id])->assertStatus(422);
 
         $this->assertSame(0, SmsOutboxMessage::query()->count());
+        $this->assertSame(1, AuditLog::allTenants()->where('action', 'parent.credentials_self_service_no_phone')->where('entity_id', $noPhone->id)->count());
+        $this->assertSame(1, AuditLog::allTenants()->where('action', 'parent.credentials_self_service_no_students_linked')->where('entity_id', $noLinks->id)->count());
     }
 
     public function test_a_fourth_send_in_one_day_is_rate_limited(): void
@@ -140,6 +149,7 @@ class ParentCredentialLookupTest extends TestCase
             ->assertJsonPath('status', 'rate_limited');
 
         $this->assertSame(3, SmsOutboxMessage::query()->where('parent_account_id', $parent->id)->count());
+        $this->assertSame(1, AuditLog::allTenants()->where('action', 'parent.credentials_self_service_rate_limited')->where('entity_id', $parent->id)->count());
     }
 
     public function test_a_parent_cannot_be_sent_credentials_under_a_different_school(): void

@@ -83,7 +83,10 @@ class ParentCredentialLookupController extends Controller
             ->where('is_active', true)
             ->findOrFail($parent);
 
-        abort_if(blank($account->phone_number), 422, 'No phone number is on file for this account. Please contact your school.');
+        if (blank($account->phone_number)) {
+            $this->logOutcome('no_phone', $account);
+            abort(422, 'No phone number is on file for this account. Please contact your school.');
+        }
 
         // The table requires a person_id on every row (see its migration) —
         // every existing sender ties a message to the student it's about.
@@ -91,7 +94,11 @@ class ParentCredentialLookupController extends Controller
         // needs any of this guardian's own linked students to satisfy that;
         // an account with no links yet has nothing to attach it to.
         $personId = $account->studentLinks()->orderBy('person_id')->value('person_id');
-        abort_if($personId === null, 422, 'No students are linked to this account yet. Please contact your school.');
+
+        if ($personId === null) {
+            $this->logOutcome('no_students_linked', $account);
+            abort(422, 'No students are linked to this account yet. Please contact your school.');
+        }
 
         // A resend within the last 5 minutes is treated as the same request,
         // not a fresh one — stops repeated clicks (or a scripted retry) from
@@ -103,6 +110,8 @@ class ParentCredentialLookupController extends Controller
             ->exists();
 
         if ($recentlySent) {
+            $this->logOutcome('duplicate', $account);
+
             return response()->json(['status' => 'already_requested', 'masked_phone' => $this->maskPhone($account->phone_number)]);
         }
 
@@ -113,6 +122,8 @@ class ParentCredentialLookupController extends Controller
         $dailyLimitKey = "parent-credentials-send:{$account->id}";
 
         if (RateLimiter::tooManyAttempts($dailyLimitKey, 3)) {
+            $this->logOutcome('rate_limited', $account);
+
             return response()->json([
                 'status' => 'rate_limited',
                 'message' => 'Daily limit reached for this account. Please contact your school directly.',
@@ -131,9 +142,27 @@ class ParentCredentialLookupController extends Controller
             'expires_at' => Date::now()->addMinutes(30),
         ]);
         broadcast(new SmsGatewayWakeUp);
-        AuditLog::record('parent.credentials_self_service_queued', null, $account->tenant_id, 'parent_account', $account->id);
+        $this->logOutcome('queued', $account);
 
         return response()->json(['status' => 'queued', 'masked_phone' => $this->maskPhone($account->phone_number)]);
+    }
+
+    /**
+     * Every outcome of a credential-send attempt gets its own audit_logs
+     * row — not just the success path — so a superadmin can see *why* a
+     * parent didn't get their text (no phone on file, no student linked,
+     * rate limited, or a within-5-minutes duplicate click) instead of the
+     * request just silently 422-ing with nothing left behind. Surfaced on
+     * Platform\CredentialRequestLogController's screen. The parent's name
+     * and masked phone are snapshotted into metadata so the log stays
+     * readable even if the account is later deactivated or renamed.
+     */
+    private function logOutcome(string $outcome, ParentAccount $account): void
+    {
+        AuditLog::record("parent.credentials_self_service_{$outcome}", null, $account->tenant_id, 'parent_account', $account->id, [
+            'parent_name' => $account->name,
+            'masked_phone' => $this->maskPhone($account->phone_number),
+        ]);
     }
 
     /**

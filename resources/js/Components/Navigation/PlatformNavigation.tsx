@@ -2,6 +2,7 @@ import { BellIcon } from '@/Components/icons/bell';
 import { ClipboardCheckIcon } from '@/Components/icons/clipboard-check';
 import { HistoryIcon } from '@/Components/icons/history';
 import { HomeIcon } from '@/Components/icons/home';
+import { KeyIcon } from '@/Components/icons/key';
 import { LayoutGridIcon } from '@/Components/icons/layout-grid';
 import { MonitorCogIcon } from '@/Components/icons/monitor-cog';
 import { RadioTowerIcon } from '@/Components/icons/radio-tower';
@@ -59,6 +60,13 @@ export const platformNavigationItems: NavItem[] = [
         route: 'platform.audit-log.index',
         activePattern: 'platform.audit-log.*',
         icon: <ClipboardCheckIcon {...icon} />,
+    },
+    {
+        name: 'credential-requests',
+        label: 'Credential Requests',
+        route: 'platform.credential-requests.index',
+        activePattern: 'platform.credential-requests.*',
+        icon: <KeyIcon {...icon} />,
     },
     {
         name: 'platform-admins',

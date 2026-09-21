@@ -77,6 +77,16 @@ const KNOWN_ACTION_GROUPS: { label: string; actions: string[] }[] = [
         ],
     },
     {
+        label: 'Credential Request',
+        actions: [
+            'parent.credentials_self_service_queued',
+            'parent.credentials_self_service_duplicate',
+            'parent.credentials_self_service_no_phone',
+            'parent.credentials_self_service_no_students_linked',
+            'parent.credentials_self_service_rate_limited',
+        ],
+    },
+    {
         label: 'Integration',
         actions: [
             'integration_profile.created',
