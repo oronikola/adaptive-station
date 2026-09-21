@@ -220,6 +220,35 @@ class PushTapEventToEssentielJobTest extends TestCase
         $this->assertSame(1, ParentAccount::query()->where('tenant_id', $tenant->id)->count());
     }
 
+    /**
+     * Covers the same carrier-throttling guard as
+     * ParentSmsNotificationTest::test_a_second_tap_within_the_recipient_interval_suppresses_its_sms(),
+     * on the essentiel path — see SmsOutboxMessage::recentlySentTo()'s
+     * docblock. Two taps resolved moments apart for the same sms_recipient
+     * must not queue two tap-alert texts to it.
+     */
+    public function test_a_second_resolve_within_the_recipient_interval_suppresses_its_tap_alert_sms(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $person = Person::factory()->for($tenant)->create();
+        $firstEvent = $this->seedTapEvent($tenant, $person);
+        $secondEvent = $this->seedTapEvent($tenant, $person);
+        $this->makeProfile($tenant, $admin);
+        $this->fakeRecordResponse();
+
+        (new PushTapEventToEssentielJob($tenant->id, $firstEvent->id))->handle(app(EssentielTapResolver::class));
+        (new PushTapEventToEssentielJob($tenant->id, $secondEvent->id))->handle(app(EssentielTapResolver::class));
+
+        // Exactly one tap-alert (parent_account_id null) for the recipient —
+        // the guardian-welcome credentials text (parent_account_id set,
+        // sent only once regardless, see the "without duplicating it" test
+        // above) is unaffected and separate from this guard.
+        $this->assertSame(1, SmsOutboxMessage::query()->where('tap_event_id', $firstEvent->id)->whereNull('parent_account_id')->count());
+        $this->assertSame(0, SmsOutboxMessage::query()->where('tap_event_id', $secondEvent->id)->whereNull('parent_account_id')->count());
+        $this->assertSame(1, AuditLog::allTenants()->where('action', 'tap_notification.sms_suppressed_recipient_interval')->where('entity_id', $person->id)->count());
+    }
+
     public function test_a_tenant_with_no_essentiel_profile_is_a_silent_no_op(): void
     {
         $tenant = Tenant::factory()->create();

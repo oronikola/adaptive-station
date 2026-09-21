@@ -4,6 +4,7 @@ namespace App\Services\Integrations;
 
 use App\Enums\PersonType;
 use App\Events\SmsGatewayWakeUp;
+use App\Models\AuditLog;
 use App\Models\IntegrationProfile;
 use App\Models\ParentAccount;
 use App\Models\Person;
@@ -87,19 +88,32 @@ class EssentielTapResolver
         $smsRecipient = $response['sms_recipient'] ?? null;
 
         if (($response['status'] ?? null) === 'recorded' && filled($smsRecipient)) {
-            SmsOutboxMessage::create([
-                'tenant_id' => $tenant->id,
-                'person_id' => $personId,
-                'parent_account_id' => null,
-                'station_id' => $event->station_id,
-                'tap_event_id' => $event->id,
-                'phone_number' => $smsRecipient,
-                'message' => $this->formatSmsMessage($tenant, $event, $response),
-                'status' => 'pending',
-                'expires_at' => Date::now()->addMinutes(30),
-            ]);
+            // Guards against a carrier silently dropping (not failing — just
+            // never delivering) a burst of texts to the same recipient in a
+            // short window — see SmsOutboxMessage::recentlySentTo()'s
+            // docblock. Same guard as DispatchParentTapNotification's local
+            // path, just keyed by the raw recipient number essentiel
+            // returned since this path has no ParentAccount to key off.
+            if (SmsOutboxMessage::recentlySentTo($smsRecipient)) {
+                AuditLog::record('tap_notification.sms_suppressed_recipient_interval', null, $tenant->id, 'person', $personId, [
+                    'masked_phone' => ParentAccount::maskedPhone($smsRecipient),
+                    'tap_event_id' => $event->id,
+                ]);
+            } else {
+                SmsOutboxMessage::create([
+                    'tenant_id' => $tenant->id,
+                    'person_id' => $personId,
+                    'parent_account_id' => null,
+                    'station_id' => $event->station_id,
+                    'tap_event_id' => $event->id,
+                    'phone_number' => $smsRecipient,
+                    'message' => $this->formatSmsMessage($tenant, $event, $response),
+                    'status' => 'pending',
+                    'expires_at' => Date::now()->addMinutes(30),
+                ]);
 
-            broadcast(new SmsGatewayWakeUp);
+                broadcast(new SmsGatewayWakeUp);
+            }
         }
 
         if ($personId !== null && filled($response['guardians'] ?? null)) {

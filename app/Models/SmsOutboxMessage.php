@@ -213,6 +213,35 @@ class SmsOutboxMessage extends Model
     }
 
     /**
+     * True if this phone number already has an outbox row from within the
+     * configured minimum interval that's still live (queued, in flight, or
+     * already gone out) — see config('services.sms_gateway.
+     * min_recipient_interval_minutes')'s docblock for why this exists.
+     * `dead` statuses (failed/expired) don't count: a message that never
+     * actually reached the recipient shouldn't block a fresh attempt at
+     * notifying them.
+     */
+    public static function recentlySentTo(string $phoneNumber): bool
+    {
+        $minutes = (int) config('services.sms_gateway.min_recipient_interval_minutes');
+
+        if ($minutes <= 0) {
+            return false;
+        }
+
+        return static::query()
+            ->where('phone_number', $phoneNumber)
+            ->whereIn('status', [
+                SmsOutboxStatus::Pending,
+                SmsOutboxStatus::Claimed,
+                SmsOutboxStatus::Sent,
+                SmsOutboxStatus::Delivered,
+            ])
+            ->where('created_at', '>', Date::now()->subMinutes($minutes))
+            ->exists();
+    }
+
+    /**
      * A quick shape check for a Philippine mobile number (09XXXXXXXXX, or
      * +63/63 9XXXXXXXXX) — not a carrier-verified guarantee the number is
      * real, but enough to block a manual resend on an obviously fake/

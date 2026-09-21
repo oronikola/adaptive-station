@@ -7,6 +7,7 @@ use App\Enums\SmsOutboxStatus;
 use App\Enums\TapEventType;
 use App\Events\SmsGatewayWakeUp;
 use App\Jobs\DispatchParentTapNotification;
+use App\Models\AuditLog;
 use App\Models\ParentAccount;
 use App\Models\Person;
 use App\Models\SmsOutboxMessage;
@@ -196,5 +197,60 @@ class ParentSmsNotificationTest extends TestCase
         (new DispatchParentTapNotification($tenant->id, $event->id))->handle(app(FcmClient::class));
 
         $this->assertDatabaseCount('sms_outbox', 0, 'mysql');
+    }
+
+    /**
+     * Covers the carrier-throttling guard — see SmsOutboxMessage::
+     * recentlySentTo()'s docblock. An IN then an OUT tap minutes (or
+     * seconds) apart is exactly the burst-to-the-same-number pattern a
+     * carrier's own anti-spam filter can silently drop; the second one is
+     * suppressed here instead of queued and lost to that filter.
+     */
+    public function test_a_second_tap_within_the_recipient_interval_suppresses_its_sms(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create();
+        $student = Person::factory()->create(['tenant_id' => $tenant->id, 'person_type' => PersonType::Student]);
+        $parent = ParentAccount::factory()->create([
+            'tenant_id' => $tenant->id,
+            'phone_number' => '+639171234567',
+            'notification_preferences' => ['notify_in' => true, 'notify_out' => true, 'notify_sms' => true],
+        ]);
+        $parent->studentLinks()->create(['person_id' => $student->id]);
+
+        $inEvent = $this->makeEvent($tenant, $station, $student, TapEventType::In);
+        (new DispatchParentTapNotification($tenant->id, $inEvent->id))->handle(app(FcmClient::class));
+
+        $outEvent = $this->makeEvent($tenant, $station, $student, TapEventType::Out);
+        (new DispatchParentTapNotification($tenant->id, $outEvent->id))->handle(app(FcmClient::class));
+
+        $this->assertDatabaseCount('sms_outbox', 1, 'mysql');
+        $suppressed = AuditLog::allTenants()->where('action', 'tap_notification.sms_suppressed_recipient_interval')->sole();
+        $this->assertSame($outEvent->id, $suppressed->metadata['tap_event_id']);
+        $this->assertSame('+63••••4567', $suppressed->metadata['masked_phone']);
+    }
+
+    /** Once the configured interval has actually passed, the next tap sends its own SMS normally — the guard is a cooldown, not a one-shot-per-person cap. */
+    public function test_a_second_tap_after_the_recipient_interval_still_sends_its_own_sms(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create();
+        $student = Person::factory()->create(['tenant_id' => $tenant->id, 'person_type' => PersonType::Student]);
+        $parent = ParentAccount::factory()->create([
+            'tenant_id' => $tenant->id,
+            'phone_number' => '+639171234567',
+            'notification_preferences' => ['notify_in' => true, 'notify_out' => true, 'notify_sms' => true],
+        ]);
+        $parent->studentLinks()->create(['person_id' => $student->id]);
+
+        $inEvent = $this->makeEvent($tenant, $station, $student, TapEventType::In);
+        (new DispatchParentTapNotification($tenant->id, $inEvent->id))->handle(app(FcmClient::class));
+
+        $this->travel(4)->minutes();
+
+        $outEvent = $this->makeEvent($tenant, $station, $student, TapEventType::Out);
+        (new DispatchParentTapNotification($tenant->id, $outEvent->id))->handle(app(FcmClient::class));
+
+        $this->assertDatabaseCount('sms_outbox', 2, 'mysql');
     }
 }

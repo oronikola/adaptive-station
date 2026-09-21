@@ -6,6 +6,8 @@ use App\Enums\TapEventType;
 use App\Enums\TenantStatus;
 use App\Events\SmsGatewayWakeUp;
 use App\Events\TapRecorded;
+use App\Models\AuditLog;
+use App\Models\ParentAccount;
 use App\Models\ParentStudentLink;
 use App\Models\Person;
 use App\Models\SmsOutboxMessage;
@@ -112,18 +114,31 @@ class DispatchParentTapNotification implements ShouldQueue
             // parent must separately turn it on (costs real money per
             // message, unlike push). See IP-007.
             if (($preferences['notify_sms'] ?? false) && filled($parent->phone_number)) {
-                SmsOutboxMessage::create([
-                    'tenant_id' => $tenant->id,
-                    'person_id' => $event->person_id,
-                    'parent_account_id' => $parent->id,
-                    'station_id' => $event->station_id,
-                    'tap_event_id' => $event->id,
-                    'phone_number' => $parent->phone_number,
-                    'message' => $this->formatSmsMessage($tenant, $event, $studentName, $verb, $localOccurredAt),
-                    'status' => 'pending',
-                    'expires_at' => Date::now()->addMinutes(30),
-                ]);
-                $queuedSms = true;
+                // Guards against a carrier silently dropping (not failing —
+                // just never delivering) a burst of texts to the same
+                // recipient in a short window, e.g. an IN then an OUT tap
+                // minutes apart, or two students sharing one guardian number
+                // tapping close together. See SmsOutboxMessage::
+                // recentlySentTo()'s docblock.
+                if (SmsOutboxMessage::recentlySentTo($parent->phone_number)) {
+                    AuditLog::record('tap_notification.sms_suppressed_recipient_interval', null, $tenant->id, 'parent_account', $parent->id, [
+                        'masked_phone' => ParentAccount::maskedPhone($parent->phone_number),
+                        'tap_event_id' => $event->id,
+                    ]);
+                } else {
+                    SmsOutboxMessage::create([
+                        'tenant_id' => $tenant->id,
+                        'person_id' => $event->person_id,
+                        'parent_account_id' => $parent->id,
+                        'station_id' => $event->station_id,
+                        'tap_event_id' => $event->id,
+                        'phone_number' => $parent->phone_number,
+                        'message' => $this->formatSmsMessage($tenant, $event, $studentName, $verb, $localOccurredAt),
+                        'status' => 'pending',
+                        'expires_at' => Date::now()->addMinutes(30),
+                    ]);
+                    $queuedSms = true;
+                }
             }
 
             foreach ($parent->deviceTokens as $deviceToken) {

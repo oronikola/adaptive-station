@@ -72,6 +72,17 @@ return [
     'sms_gateway' => [
         'daily_send_cap' => env('SMS_GATEWAY_DAILY_SEND_CAP', 450),
         'timezone' => env('SMS_GATEWAY_TIMEZONE', 'Asia/Manila'),
+
+        /*
+        | The fleet sends over ordinary consumer SIMs, not a registered bulk
+        | sender — a carrier's own anti-spam/flood filter can silently drop
+        | (not fail, just never deliver) a burst of messages hitting the
+        | same recipient number in a short window, indistinguishable from a
+        | real spam blast. This is the minimum gap SmsOutboxMessage::
+        | recentlySentTo() enforces per recipient before queuing another
+        | tap-alert to the same number. 0 disables the guard entirely.
+        */
+        'min_recipient_interval_minutes' => env('SMS_GATEWAY_MIN_RECIPIENT_INTERVAL_MINUTES', 3),
     ],
 
 ];
