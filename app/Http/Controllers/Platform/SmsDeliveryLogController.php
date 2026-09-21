@@ -50,6 +50,7 @@ class SmsDeliveryLogController extends Controller
             'filters' => $filters,
             'stats' => $this->stats(),
             'failureSummary' => $this->failureSummary(),
+            'deviceStats' => $this->deviceStats(),
         ]);
     }
 
@@ -92,6 +93,60 @@ class SmsDeliveryLogController extends Controller
             ->limit(5)
             ->get()
             ->map(fn ($row) => ['category' => $row->failure_category, 'count' => (int) $row->aggregate])
+            ->all();
+    }
+
+    /**
+     * "sent" only ever confirms the phone's modem handed the message to the
+     * carrier — not that the carrier actually delivered it (see
+     * MainActivity.kt's docblock on the native Android side). A SIM the
+     * carrier has started silently spam-throttling still reports "sent" on
+     * every attempt, so a per-device sent-vs-delivered gap is the only
+     * visible symptom from here — one device's messages piling up in "sent"
+     * while another's mostly reach "delivered" is the tell that a specific
+     * SIM's messages are being accepted locally but dropped upstream.
+     *
+     * Not every carrier sends a delivery report at all, so a nonzero gap is
+     * not by itself proof of a problem — read this as a relative signal
+     * across devices, not an absolute one. Only "sent"/"delivered" rows
+     * count (not "failed": markFailed() clears claimed_by_device_id, so a
+     * failed attempt is no longer attributable to the device that tried it —
+     * see SmsOutboxMessage::markFailed()'s docblock). Devices that have never
+     * sent anything are omitted rather than shown at a meaningless 0%.
+     *
+     * @return array<int, array{id: string, label: string, sent: int, delivered: int, attempted: int, stuck_rate: float}>
+     */
+    private function deviceStats(): array
+    {
+        $counts = SmsOutboxMessage::query()
+            ->whereNotNull('claimed_by_device_id')
+            ->whereIn('status', [SmsOutboxStatus::Sent, SmsOutboxStatus::Delivered])
+            ->selectRaw('claimed_by_device_id, status, count(*) as aggregate')
+            ->groupBy('claimed_by_device_id', 'status')
+            ->get()
+            ->groupBy('claimed_by_device_id');
+
+        return SmsGatewayDevice::query()
+            ->orderBy('label')
+            ->get(['id', 'label'])
+            ->map(function (SmsGatewayDevice $device) use ($counts) {
+                $rows = $counts->get($device->id, collect());
+                $sent = (int) ($rows->firstWhere('status', SmsOutboxStatus::Sent)->aggregate ?? 0);
+                $delivered = (int) ($rows->firstWhere('status', SmsOutboxStatus::Delivered)->aggregate ?? 0);
+                $attempted = $sent + $delivered;
+
+                return [
+                    'id' => $device->id,
+                    'label' => $device->label,
+                    'sent' => $sent,
+                    'delivered' => $delivered,
+                    'attempted' => $attempted,
+                    'stuck_rate' => $attempted > 0 ? round(($sent / $attempted) * 100, 1) : 0.0,
+                ];
+            })
+            ->filter(fn (array $row) => $row['attempted'] > 0)
+            ->sortByDesc('stuck_rate')
+            ->values()
             ->all();
     }
 }

@@ -51,6 +51,15 @@ interface Stats {
     failed: number;
 }
 
+interface DeviceStat {
+    id: string;
+    label: string;
+    sent: number;
+    delivered: number;
+    attempted: number;
+    stuck_rate: number;
+}
+
 interface SmsLogListScreenProps {
     messages: PaginatedData<SmsOutboxRow>;
     tenants: { id: string; name: string }[];
@@ -58,6 +67,7 @@ interface SmsLogListScreenProps {
     filters: Filters;
     stats: Stats;
     failureSummary: { category: string; count: number }[];
+    deviceStats: DeviceStat[];
 }
 
 const STATUS_PILL_CLASS: Record<string, string> = {
@@ -119,7 +129,7 @@ function failureReason(row: SmsOutboxRow): string {
     return 'No error';
 }
 
-export default function SmsLogListScreen({ messages, tenants, devices, filters, stats, failureSummary }: SmsLogListScreenProps) {
+export default function SmsLogListScreen({ messages, tenants, devices, filters, stats, failureSummary, deviceStats }: SmsLogListScreenProps) {
     const [isFiltering, setIsFiltering] = useState(false);
     const hasFilters = Boolean(filters.tenant_id || filters.device_id || filters.status || filters.phone_number);
     const { data, setData } = useForm({
@@ -181,6 +191,66 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                                     {failure.category}: {failure.count}
                                 </span>
                             ))}
+                        </div>
+                    </div>
+                )}
+
+                {deviceStats.length > 0 && (
+                    <div className="pf-panel">
+                        <div className="pf-panel-header">
+                            <div>
+                                <h2 className="pf-panel-title">Per-device delivery confirmation</h2>
+                                <p className="pf-panel-count">
+                                    "Sent" only confirms the phone accepted the send — a device
+                                    stuck high above the others is the tell that its SIM is
+                                    likely being throttled by the carrier, not a code problem.
+                                    Not every carrier reports delivery, so compare devices to
+                                    each other rather than reading any single number as a hard
+                                    fault.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="pf-table-wrap">
+                            <table className="pf-table sms-log-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Device</th>
+                                        <th scope="col">Sent</th>
+                                        <th scope="col">Delivered</th>
+                                        <th scope="col">Stuck at "sent"</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {deviceStats.map((device) => (
+                                        <tr key={device.id}>
+                                            <td>
+                                                <span className="sms-log-device">
+                                                    <span className="sms-log-device-icon" aria-hidden="true">
+                                                        <SmartphoneNfcIcon size={15} />
+                                                    </span>
+                                                    {device.label}
+                                                </span>
+                                            </td>
+                                            <td>{device.sent}</td>
+                                            <td>{device.delivered}</td>
+                                            <td>
+                                                <span
+                                                    className={
+                                                        'pf-pill ' +
+                                                        (device.stuck_rate >= 50
+                                                            ? 'pf-pill--danger'
+                                                            : device.stuck_rate >= 20
+                                                              ? 'pf-pill--inactive'
+                                                              : 'pf-pill--active')
+                                                    }
+                                                >
+                                                    {device.stuck_rate}% ({device.sent}/{device.attempted})
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 )}
