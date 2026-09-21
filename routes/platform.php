@@ -3,6 +3,7 @@
 use App\Http\Controllers\Platform\AuditLogController;
 use App\Http\Controllers\Platform\CredentialRequestLogController;
 use App\Http\Controllers\Platform\DashboardController;
+use App\Http\Controllers\Platform\GuardianPhoneLookupController;
 use App\Http\Controllers\Platform\PlatformAdminController;
 use App\Http\Controllers\Platform\SmsDeliveryLogController;
 use App\Http\Controllers\Platform\SmsGatewayDeviceController;
@@ -49,6 +50,9 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
         Route::patch('stations/{station}/retire', [StationController::class, 'retire'])->name('stations.retire');
         Route::patch('stations/{station}/reactivate', [StationController::class, 'reactivate'])->name('stations.reactivate');
         Route::delete('stations/{station}', [StationController::class, 'destroy'])->name('stations.destroy');
+        Route::post('stations/{station}/media', [StationController::class, 'storeMedia'])->name('stations.media.store');
+        Route::patch('stations/{station}/media/{media}', [StationController::class, 'updateMedia'])->name('stations.media.update');
+        Route::delete('stations/{station}/media/{media}', [StationController::class, 'destroyMedia'])->name('stations.media.destroy');
 
         Route::get('sms-gateway/devices', [SmsGatewayDeviceController::class, 'index'])->name('sms-gateway.devices.index');
         Route::post('sms-gateway/devices', [SmsGatewayDeviceController::class, 'store'])->name('sms-gateway.devices.store');
@@ -58,6 +62,8 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
         Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
 
         Route::get('sms-log', [SmsDeliveryLogController::class, 'index'])->name('sms-log.index');
+
+        Route::get('guardian-phone-lookup', [GuardianPhoneLookupController::class, 'index'])->name('guardian-phone-lookup.index');
 
         Route::get('credential-requests', [CredentialRequestLogController::class, 'index'])->name('credential-requests.index');
 
