@@ -10,6 +10,7 @@ import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
 import { DeleteIcon } from '@/Components/icons/delete';
 import { XIcon } from '@/Components/icons/x';
 import { ClockIcon } from '@/Components/icons/clock';
+import { PlayIcon } from '@/Components/icons/play';
 
 /**
  * The kiosk idle-screen slideshow's admin side — shared by Portal and
@@ -40,6 +41,7 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [dragging, setDragging] = useState(false);
     const [movingId, setMovingId] = useState<string | null>(null);
+    const [previewItem, setPreviewItem] = useState<KioskMediaItem | null>(null);
     const { data, setData, post, processing, progress, errors, reset, transform } = useForm<{
         file: File | null;
         duration_seconds: string;
@@ -272,11 +274,22 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
                             className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-opacity dark:border-slate-700 dark:bg-slate-900/40"
                             style={{ opacity: movingId && movingId !== item.id ? 0.5 : 1 }}
                         >
-                            <div className="h-14 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+                            <div className="relative h-14 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
                                 {item.type === 'image' ? (
                                     <img src={item.url} alt="" className="h-full w-full object-cover" />
                                 ) : (
-                                    <video src={item.url} muted className="h-full w-full object-cover" />
+                                    <>
+                                        <video src={item.url} muted className="h-full w-full object-cover" />
+                                        <button
+                                            type="button"
+                                            onClick={() => setPreviewItem(item)}
+                                            className="absolute inset-0 flex items-center justify-center bg-black/20 text-white opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100"
+                                            aria-label="Play video to check it plays correctly"
+                                            title="Play video"
+                                        >
+                                            <PlayIcon size={22} />
+                                        </button>
+                                    </>
                                 )}
                             </div>
 
@@ -354,6 +367,37 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {previewItem && (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`Preview of ${previewItem.original_filename ?? 'video'}`}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6"
+                    onClick={() => setPreviewItem(null)}
+                >
+                    <div className="w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="mb-2 flex items-center justify-between text-white">
+                            <p className="truncate text-xs font-semibold">{previewItem.original_filename ?? 'Unknown filename'}</p>
+                            <button
+                                type="button"
+                                onClick={() => setPreviewItem(null)}
+                                className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
+                                aria-label="Close preview"
+                            >
+                                <XIcon size={16} />
+                            </button>
+                        </div>
+                        <video
+                            key={previewItem.id}
+                            src={previewItem.url}
+                            controls
+                            autoPlay
+                            className="max-h-[80vh] w-full rounded-xl bg-black"
+                        />
+                    </div>
                 </div>
             )}
         </div>
