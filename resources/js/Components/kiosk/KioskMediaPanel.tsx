@@ -1,5 +1,4 @@
 import InputError from '@/Components/InputError';
-import Table from '@/Components/admin/Table';
 import StatusBadge from '@/Components/admin/StatusBadge';
 import { useForm, router } from '@inertiajs/react';
 import { useRef, useState } from 'react';
@@ -7,6 +6,10 @@ import type { KioskMediaItem } from '@/types';
 import { UploadIcon } from '@/Components/icons/upload';
 import { ChevronUpIcon } from '@/Components/icons/chevron-up';
 import { ChevronDownIcon } from '@/Components/icons/chevron-down';
+import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
+import { DeleteIcon } from '@/Components/icons/delete';
+import { XIcon } from '@/Components/icons/x';
+import { ClockIcon } from '@/Components/icons/clock';
 
 /**
  * The kiosk idle-screen slideshow's admin side — shared by Portal and
@@ -28,16 +31,34 @@ function formatFileSize(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+const TYPE_PILL: Record<string, string> = {
+    image: 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800/60',
+    video: 'bg-violet-50 text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-900/30 dark:text-violet-300 dark:ring-violet-800/60',
+};
+
 export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl, extraFormData = {} }: KioskMediaPanelProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [dragging, setDragging] = useState(false);
     const [movingId, setMovingId] = useState<string | null>(null);
-    const { data, setData, post, processing, errors, reset, transform } = useForm<{
+    const { data, setData, post, processing, progress, errors, reset, transform } = useForm<{
         file: File | null;
         duration_seconds: string;
     }>({
         file: null,
         duration_seconds: '',
     });
+
+    function handleFile(file: File | null) {
+        if (!file) return;
+        if (!file.name.match(/\.(jpe?g|png|webp|mp4|webm)$/i)) return;
+        setData('file', file);
+    }
+
+    function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+        e.preventDefault();
+        setDragging(false);
+        handleFile(e.dataTransfer.files?.[0] ?? null);
+    }
 
     function submitUpload(e: React.FormEvent) {
         e.preventDefault();
@@ -78,126 +99,232 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
     }
 
     const sorted = [...media].sort((a, b) => a.position - b.position);
+    const uploadPercent = progress?.percentage ?? null;
 
     return (
         <div className="pf-panel p-6">
-            <div className="mb-5">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Idle-Screen Media</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Shown on this kiosk after 10 seconds with no tap. Images (max 10MB) cycle in order; videos (max 100MB) play muted and loop.
-                </p>
+            <div className="mb-5 flex items-center gap-3">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/15 to-blue-500/15 text-indigo-500 ring-1 ring-inset ring-indigo-500/20 dark:text-indigo-300">
+                    <MonitorCheckIcon size={18} />
+                </span>
+                <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">Idle-Screen Media</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Shown on this kiosk after 10 seconds with no tap. Images (max 10MB) cycle in order; videos (max 100MB) play muted and loop.
+                    </p>
+                </div>
             </div>
 
-            <form onSubmit={submitUpload} className="mb-5 flex flex-wrap items-end gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/40">
-                <div className="flex-1 min-w-[220px]">
-                    <label htmlFor="kiosk-media-file" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Image or video
-                    </label>
+            <form onSubmit={submitUpload} className="mb-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
+                    {/* Drag-and-drop zone */}
+                    <div
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Upload image or video — drag and drop or click to browse"
+                        onClick={() => fileInputRef.current?.click()}
+                        onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+                        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                        onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
+                        onDrop={handleDrop}
+                        className={
+                            'flex-1 flex items-center gap-3 rounded-2xl border-2 border-dashed px-5 py-4 cursor-pointer transition-colors duration-150 ' +
+                            (dragging
+                                ? 'border-indigo-400 bg-indigo-50/70 dark:bg-indigo-950/30'
+                                : data.file
+                                  ? 'border-emerald-300 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/20'
+                                  : 'border-slate-200 bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900/40 dark:hover:border-slate-600')
+                        }
+                    >
+                        <span
+                            className={
+                                'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ' +
+                                (data.file
+                                    ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-300'
+                                    : 'bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:ring-slate-700')
+                            }
+                        >
+                            <UploadIcon size={18} />
+                        </span>
+
+                        <div className="min-w-0 flex-1">
+                            {data.file ? (
+                                <>
+                                    <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">{data.file.name}</p>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{formatFileSize(data.file.size)}</p>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                        {dragging ? 'Drop to add' : 'Drag & drop an image or video'}
+                                    </p>
+                                    <p className="text-[11px] text-slate-400">or click to browse — JPG, PNG, WEBP, MP4, WEBM</p>
+                                </>
+                            )}
+                        </div>
+
+                        {data.file && !processing && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setData('file', null);
+                                    if (fileInputRef.current) fileInputRef.current.value = '';
+                                }}
+                                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200/70 hover:text-slate-600 dark:hover:bg-slate-700"
+                                aria-label="Clear selected file"
+                            >
+                                <XIcon size={14} />
+                            </button>
+                        )}
+                    </div>
+
                     <input
-                        id="kiosk-media-file"
                         ref={fileInputRef}
                         type="file"
                         accept=".jpg,.jpeg,.png,.webp,.mp4,.webm"
-                        onChange={(e) => setData('file', e.target.files?.[0] ?? null)}
-                        className="block w-full text-xs text-slate-600 dark:text-slate-300"
+                        onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+                        className="hidden"
                     />
-                    {data.file && (
-                        <p className="mt-1 text-[11px] text-slate-400">{formatFileSize(data.file.size)}</p>
-                    )}
-                    <InputError message={errors.file} className="mt-1" />
+
+                    {/* Duration + submit */}
+                    <div className="flex items-end gap-3">
+                        <div className="w-28">
+                            <label htmlFor="kiosk-media-duration" className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                <ClockIcon size={11} />
+                                Seconds
+                            </label>
+                            <input
+                                id="kiosk-media-duration"
+                                type="number"
+                                min={1}
+                                max={120}
+                                placeholder="Default"
+                                value={data.duration_seconds}
+                                onChange={(e) => setData('duration_seconds', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-900 shadow-sm focus:border-indigo-400 focus:ring-indigo-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={processing || !data.file}
+                            className="pf-btn pf-btn-primary !h-[42px] !rounded-xl !text-xs !px-5 disabled:opacity-50"
+                        >
+                            <UploadIcon size={15} />
+                            {processing ? 'Uploading…' : 'Upload'}
+                        </button>
+                    </div>
                 </div>
 
-                <div className="w-32">
-                    <label htmlFor="kiosk-media-duration" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Seconds shown
-                    </label>
-                    <input
-                        id="kiosk-media-duration"
-                        type="number"
-                        min={1}
-                        max={120}
-                        placeholder="Default"
-                        value={data.duration_seconds}
-                        onChange={(e) => setData('duration_seconds', e.target.value)}
-                        className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                    />
-                </div>
+                {/* Real upload progress — Inertia tracks this natively for file uploads. */}
+                {processing && uploadPercent !== null && (
+                    <div className="mt-3">
+                        <div className="mb-1 flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            <span>Uploading to storage…</span>
+                            <span className="tabular-nums text-indigo-500 dark:text-indigo-300">{uploadPercent}%</span>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                            <div
+                                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-[width] duration-150 ease-out"
+                                style={{ width: `${uploadPercent}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
 
-                <button type="submit" disabled={processing || !data.file} className="pf-btn pf-btn-primary !h-9 !text-xs">
-                    <UploadIcon size={16} />
-                    {processing ? 'Uploading...' : 'Upload'}
-                </button>
+                <InputError message={errors.file} className="mt-2" />
             </form>
 
-            <Table>
-                <Table.Head>
-                    <Table.Th>Preview</Table.Th>
-                    <Table.Th>Type</Table.Th>
-                    <Table.Th>Duration</Table.Th>
-                    <Table.Th>Status</Table.Th>
-                    <Table.Th>
-                        <span className="sr-only">Actions</span>
-                    </Table.Th>
-                </Table.Head>
-                <Table.Body>
-                    {sorted.length === 0 && <Table.Empty colSpan={5}>No media assigned to this kiosk yet.</Table.Empty>}
-
+            {sorted.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 py-10 text-center dark:border-slate-700">
+                    <MonitorCheckIcon size={22} className="text-slate-300 dark:text-slate-600" />
+                    <p className="text-xs font-medium text-slate-400 dark:text-slate-500">No media assigned to this kiosk yet.</p>
+                </div>
+            ) : (
+                <div className="space-y-2">
                     {sorted.map((item, index) => (
-                        <tr key={item.id}>
-                            <Table.Td>
+                        <div
+                            key={item.id}
+                            className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-opacity dark:border-slate-700 dark:bg-slate-900/40"
+                            style={{ opacity: movingId && movingId !== item.id ? 0.5 : 1 }}
+                        >
+                            <div className="h-14 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
                                 {item.type === 'image' ? (
-                                    <img src={item.url} alt="" className="h-12 w-20 rounded-md object-cover" />
+                                    <img src={item.url} alt="" className="h-full w-full object-cover" />
                                 ) : (
-                                    <video src={item.url} muted className="h-12 w-20 rounded-md object-cover" />
+                                    <video src={item.url} muted className="h-full w-full object-cover" />
                                 )}
-                            </Table.Td>
-                            <Table.Td className="capitalize">{item.type}</Table.Td>
-                            <Table.Td>{item.duration_seconds ? `${item.duration_seconds}s` : 'Default'}</Table.Td>
-                            <Table.Td>
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${TYPE_PILL[item.type]}`}>
+                                        {item.type}
+                                    </span>
+                                    <span className="text-[11px] text-slate-400">
+                                        {item.duration_seconds ? `${item.duration_seconds}s slide` : 'Default duration'}
+                                    </span>
+                                </div>
+
                                 <button
                                     type="button"
                                     onClick={() => toggleActive(item)}
-                                    className="cursor-pointer"
+                                    className="mt-1.5 inline-flex items-center gap-2 group"
                                     title={item.is_active ? 'Click to hide from the kiosk' : 'Click to show on the kiosk'}
                                 >
+                                    <span
+                                        className={
+                                            'relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ' +
+                                            (item.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600')
+                                        }
+                                    >
+                                        <span
+                                            className={
+                                                'inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ' +
+                                                (item.is_active ? 'translate-x-4.5' : 'translate-x-1')
+                                            }
+                                            style={{ transform: item.is_active ? 'translateX(18px)' : 'translateX(2px)' }}
+                                        />
+                                    </span>
                                     <StatusBadge color={item.is_active ? 'green' : 'gray'}>
                                         {item.is_active ? 'Active' : 'Hidden'}
                                     </StatusBadge>
                                 </button>
-                            </Table.Td>
-                            <Table.Td className="text-right">
-                                <div className="flex items-center justify-end gap-2">
-                                    <button
-                                        type="button"
-                                        disabled={index === 0 || movingId !== null}
-                                        onClick={() => move(item, -1)}
-                                        className="rounded-md border border-slate-200 p-1 text-slate-500 disabled:opacity-30 dark:border-slate-700"
-                                        aria-label="Move up"
-                                    >
-                                        <ChevronUpIcon size={14} />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        disabled={index === sorted.length - 1 || movingId !== null}
-                                        onClick={() => move(item, 1)}
-                                        className="rounded-md border border-slate-200 p-1 text-slate-500 disabled:opacity-30 dark:border-slate-700"
-                                        aria-label="Move down"
-                                    >
-                                        <ChevronDownIcon size={14} />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => destroy(item)}
-                                        className="font-bold text-red-600 hover:text-red-700 hover:underline dark:text-red-400 text-xs"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
-                            </Table.Td>
-                        </tr>
+                            </div>
+
+                            <div className="flex flex-shrink-0 items-center gap-1">
+                                <button
+                                    type="button"
+                                    disabled={index === 0 || movingId !== null}
+                                    onClick={() => move(item, -1)}
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-25 disabled:hover:bg-transparent dark:hover:bg-slate-800"
+                                    aria-label="Move up"
+                                >
+                                    <ChevronUpIcon size={15} />
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={index === sorted.length - 1 || movingId !== null}
+                                    onClick={() => move(item, 1)}
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-25 disabled:hover:bg-transparent dark:hover:bg-slate-800"
+                                    aria-label="Move down"
+                                >
+                                    <ChevronDownIcon size={15} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => destroy(item)}
+                                    className="ml-1 flex h-8 w-8 items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
+                                    aria-label="Delete slide"
+                                >
+                                    <DeleteIcon size={15} />
+                                </button>
+                            </div>
+                        </div>
                     ))}
-                </Table.Body>
-            </Table>
+                </div>
+            )}
         </div>
     );
 }
