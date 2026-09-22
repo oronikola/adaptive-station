@@ -39,6 +39,16 @@ class TapEventResolveController extends Controller
 
         $resolution = $result['resolutions'][$request->validated('id')] ?? ['found' => false, 'reason' => null];
 
+        // acceptBatch() stores the tap up front so an essentiel resolution
+        // can backfill its identity in place (see its docblock) — but a card
+        // that stays unresolved (no essentiel match, or no essentiel at all)
+        // was never actually anyone's tap. Removing it here, rather than
+        // leaving a person-less row behind, keeps attendance from recording
+        // a "tap" for a card no one has any identity for.
+        if (! ($resolution['found'] ?? false)) {
+            TapEvent::whereIn('id', $result['accepted'])->delete();
+        }
+
         return response()->json($resolution);
     }
 }

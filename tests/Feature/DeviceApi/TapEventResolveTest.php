@@ -91,10 +91,15 @@ class TapEventResolveTest extends TestCase
         [, $token] = $this->makeEssentielTenant();
         Http::fake(['app-hcb.essentiel.test/*' => Http::response(['found' => false, 'reason' => 'not_registered'], 200)]);
 
+        $payload = $this->payload('UNKNOWN-CARD');
         $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/taps/resolve', $this->payload('UNKNOWN-CARD'))
+            ->postJson('/api/v1/device/taps/resolve', $payload)
             ->assertOk()
             ->assertJson(['found' => false]);
+
+        // A card no one (not even essentiel) recognizes must not leave a
+        // phantom attendance record behind.
+        $this->assertNull(TapEvent::allTenants()->find($payload['id']));
     }
 
     public function test_a_non_essentiel_tenant_gets_not_found_without_any_external_call(): void
@@ -104,12 +109,14 @@ class TapEventResolveTest extends TestCase
         ['token' => $token] = StationCredential::issueFor($station);
         Http::fake();
 
+        $payload = $this->payload('UNKNOWN-CARD');
         $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/taps/resolve', $this->payload('UNKNOWN-CARD'))
+            ->postJson('/api/v1/device/taps/resolve', $payload)
             ->assertOk()
             ->assertJson(['found' => false]);
 
         Http::assertNothingSent();
+        $this->assertNull(TapEvent::allTenants()->find($payload['id']));
     }
 
     public function test_a_card_that_already_exists_locally_still_records_the_tap(): void
