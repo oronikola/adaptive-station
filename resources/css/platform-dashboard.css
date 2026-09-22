@@ -957,6 +957,37 @@ table tbody td.pf-empty:has(> div) {
     pointer-events: none;
 }
 
+.pf-page-link:disabled {
+    background: var(--as-border-light);
+    color: var(--as-border-mid);
+    pointer-events: none;
+}
+
+.pf-page-link--ellipsis {
+    color: var(--as-text-muted);
+    cursor: default;
+}
+
+.pf-pagination-count {
+    margin-right: auto;
+    color: var(--as-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pf-pagination-count strong {
+    color: var(--as-text);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.pf-pagination-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
 /* ── Modal form · glass hero + animation ── */
 .pf-modal {
     padding: 28px;

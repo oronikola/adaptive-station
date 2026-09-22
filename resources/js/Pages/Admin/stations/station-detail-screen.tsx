@@ -3,6 +3,7 @@ import Modal from '@/Components/Modal';
 import SecretOnceCallout from '@/Components/SecretOnceCallout';
 import StatusBadge from '@/Components/admin/StatusBadge';
 import Table from '@/Components/admin/Table';
+import ClientPagination from '@/Components/admin/ClientPagination';
 import KioskMediaPanel from '@/Components/kiosk/KioskMediaPanel';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
@@ -51,6 +52,13 @@ export default function StationDetailScreen({
     const [issueActivationCodeOpen, setIssueActivationCodeOpen] = useState(false);
     const [issueCredentialOpen, setIssueCredentialOpen] = useState(false);
     const [isResettingLink, setIsResettingLink] = useState(false);
+    const [credentialPage, setCredentialPage] = useState(1);
+
+    const credentialsPerPage = 8;
+    const credentialPageCount = Math.max(1, Math.ceil(credentials.length / credentialsPerPage));
+    const safeCredentialPage = Math.min(credentialPage, credentialPageCount);
+    const credentialStart = (safeCredentialPage - 1) * credentialsPerPage;
+    const pageCredentials = credentials.slice(credentialStart, credentialStart + credentialsPerPage);
 
     const configForm = useForm({
         configuration: JSON.stringify(station.configuration ?? {}, null, 2),
@@ -290,7 +298,7 @@ export default function StationDetailScreen({
                                     <Table.Empty colSpan={4}>No credentials issued yet.</Table.Empty>
                                 )}
 
-                                {credentials.map((credential: StationCredential) => (
+                                {pageCredentials.map((credential: StationCredential) => (
                                     <tr key={credential.id}>
                                         <Table.Td>{credential.label ?? '—'}</Table.Td>
                                         <Table.Td>
@@ -318,6 +326,16 @@ export default function StationDetailScreen({
                                 ))}
                             </Table.Body>
                         </Table>
+
+                        <ClientPagination
+                            page={safeCredentialPage}
+                            pageCount={credentialPageCount}
+                            total={credentials.length}
+                            rangeStart={credentialStart + 1}
+                            rangeEnd={credentialStart + pageCredentials.length}
+                            onPageChange={setCredentialPage}
+                            className="-mx-6 -mb-6 mt-6"
+                        />
                     </div>
 
                     <KioskMediaPanel
