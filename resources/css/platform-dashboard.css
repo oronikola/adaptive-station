@@ -2329,3 +2329,50 @@ table tbody td.pf-empty:has(> div) {
     font-size: 12px;
     line-height: 1.5;
 }
+
+/* ── Station detail · two-column management grid ── */
+.pf-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+@media (min-width: 960px) {
+    .pf-detail-grid {
+        grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    }
+}
+
+/* The `.pf-panel + .pf-panel` rule would otherwise force a stray
+   margin-top onto the second column's panel, breaking row alignment. */
+.pf-detail-grid > .pf-panel {
+    margin-top: 0;
+    margin-bottom: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Fill the stretch height so both columns always match: the table area
+   expands to absorb slack, while the configuration form / textarea grow
+   to fill the remaining space beside it. */
+.pf-detail-grid > .pf-panel > .pf-table-wrap {
+    flex: 1 1 auto;
+}
+
+.pf-detail-grid-form {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.pf-detail-grid-form > *:first-child {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.pf-detail-grid-form textarea {
+    flex: 1 1 auto;
+}

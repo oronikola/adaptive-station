@@ -2,7 +2,7 @@ import React from 'react';
 
 function Table({ children }: { children: React.ReactNode }) {
     return (
-        <div className="overflow-hidden overflow-x-auto rounded-2xl border border-[#e2e8f0] bg-white shadow-[0_8px_24px_-4px_rgba(10,27,115,0.12)] dark:border-gray-700 dark:bg-gray-800">
+        <div className="h-full overflow-hidden overflow-x-auto rounded-2xl border border-[#e2e8f0] bg-white shadow-[0_8px_24px_-4px_rgba(10,27,115,0.12)] dark:border-gray-700 dark:bg-gray-800">
             <table className="min-w-full divide-y divide-[#eef1f6] dark:divide-gray-700">
                 {children}
             </table>

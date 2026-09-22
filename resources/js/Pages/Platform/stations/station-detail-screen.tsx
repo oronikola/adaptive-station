@@ -15,9 +15,9 @@ import { useMemo, useState } from 'react';
 import { KioskMediaItem, StationCredential, Tenant } from '@/types';
 import { ArrowLeftIcon } from '@/Components/icons/arrow-left';
 import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
-import { CircleHelpIcon } from '@/Components/icons/circle-help';
-import { DollarSignIcon } from '@/Components/icons/dollar-sign';
 import { ActivityIcon } from '@/Components/icons/activity';
+import { ClockIcon } from '@/Components/icons/clock';
+import { CpuIcon } from '@/Components/icons/cpu';
 import { LockIcon } from '@/Components/icons/lock';
 import { PencilIcon } from '@/Components/icons/pencil';
 import { XIcon } from '@/Components/icons/x';
@@ -129,6 +129,25 @@ export default function StationDetailScreen({
             configuration: parsed as unknown as string,
         });
     }
+
+    function formatConfiguration() {
+        try {
+            const parsed = JSON.parse(configForm.data.configuration || '{}');
+            configForm.setData('configuration', JSON.stringify(parsed, null, 2));
+            setConfigError(null);
+        } catch {
+            setConfigError('Configuration must be valid JSON before it can be formatted.');
+        }
+    }
+
+    const isValidConfiguration = useMemo(() => {
+        try {
+            JSON.parse(configForm.data.configuration || '{}');
+            return true;
+        } catch {
+            return false;
+        }
+    }, [configForm.data.configuration]);
 
     function submitIssueCredential(e: React.FormEvent) {
         e.preventDefault();
@@ -284,19 +303,6 @@ export default function StationDetailScreen({
                             ({tenant.code})
                         </p>
                     </div>
-
-                    <div className="flex items-center gap-3">
-                        {station.status === 'pending_activation' && (
-                            <button
-                                type="button"
-                                onClick={issueActivationCode}
-                                className="pf-btn pf-btn-primary"
-                            >
-                                <PlusIcon size={20} />
-                                Issue Activation Code
-                            </button>
-                        )}
-                    </div>
                 </div>
 
                 <SecretOnceCallout label="Device credential token" value={flash?.deviceToken} />
@@ -319,22 +325,32 @@ export default function StationDetailScreen({
 
                     <div className="pf-stat-card">
                         <span className="pf-stat-icon pf-stat-icon--violet" aria-hidden="true">
-                            <CircleHelpIcon size={20} />
+                            <ClockIcon size={20} />
                         </span>
                         <div>
                             <p className="pf-stat-label">Last Seen</p>
                             <p className="pf-stat-value text-sm font-semibold">
-                                {station.last_seen_at ? new Date(station.last_seen_at).toLocaleTimeString() : 'Never'}
+                                {station.last_seen_at
+                                    ? new Date(station.last_seen_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+                                    : 'Never'}
                             </p>
                             <p className="pf-stat-hint">
-                                {station.last_seen_at ? new Date(station.last_seen_at).toLocaleDateString() : 'No sync recorded'}
+                                {station.last_seen_at
+                                    ? new Date(station.last_seen_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                                    : 'No sync recorded'}
                             </p>
+                            {station.last_scan_at && (
+                                <p className="pf-stat-hint mt-0.5">
+                                    Last scan:{' '}
+                                    {new Date(station.last_scan_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                                </p>
+                            )}
                         </div>
                     </div>
 
                     <div className="pf-stat-card">
                         <span className="pf-stat-icon pf-stat-icon--green" aria-hidden="true">
-                            <DollarSignIcon size={20} />
+                            <CpuIcon size={20} />
                         </span>
                         <div>
                             <p className="pf-stat-label">App Version</p>
@@ -390,114 +406,146 @@ export default function StationDetailScreen({
                     </div>
                 )}
 
-                {/* Configuration Card */}
-                <div className="pf-panel mb-6">
-                    <div className="pf-panel-header">
-                        <div>
-                            <h3 className="pf-panel-title">Kiosk Configuration (JSON)</h3>
-                            <p className="pf-panel-count">
-                                Display settings, scanner preferences, and sync parameters delivered to the kiosk.
-                            </p>
-                        </div>
-                    </div>
-                    <form onSubmit={submitConfiguration} className="p-6 space-y-4">
-                        <div>
-                            <textarea
-                                id="configuration"
-                                rows={7}
-                                value={configForm.data.configuration}
-                                onChange={(e) => configForm.setData('configuration', e.target.value)}
-                                className="block w-full rounded-xl border-slate-300 font-mono text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 p-3"
-                                placeholder="{}"
-                            />
-                            <InputError message={configError ?? configForm.errors.configuration} className="mt-2" />
-                        </div>
-                        <div className="flex justify-end">
+                {/* Management: Device Credentials + Kiosk Configuration */}
+                <div className="pf-detail-grid">
+                    {/* Device Credentials Card */}
+                    <section className="pf-panel">
+                        <div className="pf-panel-header">
+                            <div>
+                                <h3 className="pf-panel-title">Device Credentials</h3>
+                                <p className="pf-panel-count">
+                                    Cryptographic API bearer tokens used by the kiosk hardware to authenticate.
+                                </p>
+                            </div>
                             <button
-                                type="submit"
-                                disabled={configForm.processing}
-                                className="pf-btn pf-btn-primary text-xs"
+                                type="button"
+                                onClick={() => setIssueCredentialOpen(true)}
+                                className="pf-btn pf-btn-secondary text-xs"
                             >
-                                {configForm.processing ? 'Saving...' : 'Save Configuration'}
+                                <PlusIcon size={20} />
+                                Issue New Credential
                             </button>
                         </div>
-                    </form>
-                </div>
 
-                {/* Device Credentials Card */}
-                <div className="pf-panel mb-6">
-                    <div className="pf-panel-header">
-                        <div>
-                            <h3 className="pf-panel-title">Device Credentials</h3>
-                            <p className="pf-panel-count">
-                                Cryptographic API bearer tokens used by the kiosk hardware to authenticate.
-                            </p>
+                        <div className="pf-table-wrap">
+                            <Table>
+                                <Table.Head>
+                                    <Table.Th>Label</Table.Th>
+                                    <Table.Th>Last Used</Table.Th>
+                                    <Table.Th>Status</Table.Th>
+                                    <Table.Th>
+                                        <span className="sr-only">Actions</span>
+                                    </Table.Th>
+                                </Table.Head>
+                                <Table.Body>
+                                    {credentials.length === 0 && (
+                                        <Table.Empty colSpan={4}>No credentials issued yet for this station.</Table.Empty>
+                                    )}
+
+                                    {credentials.map((credential) => (
+                                        <tr key={credential.id}>
+                                            <Table.Td className="font-medium text-slate-800 dark:text-slate-200">
+                                                {credential.label || 'Default Token'}
+                                            </Table.Td>
+                                            <Table.Td className="text-xs text-slate-500">
+                                                {credential.last_used_at
+                                                    ? new Date(credential.last_used_at).toLocaleString()
+                                                    : 'Never used'}
+                                            </Table.Td>
+                                            <Table.Td>
+                                                <StatusBadge color={credential.revoked_at ? 'gray' : 'green'}>
+                                                    {credential.revoked_at ? 'Revoked' : 'Active'}
+                                                </StatusBadge>
+                                            </Table.Td>
+                                            <Table.Td className="text-right">
+                                                {!credential.revoked_at && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => revokeCredential(credential.id)}
+                                                        className="font-medium text-red-600 hover:text-red-800 dark:text-red-400 text-xs"
+                                                    >
+                                                        Revoke
+                                                    </button>
+                                                )}
+                                            </Table.Td>
+                                        </tr>
+                                    ))}
+                                </Table.Body>
+                            </Table>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => setIssueCredentialOpen(true)}
-                            className="pf-btn pf-btn-secondary text-xs"
-                        >
-                            <PlusIcon size={20} />
-                            Issue New Credential
-                        </button>
-                    </div>
+                    </section>
 
-                    <div className="pf-table-wrap">
-                        <Table>
-                            <Table.Head>
-                                <Table.Th>Label</Table.Th>
-                                <Table.Th>Last Used</Table.Th>
-                                <Table.Th>Status</Table.Th>
-                                <Table.Th>
-                                    <span className="sr-only">Actions</span>
-                                </Table.Th>
-                            </Table.Head>
-                            <Table.Body>
-                                {credentials.length === 0 && (
-                                    <Table.Empty colSpan={4}>No credentials issued yet for this station.</Table.Empty>
-                                )}
-
-                                {credentials.map((credential) => (
-                                    <tr key={credential.id}>
-                                        <Table.Td className="font-medium text-slate-800 dark:text-slate-200">
-                                            {credential.label || 'Default Token'}
-                                        </Table.Td>
-                                        <Table.Td className="text-xs text-slate-500">
-                                            {credential.last_used_at
-                                                ? new Date(credential.last_used_at).toLocaleString()
-                                                : 'Never used'}
-                                        </Table.Td>
-                                        <Table.Td>
-                                            <StatusBadge color={credential.revoked_at ? 'gray' : 'green'}>
-                                                {credential.revoked_at ? 'Revoked' : 'Active'}
-                                            </StatusBadge>
-                                        </Table.Td>
-                                        <Table.Td className="text-right">
-                                            {!credential.revoked_at && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => revokeCredential(credential.id)}
-                                                    className="font-medium text-red-600 hover:text-red-800 dark:text-red-400 text-xs"
-                                                >
-                                                    Revoke
-                                                </button>
-                                            )}
-                                        </Table.Td>
-                                    </tr>
-                                ))}
-                            </Table.Body>
-                        </Table>
-                    </div>
-
-                    <KioskMediaPanel
-                        media={media}
-                        storeUrl={route('platform.stations.media.store', station.id)}
-                        updateUrl={(id) => route('platform.stations.media.update', [station.id, id] as unknown as Record<string, unknown>)}
-                        destroyUrl={(id) => route('platform.stations.media.destroy', [station.id, id] as unknown as Record<string, unknown>)}
-                        extraFormData={{ tenant_id: String(tenant.id) }}
-                    />
+                    {/* Kiosk Configuration Card */}
+                    <section className="pf-panel">
+                        <div className="pf-panel-header">
+                            <div>
+                                <h3 className="pf-panel-title">Kiosk Configuration</h3>
+                                <p className="pf-panel-count">
+                                    JSON delivered to the kiosk: display, scanner, and sync parameters.
+                                </p>
+                            </div>
+                        </div>
+                        <form onSubmit={submitConfiguration} className="pf-detail-grid-form p-6 space-y-4">
+                            <div>
+                                <div className="mb-2 flex items-center justify-between gap-3">
+                                    <label
+                                        htmlFor="configuration"
+                                        className="text-xs font-semibold text-slate-600 dark:text-slate-300"
+                                    >
+                                        Payload
+                                    </label>
+                                    <span
+                                        className={
+                                            'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset ' +
+                                            (isValidConfiguration
+                                                ? 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800/50'
+                                                : 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-800/50')
+                                        }
+                                        aria-live="polite"
+                                    >
+                                        <span className={`h-1.5 w-1.5 rounded-full ${isValidConfiguration ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                        {isValidConfiguration ? 'Valid JSON' : 'Invalid JSON'}
+                                    </span>
+                                </div>
+                                <textarea
+                                    id="configuration"
+                                    rows={7}
+                                    value={configForm.data.configuration}
+                                    onChange={(e) => configForm.setData('configuration', e.target.value)}
+                                    spellCheck={false}
+                                    className="block w-full resize-y rounded-xl border-slate-300 font-mono text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 p-3"
+                                    placeholder="{}"
+                                />
+                                <InputError message={configError ?? configForm.errors.configuration} className="mt-2" />
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={formatConfiguration}
+                                    className="pf-btn pf-btn-secondary text-xs"
+                                >
+                                    Format JSON
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={configForm.processing}
+                                    className="pf-btn pf-btn-primary text-xs"
+                                >
+                                    {configForm.processing ? 'Saving...' : 'Save Configuration'}
+                                </button>
+                            </div>
+                        </form>
+                    </section>
                 </div>
+
+                {/* Idle-Screen Media (standalone panel) */}
+                <KioskMediaPanel
+                    media={media}
+                    storeUrl={route('platform.stations.media.store', station.id)}
+                    updateUrl={(id) => route('platform.stations.media.update', [station.id, id] as unknown as Record<string, unknown>)}
+                    destroyUrl={(id) => route('platform.stations.media.destroy', [station.id, id] as unknown as Record<string, unknown>)}
+                    extraFormData={{ tenant_id: String(tenant.id) }}
+                />
             </div>
 
             {/* Modal for Issuing New Credential */}
