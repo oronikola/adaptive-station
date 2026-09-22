@@ -475,6 +475,11 @@
     font-weight: 500;
 }
 
+.pf-panel-count-accent {
+    color: var(--as-brand-blue);
+    font-weight: 700;
+}
+
 .pf-table-wrap {
     overflow-x: auto;
 }
@@ -1332,6 +1337,116 @@ table tbody td.pf-empty:has(> div) {
     color: var(--as-warning);
     font-size: 14px;
     line-height: 1.5;
+}
+
+.pf-notice-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.pf-notice-banner > svg {
+    flex: 0 0 20px;
+    margin-top: 1px;
+}
+
+.pf-notice-banner strong {
+    display: inline;
+}
+
+/* ── New-device credential notice (SMS gateway) ────────────────────────── */
+
+.pf-credential-notice {
+    margin-bottom: 16px;
+    padding: 22px 24px;
+}
+
+.pf-credential-notice-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.pf-credential-notice-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.pf-credential-once {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid color-mix(in srgb, var(--as-warning) 35%, transparent);
+    border-radius: 999px;
+    background: var(--as-warning-bg);
+    color: var(--as-warning);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.pf-credential-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.pf-credential-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px 14px;
+    border: 1px solid var(--as-border);
+    border-radius: 14px;
+    background: var(--as-surface-active);
+}
+
+.pf-credential-field-label {
+    flex: 0 0 auto;
+    color: var(--as-text-muted);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.pf-credential-field-value {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--as-text);
+    font-size: 13px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pf-credential-field-note {
+    margin-left: auto;
+    flex: 0 0 auto;
+    color: var(--as-text-muted);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.pf-credential-field .pf-row-action--control {
+    margin-left: auto;
+    flex: 0 0 auto;
+}
+
+@media (max-width: 640px) {
+    .pf-credential-notice-inner {
+        flex-direction: column;
+    }
+
+    .pf-credential-fields {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ── Button loading state ─────────────────────────────────────────────── */

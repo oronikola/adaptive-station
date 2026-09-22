@@ -2,6 +2,7 @@ import InputError from '@/Components/InputError';
 import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
 import { CheckIcon } from '@/Components/icons/check';
 import { ClockIcon } from '@/Components/icons/clock';
+import { CopyIcon } from '@/Components/icons/copy';
 import { LayoutGridIcon } from '@/Components/icons/layout-grid';
 import { LockIcon } from '@/Components/icons/lock';
 import { MenuIcon } from '@/Components/icons/menu';
@@ -126,6 +127,7 @@ export default function SmsGatewayDevicesScreen({
     const { flash } = usePage().props as PagePropsWithFlash;
     const { auth } = usePage<PageProps>().props;
     const canManage = auth.user.role === 'platform_super_admin';
+    const [usernameCopied, setUsernameCopied] = useState(false);
     const [createOpen, setCreateOpen] = useState(false);
     const [revokingDevice, setRevokingDevice] = useState<DeviceRow | null>(null);
     const [resettingDevice, setResettingDevice] = useState<DeviceRow | null>(null);
@@ -154,6 +156,30 @@ export default function SmsGatewayDevicesScreen({
                 reset();
             },
         });
+    }
+
+    function copyUsername() {
+        const value = flash?.deviceUsername;
+        if (!value) {
+            return;
+        }
+
+        try {
+            if (navigator?.clipboard?.writeText) {
+                navigator.clipboard.writeText(value);
+            } else {
+                const textArea = document.createElement('textarea');
+                textArea.value = value;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            }
+            setUsernameCopied(true);
+            setTimeout(() => setUsernameCopied(false), 2500);
+        } catch {
+            // Clipboard unavailable — username remains visible to copy manually.
+        }
     }
 
     function submitRevoke(e: React.FormEvent) {
@@ -213,35 +239,55 @@ export default function SmsGatewayDevicesScreen({
                 </div>
 
                 {flash?.devicePassword && (
-                    <div className="pf-panel" style={{ marginBottom: 16, padding: 16 }}>
-                        <p className="pf-field-hint" style={{ marginBottom: 8 }}>
-                            Log into the app on the phone with these credentials —
-                            the password is shown only once.
-                        </p>
-                        <p style={{ marginBottom: 4 }}>
-                            <strong>Username:</strong> <span className="font-mono">{flash.deviceUsername}</span>
-                        </p>
+                    <div className="pf-panel pf-credential-notice">
+                        <div className="pf-credential-notice-inner">
+                            <span className="pf-modal-hero-icon pf-modal-hero-icon--green" aria-hidden="true">
+                                <SmartphoneNfcIcon size={20} />
+                            </span>
+                            <div className="pf-credential-notice-copy">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <h2 className="pf-panel-title">New device credentials</h2>
+                                    <span className="pf-credential-once">
+                                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" aria-hidden="true" />
+                                        Shown once
+                                    </span>
+                                </div>
+                                <p className="pf-field-hint" style={{ margin: '4px 0 0' }}>
+                                    Log into the app on the phone with these credentials — the password is only shown once in the pop-up.
+                                </p>
+
+                                <div className="pf-credential-fields">
+                                    <div className="pf-credential-field">
+                                        <span className="pf-credential-field-label">Username</span>
+                                        <span className="pf-credential-field-value font-mono">{flash.deviceUsername}</span>
+                                        <button
+                                            type="button"
+                                            className="pf-row-action pf-row-action--control"
+                                            onClick={copyUsername}
+                                            aria-label="Copy username"
+                                        >
+                                            {usernameCopied ? <CheckIcon size={15} aria-hidden="true" /> : <CopyIcon size={15} aria-hidden="true" />}
+                                            {usernameCopied ? 'Copied' : 'Copy'}
+                                        </button>
+                                    </div>
+                                    <div className="pf-credential-field">
+                                        <span className="pf-credential-field-label">Password</span>
+                                        <span className="pf-credential-field-value font-mono">{'••••••••••'}</span>
+                                        <span className="pf-credential-field-note">In pop-up</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <SecretOnceCallout label="Password" value={flash.devicePassword} />
                     </div>
                 )}
 
                 {backlogIsHigh && (
-                    <div
-                        className="pf-panel"
-                        style={{
-                            marginBottom: 16,
-                            padding: '14px 20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 12,
-                            background: 'color-mix(in srgb, var(--as-warning, #c1791f) 8%, var(--as-surface))',
-                        }}
-                        role="alert"
-                    >
-                        <BadgeAlertIcon size={20} style={{ flexShrink: 0, color: 'var(--as-warning, #c1791f)' }} />
+                    <div className="pf-notice pf-notice-banner" role="alert">
+                        <BadgeAlertIcon size={20} aria-hidden="true" />
                         <div>
-                            <strong style={{ display: 'block', marginBottom: 2 }}>Queue backlogged</strong>
-                            <span className="pf-field-hint" style={{ margin: 0 }}>
+                            <strong>Queue backlogged</strong>
+                            <span>
                                 Oldest pending message is{' '}
                                 <strong>{formatAge(backlog.oldest_pending_age_seconds)}</strong> old.
                                 Check for offline devices in the fleet below.
@@ -279,7 +325,10 @@ export default function SmsGatewayDevicesScreen({
                     <div className="pf-panel-header">
                         <div>
                             <h2 className="pf-panel-title">Devices</h2>
-                            <p className="pf-panel-count">{devices.length} in the fleet</p>
+                            <p className="pf-panel-count">
+                                {devices.length} in the fleet ·{' '}
+                                <span className="pf-panel-count-accent">{onlineCount} online</span>
+                            </p>
                         </div>
                         <div className="pf-view-toggle" role="group" aria-label="View mode">
                             <button
@@ -365,6 +414,15 @@ export default function SmsGatewayDevicesScreen({
                                                 <div className="pft-device-info">
                                                     <p className="pft-device-label">{device.label}</p>
                                                     <p className="pft-device-username font-mono">{device.username ?? '—'}</p>
+                                                    {device.sim_stats.length > 0 && (
+                                                        <div className="pft-sim-badges">
+                                                            {device.sim_stats.map((sim) => (
+                                                                <span key={sim.sim_slot} className="pft-sim-badge">
+                                                                    SIM {sim.sim_slot + 1} · {sim.sent_today}/{device.daily_send_cap}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>

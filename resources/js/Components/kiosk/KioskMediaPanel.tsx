@@ -57,6 +57,7 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
     function handleDrop(e: React.DragEvent<HTMLDivElement>) {
         e.preventDefault();
         setDragging(false);
+        if (processing) return;
         handleFile(e.dataTransfer.files?.[0] ?? null);
     }
 
@@ -122,33 +123,46 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
                         role="button"
                         tabIndex={0}
                         aria-label="Upload image or video — drag and drop or click to browse"
-                        onClick={() => fileInputRef.current?.click()}
-                        onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
-                        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                        onClick={() => !processing && fileInputRef.current?.click()}
+                        onKeyDown={(e) => e.key === 'Enter' && !processing && fileInputRef.current?.click()}
+                        onDragOver={(e) => { e.preventDefault(); if (!processing) setDragging(true); }}
                         onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
                         onDrop={handleDrop}
                         className={
-                            'flex-1 flex items-center gap-3 rounded-2xl border-2 border-dashed px-5 py-4 cursor-pointer transition-colors duration-150 ' +
-                            (dragging
-                                ? 'border-indigo-400 bg-indigo-50/70 dark:bg-indigo-950/30'
-                                : data.file
-                                  ? 'border-emerald-300 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/20'
-                                  : 'border-slate-200 bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900/40 dark:hover:border-slate-600')
+                            'relative flex-1 flex items-center gap-3 rounded-2xl border-2 border-dashed px-5 py-4 overflow-hidden transition-colors duration-150 ' +
+                            (processing
+                                ? 'cursor-default border-indigo-300 bg-indigo-50/70 dark:border-indigo-800/70 dark:bg-indigo-950/30'
+                                : dragging
+                                  ? 'cursor-pointer border-indigo-400 bg-indigo-50/70 dark:bg-indigo-950/30'
+                                  : data.file
+                                    ? 'cursor-pointer border-emerald-300 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/20'
+                                    : 'cursor-pointer border-slate-200 bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900/40 dark:hover:border-slate-600')
                         }
                     >
                         <span
                             className={
                                 'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ' +
-                                (data.file
-                                    ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-300'
-                                    : 'bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:ring-slate-700')
+                                (processing
+                                    ? 'bg-indigo-100 text-indigo-500 dark:bg-indigo-900/50 dark:text-indigo-300'
+                                    : data.file
+                                      ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-300'
+                                      : 'bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:ring-slate-700')
                             }
                         >
-                            <UploadIcon size={18} />
+                            <UploadIcon size={18} className={processing ? 'animate-bounce' : ''} />
                         </span>
 
                         <div className="min-w-0 flex-1">
-                            {data.file ? (
+                            {processing ? (
+                                <>
+                                    <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
+                                        Uploading {data.file?.name}
+                                    </p>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                                        {data.file ? formatFileSize(data.file.size) : 'Transferring to kiosk storage…'}
+                                    </p>
+                                </>
+                            ) : data.file ? (
                                 <>
                                     <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">{data.file.name}</p>
                                     <p className="text-[11px] text-slate-500 dark:text-slate-400">{formatFileSize(data.file.size)}</p>
@@ -163,7 +177,22 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
                             )}
                         </div>
 
-                        {data.file && !processing && (
+                        {processing ? (
+                            <div className="ml-auto flex flex-shrink-0 items-baseline gap-1">
+                                {uploadPercent !== null ? (
+                                    <>
+                                        <span className="text-2xl font-extrabold leading-none tabular-nums text-indigo-600 dark:text-indigo-300">
+                                            {Math.round(uploadPercent)}
+                                        </span>
+                                        <span className="text-[11px] font-bold text-slate-400">%</span>
+                                    </>
+                                ) : (
+                                    <span className="animate-pulse text-[11px] font-bold uppercase tracking-wide text-indigo-500/80 dark:text-indigo-300/80">
+                                        Uploading…
+                                    </span>
+                                )}
+                            </div>
+                        ) : data.file ? (
                             <button
                                 type="button"
                                 onClick={(e) => {
@@ -176,6 +205,19 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
                             >
                                 <XIcon size={14} />
                             </button>
+                        ) : null}
+
+                        {processing && (
+                            <div className="absolute inset-x-3 bottom-0 h-1 overflow-hidden rounded-full bg-slate-200/70 dark:bg-slate-700/60">
+                                {uploadPercent !== null ? (
+                                    <div
+                                        className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-[width] duration-150 ease-out"
+                                        style={{ width: `${uploadPercent}%` }}
+                                    />
+                                ) : (
+                                    <div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-indigo-500 to-blue-500" />
+                                )}
+                            </div>
                         )}
                     </div>
 
@@ -216,22 +258,6 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
                         </button>
                     </div>
                 </div>
-
-                {/* Real upload progress — Inertia tracks this natively for file uploads. */}
-                {processing && uploadPercent !== null && (
-                    <div className="mt-3">
-                        <div className="mb-1 flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                            <span>Uploading to storage…</span>
-                            <span className="tabular-nums text-indigo-500 dark:text-indigo-300">{uploadPercent}%</span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                            <div
-                                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-[width] duration-150 ease-out"
-                                style={{ width: `${uploadPercent}%` }}
-                            />
-                        </div>
-                    </div>
-                )}
 
                 <InputError message={errors.file} className="mt-2" />
             </form>
