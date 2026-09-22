@@ -4,6 +4,7 @@ namespace Tests\Feature\Portal;
 
 use App\Enums\SmsOutboxStatus;
 use App\Enums\StationStatus;
+use App\Enums\TapEventType;
 use App\Models\Person;
 use App\Models\SmsOutboxMessage;
 use App\Models\Station;
@@ -49,6 +50,26 @@ class DashboardTest extends TestCase
             ->where('weeklyAttendance.6.attendance_date_local', '2026-09-15')
             ->where('weeklyAttendance.6.total', 3)
             ->where('weeklyAttendance.6.unique_people', 1));
+    }
+
+    public function test_weekly_attendance_reports_tapped_in_and_tapped_out_counts_separately(): void
+    {
+        $this->travelTo(Date::parse('2026-09-14 17:00:00', 'UTC'));
+        $tenant = Tenant::factory()->create(['timezone' => 'Asia/Manila']);
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $station = Station::factory()->for($tenant)->create();
+        TapEvent::factory()->count(2)->create([
+            'station_id' => $station->id, 'attendance_date_local' => '2026-09-15', 'event_type' => TapEventType::In,
+        ]);
+        TapEvent::factory()->create([
+            'station_id' => $station->id, 'attendance_date_local' => '2026-09-15', 'event_type' => TapEventType::Out,
+        ]);
+
+        $this->actingAs($admin)->get(route('portal.dashboard'))->assertInertia(fn ($page) => $page
+            ->where('weeklyAttendance.6.attendance_date_local', '2026-09-15')
+            ->where('weeklyAttendance.6.total', 3)
+            ->where('weeklyAttendance.6.in', 2)
+            ->where('weeklyAttendance.6.out', 1));
     }
 
     public function test_it_separates_enabled_online_and_offline_stations_at_the_configured_cutoff(): void

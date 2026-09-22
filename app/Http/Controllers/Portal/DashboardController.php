@@ -35,7 +35,7 @@ class DashboardController extends Controller
         $onlineCount = (clone $enabledStations)->where('last_seen_at', '>', $cutoff)->count();
 
         $attendance = TapEvent::query()
-            ->selectRaw('attendance_date_local, count(*) as total, count(distinct person_id) as unique_people')
+            ->selectRaw("attendance_date_local, count(*) as total, count(distinct person_id) as unique_people, sum(case when event_type = 'IN' then 1 else 0 end) as taps_in, sum(case when event_type = 'OUT' then 1 else 0 end) as taps_out")
             ->whereBetween('attendance_date_local', [$today->copy()->subDays(6)->toDateString(), $today->toDateString()])
             ->groupBy('attendance_date_local')
             ->get()
@@ -49,6 +49,8 @@ class DashboardController extends Controller
                 'attendance_date_local' => $date,
                 'total' => (int) ($row?->total ?? 0),
                 'unique_people' => (int) ($row?->unique_people ?? 0),
+                'in' => (int) ($row?->taps_in ?? 0),
+                'out' => (int) ($row?->taps_out ?? 0),
             ];
         });
 

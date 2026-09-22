@@ -45,7 +45,7 @@ interface DashboardScreenProps {
         offline_stations: { id: string; name: string; station_code: string; last_seen_at: string | null }[];
     };
     recentActivity: { id: string; action: string; created_at: string }[];
-    weeklyAttendance: { attendance_date_local: string; total: number; unique_people: number }[];
+    weeklyAttendance: { attendance_date_local: string; total: number; unique_people: number; in: number; out: number }[];
 }
 
 function formatDay(value: string, short = false): string {
@@ -139,7 +139,11 @@ function AttendanceChart({ weeklyAttendance }: { weeklyAttendance: DashboardScre
             <div className="pf-chart-legend">
                 <span className="pf-chart-legend-item pf-chart-legend-item--blue">
                     <span className="pf-chart-legend-dot" />
-                    Taps
+                    Tapped In
+                </span>
+                <span className="pf-chart-legend-item pf-chart-legend-item--amber">
+                    <span className="pf-chart-legend-dot" />
+                    Tapped Out
                 </span>
                 <span className="pf-chart-legend-item pf-chart-legend-item--green">
                     <span className="pf-chart-legend-dot" />
@@ -150,9 +154,13 @@ function AttendanceChart({ weeklyAttendance }: { weeklyAttendance: DashboardScre
                 <ResponsiveContainer width="100%" height={260}>
                     <AreaChart data={chartData} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
                         <defs>
-                            <linearGradient id="attendanceTapsFill" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="attendanceInFill" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="0%" stopColor="#234ef4" stopOpacity={0.28} />
                                 <stop offset="100%" stopColor="#234ef4" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="attendanceOutFill" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#c1791f" stopOpacity={0.24} />
+                                <stop offset="100%" stopColor="#c1791f" stopOpacity={0} />
                             </linearGradient>
                             <linearGradient id="attendancePeopleFill" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="0%" stopColor="#188352" stopOpacity={0.26} />
@@ -175,11 +183,20 @@ function AttendanceChart({ weeklyAttendance }: { weeklyAttendance: DashboardScre
                         <Tooltip content={<AttendanceTooltip />} />
                         <Area
                             type="monotone"
-                            dataKey="total"
-                            name="Taps"
+                            dataKey="in"
+                            name="Tapped In"
                             stroke="#234ef4"
                             strokeWidth={2.5}
-                            fill="url(#attendanceTapsFill)"
+                            fill="url(#attendanceInFill)"
+                            activeDot={{ r: 5, strokeWidth: 0 }}
+                        />
+                        <Area
+                            type="monotone"
+                            dataKey="out"
+                            name="Tapped Out"
+                            stroke="#c1791f"
+                            strokeWidth={2.5}
+                            fill="url(#attendanceOutFill)"
                             activeDot={{ r: 5, strokeWidth: 0 }}
                         />
                         <Area
@@ -205,6 +222,8 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
     const peopleHref = route('portal.people.index');
     const weekTotal = weeklyAttendance.reduce((sum, day) => sum + day.total, 0);
     const weekPeople = weeklyAttendance.reduce((sum, day) => sum + day.unique_people, 0);
+    const weekIn = weeklyAttendance.reduce((sum, day) => sum + day.in, 0);
+    const weekOut = weeklyAttendance.reduce((sum, day) => sum + day.out, 0);
     const attentionCount = stats.offline_station_count + (stats.sms_failures ?? 0) + stats.open_attendance_exception_count + stats.pending_station_event_count;
     const formatTime = (value: string) => new Date(value).toLocaleString(undefined, {
         timeZone: timezone, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
@@ -322,7 +341,7 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
                     <div className="pf-panel-header">
                         <div>
                             <h2 id="week-title" className="pf-panel-title">Attendance over 7 days</h2>
-                            <p className="pf-panel-count">{weekTotal.toLocaleString()} taps · {weekPeople.toLocaleString()} unique check-ins · includes today</p>
+                            <p className="pf-panel-count">{weekIn.toLocaleString()} tapped in · {weekOut.toLocaleString()} tapped out · {weekPeople.toLocaleString()} unique check-ins · includes today</p>
                         </div>
                         <Link href={route('portal.attendance.summary')} className="pft-panel-link">Full summary →</Link>
                     </div>
@@ -331,9 +350,9 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
                     <details className="school-chart-details">
                         <summary>View exact daily totals</summary>
                         <div className="pf-table-wrap"><table className="pf-table">
-                            <caption className="sr-only">Daily attendance taps and distinct identified people</caption>
-                            <thead><tr><th scope="col">Date</th><th scope="col">Taps</th><th scope="col">Unique people</th></tr></thead>
-                            <tbody>{weeklyAttendance.map((day) => <tr key={day.attendance_date_local}><th scope="row">{formatDay(day.attendance_date_local)}</th><td>{day.total.toLocaleString()}</td><td>{day.unique_people.toLocaleString()}</td></tr>)}</tbody>
+                            <caption className="sr-only">Daily attendance tapped-in, tapped-out, and distinct identified people</caption>
+                            <thead><tr><th scope="col">Date</th><th scope="col">Tapped In</th><th scope="col">Tapped Out</th><th scope="col">Unique people</th></tr></thead>
+                            <tbody>{weeklyAttendance.map((day) => <tr key={day.attendance_date_local}><th scope="row">{formatDay(day.attendance_date_local)}</th><td>{day.in.toLocaleString()}</td><td>{day.out.toLocaleString()}</td><td>{day.unique_people.toLocaleString()}</td></tr>)}</tbody>
                         </table></div>
                     </details>
                 </section>
