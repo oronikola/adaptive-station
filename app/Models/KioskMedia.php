@@ -113,6 +113,55 @@ class KioskMedia extends Model implements TenantScoped
         ]);
     }
 
+    /**
+     * Applies an admin update to a slide. An occupied requested position
+     * swaps the two slides in one tenant-database transaction, avoiding an
+     * intermediate duplicate position in the kiosk's ordered feed.
+     *
+     * @param  array{position?: int, duration_seconds?: ?int, is_active?: bool}  $attributes
+     */
+    public static function updateForStation(self $media, array $attributes): self
+    {
+        return $media->getConnection()->transaction(function () use ($media, $attributes): self {
+            $lockedMedia = static::allTenants()
+                ->whereKey($media->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (array_key_exists('position', $attributes)) {
+                $requestedPosition = $attributes['position'];
+                unset($attributes['position']);
+
+                if ($requestedPosition !== $lockedMedia->position) {
+                    $displacedMedia = static::allTenants()
+                        ->where('station_id', $lockedMedia->station_id)
+                        ->where('position', $requestedPosition)
+                        ->whereKeyNot($lockedMedia->id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($displacedMedia !== null) {
+                        $currentPosition = $lockedMedia->position;
+                        $temporaryPosition = 1 + (int) static::allTenants()
+                            ->where('station_id', $lockedMedia->station_id)
+                            ->max('position');
+
+                        $lockedMedia->update(['position' => $temporaryPosition]);
+                        $displacedMedia->update(['position' => $currentPosition]);
+                    }
+
+                    $lockedMedia->update(['position' => $requestedPosition]);
+                }
+            }
+
+            if ($attributes !== []) {
+                $lockedMedia->update($attributes);
+            }
+
+            return $lockedMedia;
+        });
+    }
+
     /** Deletes the R2 object before the row — an orphaned object with no row is a harmless, invisible cost; an orphaned row pointing at a deleted object is a broken kiosk slide. */
     public function purge(): void
     {

@@ -112,21 +112,42 @@ class StationMediaManagementTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_reordering_and_toggling_a_media_item(): void
+    public function test_reordering_swaps_two_media_items_and_updates_the_requested_item(): void
     {
         Storage::fake('r2');
         $tenant = Tenant::factory()->create();
         $admin = User::factory()->tenantAdmin($tenant)->create();
         $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
-        $media = KioskMedia::create(['tenant_id' => $tenant->id, 'station_id' => $station->id, 'type' => 'image', 'disk_path' => 'x.png', 'position' => 0, 'is_active' => true]);
+        $firstMedia = KioskMedia::create(['tenant_id' => $tenant->id, 'station_id' => $station->id, 'type' => 'image', 'disk_path' => 'first.png', 'position' => 1, 'is_active' => true]);
+        $secondMedia = KioskMedia::create(['tenant_id' => $tenant->id, 'station_id' => $station->id, 'type' => 'image', 'disk_path' => 'second.png', 'position' => 2, 'is_active' => true]);
 
         $this->actingAs($admin)
-            ->patch(route('portal.stations.media.update', [$station, $media]), ['position' => 5, 'is_active' => false])
+            ->patch(route('portal.stations.media.update', [$station, $firstMedia]), ['position' => 2, 'is_active' => false])
             ->assertRedirect();
 
-        $media->refresh();
-        $this->assertSame(5, $media->position);
-        $this->assertFalse($media->is_active);
+        $firstMedia->refresh();
+        $secondMedia->refresh();
+        $this->assertSame(2, $firstMedia->position);
+        $this->assertFalse($firstMedia->is_active);
+        $this->assertSame(1, $secondMedia->position);
+    }
+
+    public function test_a_tenant_operator_can_reorder_media_for_their_station(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $operator = User::factory()->tenantOperator($tenant)->create();
+        $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
+        $firstMedia = KioskMedia::create(['tenant_id' => $tenant->id, 'station_id' => $station->id, 'type' => 'image', 'disk_path' => 'first.png', 'position' => 1, 'is_active' => true]);
+        $secondMedia = KioskMedia::create(['tenant_id' => $tenant->id, 'station_id' => $station->id, 'type' => 'image', 'disk_path' => 'second.png', 'position' => 2, 'is_active' => true]);
+
+        $this->actingAs($operator)
+            ->patch(route('portal.stations.media.update', [$station, $secondMedia]), ['position' => 1])
+            ->assertRedirect();
+
+        $firstMedia->refresh();
+        $secondMedia->refresh();
+        $this->assertSame(2, $firstMedia->position);
+        $this->assertSame(1, $secondMedia->position);
     }
 
     public function test_deleting_media_removes_it_from_the_disk_and_the_database(): void

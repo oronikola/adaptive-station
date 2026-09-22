@@ -422,7 +422,7 @@ class StationController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
-        $mediaModel->update($data);
+        KioskMedia::updateForStation($mediaModel, $data);
 
         return redirect()->route('platform.stations.show', ['station' => $stationModel->id, 'tenant_id' => $tenant->id])
             ->with('success', 'Media updated.');

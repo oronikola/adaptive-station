@@ -95,6 +95,27 @@ class StationMediaManagementTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_a_platform_super_admin_can_reorder_media_for_a_station(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create();
+        $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
+        $firstMedia = KioskMedia::create(['tenant_id' => $tenant->id, 'station_id' => $station->id, 'type' => 'image', 'disk_path' => 'first.png', 'position' => 1, 'is_active' => true]);
+        $secondMedia = KioskMedia::create(['tenant_id' => $tenant->id, 'station_id' => $station->id, 'type' => 'image', 'disk_path' => 'second.png', 'position' => 2, 'is_active' => true]);
+
+        $this->actingAs($platformAdmin)
+            ->patch(route('platform.stations.media.update', [$station->id, $firstMedia->id]), [
+                'position' => 2,
+                'tenant_id' => $tenant->id,
+            ])
+            ->assertRedirect();
+
+        $firstMedia->refresh();
+        $secondMedia->refresh();
+        $this->assertSame(2, $firstMedia->position);
+        $this->assertSame(1, $secondMedia->position);
+    }
+
     public function test_deleting_media_from_the_platform_side_purges_the_disk_object(): void
     {
         Storage::fake('r2');
