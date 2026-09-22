@@ -111,7 +111,7 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
                 <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">Idle-Screen Media</h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Shown on this kiosk after 10 seconds with no tap. Images (max 10MB) cycle in order; videos (max 100MB) play muted and loop.
+                        Shown on this kiosk after 10 seconds with no tap. Images (max 10MB) use the selected display time; videos (max 100MB) play to the end before the next item appears.
                     </p>
                 </div>
             </div>
@@ -234,7 +234,7 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
                         <div className="w-28">
                             <label htmlFor="kiosk-media-duration" className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                                 <ClockIcon size={11} />
-                                Seconds
+                                Image seconds
                             </label>
                             <input
                                 id="kiosk-media-duration"
@@ -289,7 +289,11 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
                                         {item.type}
                                     </span>
                                     <span className="text-[11px] text-slate-400">
-                                        {item.duration_seconds ? `${item.duration_seconds}s slide` : 'Default duration'}
+                                        {item.type === 'video'
+                                            ? 'Plays to end'
+                                            : item.duration_seconds
+                                                ? `${item.duration_seconds}s slide`
+                                                : 'Default duration'}
                                     </span>
                                 </div>
 

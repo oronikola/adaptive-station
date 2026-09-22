@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KioskMediaRecord } from '@/kiosk/db';
 
-/** Every slide gets at least this long, video or image, if it has no admin-set duration_seconds — long enough to actually register with someone walking past. */
+/** An image gets this display time when the admin has not chosen one. */
 const DEFAULT_SLIDE_MS = 8_000;
 
 /**
@@ -30,14 +30,10 @@ function SpeakerIcon({ muted }: { muted: boolean }) {
 
 /**
  * The kiosk's idle-screen slideshow — takes over the whole screen once
- * KioskScreen has been idle for IDLE_AFTER_MS. Images and videos share one
- * ordered playlist and the same fixed-duration advance, rather than videos
- * getting special "play through once" handling: `loop` is set on every
- * video regardless, purely so a video whose natural length is shorter than
- * its slide duration keeps replaying instead of freezing on its last frame,
- * not so it can hold the screen forever — advancing is still driven by the
- * same timer an image slide uses. See KioskMedia's migration for why
- * duration_seconds applies uniformly to both types.
+ * KioskScreen has been idle for IDLE_AFTER_MS. Images advance after their
+ * configured display duration. A video advances only after its natural end,
+ * so it is never cut off by the carousel; a lone video loops because there
+ * is no next slide to show.
  */
 export default function IdleMediaCarousel({ media }: { media: KioskMediaRecord[] }) {
     const [index, setIndex] = useState(0);
@@ -97,16 +93,19 @@ export default function IdleMediaCarousel({ media }: { media: KioskMediaRecord[]
         });
     }, [current?.id, current?.type, muted]);
 
+    function advanceToNextSlide() {
+        setIndex((currentIndex) => (currentIndex + 1) % media.length);
+    }
+
     useEffect(() => {
-        if (media.length <= 1) return undefined;
+        if (media.length <= 1 || current?.type !== 'image') return undefined;
 
         const timer = setTimeout(() => {
-            setIndex((i) => (i + 1) % media.length);
+            advanceToNextSlide();
         }, (current?.duration_seconds ?? DEFAULT_SLIDE_MS / 1000) * 1000);
 
         return () => clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [index, media.length]);
+    }, [current?.duration_seconds, current?.type, index, media.length]);
 
     if (!current) return null;
 
@@ -136,8 +135,9 @@ export default function IdleMediaCarousel({ media }: { media: KioskMediaRecord[]
                         key={current.id}
                         ref={videoRef}
                         src={current.url}
-                        loop
+                        loop={media.length === 1}
                         playsInline
+                        onEnded={advanceToNextSlide}
                         // A network-level stall/error (a slow or briefly
                         // unreachable R2 fetch, not an autoplay-policy
                         // rejection) previously left the element stuck with
