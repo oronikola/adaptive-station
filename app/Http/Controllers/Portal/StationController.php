@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Enums\StationStatus;
 use App\Http\Controllers\Controller;
+use App\Models\KioskMedia;
 use App\Models\Station;
 use App\Models\StationActivationCode;
 use App\Models\StationCredential;
@@ -75,6 +76,7 @@ class StationController extends Controller
             'station' => $station,
             'credentials' => $station->credentials()->orderByDesc('created_at')->get(),
             'hasPairingLink' => $station->pairingTokens()->whereNull('revoked_at')->exists(),
+            'media' => $this->serializeMedia($station),
         ]);
     }
 
@@ -176,5 +178,61 @@ class StationController extends Controller
         return redirect()->route('portal.stations.show', $station)
             ->with('success', 'Station link reset. Any previous link stopped working.')
             ->with('pairingLink', route('kiosk.pair', $token));
+    }
+
+    public function storeMedia(Request $request, Station $station): RedirectResponse
+    {
+        Gate::authorize('manageForStation', [KioskMedia::class, $station]);
+
+        $data = $request->validate([
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,mp4,webm', 'max:102400'],
+            'duration_seconds' => ['nullable', 'integer', 'min:1', 'max:120'],
+        ]);
+
+        KioskMedia::uploadFor($station, $data['file'], $data['duration_seconds'] ?? null, $request->user()->id);
+
+        return redirect()->route('portal.stations.show', $station)->with('success', 'Media uploaded.');
+    }
+
+    public function updateMedia(Request $request, Station $station, KioskMedia $media): RedirectResponse
+    {
+        Gate::authorize('update', $media);
+        abort_unless($media->station_id === $station->id, 404);
+
+        $data = $request->validate([
+            'position' => ['sometimes', 'integer', 'min:0'],
+            'duration_seconds' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:120'],
+            'is_active' => ['sometimes', 'boolean'],
+        ]);
+
+        $media->update($data);
+
+        return redirect()->route('portal.stations.show', $station)->with('success', 'Media updated.');
+    }
+
+    public function destroyMedia(Request $request, Station $station, KioskMedia $media): RedirectResponse
+    {
+        Gate::authorize('delete', $media);
+        abort_unless($media->station_id === $station->id, 404);
+
+        $media->purge();
+
+        return redirect()->route('portal.stations.show', $station)->with('success', 'Media removed.');
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function serializeMedia(Station $station): array
+    {
+        return $station->media()->orderBy('position')->orderBy('created_at')->get()
+            ->map(fn (KioskMedia $media) => [
+                'id' => $media->id,
+                'type' => $media->type->value,
+                'url' => $media->url,
+                'position' => $media->position,
+                'duration_seconds' => $media->duration_seconds,
+                'is_active' => $media->is_active,
+                'created_at' => $media->created_at->toIso8601String(),
+            ])
+            ->all();
     }
 }

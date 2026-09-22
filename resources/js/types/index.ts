@@ -82,6 +82,16 @@ export interface StationCredential {
     updated_at: string;
 }
 
+export interface KioskMediaItem {
+    id: string;
+    type: 'image' | 'video';
+    url: string;
+    position: number;
+    duration_seconds: number | null;
+    is_active: boolean;
+    created_at: string;
+}
+
 export interface PaginationLink {
     url: string | null;
     label: string;

@@ -160,6 +160,22 @@ export async function uploadEventBatch(events: BatchEvent[]): Promise<BatchRespo
     return response.json();
 }
 
+export interface KioskMediaResponse {
+    media: Array<{
+        id: string;
+        type: 'image' | 'video';
+        url: string;
+        duration_seconds: number | null;
+        position: number;
+    }>;
+}
+
+export async function fetchKioskMedia(): Promise<KioskMediaResponse> {
+    const response = await deviceFetch('api.device.kiosk-media');
+    if (!response.ok) throw new Error('Failed to fetch kiosk media.');
+    return response.json();
+}
+
 export async function sendHeartbeat(pendingEventCount: number): Promise<void> {
     const response = await deviceFetch('api.device.heartbeat', {
         method: 'POST',

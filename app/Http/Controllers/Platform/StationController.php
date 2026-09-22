@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Platform;
 use App\Enums\StationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Platform\StoreStationRequest;
+use App\Models\KioskMedia;
 use App\Models\Station;
 use App\Models\StationActivationCode;
 use App\Models\StationCredential;
@@ -190,6 +191,7 @@ class StationController extends Controller
             'tenants' => $tenants,
             'schoolStations' => $schoolStations->values(),
             'credentials' => $credentials,
+            'media' => $this->serializeMedia($stationModel),
         ]);
     }
 
@@ -389,6 +391,84 @@ class StationController extends Controller
      *
      * @return array{0: Station, 1: Tenant}
      */
+    public function storeMedia(Request $request, string $station): RedirectResponse
+    {
+        [$stationModel, $tenant] = $this->resolveStation($station, $request->input('tenant_id'));
+
+        Gate::authorize('manageForStation', [KioskMedia::class, $stationModel]);
+
+        $data = $request->validate([
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,mp4,webm', 'max:102400'],
+            'duration_seconds' => ['nullable', 'integer', 'min:1', 'max:120'],
+        ]);
+
+        KioskMedia::uploadFor($stationModel, $data['file'], $data['duration_seconds'] ?? null, $request->user()->id);
+
+        return redirect()->route('platform.stations.show', ['station' => $stationModel->id, 'tenant_id' => $tenant->id])
+            ->with('success', 'Media uploaded.');
+    }
+
+    public function updateMedia(Request $request, string $station, string $media): RedirectResponse
+    {
+        [$stationModel, $tenant] = $this->resolveStation($station, $request->input('tenant_id'));
+
+        $mediaModel = KioskMedia::allTenants()->findOrFail($media);
+        Gate::authorize('update', $mediaModel);
+        abort_unless($mediaModel->station_id === $stationModel->id, 404);
+
+        $data = $request->validate([
+            'position' => ['sometimes', 'integer', 'min:0'],
+            'duration_seconds' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:120'],
+            'is_active' => ['sometimes', 'boolean'],
+        ]);
+
+        $mediaModel->update($data);
+
+        return redirect()->route('platform.stations.show', ['station' => $stationModel->id, 'tenant_id' => $tenant->id])
+            ->with('success', 'Media updated.');
+    }
+
+    public function destroyMedia(Request $request, string $station, string $media): RedirectResponse
+    {
+        [$stationModel, $tenant] = $this->resolveStation($station, $request->input('tenant_id'));
+
+        $mediaModel = KioskMedia::allTenants()->findOrFail($media);
+        Gate::authorize('delete', $mediaModel);
+        abort_unless($mediaModel->station_id === $stationModel->id, 404);
+
+        $mediaModel->purge();
+
+        return redirect()->route('platform.stations.show', ['station' => $stationModel->id, 'tenant_id' => $tenant->id])
+            ->with('success', 'Media removed.');
+    }
+
+    /**
+     * KioskMedia::allTenants(), not $station->media() — the relation's
+     * query applies TenantScope, which reads from TenantContext, which no
+     * Platform request ever sets (see this class's docblock reasoning
+     * everywhere else it queries a tenant-scoped model). Without this, the
+     * upload itself (a plain create(), unaffected by the read-side scope)
+     * would silently succeed while every list of a station's media came
+     * back empty.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function serializeMedia(Station $station): array
+    {
+        return KioskMedia::allTenants()->where('station_id', $station->id)
+            ->orderBy('position')->orderBy('created_at')->get()
+            ->map(fn (KioskMedia $media) => [
+                'id' => $media->id,
+                'type' => $media->type->value,
+                'url' => $media->url,
+                'position' => $media->position,
+                'duration_seconds' => $media->duration_seconds,
+                'is_active' => $media->is_active,
+                'created_at' => $media->created_at->toIso8601String(),
+            ])
+            ->all();
+    }
+
     protected function resolveStation(string $stationId, ?string $tenantId = null): array
     {
         if ($tenantId) {

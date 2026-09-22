@@ -8,10 +8,11 @@ import StationViewDropdown, { StationOption } from '@/Components/StationViewDrop
 import TextInput from '@/Components/TextInput';
 import StatusBadge from '@/Components/admin/StatusBadge';
 import Table from '@/Components/admin/Table';
+import KioskMediaPanel from '@/Components/kiosk/KioskMediaPanel';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { StationCredential, Tenant } from '@/types';
+import { KioskMediaItem, StationCredential, Tenant } from '@/types';
 import { ArrowLeftIcon } from '@/Components/icons/arrow-left';
 import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
 import { CircleHelpIcon } from '@/Components/icons/circle-help';
@@ -52,6 +53,7 @@ interface StationDetailScreenProps {
     tenants: Tenant[];
     schoolStations: SchoolStationOption[];
     credentials: StationCredential[];
+    media: KioskMediaItem[];
 }
 
 interface PagePropsWithFlash {
@@ -74,6 +76,7 @@ export default function StationDetailScreen({
     tenants,
     schoolStations,
     credentials,
+    media,
 }: StationDetailScreenProps) {
     const { flash } = usePage().props as PagePropsWithFlash;
 
@@ -486,6 +489,14 @@ export default function StationDetailScreen({
                             </Table.Body>
                         </Table>
                     </div>
+
+                    <KioskMediaPanel
+                        media={media}
+                        storeUrl={route('platform.stations.media.store', station.id)}
+                        updateUrl={(id) => route('platform.stations.media.update', [station.id, id] as unknown as Record<string, unknown>)}
+                        destroyUrl={(id) => route('platform.stations.media.destroy', [station.id, id] as unknown as Record<string, unknown>)}
+                        extraFormData={{ tenant_id: String(tenant.id) }}
+                    />
                 </div>
             </div>
 

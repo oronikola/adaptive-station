@@ -3,10 +3,11 @@ import Modal from '@/Components/Modal';
 import SecretOnceCallout from '@/Components/SecretOnceCallout';
 import StatusBadge from '@/Components/admin/StatusBadge';
 import Table from '@/Components/admin/Table';
+import KioskMediaPanel from '@/Components/kiosk/KioskMediaPanel';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import type { Station, StationCredential } from '@/types';
+import type { KioskMediaItem, Station, StationCredential } from '@/types';
 import IssueActivationCodeModal from './IssueActivationCodeModal';
 import { LockIcon } from '@/Components/icons/lock';
 import { XIcon } from '@/Components/icons/x';
@@ -37,10 +38,12 @@ export default function StationDetailScreen({
     station,
     credentials,
     hasPairingLink,
+    media,
 }: {
     station: Station;
     credentials: StationCredential[];
     hasPairingLink: boolean;
+    media: KioskMediaItem[];
 }) {
     const { props } = usePage<import('@/types').PageProps>();
     const flash = props.flash;
@@ -316,6 +319,13 @@ export default function StationDetailScreen({
                             </Table.Body>
                         </Table>
                     </div>
+
+                    <KioskMediaPanel
+                        media={media}
+                        storeUrl={route('portal.stations.media.store', station.station_code)}
+                        updateUrl={(id) => route('portal.stations.media.update', [station.station_code, id] as unknown as Record<string, unknown>)}
+                        destroyUrl={(id) => route('portal.stations.media.destroy', [station.station_code, id] as unknown as Record<string, unknown>)}
+                    />
                 </div>
             </div>
 

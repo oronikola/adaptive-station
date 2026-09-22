@@ -16,10 +16,13 @@ import {
     resetKioskCache,
     upsertPerson,
     upsertCard,
+    getAllKioskMedia,
     type TapEventType,
+    type KioskMediaRecord,
 } from '@/kiosk/db';
 import { activate, pairViaLink, resolveTap, DeviceUnauthorizedError, type ResolveTapResponse } from '@/kiosk/api';
-import { syncMasterData, flushPendingEvents, heartbeat } from '@/kiosk/sync';
+import { syncMasterData, flushPendingEvents, heartbeat, syncKioskMedia } from '@/kiosk/sync';
+import IdleMediaCarousel from './IdleMediaCarousel';
 
 /**
  * `crypto.randomUUID()` only exists in secure contexts (HTTPS or
@@ -63,6 +66,14 @@ const RESULT_CLEAR_MS = 3_000;
 const MASTER_DATA_SYNC_MS = 15_000;
 const EVENT_FLUSH_MS = 7_000;
 const HEARTBEAT_MS = 60_000;
+// Idle-screen media rarely changes — this only needs to be frequent enough
+// that a newly-uploaded slide reaches an already-running kiosk in a
+// reasonable time, not fast like the tap-critical intervals above.
+const KIOSK_MEDIA_SYNC_MS = 5 * 60_000;
+// How long with no tap-reader activity before the idle media takes over —
+// resets on every keystroke into the reader input, not just a completed
+// tap (see the input's onKeyDown below).
+const IDLE_AFTER_MS = 10_000;
 const EXIT_GESTURE_TAPS = 5;
 const EXIT_GESTURE_WINDOW_MS = 3_000;
 
@@ -144,6 +155,20 @@ export default function KioskScreen({
     const [result, setResult] = useState<TapResult | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const resultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // ── Idle-screen media: takes over after IDLE_AFTER_MS with no reader
+    // activity, replacing the normal tap prompt until the next keystroke.
+    // lastActivityRef (not state) drives the idle check itself — updating
+    // it on every keystroke must never re-render, or a rapid card scan
+    // would thrash this component on every character.
+    const [idleMedia, setIdleMedia] = useState<KioskMediaRecord[]>([]);
+    const [isIdle, setIsIdle] = useState(false);
+    const lastActivityRef = useRef(Date.now());
+
+    function registerActivity() {
+        lastActivityRef.current = Date.now();
+        setIsIdle(false);
+    }
 
     // ── Hidden admin exit: tap the station badge 5x fast to reveal a
     // reconfigure/deactivate dialog. There's no staff login on this screen
@@ -253,6 +278,13 @@ export default function KioskScreen({
 
         let cancelled = false;
 
+        // Shows whatever was already cached immediately, offline-first,
+        // rather than leaving the idle screen blank until the network sync
+        // below (or its first retry) completes.
+        getAllKioskMedia().then((cached) => {
+            if (!cancelled) setIdleMedia(cached);
+        });
+
         async function runMasterDataSync() {
             try {
                 await syncMasterData();
@@ -279,23 +311,56 @@ export default function KioskScreen({
             }
         }
 
+        async function runKioskMediaSync() {
+            try {
+                await syncKioskMedia();
+                setIdleMedia(await getAllKioskMedia());
+            } catch (error) {
+                // Offline, or a transient server error — the kiosk keeps
+                // showing whatever it already cached (see syncKioskMedia's
+                // docblock); a 401 still needs the same drop-back-to-
+                // activation handling as every other sync loop here.
+                handleUnauthorized(error);
+            }
+        }
+
         if (!cancelled) {
             runMasterDataSync();
             runFlush();
             runHeartbeat();
+            runKioskMediaSync();
         }
 
         const syncInterval = setInterval(runMasterDataSync, MASTER_DATA_SYNC_MS);
         const flushInterval = setInterval(runFlush, EVENT_FLUSH_MS);
         const heartbeatInterval = setInterval(runHeartbeat, HEARTBEAT_MS);
+        const kioskMediaInterval = setInterval(runKioskMediaSync, KIOSK_MEDIA_SYNC_MS);
 
         return () => {
             cancelled = true;
             clearInterval(syncInterval);
             clearInterval(flushInterval);
             clearInterval(heartbeatInterval);
+            clearInterval(kioskMediaInterval);
         };
     }, [phase]);
+
+    // ── Idle detection: a plain polling check (1s) against a ref, not a
+    // single setTimeout(IDLE_AFTER_MS) reset on every keystroke — that
+    // would mean tearing down and rescheduling a timer on every single
+    // character during a card scan. A cheap once-a-second comparison is
+    // simpler and exactly as responsive for a 10-second threshold.
+    useEffect(() => {
+        if (phase !== 'ready') return undefined;
+
+        const interval = setInterval(() => {
+            if (!isIdle && Date.now() - lastActivityRef.current >= IDLE_AFTER_MS) {
+                setIsIdle(true);
+            }
+        }, 1_000);
+
+        return () => clearInterval(interval);
+    }, [phase, isIdle]);
 
     // ── Keep the tap input focused at all times while ready ─────────────
     // Refocus is driven by the input's own blur (see onBlur on the <input>
@@ -841,7 +906,9 @@ export default function KioskScreen({
 
                 {phase === 'ready' && (
                     <>
-                        {result && theme ? (
+                        {isIdle && idleMedia.length > 0 ? (
+                            <IdleMediaCarousel media={idleMedia} />
+                        ) : result && theme ? (
                             <div
                                 key={result.title + result.kind}
                                 className="kiosk-fade-in"
@@ -1047,7 +1114,16 @@ export default function KioskScreen({
                         <input
                             ref={inputRef}
                             type="text"
-                            onKeyDown={handleTapSubmit}
+                            onKeyDown={(e) => {
+                                // Every keystroke counts as activity, not
+                                // just a completed (Enter-terminated) tap —
+                                // a card mid-scan is still someone standing
+                                // at the kiosk, and should dismiss the idle
+                                // media immediately rather than waiting for
+                                // Enter.
+                                registerActivity();
+                                handleTapSubmit(e);
+                            }}
                             onBlur={handleInputBlur}
                             autoFocus
                             autoComplete="off"

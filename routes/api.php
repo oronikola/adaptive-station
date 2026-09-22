@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Device\DeviceConfigController;
 use App\Http\Controllers\Api\Device\DeviceHeartbeatController;
 use App\Http\Controllers\Api\Device\DevicePairingController;
 use App\Http\Controllers\Api\Device\DeviceSessionController;
+use App\Http\Controllers\Api\Device\KioskMediaController;
 use App\Http\Controllers\Api\Device\MasterDataFeedController;
 use App\Http\Controllers\Api\Device\SmsGatewayController;
 use App\Http\Controllers\Api\Device\TapEventBatchController;
@@ -46,6 +47,7 @@ Route::prefix('v1/device')->name('api.device.')->group(function () {
         Route::get('master-data', [MasterDataFeedController::class, 'index'])->name('master-data');
         Route::post('heartbeat', [DeviceHeartbeatController::class, 'store'])->name('heartbeat');
         Route::get('config', [DeviceConfigController::class, 'show'])->name('config');
+        Route::get('kiosk-media', [KioskMediaController::class, 'index'])->name('kiosk-media');
     });
 });
 

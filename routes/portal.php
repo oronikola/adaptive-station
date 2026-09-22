@@ -50,6 +50,9 @@ Route::middleware(['auth', 'verified', EnsurePortalAccess::class])
             ->name('stations.activation-code');
         Route::post('stations/{station}/pairing-link', [StationController::class, 'issuePairingLink'])
             ->name('stations.pairing-link');
+        Route::post('stations/{station}/media', [StationController::class, 'storeMedia'])->name('stations.media.store');
+        Route::patch('stations/{station}/media/{media}', [StationController::class, 'updateMedia'])->name('stations.media.update');
+        Route::delete('stations/{station}/media/{media}', [StationController::class, 'destroyMedia'])->name('stations.media.destroy');
 
         Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::get('attendance/operations', [AttendanceOperationsController::class, 'index'])->name('attendance.operations.index');

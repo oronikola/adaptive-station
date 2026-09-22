@@ -120,3 +120,7 @@ CL-00x_YYYY-MM-DD_short-change-title.md
 - Every tenant's data is logically isolated in the shared MySQL database.
 - Existing School Management Systems remain optional integrations, not kiosk runtime dependencies.
 - Legacy schools can be migrated with traceable, idempotent imports and reconciliation before cutover.
+
+## Current implementation guide
+
+[ADAPTIVE_STATION_ECOSYSTEM_GUIDE.md](ADAPTIVE_STATION_ECOSYSTEM_GUIDE.md) documents the current Laravel platform together with the sibling Flutter project, `C:\laragon\www\adaptivemobile_station`. It covers the implemented application surfaces, per-school physical tenancy, kiosk-to-notification workflow, REST/WebSocket boundaries, and the parent and SMS-gateway Android flavors.

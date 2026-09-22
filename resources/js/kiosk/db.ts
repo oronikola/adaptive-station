@@ -17,7 +17,7 @@
  */
 
 const DB_NAME = 'adaptive-station-kiosk';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export interface MetaRecord {
     id: 'meta';
@@ -64,6 +64,21 @@ export interface LastTapRecord {
     at: string;
 }
 
+/**
+ * One idle-screen slide, cached locally so the idle carousel/video still
+ * has something to show if the kiosk is offline when it goes idle.
+ * `position` must be re-sorted on after every read — IndexedDB's getAll()
+ * returns rows by primary key (`id`, a UUID), not insertion order, so the
+ * server's intended display order would otherwise be lost on every reload.
+ */
+export interface KioskMediaRecord {
+    id: string;
+    type: 'image' | 'video';
+    url: string;
+    duration_seconds: number | null;
+    position: number;
+}
+
 let dbPromise: Promise<IDBDatabase> | null = null;
 
 function openDb(): Promise<IDBDatabase> {
@@ -88,6 +103,9 @@ function openDb(): Promise<IDBDatabase> {
             }
             if (!db.objectStoreNames.contains('last_tap')) {
                 db.createObjectStore('last_tap', { keyPath: 'person_id' });
+            }
+            if (!db.objectStoreNames.contains('kiosk_media')) {
+                db.createObjectStore('kiosk_media', { keyPath: 'id' });
             }
         };
 
@@ -152,7 +170,7 @@ export async function clearCredential(): Promise<void> {
  */
 export async function resetKioskCache(): Promise<void> {
     await Promise.all(
-        (['people', 'cards', 'pending_events', 'last_tap'] as const).map(async (name) => {
+        (['people', 'cards', 'pending_events', 'last_tap', 'kiosk_media'] as const).map(async (name) => {
             const s = await store(name, 'readwrite');
             await requestToPromise(s.clear());
         }),
@@ -225,4 +243,37 @@ export async function getLastTap(personId: string): Promise<LastTapRecord | unde
 export async function setLastTap(record: LastTapRecord): Promise<void> {
     const s = await store('last_tap', 'readwrite');
     await requestToPromise(s.put(record));
+}
+
+// ── kiosk_media ─────────────────────────────────────────────────────────
+
+export async function getAllKioskMedia(): Promise<KioskMediaRecord[]> {
+    const s = await store('kiosk_media', 'readonly');
+    const items = await requestToPromise(s.getAll() as IDBRequest<KioskMediaRecord[]>);
+    // getAll() returns rows by primary key (id, a UUID), not insertion
+    // order — see KioskMediaRecord's docblock. Re-sorting here, in the one
+    // place every caller reads through, means no caller can forget it.
+    return items.sort((a, b) => a.position - b.position);
+}
+
+/**
+ * Wholesale replace, not an upsert-by-id sync — the list is small (a
+ * handful of slides at most) and the device API always returns the
+ * complete current set, so there's no partial-change feed to reconcile
+ * against and a removed slide needs to actually disappear locally.
+ */
+export async function replaceAllKioskMedia(items: KioskMediaRecord[]): Promise<void> {
+    const s = await store('kiosk_media', 'readwrite');
+    // Every request issued synchronously (no await between them) so they
+    // all land on the same transaction, in call order — clear() first, then
+    // each put(). Awaiting the clear() individually before issuing the
+    // put()s would let the transaction auto-commit in between (its last
+    // queued request having already resolved) and throw
+    // TransactionInactiveError on the first put().
+    const clearRequest = s.clear();
+    const putRequests = items.map((item) => s.put(item));
+    await Promise.all([
+        requestToPromise(clearRequest),
+        ...putRequests.map((request) => requestToPromise(request)),
+    ]);
 }

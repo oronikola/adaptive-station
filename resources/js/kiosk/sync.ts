@@ -14,11 +14,12 @@ import {
     getAllPendingEvents,
     removePendingEvents,
     countPendingEvents,
+    replaceAllKioskMedia,
     type PersonRecord,
     type CardRecord,
     type TapEventType,
 } from './db';
-import { fetchMasterData, uploadEventBatch, sendHeartbeat, type MasterDataChangeRow } from './api';
+import { fetchMasterData, uploadEventBatch, sendHeartbeat, fetchKioskMedia, type MasterDataChangeRow } from './api';
 
 async function applyChange(change: MasterDataChangeRow): Promise<void> {
     if (change.entity_type === 'person') {
@@ -103,4 +104,16 @@ export async function flushPendingEvents(): Promise<Record<string, TapEventType>
 export async function heartbeat(): Promise<void> {
     const pendingCount = await countPendingEvents();
     await sendHeartbeat(pendingCount);
+}
+
+/**
+ * Refreshes the idle-screen media cache from the server — a plain
+ * fetch-and-replace, not a delta feed (see replaceAllKioskMedia()'s
+ * docblock for why). Left uncaught on purpose: an offline kiosk simply
+ * keeps showing whatever it last cached, which is exactly the point of
+ * caching it locally at all.
+ */
+export async function syncKioskMedia(): Promise<void> {
+    const response = await fetchKioskMedia();
+    await replaceAllKioskMedia(response.media);
 }

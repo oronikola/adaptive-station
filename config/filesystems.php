@@ -60,6 +60,40 @@ return [
             'report' => false,
         ],
 
+        /*
+        | Cloudflare R2 — used for kiosk idle-screen media (images/video).
+        | R2 speaks the S3 API, so this reuses the same 's3' driver, just
+        | pointed at R2's account-specific endpoint instead of AWS. R2 has
+        | no real regions, so 'auto' is the value Cloudflare's own docs use.
+        |
+        | The bucket is shared across every Adaptive product (Hub, Library,
+        | Station, ...) — 'root' keeps every object this app writes/reads
+        | under its own top-level prefix (e.g. "AdaptiveStation/...") inside
+        | that shared bucket, the same way you'd give each product its own
+        | folder if the bucket were a real filesystem. Every Storage::
+        | disk('r2') call (put/url/delete) is prefixed with this
+        | automatically — application code never needs to know it exists.
+        |
+        | 'url' must be R2's public bucket URL (either the r2.dev dev
+        | domain or a custom domain you've attached) — kiosk media is shown
+        | on an unauthenticated device screen via a plain <img>/<video> src,
+        | so the bucket (or these specific objects) must allow public read;
+        | there is no signed-URL layer here.
+        */
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_BUCKET'),
+            'root' => env('R2_ROOT_PREFIX', 'AdaptiveStation'),
+            'url' => env('R2_URL'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

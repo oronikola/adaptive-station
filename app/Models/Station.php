@@ -69,6 +69,11 @@ class Station extends Model implements TenantScoped
         return $this->hasMany(StationPairingToken::class);
     }
 
+    public function media(): HasMany
+    {
+        return $this->hasMany(KioskMedia::class);
+    }
+
     /**
      * Creates a station and records the mandatory master-data change + audit
      * log as one atomic unit, per ADR-004 ("every mutation to a ... station
