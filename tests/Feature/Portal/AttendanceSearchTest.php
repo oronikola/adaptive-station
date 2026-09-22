@@ -156,6 +156,34 @@ class AttendanceSearchTest extends TestCase
                 ->where('stats.out', 1));
     }
 
+    public function test_today_stats_are_unaffected_by_search_filters(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-14 12:00:00', 'UTC'));
+        $tenant = Tenant::factory()->create(['timezone' => 'UTC']);
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $station = Station::factory()->for($tenant)->create();
+        $person = Person::factory()->for($tenant)->create();
+
+        TapEvent::factory()->for($station)->count(2)->create([
+            'person_id' => $person->id, 'event_type' => TapEventType::In,
+            'attendance_date_local' => '2026-09-14',
+        ]);
+        TapEvent::factory()->for($station)->create([
+            'person_id' => $person->id, 'event_type' => TapEventType::Out,
+            'attendance_date_local' => '2026-09-14',
+        ]);
+        // Yesterday's taps must not bleed into today's totals.
+        TapEvent::factory()->for($station)->create([
+            'event_type' => TapEventType::In, 'attendance_date_local' => '2026-09-13',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('portal.attendance.index', ['event_type' => 'OUT']))
+            ->assertInertia(fn ($page) => $page
+                ->where('stats.in', 0)->where('stats.out', 1)
+                ->where('todayStats.in', 2)->where('todayStats.out', 1));
+    }
+
     public function test_analytics_include_every_page_and_exclude_other_schools_and_dates(): void
     {
         $this->travelTo(Carbon::parse('2026-09-14 12:00:00', 'UTC'));

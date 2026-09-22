@@ -52,6 +52,11 @@ interface AttendanceStats {
     out: number;
 }
 
+interface TodayStats {
+    in: number;
+    out: number;
+}
+
 interface PersonOption {
     id: string;
     display_name: string;
@@ -62,6 +67,7 @@ interface AttendanceSearchScreenProps {
     events: PaginatedData<AttendanceEvent>;
     filters: AttendanceFilters;
     stats?: AttendanceStats;
+    todayStats?: TodayStats;
     selectedPerson?: PersonOption | null;
     stations: Station[];
 }
@@ -339,6 +345,7 @@ export default function AttendanceSearchScreen({
     events,
     filters,
     stats,
+    todayStats,
     selectedPerson,
     stations,
 }: AttendanceSearchScreenProps) {
@@ -446,6 +453,20 @@ export default function AttendanceSearchScreen({
                         label="Total Check-Outs"
                         value={totalOutCount}
                         hint="Tap OUT events"
+                        icon="out"
+                        tone="amber"
+                    />
+                    <StatCard
+                        label="Tapped In Today"
+                        value={todayStats?.in ?? 0}
+                        hint="Regardless of active filters"
+                        icon="in"
+                        tone="violet"
+                    />
+                    <StatCard
+                        label="Tapped Out Today"
+                        value={todayStats?.out ?? 0}
+                        hint="Regardless of active filters"
                         icon="out"
                         tone="amber"
                     />

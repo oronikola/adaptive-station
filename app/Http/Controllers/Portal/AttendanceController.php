@@ -7,6 +7,8 @@ use App\Models\Person;
 use App\Models\RfidCard;
 use App\Models\Station;
 use App\Models\TapEvent;
+use App\Models\Tenant;
+use App\Support\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -70,7 +72,37 @@ class AttendanceController extends Controller
             'stations' => Station::query()->orderBy('name')->get(['id', 'name']),
             'stats' => $this->stats($filters),
             'analytics' => $this->analytics($filters),
+            'todayStats' => $this->todayStats(),
         ]);
+    }
+
+    /**
+     * Today's tap totals, independent of whatever search filters are
+     * active — the search filters answer "how many taps match this
+     * query", but this answers a fixed question ("how many people have
+     * tapped in/out today") that a filtered view shouldn't quietly change
+     * the meaning of. "Today" is the tenant's own local calendar date
+     * (matching how attendance_date_local is stored), not the server's.
+     *
+     * @return array{in: int, out: int}
+     */
+    private function todayStats(): array
+    {
+        $tenantId = app(TenantContext::class)->get();
+        $timezone = Tenant::findOrFail($tenantId)->timezone;
+        $today = Date::now()->setTimezone($timezone)->toDateString();
+
+        $counts = TapEvent::query()
+            ->where('attendance_date_local', $today)
+            ->selectRaw('event_type, count(*) as aggregate')
+            ->groupBy('event_type')
+            ->get()
+            ->keyBy(fn ($row) => $row->event_type->value);
+
+        return [
+            'in' => (int) ($counts['IN']->aggregate ?? 0),
+            'out' => (int) ($counts['OUT']->aggregate ?? 0),
+        ];
     }
 
     /**
