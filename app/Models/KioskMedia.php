@@ -25,7 +25,7 @@ use Illuminate\Validation\ValidationException;
  * the per-tenant physical database like Station/TapEvent, not the central
  * one, since it is always scoped to one station.
  */
-#[Fillable(['tenant_id', 'station_id', 'type', 'disk_path', 'position', 'duration_seconds', 'is_active', 'uploaded_by'])]
+#[Fillable(['tenant_id', 'station_id', 'type', 'disk_path', 'original_filename', 'position', 'duration_seconds', 'is_active', 'uploaded_by'])]
 #[ScopedBy(TenantScope::class)]
 class KioskMedia extends Model implements TenantScoped
 {
@@ -107,6 +107,7 @@ class KioskMedia extends Model implements TenantScoped
             'station_id' => $station->id,
             'type' => $type,
             'disk_path' => $path,
+            'original_filename' => $file->getClientOriginalName(),
             'position' => $nextPosition,
             'duration_seconds' => $durationSeconds,
             'is_active' => true,

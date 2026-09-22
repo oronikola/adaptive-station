@@ -462,6 +462,7 @@ class StationController extends Controller
                 'id' => $media->id,
                 'type' => $media->type->value,
                 'url' => $media->url,
+                'original_filename' => $media->original_filename,
                 'position' => $media->position,
                 'duration_seconds' => $media->duration_seconds,
                 'is_active' => $media->is_active,

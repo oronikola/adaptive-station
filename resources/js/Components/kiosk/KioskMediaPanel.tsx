@@ -281,7 +281,11 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
                             </div>
 
                             <div className="min-w-0 flex-1">
-                                <div className="flex flex-wrap items-center gap-2">
+                                <p className="truncate text-xs font-semibold text-slate-700 dark:text-slate-200" title={item.original_filename ?? undefined}>
+                                    {item.original_filename ?? 'Unknown filename'}
+                                </p>
+
+                                <div className="mt-1 flex flex-wrap items-center gap-2">
                                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${TYPE_PILL[item.type]}`}>
                                         {item.type}
                                     </span>

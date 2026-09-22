@@ -37,6 +37,7 @@ class StationMediaManagementTest extends TestCase
 
         $media = KioskMedia::allTenants()->where('station_id', $station->id)->sole();
         $this->assertSame('image', $media->type->value);
+        $this->assertSame('slide.png', $media->original_filename);
     }
 
     public function test_media_assigned_to_one_station_never_appears_on_another_even_at_the_same_school(): void

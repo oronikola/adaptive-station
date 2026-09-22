@@ -41,6 +41,7 @@ class StationMediaManagementTest extends TestCase
         $this->assertSame('image', $media->type->value);
         $this->assertSame(10, $media->duration_seconds);
         $this->assertTrue($media->is_active);
+        $this->assertSame('welcome.jpg', $media->original_filename);
         Storage::disk('r2')->assertExists($media->disk_path);
     }
 

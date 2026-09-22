@@ -86,6 +86,7 @@ export interface KioskMediaItem {
     id: string;
     type: 'image' | 'video';
     url: string;
+    original_filename: string | null;
     position: number;
     duration_seconds: number | null;
     is_active: boolean;
