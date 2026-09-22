@@ -27,6 +27,16 @@ interface SimStat {
     cap_status: 'ok' | 'near' | 'at';
 }
 
+interface SimStatus {
+    sim_slot: number;
+    carrier: 'smart';
+    status: 'has_load' | 'no_load' | 'unknown' | 'paused';
+    balance_centavos: number | null;
+    source: 'manual' | 'ussd';
+    checked_at: string | null;
+    last_error: string | null;
+}
+
 interface DeviceRow {
     id: string;
     label: string;
@@ -42,6 +52,7 @@ interface DeviceRow {
     // Empty until this device's app build has reported at least one
     // sim_slot-tagged send — an older, not-yet-updated phone has none yet.
     sim_stats: SimStat[];
+    sim_statuses: SimStatus[];
 }
 
 const CAP_STATUS_COLOR: Record<SimStat['cap_status'], string> = {
@@ -115,6 +126,22 @@ function formatDateTime(value: string): string {
         minute: '2-digit',
         hour12: true,
     });
+}
+
+function simLoadLabel(status: SimStatus | undefined): string {
+    if (!status) return 'Not reported';
+    if (status.status === 'has_load') return status.balance_centavos === null ? 'Has load' : `₱${(status.balance_centavos / 100).toFixed(2)}`;
+    if (status.status === 'no_load') return 'No load';
+    if (status.status === 'paused') return 'Paused';
+
+    return 'Unknown';
+}
+
+function simLoadTone(status: SimStatus | undefined): string {
+    if (status?.status === 'has_load') return 'pf-pill--active';
+    if (status?.status === 'no_load' || status?.status === 'paused') return 'pf-pill--inactive';
+
+    return 'pf-pill--warning';
 }
 
 export default function SmsGatewayDevicesScreen({
@@ -423,6 +450,17 @@ export default function SmsGatewayDevicesScreen({
                                                             ))}
                                                         </div>
                                                     )}
+                                                    <div className="pft-sim-badges">
+                                                        {[0, 1].map((slot) => {
+                                                            const sim = device.sim_statuses.find((status) => status.sim_slot === slot);
+
+                                                            return (
+                                                                <span key={slot} className={`pf-pill ${simLoadTone(sim)} `}>
+                                                                    SIM {slot + 1} · {simLoadLabel(sim)}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>

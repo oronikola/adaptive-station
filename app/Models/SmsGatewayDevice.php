@@ -88,6 +88,23 @@ class SmsGatewayDevice extends Model
         return $this->hasMany(SmsGatewayDeviceSimStat::class, 'device_id');
     }
 
+    public function simStatuses(): HasMany
+    {
+        return $this->hasMany(SmsGatewayDeviceSimStatus::class, 'device_id');
+    }
+
+    /** A legacy gateway without status reports remains eligible until it upgrades. */
+    public function canClaimSmsFor(?int $simSlot): bool
+    {
+        if ($simSlot !== null) {
+            return $this->simStatuses()->where('sim_slot', $simSlot)->first()?->canSend() ?? true;
+        }
+
+        $statuses = $this->simStatuses()->get();
+
+        return $statuses->isEmpty() || $statuses->contains(fn (SmsGatewayDeviceSimStatus $status) => $status->canSend());
+    }
+
     /**
      * 'ok' / 'near' (>=80% of the researched daily cap) / 'at' (>=100%) —
      * purely informational (see config('services.sms_gateway.

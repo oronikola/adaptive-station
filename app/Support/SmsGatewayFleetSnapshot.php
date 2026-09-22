@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Enums\SmsOutboxStatus;
 use App\Models\SmsGatewayDevice;
 use App\Models\SmsGatewayDeviceSimStat;
+use App\Models\SmsGatewayDeviceSimStatus;
 use App\Models\SmsOutboxMessage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
@@ -31,7 +32,10 @@ class SmsGatewayFleetSnapshot
         $today = SmsGatewayDevice::currentStatsDate();
 
         $devices = SmsGatewayDevice::query()
-            ->with(['simStats' => fn ($query) => $query->where('stats_date', $today)])
+            ->with([
+                'simStats' => fn ($query) => $query->where('stats_date', $today),
+                'simStatuses' => fn ($query) => $query->orderBy('sim_slot'),
+            ])
             ->orderBy('label')
             ->get()
             ->map(fn (SmsGatewayDevice $device) => [
@@ -62,6 +66,17 @@ class SmsGatewayFleetSnapshot
                         'failed_today' => $stat->failed_today,
                         'cap_status' => $stat->capStatus(),
                     ]),
+                'sim_statuses' => $device->simStatuses
+                    ->map(fn (SmsGatewayDeviceSimStatus $status) => [
+                        'sim_slot' => $status->sim_slot,
+                        'carrier' => $status->carrier,
+                        'status' => $status->status,
+                        'balance_centavos' => $status->balance_centavos,
+                        'source' => $status->source,
+                        'checked_at' => $status->checked_at?->toIso8601String(),
+                        'last_error' => $status->last_error,
+                    ])
+                    ->values(),
             ]);
 
         $backlog = [

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Device\Concerns\ResolvesAuthenticatedSmsGatewayDevi
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\SmsGatewayDeviceSimStat;
+use App\Models\SmsGatewayDeviceSimStatus;
 use App\Models\SmsGatewayDeviceToken;
 use App\Models\SmsOutboxMessage;
 use Illuminate\Http\JsonResponse;
@@ -32,10 +33,15 @@ class SmsGatewayController extends Controller
     {
         $data = $request->validate([
             'batch_size' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'sim_slot' => ['nullable', 'integer', 'min:0', 'max:1'],
         ]);
 
         $device = $this->smsGatewayDevice($request);
         $device->resetDailyStatsIfNeeded()->save();
+
+        if (! $device->canClaimSmsFor($data['sim_slot'] ?? null)) {
+            return response()->json(['messages' => []]);
+        }
 
         $messages = SmsOutboxMessage::claimBatch($device, $data['batch_size'] ?? 20);
 
@@ -46,6 +52,54 @@ class SmsGatewayController extends Controller
                 'message' => $message->message,
             ])->values(),
         ]);
+    }
+
+    public function simStatuses(Request $request): JsonResponse
+    {
+        $device = $this->smsGatewayDevice($request);
+
+        return response()->json([
+            'sim_statuses' => $device->simStatuses()
+                ->orderBy('sim_slot')
+                ->get()
+                ->map(fn (SmsGatewayDeviceSimStatus $status) => $this->simStatusPayload($status))
+                ->values(),
+        ]);
+    }
+
+    public function reportSimStatus(Request $request, int $simSlot): JsonResponse
+    {
+        abort_unless(in_array($simSlot, [0, 1], true), 404);
+
+        $data = $request->validate([
+            'carrier' => ['required', 'in:smart'],
+            'status' => ['required', Rule::in(['has_load', 'no_load', 'unknown', 'paused'])],
+            'balance_centavos' => ['nullable', 'integer', 'min:0'],
+            'source' => ['required', Rule::in(['manual', 'ussd'])],
+            'last_error' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $status = SmsGatewayDeviceSimStatus::query()->updateOrCreate(
+            ['device_id' => $this->smsGatewayDevice($request)->id, 'sim_slot' => $simSlot],
+            [...$data, 'checked_at' => now()],
+        );
+
+        return response()->json(['sim_status' => $this->simStatusPayload($status)]);
+    }
+
+    /** @return array{id: string, sim_slot: int, carrier: string, status: string, balance_centavos: int|null, source: string, checked_at: string|null, last_error: string|null} */
+    private function simStatusPayload(SmsGatewayDeviceSimStatus $status): array
+    {
+        return [
+            'id' => $status->id,
+            'sim_slot' => $status->sim_slot,
+            'carrier' => $status->carrier,
+            'status' => $status->status,
+            'balance_centavos' => $status->balance_centavos,
+            'source' => $status->source,
+            'checked_at' => $status->checked_at?->toIso8601String(),
+            'last_error' => $status->last_error,
+        ];
     }
 
     public function reportStatus(Request $request, string $message): JsonResponse

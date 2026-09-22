@@ -57,6 +57,8 @@ Route::prefix('v1/device')->name('api.device.')->group(function () {
 Route::prefix('v1/device/sms')->name('api.device.sms.')->middleware(AuthenticateSmsGatewayDevice::class)->group(function () {
     Route::post('logout', [SmsGatewayController::class, 'logout'])->name('logout');
     Route::post('claim', [SmsGatewayController::class, 'claim'])->name('claim');
+    Route::get('sim-statuses', [SmsGatewayController::class, 'simStatuses'])->name('sim-statuses.index');
+    Route::put('sim-statuses/{simSlot}', [SmsGatewayController::class, 'reportSimStatus'])->name('sim-statuses.update');
     Route::post('messages/{message}/status', [SmsGatewayController::class, 'reportStatus'])->name('messages.status');
 });
 
