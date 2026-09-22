@@ -10,6 +10,16 @@ import { SmartphoneNfcIcon } from '@/Components/icons/smartphone-nfc';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 import { PaginatedData } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
@@ -103,6 +113,51 @@ const ICON_SENT = <SendIcon size={18} />;
 const ICON_DELIVERED = <CheckIcon size={18} />;
 const ICON_FAILED = <BadgeAlertIcon size={18} />;
 
+// Status palette keeps in lockstep with the pft-stat-icon tones and pf-pill
+// colors on this page, so a bar's color always matches the stat card beside it.
+const STATUS_BAR_COLORS: Record<string, string> = {
+    pending: '#c1791f',
+    sent: '#6c47c9',
+    delivered: '#1a8a4c',
+    failed: '#d84a3f',
+};
+
+interface ChartTooltipEntry {
+    dataKey: string;
+    name: string;
+    value: number;
+    color: string;
+}
+
+function ChartTooltip({
+    active,
+    payload,
+    label,
+}: {
+    active?: boolean;
+    payload?: ChartTooltipEntry[];
+    label?: string;
+}) {
+    if (!active || !payload || payload.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="pf-chart-tooltip">
+            <p className="pf-chart-tooltip-label">{label}</p>
+            {payload.map((entry) => (
+                <div key={entry.dataKey} className="pf-chart-tooltip-row">
+                    <span style={{ color: entry.color }}>
+                        <span className="pf-chart-tooltip-swatch" />
+                        {entry.name}
+                    </span>
+                    <span>{entry.value.toLocaleString()}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 // hour12 explicit, not left to the browser locale default — some locales
 // (e.g. en-GB) render toLocaleString()'s time in 24-hour "military" format
 // otherwise.
@@ -176,6 +231,66 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                     <StatCard label="Failed" value={stats.failed} icon={ICON_FAILED} tone="red" />
                 </div>
 
+                <div className="pf-panel">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 className="pf-panel-title">Delivery analytics</h2>
+                            <p className="pf-panel-count">Message volume by final status — hover a bar for exact counts</p>
+                        </div>
+                    </div>
+                    <div className="pf-chart-legend">
+                        {(['pending', 'sent', 'delivered', 'failed'] as const).map((status) => (
+                            <span key={status} className="pf-chart-legend-item">
+                                <span
+                                    className="pf-chart-legend-dot"
+                                    style={{ background: STATUS_BAR_COLORS[status] }}
+                                />
+                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                            </span>
+                        ))}
+                    </div>
+                    {stats.total === 0 ? (
+                        <p className="pf-empty pft-panel-empty">
+                            No SMS activity yet — bars appear once fleet phones start claiming and sending tap alerts.
+                        </p>
+                    ) : (
+                        <div className="pf-chart-body">
+                            <ResponsiveContainer width="100%" height={260}>
+                                <BarChart
+                                    data={[
+                                        { name: 'Pending', value: stats.pending, tone: 'pending' },
+                                        { name: 'Sent', value: stats.sent, tone: 'sent' },
+                                        { name: 'Delivered', value: stats.delivered, tone: 'delivered' },
+                                        { name: 'Failed', value: stats.failed, tone: 'failed' },
+                                    ]}
+                                    margin={{ top: 8, right: 12, left: -12, bottom: 0 }}
+                                    barCategoryGap="28%"
+                                >
+                                    <CartesianGrid stroke="var(--as-border-light)" vertical={false} />
+                                    <XAxis
+                                        dataKey="name"
+                                        tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                    />
+                                    <YAxis
+                                        tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        allowDecimals={false}
+                                    />
+                                    <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--as-surface-active)' }} />
+                                    <Bar dataKey="value" name="Messages" maxBarSize={64} radius={[8, 8, 2, 2]}>
+                                        {(['pending', 'sent', 'delivered', 'failed'] as const).map((status) => (
+                                            <Cell key={status} fill={STATUS_BAR_COLORS[status]} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+                </div>
+
                 {failureSummary.length > 0 && (
                     <div className="pf-panel">
                         <div className="pf-panel-header">
@@ -209,6 +324,46 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                                     fault.
                                 </p>
                             </div>
+                        </div>
+                        <div className="pf-chart-legend">
+                            <span className="pf-chart-legend-item">
+                                <span className="pf-chart-legend-dot" style={{ background: STATUS_BAR_COLORS.sent }} />
+                                Sent
+                            </span>
+                            <span className="pf-chart-legend-item">
+                                <span className="pf-chart-legend-dot" style={{ background: STATUS_BAR_COLORS.delivered }} />
+                                Delivered
+                            </span>
+                        </div>
+                        <div className="pf-chart-body">
+                            <ResponsiveContainer width="100%" height={240}>
+                                <BarChart
+                                    data={deviceStats.map((device) => ({
+                                        label: device.label,
+                                        Sent: device.sent,
+                                        Delivered: device.delivered,
+                                    }))}
+                                    margin={{ top: 8, right: 12, left: -12, bottom: 0 }}
+                                >
+                                    <CartesianGrid stroke="var(--as-border-light)" vertical={false} />
+                                    <XAxis
+                                        dataKey="label"
+                                        tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        interval={0}
+                                    />
+                                    <YAxis
+                                        tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        allowDecimals={false}
+                                    />
+                                    <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--as-surface-active)' }} />
+                                    <Bar dataKey="Sent" name="Sent" fill={STATUS_BAR_COLORS.sent} maxBarSize={34} radius={[6, 6, 2, 2]} />
+                                    <Bar dataKey="Delivered" name="Delivered" fill={STATUS_BAR_COLORS.delivered} maxBarSize={34} radius={[6, 6, 2, 2]} />
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
                         <div className="pf-table-wrap">
                             <table className="pf-table sms-log-table">
