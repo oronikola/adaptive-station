@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -118,7 +119,7 @@ class KioskMedia extends Model implements TenantScoped
      * swaps the two slides in one tenant-database transaction, avoiding an
      * intermediate duplicate position in the kiosk's ordered feed.
      *
-     * @param  array{position?: int, duration_seconds?: ?int, is_active?: bool}  $attributes
+     * @param  array{position?: int, swap_with?: string, duration_seconds?: ?int, is_active?: bool}  $attributes
      */
     public static function updateForStation(self $media, array $attributes): self
     {
@@ -128,7 +129,37 @@ class KioskMedia extends Model implements TenantScoped
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if (array_key_exists('position', $attributes)) {
+            if (array_key_exists('swap_with', $attributes)) {
+                $swapWithId = $attributes['swap_with'];
+                unset($attributes['swap_with']);
+
+                $orderedMedia = static::allTenants()
+                    ->where('station_id', $lockedMedia->station_id)
+                    ->orderBy('position')
+                    ->orderBy('created_at')
+                    ->lockForUpdate()
+                    ->get();
+                $currentIndex = $orderedMedia->search(fn (self $item) => $item->id === $lockedMedia->id);
+                $neighborIndex = $orderedMedia->search(fn (self $item) => $item->id === $swapWithId);
+
+                if ($currentIndex === false || $neighborIndex === false) {
+                    throw (new ModelNotFoundException)->setModel(static::class, [$swapWithId]);
+                }
+
+                $swappedMedia = $orderedMedia->all();
+                [$swappedMedia[$currentIndex], $swappedMedia[$neighborIndex]] = [$swappedMedia[$neighborIndex], $swappedMedia[$currentIndex]];
+                $temporaryPosition = 1 + (int) $orderedMedia->max('position');
+
+                foreach ($orderedMedia as $index => $item) {
+                    $item->update(['position' => $temporaryPosition + $index]);
+                }
+
+                foreach ($swappedMedia as $index => $item) {
+                    $item->update(['position' => $index + 1]);
+                }
+
+                $lockedMedia->refresh();
+            } elseif (array_key_exists('position', $attributes)) {
                 $requestedPosition = $attributes['position'];
                 unset($attributes['position']);
 

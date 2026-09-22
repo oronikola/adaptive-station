@@ -112,17 +112,17 @@ class StationMediaManagementTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_reordering_swaps_two_media_items_and_updates_the_requested_item(): void
+    public function test_reordering_swaps_two_media_items_and_normalizes_duplicate_positions(): void
     {
         Storage::fake('r2');
         $tenant = Tenant::factory()->create();
         $admin = User::factory()->tenantAdmin($tenant)->create();
         $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
         $firstMedia = KioskMedia::create(['tenant_id' => $tenant->id, 'station_id' => $station->id, 'type' => 'image', 'disk_path' => 'first.png', 'position' => 1, 'is_active' => true]);
-        $secondMedia = KioskMedia::create(['tenant_id' => $tenant->id, 'station_id' => $station->id, 'type' => 'image', 'disk_path' => 'second.png', 'position' => 2, 'is_active' => true]);
+        $secondMedia = KioskMedia::create(['tenant_id' => $tenant->id, 'station_id' => $station->id, 'type' => 'image', 'disk_path' => 'second.png', 'position' => 1, 'is_active' => true]);
 
         $this->actingAs($admin)
-            ->patch(route('portal.stations.media.update', [$station, $firstMedia]), ['position' => 2, 'is_active' => false])
+            ->patch(route('portal.stations.media.update', [$station, $firstMedia]), ['swap_with' => $secondMedia->id, 'is_active' => false])
             ->assertRedirect();
 
         $firstMedia->refresh();
@@ -141,7 +141,7 @@ class StationMediaManagementTest extends TestCase
         $secondMedia = KioskMedia::create(['tenant_id' => $tenant->id, 'station_id' => $station->id, 'type' => 'image', 'disk_path' => 'second.png', 'position' => 2, 'is_active' => true]);
 
         $this->actingAs($operator)
-            ->patch(route('portal.stations.media.update', [$station, $secondMedia]), ['position' => 1])
+            ->patch(route('portal.stations.media.update', [$station, $secondMedia]), ['swap_with' => $firstMedia->id])
             ->assertRedirect();
 
         $firstMedia->refresh();

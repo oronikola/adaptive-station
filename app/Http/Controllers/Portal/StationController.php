@@ -201,6 +201,7 @@ class StationController extends Controller
 
         $data = $request->validate([
             'position' => ['sometimes', 'integer', 'min:0'],
+            'swap_with' => ['sometimes', 'uuid'],
             'duration_seconds' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:120'],
             'is_active' => ['sometimes', 'boolean'],
         ]);

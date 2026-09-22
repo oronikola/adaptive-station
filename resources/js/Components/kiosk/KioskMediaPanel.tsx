@@ -85,7 +85,7 @@ export default function KioskMediaPanel({ media, storeUrl, updateUrl, destroyUrl
         if (!neighbor) return;
 
         setMovingId(item.id);
-        router.patch(updateUrl(item.id), { position: neighbor.position, ...extraFormData }, {
+        router.patch(updateUrl(item.id), { swap_with: neighbor.id, ...extraFormData }, {
             preserveScroll: true,
             onFinish: () => setMovingId(null),
         });

@@ -105,7 +105,7 @@ class StationMediaManagementTest extends TestCase
 
         $this->actingAs($platformAdmin)
             ->patch(route('platform.stations.media.update', [$station->id, $firstMedia->id]), [
-                'position' => 2,
+                'swap_with' => $secondMedia->id,
                 'tenant_id' => $tenant->id,
             ])
             ->assertRedirect();
