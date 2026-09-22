@@ -69,11 +69,11 @@ export async function syncMasterData(): Promise<void> {
 /**
  * Uploads queued tap events in chunks (the batch endpoint bounds request
  * size — see config('device.max_batch_size')) and removes only the ones the
- * server actually accepted. Rejected events are left queued rather than
+ * server accepted or deliberately ignored as a repeat tap. Rejected events are left queued rather than
  * silently dropped, since they were already validated client-side and a
  * rejection here means something server-side disagrees worth investigating.
  *
- * Returns every accepted event's server-resolved direction, keyed by event
+ * Returns every accepted or ignored event's server-resolved direction, keyed by event
  * id — the server can toggle IN/OUT differently than this kiosk's own
  * optimistic local guess did (see TapEvent::resolveEventType()'s docblock),
  * so a caller that just submitted a tap uses this to correct its local
@@ -83,22 +83,30 @@ export async function syncMasterData(): Promise<void> {
  */
 const MAX_BATCH_SIZE = 500;
 
-export async function flushPendingEvents(): Promise<Record<string, TapEventType>> {
+export interface FlushPendingEventsResult {
+    ignoredEventIds: string[];
+    resolvedEventTypes: Record<string, TapEventType>;
+}
+
+export async function flushPendingEvents(): Promise<FlushPendingEventsResult> {
     const pending = await getAllPendingEvents();
-    if (pending.length === 0) return {};
+    if (pending.length === 0) return { ignoredEventIds: [], resolvedEventTypes: {} };
 
     const resolvedEventTypes: Record<string, TapEventType> = {};
+    const ignoredEventIds: string[] = [];
 
     for (let i = 0; i < pending.length; i += MAX_BATCH_SIZE) {
         const chunk = pending.slice(i, i + MAX_BATCH_SIZE);
         const result = await uploadEventBatch(chunk);
-        if (result.accepted_event_ids.length > 0) {
-            await removePendingEvents(result.accepted_event_ids);
+        const removableEventIds = [...result.accepted_event_ids, ...(result.ignored_event_ids ?? [])];
+        if (removableEventIds.length > 0) {
+            await removePendingEvents(removableEventIds);
         }
+        ignoredEventIds.push(...(result.ignored_event_ids ?? []));
         Object.assign(resolvedEventTypes, result.resolved_event_types ?? {});
     }
 
-    return resolvedEventTypes;
+    return { ignoredEventIds, resolvedEventTypes };
 }
 
 export async function heartbeat(): Promise<void> {

@@ -25,7 +25,7 @@ class TapEventDirectionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_a_second_device_toggles_direction_even_though_it_also_requested_in(): void
+    public function test_a_second_device_tap_within_five_minutes_is_ignored(): void
     {
         $tenant = Tenant::factory()->create();
         $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
@@ -59,10 +59,12 @@ class TapEventDirectionTest extends TestCase
                     'occurred_at' => now()->addSeconds(10)->toIso8601String(),
                     'occurred_offset_minutes' => 480,
                 ]],
-            ])->assertOk();
+            ])->assertOk()
+            ->assertJsonPath('ignored_event_ids', [$secondTapId])
+            ->assertJsonPath("resolved_event_types.{$secondTapId}", 'IN');
 
         $this->assertSame('IN', TapEvent::allTenants()->find($firstTapId)?->event_type->value);
-        $this->assertSame('OUT', TapEvent::allTenants()->find($secondTapId)?->event_type->value);
+        $this->assertNull(TapEvent::allTenants()->find($secondTapId));
     }
 
     /**
@@ -73,7 +75,7 @@ class TapEventDirectionTest extends TestCase
      * something else. The response must report the server's real, stored
      * decision per event id so the kiosk can correct itself.
      */
-    public function test_the_batch_response_reports_the_servers_resolved_direction_not_the_kiosks_guess(): void
+    public function test_a_second_tap_after_the_cooldown_toggles_direction(): void
     {
         $tenant = Tenant::factory()->create();
         $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
@@ -96,7 +98,7 @@ class TapEventDirectionTest extends TestCase
         $secondTapId = (string) Str::uuid();
         $this->withHeader('Authorization', "Bearer {$tokenDeviceB}")
             ->postJson('/api/v1/device/events/batch', [
-                'events' => [['id' => $secondTapId, 'card_uid' => $card->card_uid, 'event_type' => 'IN', 'occurred_at' => now()->addSeconds(10)->toIso8601String(), 'occurred_offset_minutes' => 480]],
+                'events' => [['id' => $secondTapId, 'card_uid' => $card->card_uid, 'event_type' => 'IN', 'occurred_at' => now()->addMinutes(5)->addSecond()->toIso8601String(), 'occurred_offset_minutes' => 480]],
             ])->assertOk()
             ->assertJsonPath("resolved_event_types.{$secondTapId}", 'OUT');
     }
@@ -121,7 +123,7 @@ class TapEventDirectionTest extends TestCase
             ->assertOk()->assertJsonPath("resolved_event_types.{$eventId}", 'IN');
     }
 
-    public function test_direction_still_toggles_normally_within_a_single_batch(): void
+    public function test_direction_toggles_normally_after_the_cooldown_within_a_single_batch(): void
     {
         $tenant = Tenant::factory()->create();
         $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
@@ -136,7 +138,7 @@ class TapEventDirectionTest extends TestCase
             ->postJson('/api/v1/device/events/batch', [
                 'events' => [
                     ['id' => $inId, 'card_uid' => $card->card_uid, 'event_type' => 'IN', 'occurred_at' => now()->toIso8601String(), 'occurred_offset_minutes' => 480],
-                    ['id' => $outId, 'card_uid' => $card->card_uid, 'event_type' => 'IN', 'occurred_at' => now()->addMinutes(4)->toIso8601String(), 'occurred_offset_minutes' => 480],
+                    ['id' => $outId, 'card_uid' => $card->card_uid, 'event_type' => 'IN', 'occurred_at' => now()->addMinutes(5)->addSecond()->toIso8601String(), 'occurred_offset_minutes' => 480],
                 ],
             ])->assertOk();
 

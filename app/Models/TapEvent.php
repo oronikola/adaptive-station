@@ -42,6 +42,9 @@ class TapEvent extends Model implements TenantScoped
 {
     use HasFactory, HasTenantScope, HasUuidV4;
 
+    /** Every kiosk shares this server-enforced repeat-tap window. */
+    private const RepeatTapCooldownSeconds = 300;
+
     /** Lives in the per-tenant physical database, not the central one. */
     protected $connection = 'tenant';
 
@@ -109,11 +112,12 @@ class TapEvent extends Model implements TenantScoped
      *                                               ordinary batch-upload path leaves this false, so an essentiel tenant
      *                                               gets its resolution queued (PushTapEventToEssentielJob) instead,
      *                                               never blocking the batch upload response on an external HTTP call.
-     * @return array{accepted: array<int, string>, rejected: array<int, array{id: mixed, errors: array}>, resolutions: array<string, array>, eventTypes: array<string, string>}
+     * @return array{accepted: array<int, string>, ignored: array<int, string>, rejected: array<int, array{id: mixed, errors: array}>, resolutions: array<string, array>, eventTypes: array<string, string>}
      */
     public static function acceptBatch(Station $station, array $events, bool $resolveEssentielSynchronously = false): array
     {
         $accepted = [];
+        $ignored = [];
         $rejected = [];
         $resolutions = [];
         // The kiosk's own submitted event_type is only ever a local guess
@@ -176,11 +180,20 @@ class TapEvent extends Model implements TenantScoped
                 // Locking the Person row (rather than a TapEvent row, which
                 // may not exist yet for a first tap) is what actually
                 // serializes the two transactions.
-                $tapEvent = DB::connection('tenant')->transaction(function () use ($station, $rfidCard, $cardUid, $data, $occurredAt, $attendanceDateLocal) {
+                $result = DB::connection('tenant')->transaction(function () use ($station, $rfidCard, $cardUid, $data, $occurredAt, $attendanceDateLocal) {
                     $personId = $rfidCard?->person_id;
 
                     if ($personId !== null) {
                         Person::query()->whereKey($personId)->lockForUpdate()->first();
+                    }
+
+                    $lastEvent = static::lastEventForPerson($station, $personId, $occurredAt);
+
+                    // This shares a database transaction and Person-row lock
+                    // with insertion, so another kiosk cannot turn an
+                    // immediate repeat tap into an IN then OUT pair.
+                    if ($lastEvent !== null && $lastEvent->occurred_at->diffInSeconds($occurredAt, true) < self::RepeatTapCooldownSeconds) {
+                        return ['event' => null, 'lastEvent' => $lastEvent];
                     }
 
                     $eventType = static::resolveEventType(
@@ -189,23 +202,36 @@ class TapEvent extends Model implements TenantScoped
                         $occurredAt,
                         $attendanceDateLocal,
                         TapEventType::from($data['event_type']),
+                        $lastEvent,
                     );
 
-                    return static::create([
-                        'id' => $data['id'],
-                        'tenant_id' => $station->tenant_id,
-                        'station_id' => $station->id,
-                        'person_id' => $personId,
-                        'card_uid' => $cardUid,
-                        'person_type' => $rfidCard?->person?->person_type,
-                        'event_type' => $eventType,
-                        'occurred_at' => $occurredAt,
-                        'occurred_offset_minutes' => $data['occurred_offset_minutes'],
-                        'received_at' => Date::now(),
-                        'attendance_date_local' => $attendanceDateLocal,
-                        'metadata' => $data['metadata'] ?? null,
-                    ]);
+                    return [
+                        'event' => static::create([
+                            'id' => $data['id'],
+                            'tenant_id' => $station->tenant_id,
+                            'station_id' => $station->id,
+                            'person_id' => $personId,
+                            'card_uid' => $cardUid,
+                            'person_type' => $rfidCard?->person?->person_type,
+                            'event_type' => $eventType,
+                            'occurred_at' => $occurredAt,
+                            'occurred_offset_minutes' => $data['occurred_offset_minutes'],
+                            'received_at' => Date::now(),
+                            'attendance_date_local' => $attendanceDateLocal,
+                            'metadata' => $data['metadata'] ?? null,
+                        ]),
+                        'lastEvent' => null,
+                    ];
                 });
+
+                if ($result['event'] === null) {
+                    $ignored[] = $data['id'];
+                    $eventTypes[$data['id']] = $result['lastEvent']->event_type->value;
+
+                    continue;
+                }
+
+                $tapEvent = $result['event'];
 
                 $accepted[] = $data['id'];
                 $eventTypes[$tapEvent->id] = $tapEvent->event_type->value;
@@ -257,7 +283,7 @@ class TapEvent extends Model implements TenantScoped
             }
         }
 
-        return ['accepted' => $accepted, 'rejected' => $rejected, 'resolutions' => $resolutions, 'eventTypes' => $eventTypes];
+        return ['accepted' => $accepted, 'ignored' => $ignored, 'rejected' => $rejected, 'resolutions' => $resolutions, 'eventTypes' => $eventTypes];
     }
 
     /**
@@ -285,24 +311,34 @@ class TapEvent extends Model implements TenantScoped
         Carbon $occurredAt,
         string $attendanceDateLocal,
         TapEventType $requested,
+        ?self $lastEvent = null,
     ): TapEventType {
         if ($personId === null) {
             return $requested;
         }
 
-        $lastEvent = static::query()
-            ->where('tenant_id', $station->tenant_id)
-            ->where('person_id', $personId)
-            ->where('occurred_at', '<=', $occurredAt)
-            ->orderByDesc('occurred_at')
-            ->orderByDesc('received_at')
-            ->first();
+        $lastEvent ??= static::lastEventForPerson($station, $personId, $occurredAt);
 
         return static::nextEventType(
             $lastEvent?->attendance_date_local?->toDateString(),
             $lastEvent?->event_type,
             $attendanceDateLocal,
         );
+    }
+
+    private static function lastEventForPerson(Station $station, ?string $personId, Carbon $occurredAt): ?self
+    {
+        if ($personId === null) {
+            return null;
+        }
+
+        return static::query()
+            ->where('tenant_id', $station->tenant_id)
+            ->where('person_id', $personId)
+            ->where('occurred_at', '<=', $occurredAt)
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('received_at')
+            ->first();
     }
 
     /**

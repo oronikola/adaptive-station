@@ -105,10 +105,11 @@ export interface BatchEvent {
 
 export interface BatchResponse {
     accepted_event_ids: string[];
+    ignored_event_ids: string[];
     rejected_events: Array<{ id: unknown; errors: Record<string, unknown> }>;
-    // What the server actually resolved and stored per event id — may
-    // differ from the event_type this kiosk submitted, which is only ever
-    // its own local guess (see TapEvent::resolveEventType()'s docblock).
+    // What the server actually resolved and stored — or retained for an
+    // ignored repeat tap — per event id. It may differ from the event_type
+    // this kiosk submitted, which is only its local guess.
     resolved_event_types: Record<string, TapEventType>;
 }
 

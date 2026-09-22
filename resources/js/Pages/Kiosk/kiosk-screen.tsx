@@ -598,8 +598,25 @@ export default function KioskScreen({
         // without this the kiosk would keep toggling off its own now-wrong
         // guess while the portal shows what actually got stored.
         flushPendingEvents()
-            .then((resolved) => {
-                const resolvedType = resolved[eventId];
+            .then(({ ignoredEventIds, resolvedEventTypes }) => {
+                const resolvedType = resolvedEventTypes[eventId];
+
+                if (ignoredEventIds.includes(eventId)) {
+                    const keptEventType = resolvedType ?? eventType;
+                    setLastTap({ person_id: person.id, event_type: keptEventType, at: now.toISOString() }).catch(() => {});
+
+                    setResult((current) =>
+                        current?.eventId === eventId
+                            ? {
+                                  ...current,
+                                  kind: 'duplicate',
+                                  subtitle: 'Already recorded — please try again in 5 minutes.',
+                              }
+                            : current,
+                    );
+                    return;
+                }
+
                 if (!resolvedType || resolvedType === eventType) return;
 
                 setLastTap({ person_id: person.id, event_type: resolvedType, at: now.toISOString() }).catch(() => {});
