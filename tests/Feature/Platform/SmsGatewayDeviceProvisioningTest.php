@@ -97,6 +97,31 @@ class SmsGatewayDeviceProvisioningTest extends TestCase
         ])->assertOk();
     }
 
+    public function test_reset_password_revokes_the_devices_existing_session(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        ['device' => $device] = SmsGatewayDevice::provision(['label' => 'Phone 01', 'username' => 'phone01', 'password' => 'oldpassword']);
+
+        $token = $this->postJson('/api/v1/auth/login', [
+            'identifier' => 'phone01',
+            'password' => 'oldpassword',
+        ])->assertOk()->json('token');
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])
+            ->assertOk();
+
+        $this->actingAs($platformAdmin)
+            ->patch(route('platform.sms-gateway.devices.reset-password', $device->id));
+
+        // Resetting the password is the admin's "kick this phone out" button
+        // — the old session must actually stop working, not just require a
+        // different password on the *next* login.
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])
+            ->assertStatus(401);
+    }
+
     public function test_platform_super_admin_can_set_a_custom_password_when_resetting(): void
     {
         $platformAdmin = User::factory()->platformSuperAdmin()->create();

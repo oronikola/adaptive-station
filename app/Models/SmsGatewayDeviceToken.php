@@ -48,10 +48,28 @@ class SmsGatewayDeviceToken extends Model
     }
 
     /**
+     * One physical phone per device identity, unlike StationCredential
+     * (which deliberately allows several labeled credentials per kiosk) — a
+     * gateway phone's login represents "I am this device" to the backend,
+     * so a second phone logging in with the same username/password must
+     * replace the first, not run alongside it. Without this, two phones
+     * could both hold a valid token for the same device_id and both
+     * independently claim/send/report under its identity: their combined
+     * sent_today is still counted correctly (see SmsGatewayDevice's atomic
+     * increment), but if the two phones don't tag every send with a
+     * sim_slot identically, the per-SIM breakdown silently falls behind the
+     * device-level total — this is what actually happened to a device
+     * whose SIM 1 + SIM 2 counts didn't add up to its own aggregate.
+     *
      * @return array{token: self, plaintext: string}
      */
     public static function issueFor(SmsGatewayDevice $device, ?Model $actor = null): array
     {
+        static::query()
+            ->where('device_id', $device->id)
+            ->whereNull('revoked_at')
+            ->update(['revoked_at' => Date::now()]);
+
         $plaintext = Str::random(64);
 
         $token = static::create([

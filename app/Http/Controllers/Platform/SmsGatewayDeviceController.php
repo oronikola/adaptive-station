@@ -60,6 +60,12 @@ class SmsGatewayDeviceController extends Controller
      * Regenerates a device's password without touching its username or
      * active status — for a phone that needs re-entering its credentials
      * (e.g. after a factory reset) without losing its send history/stats.
+     * Also revokes every currently-active token: this is the button an
+     * admin reaches for to kick out a phone that shouldn't be logged in
+     * anymore, so it must actually end that phone's session, not just
+     * change what a *future* login would need — see
+     * SmsGatewayDeviceToken::issueFor()'s docblock for why more than one
+     * live session per device is never allowed.
      */
     public function resetPassword(Request $request, SmsGatewayDevice $device): RedirectResponse
     {
@@ -81,6 +87,11 @@ class SmsGatewayDeviceController extends Controller
                 'password_plaintext' => Crypt::encryptString($password),
                 'updated_at' => now(),
             ]);
+
+        SmsGatewayDeviceToken::query()
+            ->where('device_id', $device->id)
+            ->whereNull('revoked_at')
+            ->update(['revoked_at' => now()]);
 
         AuditLog::record('sms_gateway_device.password_reset', $request->user(), null, 'sms_gateway_device', $device->id);
 

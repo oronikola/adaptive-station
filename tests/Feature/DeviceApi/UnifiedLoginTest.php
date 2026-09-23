@@ -147,7 +147,50 @@ class UnifiedLoginTest extends TestCase
         ])->assertOk();
 
         $this->withHeader('Authorization', 'Bearer '.$login->json('token'))
-            ->postJson('/api/v1/device/sms/claim')
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])
+            ->assertOk();
+    }
+
+    /**
+     * A gateway device represents one physical phone's identity — unlike a
+     * kiosk station, which may hold several labeled credentials at once (see
+     * StationCredential), only one phone may ever be logged in as a given
+     * device at a time. Without this, two phones sharing the same login
+     * could both claim/send/report under the same device_id, and if they
+     * don't tag every send with a sim_slot identically, the per-SIM
+     * breakdown silently falls behind the device's own aggregate total.
+     */
+    public function test_logging_in_again_revokes_the_devices_previous_session(): void
+    {
+        SmsGatewayDevice::provision([
+            'label' => 'Phone 01',
+            'username' => 'phone01',
+            'password' => 'devicepass123',
+        ]);
+
+        $firstLogin = $this->postJson('/api/v1/auth/login', [
+            'identifier' => 'phone01',
+            'password' => 'devicepass123',
+        ])->assertOk();
+        $firstToken = $firstLogin->json('token');
+
+        $this->withHeader('Authorization', "Bearer {$firstToken}")
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])
+            ->assertOk();
+
+        $secondLogin = $this->postJson('/api/v1/auth/login', [
+            'identifier' => 'phone01',
+            'password' => 'devicepass123',
+        ])->assertOk();
+        $secondToken = $secondLogin->json('token');
+
+        // The first phone's session is dead the instant the second one logs in.
+        $this->withHeader('Authorization', "Bearer {$firstToken}")
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])
+            ->assertStatus(401);
+
+        $this->withHeader('Authorization', "Bearer {$secondToken}")
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])
             ->assertOk();
     }
 
