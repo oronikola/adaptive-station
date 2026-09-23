@@ -5,11 +5,22 @@ import { ActivityIcon } from '@/Components/icons/activity';
 import { CalendarDaysIcon } from '@/Components/icons/calendar-days';
 import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
 import { HistoryIcon } from '@/Components/icons/history';
+import { MonitorCogIcon } from '@/Components/icons/monitor-cog';
 import { ServerIcon } from '@/Components/icons/server';
+import { UserCheckIcon } from '@/Components/icons/user-check';
 import { UserIcon } from '@/Components/icons/user';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 import { PaginatedData } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
@@ -31,9 +42,42 @@ interface Filters {
     date_to?: string;
 }
 
+interface Stats {
+    total: number;
+    user: number;
+    station: number;
+    parent_account: number;
+    system: number;
+}
+
+interface TrendPoint {
+    bucket: string;
+    total: number;
+    user: number;
+    station: number;
+    parent_account: number;
+    system: number;
+}
+
+interface Trend {
+    granularity: 'day' | 'month';
+    range: { date_from: string; date_to: string };
+    points: TrendPoint[];
+}
+
+interface SchoolAnalyticsRow {
+    id: string;
+    name: string;
+    total: number;
+    share: number;
+}
+
 interface AuditLogListScreenProps {
     logs: PaginatedData<AuditLog>;
     filters: Filters;
+    stats: Stats;
+    trend: Trend;
+    schoolAnalytics: SchoolAnalyticsRow[];
 }
 
 const KNOWN_ACTION_GROUPS: { label: string; actions: string[] }[] = [
@@ -129,6 +173,189 @@ const ACTOR_OPTIONS = [
     { value: 'system', label: 'System' },
 ];
 
+const ACTORS = ['user', 'parent_account', 'station', 'system'] as const;
+
+const ACTOR_LABEL: Record<string, string> = {
+    user: 'User',
+    parent_account: 'Parent account',
+    station: 'Station',
+    system: 'System',
+};
+
+// Flat, distinct fill colors — the platform dashboard's SMS status palette
+// plus the brand blue, so stacked segments read apart at a glance.
+const ACTOR_COLORS: Record<string, string> = {
+    user: '#234ef4',
+    parent_account: '#6c47c9',
+    station: '#c1791f',
+    system: '#7a8699',
+};
+
+interface StatCardProps {
+    label: string;
+    value: number;
+    icon: React.ReactNode;
+    tone: 'blue' | 'amber' | 'violet' | 'green' | 'red';
+    pill?: { value: string; text: string; tone?: string };
+}
+
+function StatCard({ label, value, icon, tone, pill }: StatCardProps) {
+    return (
+        <div className="pft-stat-card">
+            <div className="pft-stat-card-top">
+                <p className="pft-stat-label">{label}</p>
+                <span className={`pft-stat-icon pft-stat-icon--${tone}`}>{icon}</span>
+            </div>
+            <p className="pft-stat-value">{value}</p>
+            {pill && (
+                <div className="pft-stat-pills">
+                    <span className={`pft-stat-pill ${pill.tone ? `pft-stat-pill--${pill.tone}` : ''}`}>
+                        <strong>{pill.value}</strong> {pill.text}
+                    </span>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function sharePct(part: number, total: number): string {
+    return total > 0 ? `${Math.round((part / total) * 100)}%` : '0%';
+}
+
+interface TooltipEntry {
+    dataKey: string;
+    name: string;
+    value: number;
+    color: string;
+}
+
+function ChartTooltip({
+    active,
+    payload,
+    label,
+}: {
+    active?: boolean;
+    payload?: TooltipEntry[];
+    label?: string;
+}) {
+    if (!active || !payload || payload.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="pf-chart-tooltip">
+            <p className="pf-chart-tooltip-label">{label}</p>
+            {payload.map((entry) => (
+                <div key={entry.dataKey} className="pf-chart-tooltip-row">
+                    <span style={{ color: entry.color }}>
+                        <span className="pf-chart-tooltip-swatch" />
+                        {entry.name}
+                    </span>
+                    <span>{entry.value.toLocaleString()}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function AuditTrendChart({ trend }: { trend: Trend }) {
+    const granularity = trend.granularity;
+    const chartData = trend.points.map((point) => ({
+        ...point,
+        label:
+            granularity === 'day'
+                ? new Date(`${point.bucket}T12:00:00`).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                  })
+                : new Date(`${point.bucket}-01T12:00:00`).toLocaleDateString(undefined, {
+                      month: 'short',
+                      year: 'numeric',
+                  }),
+    }));
+
+    const hasData = chartData.some((point) => point.total > 0);
+
+    return (
+        <>
+            <div className="pf-chart-legend">
+                {ACTORS.map((actor) => (
+                    <span key={actor} className="pf-chart-legend-item">
+                        <span className="pf-chart-legend-dot" style={{ background: ACTOR_COLORS[actor] }} />
+                        {ACTOR_LABEL[actor]}
+                    </span>
+                ))}
+            </div>
+            {!hasData ? (
+                <p className="pf-empty pft-panel-empty">No audit entries in this window.</p>
+            ) : (
+                <div className="pf-chart-body">
+                    <ResponsiveContainer width="100%" height={280}>
+                        <BarChart
+                            data={chartData}
+                            margin={{ top: 8, right: 12, left: -12, bottom: 0 }}
+                            barCategoryGap="20%"
+                        >
+                            <CartesianGrid stroke="var(--as-border-light)" vertical={false} />
+                            <XAxis
+                                dataKey="label"
+                                tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <YAxis
+                                tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                axisLine={false}
+                                tickLine={false}
+                                allowDecimals={false}
+                            />
+                            <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--as-surface-active)' }} />
+                            {ACTORS.map((actor) => (
+                                <Bar
+                                    key={actor}
+                                    dataKey={actor}
+                                    stackId="audit-entries"
+                                    name={ACTOR_LABEL[actor]}
+                                    fill={ACTOR_COLORS[actor]}
+                                    maxBarSize={44}
+                                    radius={actor === 'system' ? [3, 3, 0, 0] : [0, 0, 0, 0]}
+                                />
+                            ))}
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+        </>
+    );
+}
+
+function SchoolRankPanel({ rows }: { rows: SchoolAnalyticsRow[] }) {
+    if (rows.length === 0) {
+        return <p className="pf-empty pft-panel-empty">No school activity in this window.</p>;
+    }
+
+    return (
+        <ul className="pft-school-rank-list">
+            {rows.map((row) => (
+                <li key={row.id} className="pft-school-rank-row">
+                    <div className="pft-school-rank-main">
+                        <span className="pft-school-rank-name">{row.name}</span>
+                        <span className="pft-school-rank-count">
+                            {row.total} entr{row.total === 1 ? 'y' : 'ies'}
+                        </span>
+                    </div>
+                    <div className="pft-school-rank-meta">
+                        <div className="pft-school-rank-track" role="img" aria-label={`${row.share}% of all entries`}>
+                            <span style={{ width: `${Math.min(100, row.share)}%` }} />
+                        </div>
+                        <span className="pft-school-rank-pct">{row.share}%</span>
+                    </div>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
 function formatAction(action: string): string {
     return action.replaceAll('.', ' · ').replaceAll('_', ' ');
 }
@@ -137,7 +364,7 @@ function actionTone(action: string): string {
     return action.split('.')[0] ?? 'system';
 }
 
-export default function AuditLogListScreen({ logs, filters }: AuditLogListScreenProps) {
+export default function AuditLogListScreen({ logs, filters, stats, trend, schoolAnalytics }: AuditLogListScreenProps) {
     const [isFiltering, setIsFiltering] = useState(false);
     const hasFilters = Boolean(filters.search || filters.actor_type || filters.date_from || filters.date_to);
     const { data, setData } = useForm({
@@ -186,6 +413,61 @@ export default function AuditLogListScreen({ logs, filters }: AuditLogListScreen
                             </p>
                         </div>
                     </div>
+                </div>
+
+                <div className="pft-stat-grid">
+                    <StatCard
+                        label="User actions"
+                        value={stats.user}
+                        icon={<UserIcon size={18} />}
+                        tone="blue"
+                        pill={{ value: sharePct(stats.user, stats.total), text: 'of entries' }}
+                    />
+                    <StatCard
+                        label="Station actions"
+                        value={stats.station}
+                        icon={<MonitorCogIcon size={18} />}
+                        tone="amber"
+                        pill={{ value: sharePct(stats.station, stats.total), text: 'of entries' }}
+                    />
+                    <StatCard
+                        label="Parent actions"
+                        value={stats.parent_account}
+                        icon={<UserCheckIcon size={18} />}
+                        tone="violet"
+                        pill={{ value: sharePct(stats.parent_account, stats.total), text: 'of entries' }}
+                    />
+                    <StatCard
+                        label="System actions"
+                        value={stats.system}
+                        icon={<ServerIcon size={18} />}
+                        tone="green"
+                        pill={{ value: sharePct(stats.system, stats.total), text: 'of entries' }}
+                    />
+                </div>
+
+                <div className="pft-grid-2 pft-analytics-grid">
+                    <section className="pf-panel pft-growth-panel" aria-labelledby="audit-trend-title">
+                        <div className="pf-panel-header">
+                            <div>
+                                <h2 id="audit-trend-title" className="pf-panel-title">Activity over time</h2>
+                                <p className="pf-panel-count">
+                                    {stats.total} entr{stats.total === 1 ? 'y' : 'ies'} in window · {trend.range.date_from} → {trend.range.date_to}
+                                </p>
+                            </div>
+                        </div>
+                        <AuditTrendChart trend={trend} />
+                    </section>
+
+                    <section className="pf-panel pft-growth-panel" aria-labelledby="school-analytics-title">
+                        <div className="pf-panel-header">
+                            <div>
+                                <h2 id="school-analytics-title" className="pf-panel-title">By school</h2>
+                                <p className="pf-panel-count">Top schools by audit volume · share of all entries</p>
+                            </div>
+                        </div>
+                        <SchoolRankPanel rows={schoolAnalytics} />
+                    </section>
                 </div>
 
                 <form onSubmit={submit} className="pf-filter-bar pal-audit-filters" role="search">

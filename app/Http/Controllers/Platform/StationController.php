@@ -15,6 +15,8 @@ use App\Support\TenantDatabase;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
@@ -67,6 +69,7 @@ class StationController extends Controller
                     'last_pending_count',
                     'last_seen_at',
                     'last_scan_at',
+                    'created_at',
                 ])
                 ->each(function (Station $station) use ($tenant, $now, $thresholdMinutes, $allStationOptions, $allStations) {
                     $station->setRelation('tenant', $tenant);
@@ -85,6 +88,7 @@ class StationController extends Controller
                         'last_pending_count' => $station->last_pending_count,
                         'last_seen_at' => $station->last_seen_at?->toIso8601String(),
                         'last_scan_at' => $station->last_scan_at?->toIso8601String(),
+                        'created_at' => $station->created_at?->toIso8601String(),
                         'is_online' => $isOnline,
                         'tenant' => [
                             'id' => $tenant->id,
@@ -141,6 +145,9 @@ class StationController extends Controller
                 'tenant_id' => $selectedTenantId ?? '',
                 'status' => $selectedStatus,
             ],
+            'stats' => $this->stationStats($allStations),
+            'trend' => $this->stationTrend($allStations),
+            'schoolAnalytics' => $this->stationSchoolAnalytics($allStations),
         ]);
     }
 
@@ -468,6 +475,127 @@ class StationController extends Controller
                 'is_active' => $media->is_active,
                 'created_at' => $media->created_at->toIso8601String(),
             ])
+            ->all();
+    }
+
+    /**
+     * Filter-aware fleet roll-up for the stat cards — how many stations of
+     * each status exist within the current tenant/status filters. "online"
+     * and "offline" are relative to active stations (mirrors
+     * Tenant::platformStationTotals()): offline means an active station whose
+     * heartbeat has gone stale, not the whole disabled/retired set.
+     *
+     * @return array<string, int>
+     */
+    private function stationStats(Collection $stations): array
+    {
+        $stats = [
+            'total' => 0,
+            'active' => 0,
+            'pending_activation' => 0,
+            'disabled' => 0,
+            'retired' => 0,
+            'online' => 0,
+            'offline' => 0,
+        ];
+
+        foreach ($stations as $station) {
+            $stats['total']++;
+            $stats[$station['status']]++;
+
+            if ($station['is_online']) {
+                $stats['online']++;
+            } elseif ($station['status'] === 'active') {
+                $stats['offline']++;
+            }
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Station onboarding over time — when each device was created, bucketed
+     * daily (default) or monthly once the filtered span crosses ~3 months,
+     * so the chart never grows past a readable number of bars. Zero-filled
+     * so a quiet stretch still renders. The date range always spans the
+     * filtered station set (there is no date filter on this screen, so the
+     * window is whatever the current tenant/status filters resolve to).
+     *
+     * @return array{granularity: string, range: array{date_from: string, date_to: string}, points: array<int, array<string, int|string>>}
+     */
+    private function stationTrend(Collection $stations): array
+    {
+        $createdAt = $stations->pluck('created_at')->filter();
+
+        if ($createdAt->isEmpty()) {
+            return [
+                'granularity' => 'day',
+                'range' => ['date_from' => '', 'date_to' => ''],
+                'points' => [],
+            ];
+        }
+
+        $from = Carbon::parse($createdAt->min());
+        $to = Carbon::parse($createdAt->max());
+        $granularity = $from->diffInDays($to) <= 92 ? 'day' : 'month';
+        $expression = $granularity === 'day' ? '%Y-%m-%d' : '%Y-%m';
+
+        $counts = collect();
+        foreach ($stations as $station) {
+            if (! $station['created_at']) {
+                continue;
+            }
+            $bucket = Carbon::parse($station['created_at'])->format($expression);
+            $counts->put($bucket, $counts->get($bucket, 0) + 1);
+        }
+
+        $points = collect();
+        if ($granularity === 'day') {
+            for ($cursor = $from->copy(); $cursor->lte($to); $cursor->addDay()) {
+                $bucket = $cursor->format($expression);
+                $points->push(['bucket' => $bucket, 'total' => $counts->get($bucket, 0)]);
+            }
+        } else {
+            for ($cursor = $from->copy()->firstOfMonth(); $cursor->format($expression) <= $to->format($expression); $cursor->addMonth()) {
+                $bucket = $cursor->format($expression);
+                $points->push(['bucket' => $bucket, 'total' => $counts->get($bucket, 0)]);
+            }
+        }
+
+        return [
+            'granularity' => $granularity,
+            'range' => ['date_from' => $from->toDateString(), 'date_to' => $to->toDateString()],
+            'points' => $points->all(),
+        ];
+    }
+
+    /**
+     * Per-school fleet ranking — where the stations actually live and how
+     * healthy each school's fleet is (online share of its total). Sorted by
+     * station count, top 10, filter-aware (a tenant filter pares this to
+     * that one school).
+     *
+     * @return array<int, array{id: string, name: string, total: int, online: int, online_rate: float}>
+     */
+    private function stationSchoolAnalytics(Collection $stations): array
+    {
+        return $stations
+            ->groupBy('tenant_id')
+            ->map(function (Collection $group): array {
+                $total = $group->count();
+                $online = $group->where('is_online', true)->count();
+
+                return [
+                    'id' => (string) $group->first()['tenant_id'],
+                    'name' => (string) ($group->first()['tenant']['name'] ?? 'Unknown school'),
+                    'total' => $total,
+                    'online' => $online,
+                    'online_rate' => $total > 0 ? round(($online / $total) * 100, 1) : 0.0,
+                ];
+            })
+            ->sortByDesc('total')
+            ->take(10)
+            ->values()
             ->all();
     }
 

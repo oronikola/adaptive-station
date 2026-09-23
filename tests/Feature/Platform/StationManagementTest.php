@@ -57,6 +57,99 @@ class StationManagementTest extends TestCase
             );
     }
 
+    public function test_station_analytics_are_scoped_to_the_current_filters(): void
+    {
+        $superAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenantA = Tenant::factory()->create(['name' => 'Alpha School']);
+        $tenantB = Tenant::factory()->create(['name' => 'Beta High']);
+
+        $heartbeatCutoff = now()->subMinutes((int) config('device.station_offline_threshold_minutes'));
+
+        Station::factory()->for($tenantA)->create([
+            'name' => 'A Online 1',
+            'status' => StationStatus::Active,
+            'last_seen_at' => now(),
+        ]);
+        Station::factory()->for($tenantA)->create([
+            'name' => 'A Online 2',
+            'status' => StationStatus::Active,
+            'last_seen_at' => now(),
+        ]);
+        Station::factory()->for($tenantA)->create([
+            'name' => 'A Offline',
+            'status' => StationStatus::Active,
+            'last_seen_at' => $heartbeatCutoff->copy()->subMinutes(5),
+        ]);
+        Station::factory()->for($tenantA)->create([
+            'name' => 'A Pending',
+            'status' => StationStatus::PendingActivation,
+        ]);
+        Station::factory()->for($tenantB)->create([
+            'name' => 'B Online',
+            'status' => StationStatus::Active,
+            'last_seen_at' => now(),
+        ]);
+        Station::factory()->for($tenantB)->create([
+            'name' => 'B Retired',
+            'status' => StationStatus::Retired,
+        ]);
+
+        $this->actingAs($superAdmin)->get(route('platform.stations.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.total', 6)
+                ->where('stats.active', 4)
+                ->where('stats.pending_activation', 1)
+                ->where('stats.disabled', 0)
+                ->where('stats.retired', 1)
+                ->where('stats.online', 3)
+                ->where('stats.offline', 1)
+                ->where('schoolAnalytics.0.name', 'Alpha School')
+                ->where('schoolAnalytics.0.total', 4)
+                ->where('schoolAnalytics.0.online', 2)
+                ->where('schoolAnalytics.0.online_rate', 50)
+                ->where('schoolAnalytics.1.name', 'Beta High')
+                ->where('schoolAnalytics.1.total', 2)
+                ->where('schoolAnalytics.1.online_rate', 50)
+            );
+
+        $scoped = $this->actingAs($superAdmin)->get(route('platform.stations.index', [
+            'status' => 'active',
+        ]));
+        $scoped->assertInertia(fn (Assert $page) => $page
+            ->where('stats.total', 4)
+            ->where('stats.active', 4)
+            ->where('stats.online', 3)
+            ->where('stats.offline', 1));
+
+        $tenantScoped = $this->actingAs($superAdmin)->get(route('platform.stations.index', [
+            'tenant_id' => $tenantA->id,
+        ]));
+        $tenantScoped->assertInertia(fn (Assert $page) => $page
+            ->where('stats.total', 4)
+            ->where('stats.online', 2)
+            ->where('schoolAnalytics.0.name', 'Alpha School')
+            ->where('schoolAnalytics.0.total', 4));
+    }
+
+    public function test_station_trend_collapses_to_months_for_wide_spans(): void
+    {
+        $superAdmin = User::factory()->platformSuperAdmin()->create();
+        $tenant = Tenant::factory()->create();
+
+        $this->createStationAt($tenant, now()->subDays(200));
+        $this->createStationAt($tenant, now()->subDays(40));
+        $this->createStationAt($tenant, now());
+
+        $props = $this->actingAs($superAdmin)->get(route('platform.stations.index'))
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertSame('month', $props['trend']['granularity']);
+        $this->assertSame(3, array_sum(array_column($props['trend']['points'], 'total')));
+        $this->assertGreaterThanOrEqual(7, count($props['trend']['points']));
+    }
+
     public function test_platform_super_admin_can_filter_stations_by_status_view(): void
     {
         $superAdmin = User::factory()->platformSuperAdmin()->create();
@@ -256,5 +349,13 @@ class StationManagementTest extends TestCase
         ]);
         $response->assertRedirect(route('platform.stations.show', ['station' => $station->id, 'tenant_id' => $tenant->id]));
         $response->assertSessionHas('activationCode');
+    }
+
+    private function createStationAt(Tenant $tenant, \DateTimeInterface $createdAt): void
+    {
+        $station = Station::factory()->for($tenant)->create(['status' => StationStatus::Active]);
+        Station::allTenants()
+            ->where('id', $station->id)
+            ->update(['created_at' => $createdAt]);
     }
 }

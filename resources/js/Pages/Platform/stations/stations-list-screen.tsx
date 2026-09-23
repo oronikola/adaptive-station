@@ -8,6 +8,7 @@ import Table from '@/Components/admin/Table';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import Pagination from '@/Components/admin/Pagination';
 import { PageProps, PaginatedData, Tenant } from '@/types';
 import { MenuIcon } from '@/Components/icons/menu';
@@ -55,6 +56,35 @@ const statusLabels: Record<string, string> = {
     retired: 'Retired',
 };
 
+interface StationStats {
+    total: number;
+    active: number;
+    pending_activation: number;
+    disabled: number;
+    retired: number;
+    online: number;
+    offline: number;
+}
+
+interface TrendPoint {
+    bucket: string;
+    total: number;
+}
+
+interface StationTrend {
+    granularity: 'day' | 'month';
+    range: { date_from: string; date_to: string };
+    points: TrendPoint[];
+}
+
+interface SchoolAnalyticsRow {
+    id: string;
+    name: string;
+    total: number;
+    online: number;
+    online_rate: number;
+}
+
 interface StationsListScreenProps {
     stations: PaginatedData<StationRow>;
     tenants: Tenant[];
@@ -63,6 +93,9 @@ interface StationsListScreenProps {
         tenant_id?: string;
         status?: string;
     };
+    stats: StationStats;
+    trend: StationTrend;
+    schoolAnalytics: SchoolAnalyticsRow[];
 }
 
 interface PagePropsWithFlash {
@@ -81,11 +114,170 @@ function slugifyStation(value: string): string {
         .replace(/^-+|-+$/g, '');
 }
 
+function sharePct(part: number, total: number): string {
+    return total > 0 ? `${Math.round((part / total) * 100)}%` : '0%';
+}
+
+interface StatCardProps {
+    label: string;
+    value: number;
+    icon: React.ReactNode;
+    tone: 'blue' | 'amber' | 'violet' | 'green' | 'red';
+    pill?: { value: string; text: string; tone?: string };
+}
+
+function StatCard({ label, value, icon, tone, pill }: StatCardProps) {
+    return (
+        <div className="pft-stat-card">
+            <div className="pft-stat-card-top">
+                <p className="pft-stat-label">{label}</p>
+                <span className={`pft-stat-icon pft-stat-icon--${tone}`}>{icon}</span>
+            </div>
+            <p className="pft-stat-value">{value}</p>
+            {pill && (
+                <div className="pft-stat-pills">
+                    <span className={`pft-stat-pill ${pill.tone ? `pft-stat-pill--${pill.tone}` : ''}`}>
+                        <strong>{pill.value}</strong> {pill.text}
+                    </span>
+                </div>
+            )}
+        </div>
+    );
+}
+
+interface TooltipEntry {
+    dataKey: string;
+    name: string;
+    value: number;
+    color: string;
+}
+
+function ChartTooltip({
+    active,
+    payload,
+    label,
+}: {
+    active?: boolean;
+    payload?: TooltipEntry[];
+    label?: string;
+}) {
+    if (!active || !payload || payload.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="pf-chart-tooltip">
+            <p className="pf-chart-tooltip-label">{label}</p>
+            {payload.map((entry) => (
+                <div key={entry.dataKey} className="pf-chart-tooltip-row">
+                    <span style={{ color: entry.color }}>
+                        <span className="pf-chart-tooltip-swatch" />
+                        {entry.name}
+                    </span>
+                    <span>{entry.value.toLocaleString()}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function labelForBucket(bucket: string, granularity: 'day' | 'month'): string {
+    if (granularity === 'day') {
+        return new Date(`${bucket}T12:00:00`).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+        });
+    }
+    return new Date(`${bucket}-01T12:00:00`).toLocaleDateString(undefined, {
+        month: 'short',
+        year: 'numeric',
+    });
+}
+
+function StationTrendChart({ trend }: { trend: StationTrend }) {
+    const chartData = trend.points.map((point) => ({
+        ...point,
+        label: labelForBucket(point.bucket, trend.granularity),
+    }));
+
+    const hasData = chartData.some((point) => point.total > 0);
+
+    return (
+        <>
+            {!hasData ? (
+                <p className="pf-empty pft-panel-empty">No stations created in this window.</p>
+            ) : (
+                <div className="pf-chart-body">
+                    <ResponsiveContainer width="100%" height={280}>
+                        <BarChart
+                            data={chartData}
+                            margin={{ top: 8, right: 12, left: -12, bottom: 0 }}
+                            barCategoryGap="20%"
+                        >
+                            <CartesianGrid stroke="var(--as-border-light)" vertical={false} />
+                            <XAxis
+                                dataKey="label"
+                                tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <YAxis
+                                tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                axisLine={false}
+                                tickLine={false}
+                                allowDecimals={false}
+                            />
+                            <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--as-surface-active)' }} />
+                            <Bar
+                                dataKey="total"
+                                name="Stations added"
+                                fill="#234ef4"
+                                maxBarSize={44}
+                                radius={[3, 3, 0, 0]}
+                            />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+        </>
+    );
+}
+
+function SchoolRankPanel({ rows }: { rows: SchoolAnalyticsRow[] }) {
+    if (rows.length === 0) {
+        return <p className="pf-empty pft-panel-empty">No stations in this window.</p>;
+    }
+
+    return (
+        <ul className="pft-school-rank-list">
+            {rows.map((row) => (
+                <li key={row.id} className="pft-school-rank-row">
+                    <div className="pft-school-rank-main">
+                        <span className="pft-school-rank-name">{row.name}</span>
+                        <span className="pft-school-rank-count">
+                            {row.total} station{row.total === 1 ? '' : 's'} · {row.online} online
+                        </span>
+                    </div>
+                    <div className="pft-school-rank-meta">
+                        <div className="pft-school-rank-track" role="img" aria-label={`${row.online_rate}% online`}>
+                            <span style={{ width: `${Math.min(100, row.online_rate)}%` }} />
+                        </div>
+                        <span className="pft-school-rank-pct">{row.online_rate}%</span>
+                    </div>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
 export default function StationsListScreen({
     stations,
     tenants,
     allStationOptions = [],
     filters = {},
+    stats,
+    trend,
+    schoolAnalytics,
 }: StationsListScreenProps) {
     const { flash } = usePage().props as PagePropsWithFlash;
     const { auth } = usePage<PageProps>().props;
@@ -291,6 +483,75 @@ export default function StationsListScreen({
 
                 <SecretOnceCallout label="Station link" value={flash?.pairingLink} />
                 <SecretOnceCallout label="Activation code" value={flash?.activationCode} />
+
+                {/* Fleet Analytics */}
+                <div className="pft-stat-grid">
+                    <StatCard
+                        label="Total stations"
+                        value={stats.total}
+                        icon={<MonitorCheckIcon size={18} />}
+                        tone="blue"
+                        pill={{
+                            value: sharePct(stats.online, stats.total),
+                            text: 'online now',
+                        }}
+                    />
+                    <StatCard
+                        label="Active"
+                        value={stats.active}
+                        icon={<WifiIcon size={18} />}
+                        tone="green"
+                        pill={{
+                            value: sharePct(stats.active, stats.total),
+                            text: 'of all stations',
+                        }}
+                    />
+                    <StatCard
+                        label="Pending activation"
+                        value={stats.pending_activation}
+                        icon={<KeyIcon size={18} />}
+                        tone="amber"
+                        pill={{
+                            value: sharePct(stats.pending_activation, stats.total),
+                            text: 'waiting on a code',
+                        }}
+                    />
+                    <StatCard
+                        label="Out of service"
+                        value={stats.disabled + stats.retired}
+                        icon={<ArchiveIcon size={18} />}
+                        tone="red"
+                        pill={{
+                            value: sharePct(stats.disabled + stats.retired, stats.total),
+                            text: 'disabled or retired',
+                        }}
+                    />
+                </div>
+
+                <div className="pft-grid-2 pft-analytics-grid">
+                    <section className="pf-panel pft-growth-panel" aria-labelledby="station-trend-title">
+                        <div className="pf-panel-header">
+                            <div>
+                                <h2 id="station-trend-title" className="pf-panel-title">Stations added over time</h2>
+                                <p className="pf-panel-count">
+                                    {stats.total} station{stats.total === 1 ? '' : 's'} in window ·{' '}
+                                    {trend.range.date_from} → {trend.range.date_to}
+                                </p>
+                            </div>
+                        </div>
+                        <StationTrendChart trend={trend} />
+                    </section>
+
+                    <section className="pf-panel pft-growth-panel" aria-labelledby="school-analytics-title">
+                        <div className="pf-panel-header">
+                            <div>
+                                <h2 id="school-analytics-title" className="pf-panel-title">By school</h2>
+                                <p className="pf-panel-count">Top schools by fleet size · share online</p>
+                            </div>
+                        </div>
+                        <SchoolRankPanel rows={schoolAnalytics} />
+                    </section>
+                </div>
 
                 {/* Unified Dropdown & Filter Actions */}
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-3">

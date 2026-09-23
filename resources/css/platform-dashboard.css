@@ -1229,6 +1229,10 @@ table tbody td.pf-empty:has(> div) {
 }
 
 /* Filter bar · treated as floating card */
+.pft-growth-panel + .pf-filter-bar {
+    margin-top: 24px;
+}
+
 .pf-filter-bar {
     display: flex;
     flex-wrap: wrap;

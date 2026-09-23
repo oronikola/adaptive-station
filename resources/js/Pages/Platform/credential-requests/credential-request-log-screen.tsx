@@ -1,8 +1,6 @@
 import Pagination from '@/Components/admin/Pagination';
 import PremiumSelect from '@/Components/PremiumSelect';
 import PremiumDatePicker from '@/Components/PremiumDatePicker';
-import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
-import { CheckIcon } from '@/Components/icons/check';
 import { ClockIcon } from '@/Components/icons/clock';
 import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
 import { KeyIcon } from '@/Components/icons/key';
@@ -11,6 +9,16 @@ import { UserIcon } from '@/Components/icons/user';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 import { PaginatedData } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
@@ -38,6 +46,15 @@ interface Stats {
     no_phone: number;
     no_students_linked: number;
     rate_limited: number;
+    success_rate: number;
+}
+
+interface SchoolAnalyticsRow {
+    id: string;
+    name: string;
+    total: number;
+    queued: number;
+    success_rate: number;
 }
 
 interface CredentialRequestLogScreenProps {
@@ -45,6 +62,7 @@ interface CredentialRequestLogScreenProps {
     tenants: { id: string; name: string }[];
     filters: Filters;
     stats: Stats;
+    schoolAnalytics: SchoolAnalyticsRow[];
 }
 
 const OUTCOME_OPTIONS = [
@@ -56,8 +74,10 @@ const OUTCOME_OPTIONS = [
     { value: 'rate_limited', label: 'Rate limited' },
 ];
 
+const OUTCOMES = ['queued', 'duplicate', 'no_phone', 'no_students_linked', 'rate_limited'] as const;
+
 const OUTCOME_LABEL: Record<string, string> = {
-    queued: 'Queued',
+    queued: 'Queued (sent)',
     duplicate: 'Duplicate request',
     no_phone: 'No phone on file',
     no_students_linked: 'No students linked',
@@ -72,22 +92,127 @@ const OUTCOME_PILL_CLASS: Record<string, string> = {
     rate_limited: 'pf-pill--danger',
 };
 
-interface StatCardProps {
-    label: string;
+// Lockstep with the platform dashboard's SMS status palette — green for the
+// outcome that means a message actually went out, amber/red for the various
+// dead-ends, violet for a structural blocker rather than a transient one.
+const OUTCOME_COLORS: Record<string, string> = {
+    queued: '#1a8a4c',
+    duplicate: '#c1791f',
+    no_phone: '#d84a3f',
+    no_students_linked: '#6c47c9',
+    rate_limited: '#7a8699',
+};
+
+interface TooltipEntry {
+    dataKey: string;
+    name: string;
     value: number;
-    icon: React.ReactNode;
-    tone: 'blue' | 'amber' | 'violet' | 'green' | 'red';
+    color: string;
 }
 
-function StatCard({ label, value, icon, tone }: StatCardProps) {
+function ChartTooltip({
+    active,
+    payload,
+    label,
+}: {
+    active?: boolean;
+    payload?: TooltipEntry[];
+    label?: string;
+}) {
+    if (!active || !payload || payload.length === 0) {
+        return null;
+    }
+
     return (
-        <div className="pft-stat-card">
-            <div className="pft-stat-card-top">
-                <p className="pft-stat-label">{label}</p>
-                <span className={`pft-stat-icon pft-stat-icon--${tone}`}>{icon}</span>
-            </div>
-            <p className="pft-stat-value">{value}</p>
+        <div className="pf-chart-tooltip">
+            <p className="pf-chart-tooltip-label">{label}</p>
+            {payload.map((entry) => (
+                <div key={entry.dataKey} className="pf-chart-tooltip-row">
+                    <span style={{ color: entry.color }}>
+                        <span className="pf-chart-tooltip-swatch" />
+                        {entry.name}
+                    </span>
+                    <span>{entry.value.toLocaleString()}</span>
+                </div>
+            ))}
         </div>
+    );
+}
+
+function RequestOutcomesChart({ stats }: { stats: Stats }) {
+    const chartData = OUTCOMES.map((outcome) => ({
+        outcome,
+        name: OUTCOME_LABEL[outcome],
+        value: stats[outcome],
+    }));
+
+    return (
+        <>
+            <div className="pf-chart-legend">
+                {OUTCOMES.map((outcome) => (
+                    <span key={outcome} className="pf-chart-legend-item">
+                        <span className="pf-chart-legend-dot" style={{ background: OUTCOME_COLORS[outcome] }} />
+                        {OUTCOME_LABEL[outcome]}
+                    </span>
+                ))}
+            </div>
+            {stats.total === 0 ? (
+                <p className="pf-empty pft-panel-empty">No credential requests in this window.</p>
+            ) : (
+                <div className="pf-chart-body">
+                    <ResponsiveContainer width="100%" height={240}>
+                        <BarChart data={chartData} margin={{ top: 8, right: 12, left: -12, bottom: 0 }} barCategoryGap="28%">
+                            <CartesianGrid stroke="var(--as-border-light)" vertical={false} />
+                            <XAxis
+                                dataKey="name"
+                                tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <YAxis
+                                tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                axisLine={false}
+                                tickLine={false}
+                                allowDecimals={false}
+                            />
+                            <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--as-surface-active)' }} />
+                            <Bar dataKey="value" name="Requests" maxBarSize={64} radius={[8, 8, 2, 2]}>
+                                {chartData.map((entry) => (
+                                    <Cell key={entry.outcome} fill={OUTCOME_COLORS[entry.outcome]} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+        </>
+    );
+}
+
+function SchoolAnalyticsPanel({ rows }: { rows: SchoolAnalyticsRow[] }) {
+    if (rows.length === 0) {
+        return <p className="pf-empty pft-panel-empty">No school activity in this window.</p>;
+    }
+
+    return (
+        <ul className="pft-school-rank-list">
+            {rows.map((row) => (
+                <li key={row.id} className="pft-school-rank-row">
+                    <div className="pft-school-rank-main">
+                        <span className="pft-school-rank-name">{row.name}</span>
+                        <span className="pft-school-rank-count">
+                            {row.total} request{row.total === 1 ? '' : 's'}
+                        </span>
+                    </div>
+                    <div className="pft-school-rank-meta">
+                        <div className="pft-school-rank-track" role="img" aria-label={`${row.success_rate}% of requests queued`}>
+                            <span style={{ width: `${Math.min(100, row.success_rate)}%` }} />
+                        </div>
+                        <span className="pft-school-rank-pct">{row.success_rate}% queued</span>
+                    </div>
+                </li>
+            ))}
+        </ul>
     );
 }
 
@@ -105,7 +230,7 @@ function formatDateTime(value: string): string {
     });
 }
 
-export default function CredentialRequestLogScreen({ requests, tenants, filters, stats }: CredentialRequestLogScreenProps) {
+export default function CredentialRequestLogScreen({ requests, tenants, filters, stats, schoolAnalytics }: CredentialRequestLogScreenProps) {
     const [isFiltering, setIsFiltering] = useState(false);
     const hasFilters = Boolean(filters.tenant_id || filters.outcome || filters.date_from || filters.date_to);
     const { data, setData } = useForm({
@@ -155,13 +280,27 @@ export default function CredentialRequestLogScreen({ requests, tenants, filters,
                     </div>
                 </div>
 
-                <div className="pft-stat-grid">
-                    <StatCard label="Queued" value={stats.queued} icon={<CheckIcon size={18} />} tone="green" />
-                    <StatCard label="Duplicate" value={stats.duplicate} icon={<ClockIcon size={18} />} tone="amber" />
-                    <StatCard label="No phone on file" value={stats.no_phone} icon={<PhoneIcon size={18} />} tone="red" />
-                    <StatCard label="No students linked" value={stats.no_students_linked} icon={<BadgeAlertIcon size={18} />} tone="red" />
-                    <StatCard label="Rate limited" value={stats.rate_limited} icon={<BadgeAlertIcon size={18} />} tone="red" />
-                </div>
+                <section className="pf-panel" aria-labelledby="cred-outcomes-title">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 id="cred-outcomes-title" className="pf-panel-title">Request outcomes</h2>
+                            <p className="pf-panel-count">
+                                {stats.total.toLocaleString()} attempt{stats.total === 1 ? '' : 's'} in this range · {stats.success_rate}% queued
+                            </p>
+                        </div>
+                    </div>
+                    <RequestOutcomesChart stats={stats} />
+                </section>
+
+                <section className="pf-panel pft-growth-panel" aria-labelledby="school-analytics-title">
+                    <div className="pf-panel-header">
+                        <div>
+                            <h2 id="school-analytics-title" className="pf-panel-title">By school</h2>
+                            <p className="pf-panel-count">Top schools by request volume · share that queued</p>
+                        </div>
+                    </div>
+                    <SchoolAnalyticsPanel rows={schoolAnalytics} />
+                </section>
 
                 <form onSubmit={submit} className="pf-filter-bar" role="search">
                     <div className="pf-field">
