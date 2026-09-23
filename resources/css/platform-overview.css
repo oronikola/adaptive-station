@@ -2265,3 +2265,22 @@
         transition: none !important;
     }
 }
+
+/* ── Account Credentials · reveal-anytime password cell ────────────────
+   min-width on the masked/plaintext value keeps the reveal/copy buttons
+   from shifting sideways in the table when the value's rendered length
+   changes on toggle. */
+
+.pfa-credential-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pfa-credential-value {
+    display: inline-block;
+    min-width: 92px;
+    color: var(--as-text-body);
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+}

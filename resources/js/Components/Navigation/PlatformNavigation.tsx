@@ -2,6 +2,7 @@ import { BellIcon } from '@/Components/icons/bell';
 import { ClipboardCheckIcon } from '@/Components/icons/clipboard-check';
 import { HistoryIcon } from '@/Components/icons/history';
 import { HomeIcon } from '@/Components/icons/home';
+import { IdCardIcon } from '@/Components/icons/id-card';
 import { KeyIcon } from '@/Components/icons/key';
 import { LayoutGridIcon } from '@/Components/icons/layout-grid';
 import { MonitorCogIcon } from '@/Components/icons/monitor-cog';
@@ -75,6 +76,13 @@ export const platformNavigationItems: NavItem[] = [
         route: 'platform.credential-requests.index',
         activePattern: 'platform.credential-requests.*',
         icon: <KeyIcon {...icon} />,
+    },
+    {
+        name: 'account-credentials',
+        label: 'Account Credentials',
+        route: 'platform.account-credentials.index',
+        activePattern: 'platform.account-credentials.*',
+        icon: <IdCardIcon {...icon} />,
     },
     {
         name: 'platform-admins',

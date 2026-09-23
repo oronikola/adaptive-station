@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Platform\AccountCredentialLookupController;
 use App\Http\Controllers\Platform\AuditLogController;
 use App\Http\Controllers\Platform\CredentialRequestLogController;
 use App\Http\Controllers\Platform\DashboardController;
@@ -66,6 +67,10 @@ Route::middleware(['auth', 'verified', EnsurePlatformAccess::class])
         Route::get('guardian-phone-lookup', [GuardianPhoneLookupController::class, 'index'])->name('guardian-phone-lookup.index');
 
         Route::get('credential-requests', [CredentialRequestLogController::class, 'index'])->name('credential-requests.index');
+
+        Route::get('account-credentials', [AccountCredentialLookupController::class, 'index'])->name('account-credentials.index');
+        Route::patch('account-credentials/users/{user}/reset-password', [AccountCredentialLookupController::class, 'resetUserPassword'])->name('account-credentials.users.reset-password');
+        Route::patch('account-credentials/parents/{parent}/reset-password', [AccountCredentialLookupController::class, 'resetParentPassword'])->name('account-credentials.parents.reset-password');
 
         Route::get('platform-admins', [PlatformAdminController::class, 'index'])->name('platform-admins.index');
         Route::post('platform-admins', [PlatformAdminController::class, 'store'])->name('platform-admins.store');
