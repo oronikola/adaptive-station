@@ -5,7 +5,9 @@ namespace App\Console\Commands;
 use App\Enums\SmsOutboxStatus;
 use App\Models\SmsOutboxMessage;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -24,14 +26,35 @@ class ReclaimStaleSmsClaims extends Command
         $minutes = (int) ($this->option('minutes') ?? SmsOutboxMessage::CLAIM_LEASE_MINUTES);
         $cutoff = Date::now()->subMinutes($minutes);
 
-        $affected = SmsOutboxMessage::query()
+        $claims = SmsOutboxMessage::query()
             ->where('status', SmsOutboxStatus::Claimed->value)
             ->where('claimed_at', '<', $cutoff)
-            ->update([
-                'status' => SmsOutboxStatus::Pending->value,
-                'claimed_by_device_id' => null,
-                'claimed_at' => null,
-            ]);
+            ->orderBy('id');
+        $affected = 0;
+
+        $claims->chunkById(100, function (Collection $claims) use (&$affected, $cutoff) {
+            foreach ($claims as $claim) {
+                $reclaimed = DB::connection('mysql')->transaction(function () use ($claim, $cutoff) {
+                    $row = SmsOutboxMessage::query()->lockForUpdate()->find($claim->id);
+
+                    if ($row === null || $row->status !== SmsOutboxStatus::Claimed || $row->claimed_at?->gte($cutoff)) {
+                        return false;
+                    }
+
+                    $row->releaseClaimReservation();
+                    $row->forceFill([
+                        'status' => SmsOutboxStatus::Pending,
+                        'claimed_by_device_id' => null,
+                        'claimed_sim_slot' => null,
+                        'claimed_at' => null,
+                    ])->save();
+
+                    return true;
+                });
+
+                $affected += $reclaimed ? 1 : 0;
+            }
+        });
 
         if ($affected > 0) {
             Log::warning('Reclaimed stale SMS outbox claims.', ['count' => $affected]);

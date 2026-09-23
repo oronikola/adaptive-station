@@ -14,6 +14,7 @@ import '../../../../css/platform-overview.css';
 interface SimStat {
     sim_slot: number;
     sent_today: number;
+    reserved_today: number;
     delivered_today: number;
     failed_today: number;
     cap_status: 'ok' | 'near' | 'at';
@@ -26,6 +27,7 @@ interface DeviceRow {
     is_active: boolean;
     last_seen_at: string | null;
     sent_today: number;
+    reserved_today: number;
     delivered_today: number;
     failed_today: number;
     is_stale: boolean;

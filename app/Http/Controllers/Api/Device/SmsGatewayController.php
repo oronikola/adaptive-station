@@ -12,6 +12,7 @@ use App\Models\SmsGatewayDeviceToken;
 use App\Models\SmsOutboxMessage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class SmsGatewayController extends Controller
@@ -33,17 +34,17 @@ class SmsGatewayController extends Controller
     {
         $data = $request->validate([
             'batch_size' => ['sometimes', 'integer', 'min:1', 'max:50'],
-            'sim_slot' => ['nullable', 'integer', 'min:0', 'max:1'],
+            'sim_slot' => ['required', 'integer', 'min:0', 'max:1'],
         ]);
 
         $device = $this->smsGatewayDevice($request);
         $device->resetDailyStatsIfNeeded()->save();
 
-        if (! $device->canClaimSmsFor($data['sim_slot'] ?? null)) {
-            return response()->json(['messages' => []]);
-        }
-
-        $messages = SmsOutboxMessage::claimBatch($device, $data['batch_size'] ?? 20);
+        $messages = SmsOutboxMessage::claimBatch($device, $data['sim_slot'], $data['batch_size'] ?? 20);
+        $simStat = SmsGatewayDeviceSimStat::query()
+            ->where('device_id', $device->id)
+            ->where('sim_slot', $data['sim_slot'])
+            ->first();
 
         return response()->json([
             'messages' => $messages->map(fn (SmsOutboxMessage $message) => [
@@ -51,6 +52,7 @@ class SmsGatewayController extends Controller
                 'phone_number' => $message->phone_number,
                 'message' => $message->message,
             ])->values(),
+            'capacity_exhausted' => $messages->isEmpty() && $simStat?->remainingCapacity() === 0,
         ]);
     }
 
@@ -119,60 +121,67 @@ class SmsGatewayController extends Controller
 
         $device = $this->smsGatewayDevice($request);
         $device->resetDailyStatsIfNeeded()->save();
-        $simSlot = $data['sim_slot'] ?? null;
+        DB::connection('mysql')->transaction(function () use ($data, $device, $message) {
 
-        // Scoped to this device's own claim — a device can never report
-        // status on a row it didn't claim itself. markSent() never clears
-        // claimed_by_device_id, so a later, out-of-band delivery report
-        // (the carrier's report can arrive seconds to minutes after the
-        // original send/claim cycle) still resolves through this same scope.
-        $row = SmsOutboxMessage::query()
-            ->where('claimed_by_device_id', $device->id)
-            ->findOrFail($message);
-
-        if ($data['status'] === 'delivered') {
-            // Only meaningful after this device's own send actually
-            // succeeded — a delivery report can't retroactively apply to a
-            // message that was reported failed (which also clears
-            // claimed_by_device_id, so it would already 404 above) or is
-            // still only claimed.
-            abort_unless($row->status === SmsOutboxStatus::Sent, 409, 'Message has not been reported sent yet.');
-
-            $row->markDelivered();
-            $device->increment('delivered_today');
-            if ($simSlot !== null) {
-                SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'delivered_today');
-            }
-        } elseif ($data['status'] === 'sent') {
-            // markSent() deliberately leaves claimed_by_device_id set (see
-            // its docblock, for a later delivery report), so unlike
-            // 'failed' below, a retried 'sent' report — the device retrying
-            // after a network hiccup even though its first call already
-            // succeeded server-side — still passes the ownership scope
-            // above and would reach here again. Only count it once.
-            if ($row->status === SmsOutboxStatus::Claimed) {
-                $row->markSent($simSlot);
-                $device->increment('sent_today');
-                if ($simSlot !== null) {
-                    SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'sent_today');
-                }
-            }
-        } else {
-            $failureCategory = $data['failure_category'] ?? $this->failureCategoryFor($data['error'] ?? null);
-
-            $row->markFailed(
-                error: $data['error'] ?? null,
-                simSlot: $simSlot,
-                failureCategory: $failureCategory,
-                androidResultCode: $data['android_result_code'] ?? null,
-                carrierErrorCode: $data['carrier_error_code'] ?? null,
-                gatewayAppVersion: $data['gateway_app_version'] ?? null,
+            // Scoped to this device's own claim — a device can never report
+            // status on a row it didn't claim itself. markSent() never clears
+            // claimed_by_device_id, so a later, out-of-band delivery report
+            // (the carrier's report can arrive seconds to minutes after the
+            // original send/claim cycle) still resolves through this same scope.
+            $row = SmsOutboxMessage::query()
+                ->where('claimed_by_device_id', $device->id)
+                ->lockForUpdate()
+                ->findOrFail($message);
+            $claimedSimSlot = $row->claimed_sim_slot;
+            $expectedSimSlot = $claimedSimSlot ?? $row->sim_slot ?? $data['sim_slot'] ?? null;
+            $simSlot = $data['sim_slot'] ?? $expectedSimSlot;
+            abort_unless(
+                $simSlot !== null && ($claimedSimSlot === null || $claimedSimSlot === $simSlot),
+                422,
+                'Status SIM does not match the claimed message.',
             );
-            $device->increment('failed_today');
-            if ($simSlot !== null) {
+
+            if ($data['status'] === 'delivered') {
+                // Only meaningful after this device's own send actually
+                // succeeded — a delivery report can't retroactively apply to a
+                // message that was reported failed (which also clears
+                // claimed_by_device_id, so it would already 404 above) or is
+                // still only claimed.
+                abort_unless($row->status === SmsOutboxStatus::Sent, 409, 'Message has not been reported sent yet.');
+
+                $row->markDelivered();
+                $device->increment('delivered_today');
+                SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'delivered_today');
+            } elseif ($data['status'] === 'sent') {
+                // markSent() deliberately leaves claimed_by_device_id set (see
+                // its docblock, for a later delivery report), so unlike
+                // 'failed' below, a retried 'sent' report — the device retrying
+                // after a network hiccup even though its first call already
+                // succeeded server-side — still passes the ownership scope
+                // above and would reach here again. Only count it once.
+                if ($row->status === SmsOutboxStatus::Claimed) {
+                    SmsGatewayDeviceSimStat::consumeReservation($device->id, $simSlot);
+                    $row->markSent($simSlot);
+                    $device->increment('sent_today');
+                }
+            } else {
+                abort_unless($row->status === SmsOutboxStatus::Claimed, 409, 'Message has already been resolved.');
+                $failureCategory = $data['failure_category'] ?? $this->failureCategoryFor($data['error'] ?? null);
+
+                $row->releaseClaimReservation();
+                $row->markFailed(
+                    error: $data['error'] ?? null,
+                    simSlot: $simSlot,
+                    failureCategory: $failureCategory,
+                    androidResultCode: $data['android_result_code'] ?? null,
+                    carrierErrorCode: $data['carrier_error_code'] ?? null,
+                    gatewayAppVersion: $data['gateway_app_version'] ?? null,
+                );
+                $device->increment('failed_today');
                 SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'failed_today');
             }
-        }
+
+        });
 
         return response()->json(['status' => 'ok']);
     }

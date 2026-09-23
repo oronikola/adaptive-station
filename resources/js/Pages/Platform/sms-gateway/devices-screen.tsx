@@ -22,6 +22,7 @@ import '../../../../css/platform-overview.css';
 interface SimStat {
     sim_slot: number;
     sent_today: number;
+    reserved_today: number;
     delivered_today: number;
     failed_today: number;
     cap_status: 'ok' | 'near' | 'at';
@@ -44,6 +45,7 @@ interface DeviceRow {
     is_active: boolean;
     last_seen_at: string | null;
     sent_today: number;
+    reserved_today: number;
     delivered_today: number;
     failed_today: number;
     is_stale: boolean;
@@ -431,7 +433,7 @@ export default function SmsGatewayDevicesScreen({
                             </thead>
                             <tbody>
                                 {devices.map((device) => {
-                                    const capPct = Math.min(100, Math.round((device.sent_today / device.device_daily_send_cap) * 100));
+                                    const capPct = Math.min(100, Math.round(((device.sent_today + device.reserved_today) / device.device_daily_send_cap) * 100));
                                     return (
                                     <tr key={device.id}>
                                         <td>
@@ -442,6 +444,11 @@ export default function SmsGatewayDevicesScreen({
                                                 <div className="pft-device-info">
                                                     <p className="pft-device-label">{device.label}</p>
                                                     <p className="pft-device-username font-mono">{device.username ?? '—'}</p>
+                                                    {device.reserved_today > 0 && (
+                                                        <p className="pft-device-username">
+                                                            {device.reserved_today} SMS reserved for in-progress sends
+                                                        </p>
+                                                    )}
                                                     {device.sim_stats.length > 0 && (
                                                         <div className="pft-sim-badges">
                                                             {device.sim_stats.map((sim) => (

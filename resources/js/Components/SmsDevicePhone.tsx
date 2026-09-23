@@ -4,6 +4,7 @@ import { XIcon } from '@/Components/icons/x';
 interface SimStat {
     sim_slot: number;
     sent_today: number;
+    reserved_today: number;
     delivered_today: number;
     failed_today: number;
     cap_status: 'ok' | 'near' | 'at';
@@ -16,6 +17,7 @@ export interface SmsDevicePhoneDevice {
     is_active: boolean;
     last_seen_at: string | null;
     sent_today: number;
+    reserved_today: number;
     delivered_today: number;
     failed_today: number;
     is_stale: boolean;
@@ -86,8 +88,10 @@ export default function SmsDevicePhone({
                     <div className="sms-phone-sims">
                         {sims.map((sim, index) => {
                             const sent = sim?.sent_today ?? 0;
+                            const reserved = sim?.reserved_today ?? 0;
+                            const used = sent + reserved;
                             const pct = sim
-                                ? Math.min(100, Math.round((sent / Math.max(1, device.daily_send_cap)) * 100))
+                                ? Math.min(100, Math.round((used / Math.max(1, device.daily_send_cap)) * 100))
                                 : 0;
 
                             return (
@@ -110,6 +114,10 @@ export default function SmsDevicePhone({
                         <div>
                             <strong className="font-mono">{device.sent_today}</strong>
                             <span>Sent</span>
+                        </div>
+                        <div>
+                            <strong className="font-mono">{device.reserved_today}</strong>
+                            <span>Reserved</span>
                         </div>
                         <div>
                             <strong className="font-mono">{device.delivered_today}</strong>

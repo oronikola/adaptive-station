@@ -72,7 +72,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->makeOutboxRow($tenantB);
 
         $response = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim', ['batch_size' => 10])
+            ->postJson('/api/v1/device/sms/claim', ['batch_size' => 10, 'sim_slot' => 0])
             ->assertOk();
 
         $this->assertCount(2, $response->json('messages'));
@@ -86,11 +86,11 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->makeOutboxRow($tenant);
 
         $first = $this->withHeader('Authorization', "Bearer {$tokenA}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 1])->assertOk();
         $this->assertCount(1, $first->json('messages'));
 
         $second = $this->withHeader('Authorization', "Bearer {$tokenB}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
         $this->assertCount(0, $second->json('messages'));
     }
 
@@ -101,7 +101,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->makeOutboxRow($tenant);
 
         $claim = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
         $messageId = $claim->json('messages.0.id');
 
         $this->withHeader('Authorization', "Bearer {$token}")
@@ -153,7 +153,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->makeOutboxRow($tenant);
 
         $claim = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 1])->assertOk();
         $messageId = $claim->json('messages.0.id');
 
         $this->withHeader('Authorization', "Bearer {$token}")
@@ -175,16 +175,20 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->makeOutboxRow($tenant);
 
         $claim = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
         $messageId = $claim->json('messages.0.id');
 
         $this->withHeader('Authorization', "Bearer {$token}")
             ->postJson("/api/v1/device/sms/messages/{$messageId}/status", ['status' => 'sent'])
             ->assertOk();
 
-        $this->assertNull(SmsOutboxMessage::find($messageId)->sim_slot);
+        $this->assertSame(0, SmsOutboxMessage::find($messageId)->sim_slot);
         $this->assertSame(1, $device->fresh()->sent_today);
-        $this->assertDatabaseCount('sms_gateway_device_sim_stats', 0);
+        $this->assertDatabaseHas('sms_gateway_device_sim_stats', [
+            'device_id' => $device->id,
+            'sim_slot' => 0,
+            'sent_today' => 1,
+        ]);
     }
 
     public function test_a_failed_report_keeps_the_sim_slot_but_clears_the_claiming_device(): void
@@ -194,7 +198,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->makeOutboxRow($tenant);
 
         $claim = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
         $messageId = $claim->json('messages.0.id');
 
         $this->withHeader('Authorization', "Bearer {$token}")
@@ -213,7 +217,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->makeOutboxRow($tenant);
 
         $claim = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])
             ->assertOk();
         $messageId = $claim->json('messages.0.id');
 
@@ -237,7 +241,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->makeOutboxRow($tenant);
 
         $claim = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])
             ->assertOk();
         $messageId = $claim->json('messages.0.id');
 
@@ -267,7 +271,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->makeOutboxRow($tenant);
 
         $claim = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
         $messageId = $claim->json('messages.0.id');
 
         // A network hiccup can make the phone retry a report even though its
@@ -294,7 +298,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->makeOutboxRow($tenant);
 
         $claim = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
         $messageId = $claim->json('messages.0.id');
 
         $this->withHeader('Authorization', "Bearer {$token}")
@@ -318,7 +322,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->makeOutboxRow($tenant);
 
         $claim = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
         $messageId = $claim->json('messages.0.id');
 
         $this->withHeader('Authorization', "Bearer {$token}")
@@ -336,7 +340,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         $row = $this->makeOutboxRow($tenant, ['status' => SmsOutboxStatus::Pending]);
 
         $this->withHeader('Authorization', "Bearer {$tokenA}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
 
         $this->withHeader('Authorization', "Bearer {$tokenB}")
             ->postJson("/api/v1/device/sms/messages/{$row->id}/status", ['status' => 'sent'])
@@ -351,7 +355,7 @@ class SmsGatewayDeviceApiTest extends TestCase
 
         for ($attempt = 1; $attempt <= SmsOutboxMessage::MAX_ATTEMPTS; $attempt++) {
             $claim = $this->withHeader('Authorization', "Bearer {$token}")
-                ->postJson('/api/v1/device/sms/claim')->assertOk();
+                ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
             $this->assertCount(1, $claim->json('messages'), "expected a claimable row on attempt {$attempt}");
             $messageId = $claim->json('messages.0.id');
 
@@ -368,7 +372,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         }
 
         $finalClaim = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
         $this->assertCount(0, $finalClaim->json('messages'));
     }
 
@@ -389,7 +393,7 @@ class SmsGatewayDeviceApiTest extends TestCase
         $this->assertNull($fresh->claimed_by_device_id);
 
         $reclaimed = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
         $this->assertCount(1, $reclaimed->json('messages'));
     }
 
@@ -404,7 +408,7 @@ class SmsGatewayDeviceApiTest extends TestCase
 
         ['token' => $token] = $this->makeDevice();
         $claim = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/device/sms/claim')->assertOk();
+            ->postJson('/api/v1/device/sms/claim', ['sim_slot' => 0])->assertOk();
         $this->assertCount(0, $claim->json('messages'));
     }
 }

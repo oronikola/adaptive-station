@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 #[Fillable([
     'tenant_id', 'person_id', 'parent_account_id', 'station_id', 'tap_event_id',
     'phone_number', 'message', 'status', 'expires_at',
-    'claimed_by_device_id', 'claimed_at', 'attempts', 'sim_slot',
+    'claimed_by_device_id', 'claimed_sim_slot', 'claimed_at', 'attempts', 'sim_slot',
 ])]
 class SmsOutboxMessage extends Model
 {
@@ -99,16 +99,22 @@ class SmsOutboxMessage extends Model
      * an acceptable trade for keeping this hot path index-ordered and lock
      * scoped to only the rows actually claimed.
      */
-    public static function claimBatch(SmsGatewayDevice $device, int $batchSize): Collection
+    public static function claimBatch(SmsGatewayDevice $device, int $simSlot, int $batchSize): Collection
     {
-        return DB::connection('mysql')->transaction(function () use ($device, $batchSize) {
+        return DB::connection('mysql')->transaction(function () use ($device, $simSlot, $batchSize) {
             $now = Date::now();
+            $simStat = SmsGatewayDeviceSimStat::lockForToday($device->id, $simSlot);
+            $availableCapacity = min($batchSize, $simStat->remainingCapacity());
+
+            if ($availableCapacity === 0) {
+                return collect();
+            }
 
             $ids = static::query()
                 ->where('status', SmsOutboxStatus::Pending->value)
                 ->where('expires_at', '>', $now)
                 ->orderBy('created_at')
-                ->limit($batchSize)
+                ->limit($availableCapacity)
                 // Laravel's query builder has no skipLocked() helper (only
                 // lockForUpdate()/sharedLock()) — ->lock() accepts a raw
                 // lock clause string, which is how "FOR UPDATE SKIP LOCKED"
@@ -137,10 +143,13 @@ class SmsOutboxMessage extends Model
                 $row->forceFill([
                     'status' => SmsOutboxStatus::Claimed,
                     'claimed_by_device_id' => $device->id,
+                    'claimed_sim_slot' => $simSlot,
                     'claimed_at' => $now,
                     'attempts' => $row->attempts + 1,
                 ])->save();
             }
+
+            $simStat->increment('reserved_today', $rows->count());
 
             return $rows;
         });
@@ -158,6 +167,7 @@ class SmsOutboxMessage extends Model
         $this->forceFill([
             'status' => SmsOutboxStatus::Sent,
             'sent_at' => Date::now(),
+            'claimed_sim_slot' => null,
             'sim_slot' => $simSlot ?? $this->sim_slot,
             'last_error' => null,
             'failure_category' => null,
@@ -202,6 +212,7 @@ class SmsOutboxMessage extends Model
         $this->forceFill([
             'status' => $deadLetter ? SmsOutboxStatus::Failed : SmsOutboxStatus::Pending,
             'claimed_by_device_id' => null,
+            'claimed_sim_slot' => null,
             'claimed_at' => null,
             'last_error' => $error,
             'sim_slot' => $simSlot ?? $this->sim_slot,
@@ -210,6 +221,13 @@ class SmsOutboxMessage extends Model
             'carrier_error_code' => $carrierErrorCode,
             'gateway_app_version' => $gatewayAppVersion,
         ])->save();
+    }
+
+    public function releaseClaimReservation(): void
+    {
+        if ($this->claimed_by_device_id !== null && $this->claimed_sim_slot !== null) {
+            SmsGatewayDeviceSimStat::releaseReservation($this->claimed_by_device_id, $this->claimed_sim_slot);
+        }
     }
 
     /**
@@ -268,6 +286,7 @@ class SmsOutboxMessage extends Model
             'status' => SmsOutboxStatus::Pending,
             'attempts' => 0,
             'claimed_by_device_id' => null,
+            'claimed_sim_slot' => null,
             'claimed_at' => null,
             'last_error' => null,
             'failure_category' => null,

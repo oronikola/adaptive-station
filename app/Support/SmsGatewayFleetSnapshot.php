@@ -52,6 +52,8 @@ class SmsGatewayFleetSnapshot
             ->map(function (SmsGatewayDevice $device) use ($today, $staleThreshold, $simSlotCounts) {
                 $simSlotCount = (int) ($simSlotCounts[$device->id] ?? 0);
                 $deviceCap = SmsGatewayDevice::aggregateDailySendCap($simSlotCount);
+                $reservedToday = $device->simStats->sum('reserved_today');
+                $sentToday = $device->stats_date?->toDateString() === $today ? $device->sent_today : 0;
 
                 return [
                     'id' => $device->id,
@@ -59,7 +61,8 @@ class SmsGatewayFleetSnapshot
                     'username' => $device->username,
                     'is_active' => $device->is_active,
                     'last_seen_at' => $device->last_seen_at?->toIso8601String(),
-                    'sent_today' => $device->stats_date?->toDateString() === $today ? $device->sent_today : 0,
+                    'sent_today' => $sentToday,
+                    'reserved_today' => $reservedToday,
                     'delivered_today' => $device->stats_date?->toDateString() === $today ? $device->delivered_today : 0,
                     'failed_today' => $device->stats_date?->toDateString() === $today ? $device->failed_today : 0,
                     'is_stale' => $device->last_seen_at === null || $device->last_seen_at->lt($staleThreshold),
@@ -76,7 +79,7 @@ class SmsGatewayFleetSnapshot
                     // gets an inflated cap it could never legitimately fill.
                     'device_daily_send_cap' => $deviceCap,
                     'cap_status' => SmsGatewayDevice::capStatusFor(
-                        $device->stats_date?->toDateString() === $today ? $device->sent_today : 0,
+                        $sentToday + $reservedToday,
                         $deviceCap,
                     ),
                     // Only shown once this device has reported sends from
@@ -96,6 +99,7 @@ class SmsGatewayFleetSnapshot
                             ->map(fn (SmsGatewayDeviceSimStat $stat) => [
                                 'sim_slot' => $stat->sim_slot,
                                 'sent_today' => $stat->sent_today,
+                                'reserved_today' => $stat->reserved_today,
                                 'delivered_today' => $stat->delivered_today,
                                 'failed_today' => $stat->failed_today,
                                 'cap_status' => $stat->capStatus(),

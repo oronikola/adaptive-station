@@ -6,8 +6,9 @@ use App\Models\Concerns\HasUuidV4;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Per-(device, SIM slot) daily send counters — split out from
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  * never gets a row here, which read call sites must treat as "unknown", not
  * "zero sent".
  */
-#[Fillable(['device_id', 'sim_slot', 'sent_today', 'delivered_today', 'failed_today', 'stats_date'])]
+#[Fillable(['device_id', 'sim_slot', 'sent_today', 'reserved_today', 'delivered_today', 'failed_today', 'stats_date'])]
 class SmsGatewayDeviceSimStat extends Model
 {
     use HasUuidV4;
@@ -42,7 +43,81 @@ class SmsGatewayDeviceSimStat extends Model
     /** 'ok' / 'near' (>=80% of the daily cap) / 'at' (>=100%) — see SmsGatewayDevice::capStatusFor(). */
     public function capStatus(): string
     {
-        return SmsGatewayDevice::capStatusFor($this->sent_today);
+        return SmsGatewayDevice::capStatusFor($this->sent_today + $this->reserved_today);
+    }
+
+    public function remainingCapacity(): int
+    {
+        return max(0, (int) config('services.sms_gateway.daily_send_cap') - $this->sent_today - $this->reserved_today);
+    }
+
+    /**
+     * Finds today's counter while holding its row lock. Call only inside a
+     * mysql transaction so concurrent claims from a SIM cannot exceed its cap.
+     */
+    public static function lockForToday(string $deviceId, int $simSlot): self
+    {
+        $today = SmsGatewayDevice::currentStatsDate();
+        $stat = static::query()
+            ->where('device_id', $deviceId)
+            ->where('sim_slot', $simSlot)
+            ->lockForUpdate()
+            ->first();
+
+        if ($stat === null) {
+            DB::connection('mysql')->table((new static)->getTable())->insertOrIgnore([
+                'id' => (string) Str::uuid(),
+                'device_id' => $deviceId,
+                'sim_slot' => $simSlot,
+                'sent_today' => 0,
+                'reserved_today' => 0,
+                'delivered_today' => 0,
+                'failed_today' => 0,
+                'stats_date' => $today,
+                'created_at' => Date::now(),
+                'updated_at' => Date::now(),
+            ]);
+
+            $stat = static::query()
+                ->where('device_id', $deviceId)
+                ->where('sim_slot', $simSlot)
+                ->lockForUpdate()
+                ->firstOrFail();
+        }
+
+        if ($stat->stats_date?->toDateString() !== $today) {
+            $stat->forceFill([
+                'sent_today' => 0,
+                'reserved_today' => 0,
+                'delivered_today' => 0,
+                'failed_today' => 0,
+                'stats_date' => $today,
+            ])->save();
+        }
+
+        return $stat;
+    }
+
+    public static function consumeReservation(string $deviceId, int $simSlot): void
+    {
+        DB::connection('mysql')->transaction(function () use ($deviceId, $simSlot) {
+            $stat = static::lockForToday($deviceId, $simSlot);
+            $stat->forceFill([
+                'sent_today' => $stat->sent_today + 1,
+                'reserved_today' => max(0, $stat->reserved_today - 1),
+            ])->save();
+        });
+    }
+
+    public static function releaseReservation(string $deviceId, int $simSlot): void
+    {
+        DB::connection('mysql')->transaction(function () use ($deviceId, $simSlot) {
+            $stat = static::lockForToday($deviceId, $simSlot);
+
+            if ($stat->reserved_today > 0) {
+                $stat->decrement('reserved_today');
+            }
+        });
     }
 
     /**
@@ -65,47 +140,8 @@ class SmsGatewayDeviceSimStat extends Model
      */
     public static function incrementFor(string $deviceId, int $simSlot, string $counter): self
     {
-        $today = SmsGatewayDevice::currentStatsDate();
-
-        return DB::connection('mysql')->transaction(function () use ($deviceId, $simSlot, $counter, $today) {
-            $stat = static::query()
-                ->where('device_id', $deviceId)
-                ->where('sim_slot', $simSlot)
-                ->lockForUpdate()
-                ->first();
-
-            if ($stat === null) {
-                try {
-                    $stat = static::create([
-                        'device_id' => $deviceId,
-                        'sim_slot' => $simSlot,
-                        'sent_today' => 0,
-                        'delivered_today' => 0,
-                        'failed_today' => 0,
-                        'stats_date' => $today,
-                    ]);
-                } catch (QueryException $e) {
-                    if ((int) ($e->errorInfo[1] ?? 0) !== 1062) {
-                        throw $e;
-                    }
-
-                    $stat = static::query()
-                        ->where('device_id', $deviceId)
-                        ->where('sim_slot', $simSlot)
-                        ->lockForUpdate()
-                        ->firstOrFail();
-                }
-            }
-
-            if ($stat->stats_date?->toDateString() !== $today) {
-                $stat->forceFill([
-                    'sent_today' => 0,
-                    'delivered_today' => 0,
-                    'failed_today' => 0,
-                    'stats_date' => $today,
-                ])->save();
-            }
-
+        return DB::connection('mysql')->transaction(function () use ($deviceId, $simSlot, $counter) {
+            $stat = static::lockForToday($deviceId, $simSlot);
             $stat->increment($counter);
 
             return $stat;

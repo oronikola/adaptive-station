@@ -66,8 +66,8 @@ return [
     | published by any carrier API, so this is a best-known estimate rather
     | than something the fleet can verify directly. Used by
     | SmsGatewayDevice::dailySendCapStatus() to flag a device as near/at
-    | its limit on the fleet screen — purely informational; nothing here
-    | stops new messages from still being claimed to it.
+    | its limit on the fleet screen. The claim transaction reserves capacity
+    | per SIM, so a capped SIM cannot claim another recipient.
     */
     'sms_gateway' => [
         'daily_send_cap' => env('SMS_GATEWAY_DAILY_SEND_CAP', 450),

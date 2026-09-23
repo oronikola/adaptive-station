@@ -85,7 +85,7 @@ class SmsOutboxConcurrencyTest extends TestCase
                 $idsToLock->all(),
             ))->pluck('id');
 
-            $claimed = SmsOutboxMessage::claimBatch($device, 20);
+            $claimed = SmsOutboxMessage::claimBatch($device, 0, 20);
         } finally {
             $second->rollBack();
             $second->disconnect();
