@@ -90,7 +90,7 @@ const STATUS_PILL_CLASS: Record<string, string> = {
 // This palette is used by both the chart bars and the legend.
 const STATUS_BAR_COLORS: Record<string, string> = {
     pending: '#f38b22',
-    sent: '#229a5b',
+    sent: '#4ade80',
     failed: '#d84a3f',
 };
 
