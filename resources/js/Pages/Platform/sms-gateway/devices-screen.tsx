@@ -154,11 +154,11 @@ function simLoadLabel(status: SimStatus | undefined): string {
     return 'Unknown';
 }
 
-function simLoadTone(status: SimStatus | undefined): string {
+function simLoadTone(status: SimStatus): string {
     if (status?.status === 'has_load') return 'pf-pill--active';
     if (status?.status === 'no_load' || status?.status === 'paused') return 'pf-pill--inactive';
 
-    return 'pf-pill--warning';
+    return 'pf-pill--inactive';
 }
 
 export default function SmsGatewayDevicesScreen({
@@ -481,6 +481,10 @@ export default function SmsGatewayDevicesScreen({
                                                         {[0, 1].map((slot) => {
                                                             const sim = device.sim_statuses.find((status) => status.sim_slot === slot);
 
+                                                            if (!sim || sim.status === 'unknown') {
+                                                                return null;
+                                                            }
+
                                                             return (
                                                                 <span key={slot} className={`pf-pill ${simLoadTone(sim)} `}>
                                                                     SIM {slot + 1} · {simLoadLabel(sim)}
@@ -492,22 +496,13 @@ export default function SmsGatewayDevicesScreen({
                                             </div>
                                         </td>
                                         <td>
-                                            <span
-                                                className={
-                                                    'pf-pill ' +
-                                                    (!device.is_active
-                                                        ? 'pf-pill--inactive'
-                                                        : device.is_stale
-                                                          ? 'pf-pill--warning'
-                                                          : 'pf-pill--active')
-                                                }
-                                            >
-                                                {!device.is_active
-                                                    ? 'Deactivated'
-                                                    : device.is_stale
-                                                      ? 'Offline'
-                                                      : 'Online'}
-                                            </span>
+                                            {!device.is_stale && (
+                                                <span
+                                                    className={'pf-pill ' + (!device.is_active ? 'pf-pill--inactive' : 'pf-pill--active')}
+                                                >
+                                                    {device.is_active ? 'Online' : 'Deactivated'}
+                                                </span>
+                                            )}
                                         </td>
                                         <td>
                                             <span
