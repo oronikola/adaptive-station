@@ -155,8 +155,7 @@ function simLoadLabel(status: SimStatus | undefined): string {
 }
 
 function simLoadTone(status: SimStatus): string {
-    if (status?.status === 'has_load') return 'pf-pill--active';
-    if (status?.status === 'no_load' || status?.status === 'paused') return 'pf-pill--inactive';
+    if (status.status === 'no_load' || status.status === 'paused') return 'pf-pill--inactive';
 
     return 'pf-pill--inactive';
 }
@@ -481,7 +480,7 @@ export default function SmsGatewayDevicesScreen({
                                                         {[0, 1].map((slot) => {
                                                             const sim = device.sim_statuses.find((status) => status.sim_slot === slot);
 
-                                                            if (!sim || sim.status === 'unknown') {
+                                                            if (!sim || sim.status === 'unknown' || sim.status === 'has_load') {
                                                                 return null;
                                                             }
 
@@ -496,11 +495,11 @@ export default function SmsGatewayDevicesScreen({
                                             </div>
                                         </td>
                                         <td>
-                                            {!device.is_stale && (
+                                            {!device.is_stale && !device.is_active && (
                                                 <span
-                                                    className={'pf-pill ' + (!device.is_active ? 'pf-pill--inactive' : 'pf-pill--active')}
+                                                    className="pf-pill pf-pill--inactive"
                                                 >
-                                                    {device.is_active ? 'Online' : 'Deactivated'}
+                                                    Deactivated
                                                 </span>
                                             )}
                                         </td>
