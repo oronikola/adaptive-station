@@ -49,6 +49,14 @@ interface DeviceRow {
     delivered_today: number;
     failed_today: number;
     is_stale: boolean;
+    // When the device's currently-active session logged in / was last used
+    // — null once it's been logged out (or, before this device ever logged
+    // in at all). Only ever one active session at a time: logging in again
+    // revokes whatever session existed before (see SmsGatewayDeviceToken::
+    // issueFor()'s docblock), so this is "who's holding this phone right
+    // now," not a history of every login.
+    session_signed_in_at: string | null;
+    session_last_used_at: string | null;
     daily_send_cap: number;
     device_daily_send_cap: number;
     cap_status: 'ok' | 'near' | 'at';
@@ -129,6 +137,12 @@ function formatDateTime(value: string): string {
         minute: '2-digit',
         hour12: true,
     });
+}
+
+function timeAgo(value: string): string {
+    const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+    if (seconds < 60) return 'just now';
+    return `${formatAge(seconds)} ago`;
 }
 
 function simLoadLabel(status: SimStatus | undefined): string {
@@ -444,6 +458,11 @@ export default function SmsGatewayDevicesScreen({
                                                 <div className="pft-device-info">
                                                     <p className="pft-device-label">{device.label}</p>
                                                     <p className="pft-device-username font-mono">{device.username ?? '—'}</p>
+                                                    <p className="pft-device-username">
+                                                        {device.session_signed_in_at
+                                                            ? `Signed in ${timeAgo(device.session_signed_in_at)}`
+                                                            : 'No active session'}
+                                                    </p>
                                                     {device.reserved_today > 0 && (
                                                         <p className="pft-device-username">
                                                             {device.reserved_today} SMS reserved for in-progress sends

@@ -6,6 +6,7 @@ use App\Enums\SmsOutboxStatus;
 use App\Models\SmsGatewayDevice;
 use App\Models\SmsGatewayDeviceSimStat;
 use App\Models\SmsGatewayDeviceSimStatus;
+use App\Models\SmsGatewayDeviceToken;
 use App\Models\SmsOutboxMessage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
@@ -42,6 +43,20 @@ class SmsGatewayFleetSnapshot
             ->groupBy('device_id')
             ->pluck('slot_count', 'device_id');
 
+        // The currently-active session per device (SmsGatewayDeviceToken::
+        // issueFor() revokes everything else on login, so there's normally
+        // at most one) — surfaced so an admin can see *when* a device last
+        // signed in, rather than a session swap (a new phone logging in and
+        // silently invalidating the old one) being invisible on this screen.
+        // Ordered ascending then keyBy() so, on the rare chance more than
+        // one still-active row exists (e.g. from before that revoke-on-
+        // login behavior shipped), the most recent one wins.
+        $activeSessions = SmsGatewayDeviceToken::query()
+            ->whereNull('revoked_at')
+            ->orderBy('created_at')
+            ->get(['device_id', 'created_at', 'last_used_at'])
+            ->keyBy('device_id');
+
         $devices = SmsGatewayDevice::query()
             ->with([
                 'simStats' => fn ($query) => $query->where('stats_date', $today),
@@ -49,7 +64,8 @@ class SmsGatewayFleetSnapshot
             ])
             ->orderBy('label')
             ->get()
-            ->map(function (SmsGatewayDevice $device) use ($today, $staleThreshold, $simSlotCounts) {
+            ->map(function (SmsGatewayDevice $device) use ($today, $staleThreshold, $simSlotCounts, $activeSessions) {
+                $session = $activeSessions[$device->id] ?? null;
                 $simSlotCount = (int) ($simSlotCounts[$device->id] ?? 0);
                 $deviceCap = SmsGatewayDevice::aggregateDailySendCap($simSlotCount);
                 $reservedToday = $device->simStats->sum('reserved_today');
@@ -66,6 +82,8 @@ class SmsGatewayFleetSnapshot
                     'delivered_today' => $device->stats_date?->toDateString() === $today ? $device->delivered_today : 0,
                     'failed_today' => $device->stats_date?->toDateString() === $today ? $device->failed_today : 0,
                     'is_stale' => $device->last_seen_at === null || $device->last_seen_at->lt($staleThreshold),
+                    'session_signed_in_at' => $session?->created_at?->toIso8601String(),
+                    'session_last_used_at' => $session?->last_used_at?->toIso8601String(),
                     // Per-SIM cap — what each SIM badge is measured against.
                     'daily_send_cap' => config('services.sms_gateway.daily_send_cap'),
                     // The device row's own total is every SIM it actually

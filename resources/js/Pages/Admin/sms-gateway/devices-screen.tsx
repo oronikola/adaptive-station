@@ -26,6 +26,10 @@ interface DeviceRow {
     username: string | null;
     is_active: boolean;
     last_seen_at: string | null;
+    // Which phone currently holds this device's identity, and since when —
+    // only one session is ever active at a time (see SmsGatewayDeviceToken::
+    // issueFor()'s docblock), so this is "who's logged in right now."
+    session_signed_in_at: string | null;
     sent_today: number;
     reserved_today: number;
     delivered_today: number;
@@ -103,6 +107,12 @@ function formatDateTime(value: string): string {
         minute: '2-digit',
         hour12: true,
     });
+}
+
+function timeAgo(value: string): string {
+    const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+    if (seconds < 60) return 'just now';
+    return `${formatAge(seconds)} ago`;
 }
 
 /**
@@ -277,6 +287,11 @@ export default function SmsGatewayDevicesScreen({
                                                 <div className="pft-device-info">
                                                     <p className="pft-device-label">{device.label}</p>
                                                     <p className="pft-device-username font-mono">{device.username ?? '—'}</p>
+                                                    <p className="pft-device-username">
+                                                        {device.session_signed_in_at
+                                                            ? `Signed in ${timeAgo(device.session_signed_in_at)}`
+                                                            : 'No active session'}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </td>

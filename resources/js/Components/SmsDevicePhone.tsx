@@ -1,6 +1,16 @@
 import { LockIcon } from '@/Components/icons/lock';
 import { XIcon } from '@/Components/icons/x';
 
+function timeAgo(value: string): string {
+    const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+    if (seconds < 60) return 'just now';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h === 0) return `${m}m ago`;
+    if (m === 0) return `${h}h ago`;
+    return `${h}h ${m}m ago`;
+}
+
 interface SimStat {
     sim_slot: number;
     sent_today: number;
@@ -16,6 +26,11 @@ export interface SmsDevicePhoneDevice {
     username: string | null;
     is_active: boolean;
     last_seen_at: string | null;
+    // Which phone currently holds this device's identity, and since when —
+    // see SmsGatewayDeviceToken::issueFor()'s docblock: only one session is
+    // ever active at a time, so this is "who's logged in right now," not a
+    // login history.
+    session_signed_in_at: string | null;
     sent_today: number;
     reserved_today: number;
     delivered_today: number;
@@ -81,6 +96,9 @@ export default function SmsDevicePhone({
                     <p className="sms-phone-app">SMS Gateway</p>
                     <h3 className="sms-phone-name">{device.label}</h3>
                     <p className="sms-phone-user font-mono">{device.username ?? 'unassigned'}</p>
+                    <p className="sms-phone-user" style={{ opacity: 0.75 }}>
+                        {device.session_signed_in_at ? `Signed in ${timeAgo(device.session_signed_in_at)}` : 'No active session'}
+                    </p>
                     <span className={`sms-phone-chip sms-phone-chip--${status}`}>
                         {statusLabel(status)}
                     </span>
