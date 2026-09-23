@@ -4,7 +4,6 @@ import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
 import { ClockIcon } from '@/Components/icons/clock';
 import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
 import { PhoneIcon } from '@/Components/icons/phone';
-import { SendIcon } from '@/Components/icons/send';
 import { SmartphoneNfcIcon } from '@/Components/icons/smartphone-nfc';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
@@ -88,34 +87,10 @@ const STATUS_PILL_CLASS: Record<string, string> = {
     expired: 'pf-pill--danger',
 };
 
-interface StatCardProps {
-    label: string;
-    value: number;
-    icon: React.ReactNode;
-    tone: 'blue' | 'amber' | 'violet' | 'green' | 'red';
-}
-
-function StatCard({ label, value, icon, tone }: StatCardProps) {
-    return (
-        <div className="pft-stat-card">
-            <div className="pft-stat-card-top">
-                <p className="pft-stat-label">{label}</p>
-                <span className={`pft-stat-icon pft-stat-icon--${tone}`}>{icon}</span>
-            </div>
-            <p className="pft-stat-value">{value}</p>
-        </div>
-    );
-}
-
-const ICON_PENDING = <ClockIcon size={18} />;
-const ICON_SENT = <SendIcon size={18} />;
-const ICON_FAILED = <BadgeAlertIcon size={18} />;
-
-// Status palette keeps in lockstep with the pft-stat-icon tones and pf-pill
-// colors on this page, so a bar's color always matches the stat card beside it.
+// This palette is used by both the chart bars and the legend.
 const STATUS_BAR_COLORS: Record<string, string> = {
-    pending: '#c1791f',
-    sent: '#6c47c9',
+    pending: '#f38b22',
+    sent: '#229a5b',
     failed: '#d84a3f',
 };
 
@@ -221,12 +196,6 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                     </div>
                 </div>
 
-                <div className="pft-stat-grid">
-                    <StatCard label="Pending" value={stats.pending} icon={ICON_PENDING} tone="amber" />
-                    <StatCard label="Sent" value={stats.sent} icon={ICON_SENT} tone="violet" />
-                    <StatCard label="Failed" value={stats.failed} icon={ICON_FAILED} tone="red" />
-                </div>
-
                 <div className="pf-panel">
                     <div className="pf-panel-header">
                         <div>
@@ -286,26 +255,27 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                     )}
                 </div>
 
-                {failureSummary.length > 0 && (
-                    <div className="pf-panel">
-                        <div className="pf-panel-header">
-                            <div>
-                                <h2 className="pf-panel-title">Current failure reasons</h2>
-                                <p className="pf-panel-count">Dead-lettered messages across all schools</p>
+                <div className="grid gap-6">
+                    {failureSummary.length > 0 && (
+                        <div className="pf-panel">
+                            <div className="pf-panel-header">
+                                <div>
+                                    <h2 className="pf-panel-title">Current failure reasons</h2>
+                                    <p className="pf-panel-count">Dead-lettered messages across all schools</p>
+                                </div>
+                            </div>
+                            <div className="pfs-meta-row">
+                                {failureSummary.map((failure) => (
+                                    <span key={failure.category} className="pfs-meta-pill pfs-meta-pill--school">
+                                        <BadgeAlertIcon size={13} aria-hidden="true" />
+                                        {failure.category}: {failure.count}
+                                    </span>
+                                ))}
                             </div>
                         </div>
-                        <div className="pfs-meta-row">
-                            {failureSummary.map((failure) => (
-                                <span key={failure.category} className="pfs-meta-pill pfs-meta-pill--school">
-                                    <BadgeAlertIcon size={13} aria-hidden="true" />
-                                    {failure.category}: {failure.count}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                    )}
 
-                <form onSubmit={submit} className="pf-filter-bar" role="search">
+                    <form onSubmit={submit} className="pf-filter-bar" role="search">
                     <div className="pf-field">
                         <label htmlFor="tenant_id">School</label>
                         <PremiumSelect
@@ -387,7 +357,8 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                             </Link>
                         )}
                     </div>
-                </form>
+                    </form>
+                </div>
 
                 <div className="pf-panel">
                     <div className="pf-panel-header">
