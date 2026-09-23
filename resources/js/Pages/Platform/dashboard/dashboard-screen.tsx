@@ -2,6 +2,7 @@ import { ChevronRightIcon } from '@/Components/icons/chevron-right';
 import { ClockIcon } from '@/Components/icons/clock';
 import { HomeIcon } from '@/Components/icons/home';
 import { LayoutGridIcon } from '@/Components/icons/layout-grid';
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
 import { MonitorCogIcon } from '@/Components/icons/monitor-cog';
 import { PlusIcon } from '@/Components/icons/plus';
 import { ZapIcon } from '@/Components/icons/zap';
@@ -11,7 +12,10 @@ import { Tenant } from '@/types';
 import {
     Area,
     AreaChart,
+    Bar,
+    BarChart,
     CartesianGrid,
+    Cell,
     ResponsiveContainer,
     Tooltip,
     XAxis,
@@ -90,6 +94,148 @@ function ActivationGauge({
                 <span><i className="pft-dot pft-dot--disabled" />{disabled} disabled or retired</span>
             </div>
         </div>
+    );
+}
+
+/** Same "share of active fleet" layout as ActivationGauge, but for the live
+ * heartbeat ratio (online vs. enabled), not the activation ratio. */
+function StationGauge({
+    online,
+    active,
+    offline,
+    pending,
+}: {
+    online: number;
+    active: number;
+    offline: number;
+    pending: number;
+}) {
+    const pct = active > 0 ? Math.round((online / active) * 100) : 0;
+
+    return (
+        <div className="pft-gauge-card">
+            <div className="pft-gauge-summary">
+                <div>
+                    <span className="pft-gauge-pct">{pct}%</span>
+                    <p className="pft-gauge-caption">Stations online now</p>
+                </div>
+                <strong>{online}<span> / {active} active</span></strong>
+            </div>
+            <div className="pft-activation-track" role="progressbar" aria-label="Stations online now" aria-valuemin={0} aria-valuemax={active || 1} aria-valuenow={online}>
+                <span style={{ width: `${Math.min(100, pct)}%` }} />
+            </div>
+            <div className="pft-activation-pills">
+                <span><i className="pft-dot pft-dot--pending" />{offline} offline</span>
+                <span><i className="pft-dot pft-dot--disabled" />{pending} awaiting activation</span>
+            </div>
+        </div>
+    );
+}
+
+interface SmsStats {
+    total: number;
+    pending: number;
+    sent: number;
+    delivered: number;
+    failed: number;
+}
+
+// Status palette in lockstep with the sms-log page's own bar chart, plus the
+// green "delivered" tone this fleet-wide dashboard adds.
+const SMS_STATUS_COLORS: Record<string, string> = {
+    pending: '#c1791f',
+    sent: '#6c47c9',
+    delivered: '#1a8a4c',
+    failed: '#d84a3f',
+};
+
+function SmsFleetHealthPanel({
+    smsHealth,
+}: {
+    smsHealth: {
+        stats: SmsStats;
+        failureSummary: { category: string; count: number }[];
+    };
+}) {
+    const { stats, failureSummary } = smsHealth;
+    const chartData = [
+        { name: 'Pending', value: stats.pending, tone: 'pending' },
+        { name: 'Sent', value: stats.sent, tone: 'sent' },
+        { name: 'Delivered', value: stats.delivered, tone: 'delivered' },
+        { name: 'Failed', value: stats.failed, tone: 'failed' },
+    ];
+
+    return (
+        <section className="pf-panel pft-growth-panel" aria-labelledby="sms-health-title">
+            <div className="pf-panel-header">
+                <div>
+                    <h2 id="sms-health-title" className="pf-panel-title">SMS fleet health</h2>
+                    <p className="pf-panel-count">Tap-alert delivery across every school, all-time</p>
+                </div>
+                <Link href={route('platform.sms-log.index')} className="pft-panel-link">
+                    Full delivery log
+                    <ChevronRightIcon size={14} />
+                </Link>
+            </div>
+
+            <div className="pf-chart-legend">
+                {(['pending', 'sent', 'delivered', 'failed'] as const).map((status) => (
+                    <span key={status} className="pf-chart-legend-item">
+                        <span className="pf-chart-legend-dot" style={{ background: SMS_STATUS_COLORS[status] }} />
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </span>
+                ))}
+            </div>
+            {stats.total === 0 ? (
+                <p className="pf-empty pft-panel-empty">
+                    No SMS activity yet — bars appear once fleet phones start claiming and sending tap alerts.
+                </p>
+            ) : (
+                <div className="pf-chart-body">
+                    <ResponsiveContainer width="100%" height={240}>
+                        <BarChart
+                            data={chartData}
+                            margin={{ top: 8, right: 12, left: -12, bottom: 0 }}
+                            barCategoryGap="28%"
+                        >
+                            <CartesianGrid stroke="var(--as-border-light)" vertical={false} />
+                            <XAxis
+                                dataKey="name"
+                                tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <YAxis
+                                tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                axisLine={false}
+                                tickLine={false}
+                                allowDecimals={false}
+                            />
+                            <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--as-surface-active)' }} />
+                            <Bar dataKey="value" name="Messages" maxBarSize={64} radius={[8, 8, 2, 2]}>
+                                {chartData.map((bar) => (
+                                    <Cell key={bar.name} fill={SMS_STATUS_COLORS[bar.tone]} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+
+            {failureSummary.length > 0 && (
+                <div className="pft-fleet-block">
+                    <h3 className="pft-subheading">Top failure reasons</h3>
+                    <div className="pfs-meta-row">
+                        {failureSummary.map((failure) => (
+                            <span key={failure.category} className="pfs-meta-pill pfs-meta-pill--school">
+                                <BadgeAlertIcon size={13} aria-hidden="true" />
+                                {failure.category}: {failure.count}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </section>
     );
 }
 
@@ -307,14 +453,20 @@ interface DashboardScreenProps {
         pending_station_count: number;
         disabled_station_count: number;
         retired_station_count: number;
+        online_station_count: number;
+        offline_station_count: number;
     };
     statusCounts: StatusCounts;
     growth: GrowthPoint[];
     recentActivity: ActivityLog[];
     recentClients: Tenant[];
+    smsHealth: {
+        stats: SmsStats;
+        failureSummary: { category: string; count: number }[];
+    };
 }
 
-export default function DashboardScreen({ stats, statusCounts, growth, recentActivity, recentClients }: DashboardScreenProps) {
+export default function DashboardScreen({ stats, statusCounts, growth, recentActivity, recentClients, smsHealth }: DashboardScreenProps) {
     return (
         <PlatformLayout>
             <Head title="Dashboard" />
@@ -397,6 +549,8 @@ export default function DashboardScreen({ stats, statusCounts, growth, recentAct
                     </div>
                     <ClientGrowthChart growth={growth} />
                 </div>
+
+                <SmsFleetHealthPanel smsHealth={smsHealth} />
 
                 <div className="pft-widgets-grid">
                     <div className="pft-widgets-main">
@@ -490,6 +644,21 @@ export default function DashboardScreen({ stats, statusCounts, growth, recentAct
                                 total={stats.station_count}
                                 pending={stats.pending_station_count}
                                 disabled={stats.disabled_station_count + stats.retired_station_count}
+                            />
+                        </div>
+
+                        <div className="pf-panel">
+                            <div className="pf-panel-header">
+                                <div>
+                                    <h2 className="pf-panel-title">Stations Online</h2>
+                                    <p className="pf-panel-count">Share of enabled stations with a fresh heartbeat</p>
+                                </div>
+                            </div>
+                            <StationGauge
+                                online={stats.online_station_count}
+                                active={stats.active_station_count}
+                                offline={stats.offline_station_count}
+                                pending={stats.pending_station_count}
                             />
                         </div>
 

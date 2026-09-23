@@ -260,6 +260,33 @@ class SmsGatewayDeviceApiTest extends TestCase
         ]);
     }
 
+    public function test_a_retried_sent_report_does_not_double_count_after_the_first_already_succeeded(): void
+    {
+        ['token' => $token, 'device' => $device] = $this->makeDevice();
+        $tenant = Tenant::factory()->create();
+        $this->makeOutboxRow($tenant);
+
+        $claim = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/device/sms/claim')->assertOk();
+        $messageId = $claim->json('messages.0.id');
+
+        // A network hiccup can make the phone retry a report even though its
+        // first call already reached the server and succeeded.
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/device/sms/messages/{$messageId}/status", ['status' => 'sent', 'sim_slot' => 0])
+            ->assertOk();
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/device/sms/messages/{$messageId}/status", ['status' => 'sent', 'sim_slot' => 0])
+            ->assertOk();
+
+        $this->assertSame(1, $device->fresh()->sent_today);
+        $this->assertDatabaseHas('sms_gateway_device_sim_stats', [
+            'device_id' => $device->id,
+            'sim_slot' => 0,
+            'sent_today' => 1,
+        ]);
+    }
+
     public function test_reporting_delivered_after_sent_marks_the_row_delivered_and_updates_device_stats(): void
     {
         ['token' => $token, 'device' => $device] = $this->makeDevice();

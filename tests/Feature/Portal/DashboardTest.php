@@ -126,7 +126,69 @@ class DashboardTest extends TestCase
         $this->sms($tenant, SmsOutboxStatus::Failed);
 
         $this->actingAs($user)->get(route('portal.dashboard'))
-            ->assertInertia(fn ($page) => $page->where('stats.sms_failures', null));
+            ->assertInertia(fn ($page) => $page
+                ->where('stats.sms_failures', null)
+                ->where('smsHealth', null)
+                ->has('stationVolume'));
+    }
+
+    public function test_sms_health_folds_statuses_and_reports_the_top_failure_reason_for_delivery_access(): void
+    {
+        $tenant = Tenant::factory()->create(['timezone' => 'UTC']);
+        $otherTenant = Tenant::factory()->create();
+        $admin = User::factory()->adaptivestationAdmin()->create();
+        $this->sms($tenant, SmsOutboxStatus::Failed);
+        $this->sms($tenant, SmsOutboxStatus::Failed);
+        $this->sms($tenant, SmsOutboxStatus::Expired);
+        $this->sms($tenant, SmsOutboxStatus::Sent);
+        $this->sms($tenant, SmsOutboxStatus::Delivered);
+        $this->sms($tenant, SmsOutboxStatus::Claimed);
+        $this->sms($tenant, SmsOutboxStatus::Pending);
+        $this->sms($otherTenant, SmsOutboxStatus::Failed);
+        SmsOutboxMessage::where('tenant_id', $tenant->id)
+            ->where('status', SmsOutboxStatus::Failed)
+            ->update(['failure_category' => 'RADIO_TEARDOWN', 'last_error' => 'radio down']);
+
+        $this->actingAs($admin)->withSession(['oversight_tenant_id' => $tenant->id])
+            ->get(route('portal.dashboard'))->assertInertia(fn ($page) => $page
+            ->where('smsHealth.total', 7)
+            ->where('smsHealth.pending', 2)
+            ->where('smsHealth.sent', 1)
+            ->where('smsHealth.delivered', 1)
+            ->where('smsHealth.failed', 3)
+            ->where('smsHealth.topFailure.category', 'RADIO_TEARDOWN')
+            ->where('smsHealth.topFailure.count', 2));
+    }
+
+    public function test_sms_health_reports_null_top_failure_when_no_failed_messages_are_categorized(): void
+    {
+        $tenant = Tenant::factory()->create(['timezone' => 'UTC']);
+        $admin = User::factory()->adaptivestationAdmin()->create();
+        $this->sms($tenant, SmsOutboxStatus::Failed);
+        $this->sms($tenant, SmsOutboxStatus::Delivered);
+
+        $this->actingAs($admin)->withSession(['oversight_tenant_id' => $tenant->id])
+            ->get(route('portal.dashboard'))->assertInertia(fn ($page) => $page
+            ->where('smsHealth.failed', 1)
+            ->where('smsHealth.topFailure', null));
+    }
+
+    public function test_station_volume_totals_taps_per_station_over_seven_days_and_drops_quiet_ones(): void
+    {
+        $this->travelTo(Date::parse('2026-09-14 12:00:00', 'UTC'));
+        $tenant = Tenant::factory()->create(['timezone' => 'UTC']);
+        $admin = User::factory()->tenantAdmin($tenant)->create();
+        $busy = Station::factory()->for($tenant)->create();
+        $quiet = Station::factory()->for($tenant)->create();
+        TapEvent::factory()->count(4)->create(['station_id' => $busy->id, 'attendance_date_local' => '2026-09-14']);
+        TapEvent::factory()->create(['station_id' => $busy->id, 'attendance_date_local' => '2026-09-08']);
+        TapEvent::factory()->create(['station_id' => $quiet->id, 'attendance_date_local' => '2026-09-07']);
+
+        $this->actingAs($admin)->get(route('portal.dashboard'))->assertInertia(fn ($page) => $page
+            ->has('stationVolume', 1)
+            ->where('stationVolume.0.id', $busy->id)
+            ->where('stationVolume.0.name', $busy->name)
+            ->where('stationVolume.0.total', 5));
     }
 
     public function test_it_returns_an_empty_overview_and_a_complete_zero_filled_week(): void

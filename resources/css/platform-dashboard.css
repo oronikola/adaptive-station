@@ -2522,3 +2522,20 @@ table tbody td.pf-empty:has(> div) {
 .pf-detail-grid-form textarea {
     flex: 1 1 auto;
 }
+
+/* ── Platform dashboard · SMS fleet health blocks ─────────────────── */
+
+.pft-fleet-block {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--as-border-light);
+}
+
+.pft-subheading {
+    margin: 0;
+    color: var(--as-text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}

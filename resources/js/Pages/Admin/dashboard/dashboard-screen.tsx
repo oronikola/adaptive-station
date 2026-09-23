@@ -3,6 +3,7 @@ import { ClockIcon } from '@/Components/icons/clock';
 import { CreditCardIcon } from '@/Components/icons/credit-card';
 import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
 import { LayoutGridIcon } from '@/Components/icons/layout-grid';
+import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
 import { MessageSquareIcon } from '@/Components/icons/message-square';
 import { MonitorCheckIcon } from '@/Components/icons/monitor-check';
 import { UsersIcon } from '@/Components/icons/users';
@@ -10,7 +11,10 @@ import { Head, Link, usePoll } from '@inertiajs/react';
 import {
     Area,
     AreaChart,
+    Bar,
+    BarChart,
     CartesianGrid,
+    Cell,
     ResponsiveContainer,
     Tooltip,
     XAxis,
@@ -46,6 +50,15 @@ interface DashboardScreenProps {
     };
     recentActivity: { id: string; action: string; created_at: string }[];
     weeklyAttendance: { attendance_date_local: string; total: number; unique_people: number; in: number; out: number }[];
+    smsHealth: {
+        total: number;
+        pending: number;
+        sent: number;
+        delivered: number;
+        failed: number;
+        topFailure: { category: string; count: number } | null;
+    } | null;
+    stationVolume: { id: string; name: string; station_code: string; total: number }[];
 }
 
 function formatDay(value: string, short = false): string {
@@ -215,8 +228,135 @@ function AttendanceChart({ weeklyAttendance }: { weeklyAttendance: DashboardScre
     );
 }
 
-export default function DashboardScreen({ today, timezone, updatedAt, stats, stationHealth, recentActivity, weeklyAttendance }: DashboardScreenProps) {
-    usePoll(30000, { only: ['today', 'timezone', 'updatedAt', 'stats', 'stationHealth', 'recentActivity', 'weeklyAttendance'] });
+// Status palette in lockstep with the sms-log page's own bar chart, plus the
+// green "delivered" tone this dashboard adds.
+const SMS_STATUS_COLORS: Record<string, string> = {
+    pending: '#c1791f',
+    sent: '#6c47c9',
+    delivered: '#1a8a4c',
+    failed: '#d84a3f',
+};
+
+function SmsDeliveryHealthPanel({ smsHealth }: { smsHealth: NonNullable<DashboardScreenProps['smsHealth']> }) {
+    const chartData = [
+        { name: 'Pending', value: smsHealth.pending, tone: 'pending' },
+        { name: 'Sent', value: smsHealth.sent, tone: 'sent' },
+        { name: 'Delivered', value: smsHealth.delivered, tone: 'delivered' },
+        { name: 'Failed', value: smsHealth.failed, tone: 'failed' },
+    ];
+
+    return (
+        <section className="pf-panel" aria-labelledby="sms-health-title">
+            <div className="pf-panel-header">
+                <div>
+                    <h2 id="sms-health-title" className="pf-panel-title">SMS delivery health</h2>
+                    <p className="pf-panel-count">Tap-alert delivery for this school, all-time</p>
+                </div>
+                <Link href={route('portal.sms-log.index')} className="pft-panel-link">Full delivery log →</Link>
+            </div>
+            <div className="pf-chart-legend">
+                {(['pending', 'sent', 'delivered', 'failed'] as const).map((status) => (
+                    <span key={status} className="pf-chart-legend-item">
+                        <span className="pf-chart-legend-dot" style={{ background: SMS_STATUS_COLORS[status] }} />
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </span>
+                ))}
+            </div>
+            {smsHealth.total === 0 ? (
+                <p className="pf-empty pft-panel-empty">
+                    No SMS activity yet — tap alerts appear once fleet phones start sending them.
+                </p>
+            ) : (
+                <div className="pf-chart-body">
+                    <ResponsiveContainer width="100%" height={220}>
+                        <BarChart
+                            data={chartData}
+                            margin={{ top: 8, right: 12, left: -12, bottom: 0 }}
+                            barCategoryGap="28%"
+                        >
+                            <CartesianGrid stroke="var(--as-border-light)" vertical={false} />
+                            <XAxis
+                                dataKey="name"
+                                tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <YAxis
+                                tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                                axisLine={false}
+                                tickLine={false}
+                                allowDecimals={false}
+                            />
+                            <Tooltip content={<AttendanceTooltip />} cursor={{ fill: 'var(--as-surface-active)' }} />
+                            <Bar dataKey="value" name="Messages" maxBarSize={64} radius={[8, 8, 2, 2]}>
+                                {chartData.map((bar) => (
+                                    <Cell key={bar.name} fill={SMS_STATUS_COLORS[bar.tone]} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+            {smsHealth.topFailure && (
+                <p className="school-sms-failure">
+                    <BadgeAlertIcon size={14} aria-hidden="true" />
+                    Top failure reason: <strong>{smsHealth.topFailure.category}</strong> · {smsHealth.topFailure.count} message{smsHealth.topFailure.count === 1 ? '' : 's'}
+                </p>
+            )}
+        </section>
+    );
+}
+
+function shortenStationName(name: string): string {
+    return name.length > 18 ? `${name.slice(0, 17)}…` : name;
+}
+
+function StationVolumePanel({ stationVolume }: { stationVolume: DashboardScreenProps['stationVolume'] }) {
+    return (
+        <section className="pf-panel" aria-labelledby="station-volume-title">
+            <div className="pf-panel-header">
+                <div>
+                    <h2 id="station-volume-title" className="pf-panel-title">Tap volume by station</h2>
+                    <p className="pf-panel-count">Activity per station, last 7 days</p>
+                </div>
+                <Link href={route('portal.stations.index')} className="pft-panel-link">View stations →</Link>
+            </div>
+            <div className="pf-chart-body">
+                <ResponsiveContainer width="100%" height={Math.max(240, stationVolume.length * 46)}>
+                    <BarChart
+                        data={stationVolume}
+                        layout="vertical"
+                        margin={{ top: 4, right: 16, left: 0, bottom: 0 }}
+                        barCategoryGap="32%"
+                    >
+                        <CartesianGrid stroke="var(--as-border-light)" horizontal={false} />
+                        <XAxis
+                            type="number"
+                            tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                            axisLine={false}
+                            tickLine={false}
+                            allowDecimals={false}
+                        />
+                        <YAxis
+                            type="category"
+                            dataKey="name"
+                            width={110}
+                            tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
+                            axisLine={false}
+                            tickLine={false}
+                            tickFormatter={shortenStationName}
+                        />
+                        <Tooltip content={<AttendanceTooltip />} cursor={{ fill: 'var(--as-surface-active)' }} />
+                        <Bar dataKey="total" name="Taps" fill="#234ef4" maxBarSize={24} radius={[0, 8, 8, 0]} />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </section>
+    );
+}
+
+export default function DashboardScreen({ today, timezone, updatedAt, stats, stationHealth, recentActivity, weeklyAttendance, smsHealth, stationVolume }: DashboardScreenProps) {
+    usePoll(30000, { only: ['today', 'timezone', 'updatedAt', 'stats', 'stationHealth', 'recentActivity', 'weeklyAttendance', 'smsHealth', 'stationVolume'] });
     const attendanceHref = route('portal.attendance.index', { date_from: today, date_to: today });
     const stationsHref = route('portal.stations.index');
     const peopleHref = route('portal.people.index');
@@ -356,6 +496,19 @@ export default function DashboardScreen({ today, timezone, updatedAt, stats, sta
                         </table></div>
                     </details>
                 </section>
+
+                {smsHealth && stationVolume.length > 0 && (
+                    <div className="pft-grid-2">
+                        <SmsDeliveryHealthPanel smsHealth={smsHealth} />
+                        <StationVolumePanel stationVolume={stationVolume} />
+                    </div>
+                )}
+                {smsHealth && stationVolume.length === 0 && (
+                    <SmsDeliveryHealthPanel smsHealth={smsHealth} />
+                )}
+                {!smsHealth && stationVolume.length > 0 && (
+                    <StationVolumePanel stationVolume={stationVolume} />
+                )}
 
                 <div className="pft-widgets-grid">
                     <div className="pft-widgets-main">

@@ -144,10 +144,18 @@ class SmsGatewayController extends Controller
                 SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'delivered_today');
             }
         } elseif ($data['status'] === 'sent') {
-            $row->markSent($simSlot);
-            $device->increment('sent_today');
-            if ($simSlot !== null) {
-                SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'sent_today');
+            // markSent() deliberately leaves claimed_by_device_id set (see
+            // its docblock, for a later delivery report), so unlike
+            // 'failed' below, a retried 'sent' report — the device retrying
+            // after a network hiccup even though its first call already
+            // succeeded server-side — still passes the ownership scope
+            // above and would reach here again. Only count it once.
+            if ($row->status === SmsOutboxStatus::Claimed) {
+                $row->markSent($simSlot);
+                $device->increment('sent_today');
+                if ($simSlot !== null) {
+                    SmsGatewayDeviceSimStat::incrementFor($device->id, $simSlot, 'sent_today');
+                }
             }
         } else {
             $failureCategory = $data['failure_category'] ?? $this->failureCategoryFor($data['error'] ?? null);

@@ -6,6 +6,8 @@ use App\Models\Concerns\HasUuidV4;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Per-(device, SIM slot) daily send counters — split out from
@@ -48,28 +50,65 @@ class SmsGatewayDeviceSimStat extends Model
      * counters over first if the stored stats_date has gone stale —
      * mirrors SmsGatewayDevice::resetDailyStatsIfNeeded()'s same reasoning,
      * just one level more granular.
+     *
+     * A device's two SIMs report status independently (and can send at the
+     * same time), so two calls for the same device+slot can genuinely
+     * overlap. lockForUpdate() serializes them against an existing row;
+     * find-or-create the very first row for a given (device, sim_slot)
+     * still races between two concurrent callers, so a duplicate-key insert
+     * is caught and re-fetched (same pattern as TapEvent::acceptBatch()) —
+     * without either of these, two concurrent read-then-increment calls can
+     * read the same starting count and one increment is silently lost,
+     * which is why this device's per-SIM totals used to under-count against
+     * the device-level aggregate (see SmsGatewayDevice::increment() calls in
+     * SmsGatewayController::reportStatus(), which are already atomic).
      */
     public static function incrementFor(string $deviceId, int $simSlot, string $counter): self
     {
         $today = SmsGatewayDevice::currentStatsDate();
 
-        $stat = static::query()->firstOrNew([
-            'device_id' => $deviceId,
-            'sim_slot' => $simSlot,
-        ]);
+        return DB::connection('mysql')->transaction(function () use ($deviceId, $simSlot, $counter, $today) {
+            $stat = static::query()
+                ->where('device_id', $deviceId)
+                ->where('sim_slot', $simSlot)
+                ->lockForUpdate()
+                ->first();
 
-        if ($stat->stats_date?->toDateString() !== $today) {
-            $stat->forceFill([
-                'sent_today' => 0,
-                'delivered_today' => 0,
-                'failed_today' => 0,
-                'stats_date' => $today,
-            ]);
-        }
+            if ($stat === null) {
+                try {
+                    $stat = static::create([
+                        'device_id' => $deviceId,
+                        'sim_slot' => $simSlot,
+                        'sent_today' => 0,
+                        'delivered_today' => 0,
+                        'failed_today' => 0,
+                        'stats_date' => $today,
+                    ]);
+                } catch (QueryException $e) {
+                    if ((int) ($e->errorInfo[1] ?? 0) !== 1062) {
+                        throw $e;
+                    }
 
-        $stat->{$counter} = $stat->{$counter} + 1;
-        $stat->save();
+                    $stat = static::query()
+                        ->where('device_id', $deviceId)
+                        ->where('sim_slot', $simSlot)
+                        ->lockForUpdate()
+                        ->firstOrFail();
+                }
+            }
 
-        return $stat;
+            if ($stat->stats_date?->toDateString() !== $today) {
+                $stat->forceFill([
+                    'sent_today' => 0,
+                    'delivered_today' => 0,
+                    'failed_today' => 0,
+                    'stats_date' => $today,
+                ])->save();
+            }
+
+            $stat->increment($counter);
+
+            return $stat;
+        });
     }
 }

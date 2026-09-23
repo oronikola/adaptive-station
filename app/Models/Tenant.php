@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StationStatus;
 use App\Enums\TenantStatus;
 use App\Models\Concerns\HasUuidV4;
 use App\Support\TenantDatabase;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -122,6 +124,11 @@ class Tenant extends Model
      * query that counts across all of them, so this loops every tenant's own
      * database and sums in PHP. Shared by the platform dashboard and the
      * clients list, both of which need the same platform-wide totals.
+     *
+     * The online estimate adds one query per tenant: active stations whose
+     * heartbeat is fresh enough to count as online, per config('device.
+     * station_offline_threshold_minutes'). "offline" is always relative to
+     * active stations, not the whole fleet.
      */
     public static function platformStationTotals(): array
     {
@@ -131,7 +138,11 @@ class Tenant extends Model
             'pending_activation' => 0,
             'disabled' => 0,
             'retired' => 0,
+            'online' => 0,
+            'offline' => 0,
         ];
+
+        $heartbeatCutoff = Date::now()->subMinutes((int) config('device.station_offline_threshold_minutes'));
 
         foreach (static::all() as $tenant) {
             TenantDatabase::use($tenant);
@@ -141,10 +152,24 @@ class Tenant extends Model
                 ->groupBy('status')
                 ->pluck('aggregate', 'status');
 
+            $activeThisTenant = 0;
             foreach ($statusCounts as $status => $count) {
+                $count = (int) $count;
                 $totals['total'] += $count;
                 $totals[$status] += $count;
+                if ($status === StationStatus::Active->value) {
+                    $activeThisTenant = $count;
+                }
             }
+
+            $onlineThisTenant = Station::allTenants()
+                ->where('tenant_id', $tenant->id)
+                ->where('status', StationStatus::Active)
+                ->where('last_seen_at', '>', $heartbeatCutoff)
+                ->count();
+
+            $totals['online'] += $onlineThisTenant;
+            $totals['offline'] += max(0, $activeThisTenant - $onlineThisTenant);
         }
 
         return $totals;

@@ -15,6 +15,7 @@ use App\Models\TapEvent;
 use App\Models\Tenant;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Date;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,6 +30,7 @@ class DashboardController extends Controller
         $today = $now->copy()->setTimezone($timezone)->startOfDay();
         $thresholdMinutes = (int) config('device.station_offline_threshold_minutes');
         $cutoff = $now->copy()->subMinutes($thresholdMinutes);
+        $canViewSms = $request->user()->isAdaptivestationAdmin();
 
         $enabledStations = Station::query()->where('status', StationStatus::Active);
         $enabledCount = (clone $enabledStations)->count();
@@ -56,12 +58,24 @@ class DashboardController extends Controller
 
         // SMS is a central, unscoped model. Match the delivery log's role
         // restriction and explicitly constrain every count to this school.
-        $smsFailures = $request->user()->isAdaptivestationAdmin()
+        $smsFailures = $canViewSms
             ? SmsOutboxMessage::query()
                 ->where('tenant_id', $tenantId)
                 ->where('status', SmsOutboxStatus::Failed)
                 ->count()
             : null;
+
+        // Same role gate as the delivery log — the SMS delivery-health tile
+        // (status distribution + top failure reason) is only meaningful to a
+        // user who can actually reach that page. Kept all-time to stay in
+        // sync with the sms_failures metric card and the log's own stats().
+        $smsHealth = $canViewSms
+            ? $this->smsHealth($tenantId)
+            : null;
+
+        // Attendance is per-station on this tenant's own database, so per-
+        // station volume uses the same 7-day window as weeklyAttendance.
+        $stationVolume = $this->stationVolume($today);
 
         return Inertia::render('Admin/dashboard/dashboard-screen', [
             'today' => $today->toDateString(),
@@ -100,6 +114,79 @@ class DashboardController extends Controller
             ],
             'recentActivity' => AuditLog::query()->latest('created_at')->take(8)->get(),
             'weeklyAttendance' => $weeklyAttendance,
+            'smsHealth' => $smsHealth,
+            'stationVolume' => $stationVolume,
         ]);
+    }
+
+    /**
+     * Same shape as Portal\SmsDeliveryLogController::stats() — claimed folds
+     * into "pending" (still in flight), expired folds into "failed" (never
+     * reached the phone) — plus the school's top dead-letter failure reason.
+     * Always scoped to this tenant and independent of any filters, matching
+     * the dashboard's other permanent overviews.
+     *
+     * @return array{total: int, pending: int, sent: int, delivered: int, failed: int, topFailure: array{category: string, count: int}|null}
+     */
+    private function smsHealth(?string $tenantId): array
+    {
+        $counts = SmsOutboxMessage::query()
+            ->where('tenant_id', $tenantId)
+            ->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')
+            ->get()
+            ->mapWithKeys(fn ($row) => [$row->status->value => (int) $row->aggregate]);
+
+        $topFailure = SmsOutboxMessage::query()
+            ->where('tenant_id', $tenantId)
+            ->where('status', SmsOutboxStatus::Failed)
+            ->whereNotNull('failure_category')
+            ->selectRaw('failure_category, count(*) as aggregate')
+            ->groupBy('failure_category')
+            ->orderByDesc('aggregate')
+            ->first();
+
+        return [
+            'total' => $counts->sum(),
+            'pending' => ($counts['pending'] ?? 0) + ($counts['claimed'] ?? 0),
+            'sent' => $counts['sent'] ?? 0,
+            'delivered' => $counts['delivered'] ?? 0,
+            'failed' => ($counts['failed'] ?? 0) + ($counts['expired'] ?? 0),
+            'topFailure' => $topFailure !== null
+                ? ['category' => $topFailure->failure_category, 'count' => (int) $topFailure->aggregate]
+                : null,
+        ];
+    }
+
+    /**
+     * Tap volume per station over the same 7-day window as the attendance
+     * chart, for a "where is activity actually happening" comparison across
+     * this school's fleet. Stations with zero taps are omitted — like
+     * SMS deviceStats, a row sitting at 0 adds noise without meaning.
+     *
+     * @return array<int, array{id: string, name: string, station_code: string, total: int}>
+     */
+    private function stationVolume(Carbon $today): array
+    {
+        $counts = TapEvent::query()
+            ->selectRaw('station_id, count(*) as total')
+            ->whereBetween('attendance_date_local', [$today->copy()->subDays(6)->toDateString(), $today->toDateString()])
+            ->groupBy('station_id')
+            ->get()
+            ->keyBy('station_id');
+
+        return Station::query()
+            ->get(['id', 'name', 'station_code'])
+            ->map(fn (Station $station): array => [
+                'id' => $station->id,
+                'name' => $station->name,
+                'station_code' => $station->station_code,
+                'total' => (int) ($counts->get($station->id)?->total ?? 0),
+            ])
+            ->filter(fn (array $row): bool => $row['total'] > 0)
+            ->sortByDesc('total')
+            ->take(8)
+            ->values()
+            ->all();
     }
 }

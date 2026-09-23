@@ -2,13 +2,16 @@
 
 namespace Tests\Feature\Platform;
 
+use App\Enums\SmsOutboxStatus;
 use App\Enums\StationStatus;
 use App\Enums\TenantStatus;
+use App\Models\SmsOutboxMessage;
 use App\Models\Station;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -90,5 +93,61 @@ class DashboardTest extends TestCase
                 ->where('stats.pending_station_count', 1)
                 ->where('stats.disabled_station_count', 1)
                 ->where('stats.retired_station_count', 0));
+    }
+
+    public function test_online_and_offline_station_counts_are_aggregated_across_tenants(): void
+    {
+        $this->travelTo(Date::parse('2026-09-15 12:00:00', 'UTC'));
+        config(['device.station_offline_threshold_minutes' => 10]);
+        $admin = User::factory()->platformSuperAdmin()->create();
+        $tenantA = Tenant::factory()->create();
+        $tenantB = Tenant::factory()->create();
+        Station::factory()->for($tenantA)->create(['status' => StationStatus::Active, 'last_seen_at' => now()->subMinutes(5)]);
+        Station::factory()->for($tenantA)->create(['status' => StationStatus::Active, 'last_seen_at' => now()->subMinutes(20)]);
+        Station::factory()->for($tenantA)->create(['status' => StationStatus::PendingActivation, 'last_seen_at' => now()]);
+        Station::factory()->for($tenantB)->create(['status' => StationStatus::Active, 'last_seen_at' => now()]);
+
+        $this->actingAs($admin)->get(route('platform.dashboard'))
+            ->assertInertia(fn ($page) => $page
+                ->where('stats.station_count', 4)
+                ->where('stats.active_station_count', 3)
+                ->where('stats.online_station_count', 2)
+                ->where('stats.offline_station_count', 1));
+    }
+
+    public function test_sms_health_reports_fleet_wide_delivery_across_all_schools(): void
+    {
+        $admin = User::factory()->platformSuperAdmin()->create();
+        $tenantA = Tenant::factory()->create();
+        $tenantB = Tenant::factory()->create();
+        $this->sms($tenantA, SmsOutboxStatus::Delivered);
+        $this->sms($tenantA, SmsOutboxStatus::Failed);
+        $this->sms($tenantB, SmsOutboxStatus::Expired);
+        $this->sms($tenantB, SmsOutboxStatus::Pending);
+        SmsOutboxMessage::where('status', SmsOutboxStatus::Failed)->update(['failure_category' => 'CARRIER_ERROR']);
+
+        $this->actingAs($admin)->get(route('platform.dashboard'))
+            ->assertInertia(fn ($page) => $page
+                ->where('smsHealth.stats.total', 4)
+                ->where('smsHealth.stats.pending', 1)
+                ->where('smsHealth.stats.sent', 0)
+                ->where('smsHealth.stats.delivered', 1)
+                ->where('smsHealth.stats.failed', 2)
+                ->has('smsHealth.failureSummary', 1)
+                ->where('smsHealth.failureSummary.0.category', 'CARRIER_ERROR')
+                ->where('smsHealth.failureSummary.0.count', 1));
+    }
+
+    private function sms(Tenant $tenant, SmsOutboxStatus $status): SmsOutboxMessage
+    {
+        return SmsOutboxMessage::create([
+            'tenant_id' => $tenant->id,
+            'person_id' => (string) Str::uuid(),
+            'parent_account_id' => (string) Str::uuid(),
+            'phone_number' => '+639170000001',
+            'message' => 'Attendance notification',
+            'status' => $status,
+            'expires_at' => now()->addMinutes(30),
+        ]);
     }
 }

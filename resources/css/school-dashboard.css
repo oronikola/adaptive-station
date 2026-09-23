@@ -102,6 +102,23 @@
 .school-activity-list li { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; }
 .school-activity-list li + li { border-top: 1px solid var(--as-border); }
 .school-activity-list time { color: var(--as-text-secondary); font-size: 12px; white-space: nowrap; }
+.school-sms-failure {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0 0;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--as-border);
+    background: var(--as-surface-hover);
+    color: var(--as-text-secondary);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+.school-sms-failure svg { flex: 0 0 auto; color: var(--as-warning); }
+.school-sms-failure strong { color: var(--as-text); font-weight: 650; }
+.school-dashboard .pft-grid-2 { margin-bottom: 0; }
+.school-dashboard .pft-grid-2 > .pf-panel { margin-top: 0; margin-bottom: 0; min-width: 0; }
 .school-dashboard a:focus-visible, .school-chart-details summary:focus-visible { outline: 2px solid var(--as-brand); outline-offset: 4px; }
 @media (max-width: 1199px) {
     .school-content-grid { grid-template-columns: minmax(0, 1fr); }
