@@ -38,14 +38,18 @@ class SmsGatewayFleetCapTest extends TestCase
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
             ->where('devices.0.cap_status', 'ok')
-            ->where('devices.0.daily_send_cap', 450));
+            ->where('devices.0.daily_send_cap', 450)
+            // Every device is dual-SIM, so its own aggregate is measured
+            // against double the per-SIM cap — see
+            // SmsGatewayDevice::aggregateDailySendCap()'s docblock.
+            ->where('devices.0.device_daily_send_cap', 900));
     }
 
     public function test_a_device_near_its_daily_cap_is_flagged(): void
     {
         config(['services.sms_gateway.daily_send_cap' => 450]);
         $platformAdmin = User::factory()->platformSuperAdmin()->create();
-        $this->deviceWithSentToday(380);
+        $this->deviceWithSentToday(760); // >=80% of the 900 combined (2x450) cap
 
         $response = $this->actingAs($platformAdmin)->get(route('platform.sms-gateway.devices.index'));
 
@@ -56,7 +60,7 @@ class SmsGatewayFleetCapTest extends TestCase
     {
         config(['services.sms_gateway.daily_send_cap' => 450]);
         $platformAdmin = User::factory()->platformSuperAdmin()->create();
-        $this->deviceWithSentToday(450);
+        $this->deviceWithSentToday(900); // the combined (2x450) cap, not the per-SIM figure
 
         $response = $this->actingAs($platformAdmin)->get(route('platform.sms-gateway.devices.index'));
 

@@ -20,6 +20,7 @@ export interface SmsDevicePhoneDevice {
     failed_today: number;
     is_stale: boolean;
     daily_send_cap: number;
+    device_daily_send_cap: number;
     cap_status: 'ok' | 'near' | 'at';
     sim_stats: SimStat[];
 }
@@ -61,7 +62,7 @@ export default function SmsDevicePhone({
     );
     const capPct = Math.min(
         100,
-        Math.round((device.sent_today / Math.max(1, device.daily_send_cap)) * 100),
+        Math.round((device.sent_today / Math.max(1, device.device_daily_send_cap)) * 100),
     );
 
     return (
@@ -125,7 +126,7 @@ export default function SmsDevicePhone({
 
             <div className="sms-phone-meta">
                 <p className="sms-phone-cap font-mono">
-                    Today {device.sent_today}/{device.daily_send_cap}
+                    Today {device.sent_today}/{device.device_daily_send_cap}
                     <span className="sms-phone-cap-bar">
                         <span style={{ width: `${capPct}%` }} />
                     </span>

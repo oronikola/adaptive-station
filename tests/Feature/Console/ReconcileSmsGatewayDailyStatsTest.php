@@ -75,7 +75,6 @@ class ReconcileSmsGatewayDailyStatsTest extends TestCase
 
     public function test_the_device_option_scopes_the_reconciliation_to_one_device(): void
     {
-        $tenant = Tenant::factory()->create();
         $target = SmsGatewayDevice::create(['label' => 'Phone A']);
         $other = SmsGatewayDevice::create(['label' => 'Phone B']);
         $target->forceFill(['sent_today' => 99, 'stats_date' => SmsGatewayDevice::currentStatsDate()])->save();

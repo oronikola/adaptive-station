@@ -48,9 +48,17 @@ class SmsGatewayFleetSnapshot
                 'delivered_today' => $device->stats_date?->toDateString() === $today ? $device->delivered_today : 0,
                 'failed_today' => $device->stats_date?->toDateString() === $today ? $device->failed_today : 0,
                 'is_stale' => $device->last_seen_at === null || $device->last_seen_at->lt($staleThreshold),
+                // Per-SIM cap — what each SIM badge is measured against.
                 'daily_send_cap' => config('services.sms_gateway.daily_send_cap'),
+                // The device row's own total is both SIMs combined, so it's
+                // measured against double the per-SIM cap (see
+                // SmsGatewayDevice::aggregateDailySendCap()'s docblock) —
+                // otherwise a healthy dual-SIM phone reads as "over cap"
+                // once its two SIMs' sends add up past the single-SIM figure.
+                'device_daily_send_cap' => SmsGatewayDevice::aggregateDailySendCap(),
                 'cap_status' => SmsGatewayDevice::capStatusFor(
                     $device->stats_date?->toDateString() === $today ? $device->sent_today : 0,
+                    SmsGatewayDevice::aggregateDailySendCap(),
                 ),
                 // Only present once this device's app build has reported at
                 // least one sim_slot-tagged send — an older, not-yet-updated

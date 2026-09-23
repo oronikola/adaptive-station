@@ -48,6 +48,7 @@ interface DeviceRow {
     failed_today: number;
     is_stale: boolean;
     daily_send_cap: number;
+    device_daily_send_cap: number;
     cap_status: 'ok' | 'near' | 'at';
     // Empty until this device's app build has reported at least one
     // sim_slot-tagged send — an older, not-yet-updated phone has none yet.
@@ -430,7 +431,7 @@ export default function SmsGatewayDevicesScreen({
                             </thead>
                             <tbody>
                                 {devices.map((device) => {
-                                    const capPct = Math.min(100, Math.round((device.sent_today / device.daily_send_cap) * 100));
+                                    const capPct = Math.min(100, Math.round((device.sent_today / device.device_daily_send_cap) * 100));
                                     return (
                                     <tr key={device.id}>
                                         <td>
@@ -497,7 +498,7 @@ export default function SmsGatewayDevicesScreen({
                                                 <CheckIcon size={13} aria-hidden="true" />
                                                 <span className="pft-fleet-metric-value">
                                                     {device.sent_today}
-                                                    <span> / {device.daily_send_cap}</span>
+                                                    <span> / {device.device_daily_send_cap}</span>
                                                 </span>
                                                 <span className="pft-fleet-cap-track" aria-hidden="true">
                                                     <span

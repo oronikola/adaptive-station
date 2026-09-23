@@ -106,20 +106,37 @@ class SmsGatewayDevice extends Model
     }
 
     /**
+     * Every phone in this fleet is dual-SIM (see the sms_gateway_device_sim_
+     * stats migration's own docblock: "a phone has exactly 2 SIM slots
+     * today") — config('services.sms_gateway.daily_send_cap') is a per-SIM
+     * figure, so a device's own aggregate sent_today can legitimately reach
+     * twice that before either SIM is actually near its own cap. Comparing
+     * the aggregate against the plain per-SIM cap (as this used to) made a
+     * healthy dual-SIM phone look like it had blown through its limit.
+     */
+    public const SIM_SLOTS_PER_DEVICE = 2;
+
+    public static function aggregateDailySendCap(): int
+    {
+        return (int) config('services.sms_gateway.daily_send_cap') * self::SIM_SLOTS_PER_DEVICE;
+    }
+
+    /**
      * 'ok' / 'near' (>=80% of the researched daily cap) / 'at' (>=100%) —
      * purely informational (see config('services.sms_gateway.
      * daily_send_cap')'s docblock), computed from this device's own
-     * aggregate sent_today, not broken down per SIM. Use
-     * SmsGatewayDeviceSimStat::capStatus() for the per-SIM version.
+     * aggregate sent_today against aggregateDailySendCap(), not broken down
+     * per SIM. Use SmsGatewayDeviceSimStat::capStatus() for the per-SIM
+     * version, which compares against the plain per-SIM cap instead.
      */
     public function dailySendCapStatus(): string
     {
-        return static::capStatusFor($this->sent_today);
+        return static::capStatusFor($this->sent_today, static::aggregateDailySendCap());
     }
 
-    public static function capStatusFor(int $sentToday): string
+    public static function capStatusFor(int $sentToday, ?int $cap = null): string
     {
-        $cap = config('services.sms_gateway.daily_send_cap');
+        $cap ??= config('services.sms_gateway.daily_send_cap');
 
         return match (true) {
             $sentToday >= $cap => 'at',
