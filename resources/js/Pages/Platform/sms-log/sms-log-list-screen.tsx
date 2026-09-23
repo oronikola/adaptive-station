@@ -1,7 +1,6 @@
 import Pagination from '@/Components/admin/Pagination';
 import PremiumSelect from '@/Components/PremiumSelect';
 import { BadgeAlertIcon } from '@/Components/icons/badge-alert';
-import { CheckIcon } from '@/Components/icons/check';
 import { ClockIcon } from '@/Components/icons/clock';
 import { GraduationCapIcon } from '@/Components/icons/graduation-cap';
 import { PhoneIcon } from '@/Components/icons/phone';
@@ -110,7 +109,6 @@ function StatCard({ label, value, icon, tone }: StatCardProps) {
 
 const ICON_PENDING = <ClockIcon size={18} />;
 const ICON_SENT = <SendIcon size={18} />;
-const ICON_DELIVERED = <CheckIcon size={18} />;
 const ICON_FAILED = <BadgeAlertIcon size={18} />;
 
 // Status palette keeps in lockstep with the pft-stat-icon tones and pf-pill
@@ -118,7 +116,6 @@ const ICON_FAILED = <BadgeAlertIcon size={18} />;
 const STATUS_BAR_COLORS: Record<string, string> = {
     pending: '#c1791f',
     sent: '#6c47c9',
-    delivered: '#1a8a4c',
     failed: '#d84a3f',
 };
 
@@ -227,7 +224,6 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                 <div className="pft-stat-grid">
                     <StatCard label="Pending" value={stats.pending} icon={ICON_PENDING} tone="amber" />
                     <StatCard label="Sent" value={stats.sent} icon={ICON_SENT} tone="violet" />
-                    <StatCard label="Delivered" value={stats.delivered} icon={ICON_DELIVERED} tone="green" />
                     <StatCard label="Failed" value={stats.failed} icon={ICON_FAILED} tone="red" />
                 </div>
 
@@ -239,7 +235,7 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                         </div>
                     </div>
                     <div className="pf-chart-legend">
-                        {(['pending', 'sent', 'delivered', 'failed'] as const).map((status) => (
+                        {(['pending', 'sent', 'failed'] as const).map((status) => (
                             <span key={status} className="pf-chart-legend-item">
                                 <span
                                     className="pf-chart-legend-dot"
@@ -260,7 +256,6 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                                     data={[
                                         { name: 'Pending', value: stats.pending, tone: 'pending' },
                                         { name: 'Sent', value: stats.sent, tone: 'sent' },
-                                        { name: 'Delivered', value: stats.delivered, tone: 'delivered' },
                                         { name: 'Failed', value: stats.failed, tone: 'failed' },
                                     ]}
                                     margin={{ top: 8, right: 12, left: -12, bottom: 0 }}
@@ -281,7 +276,7 @@ export default function SmsLogListScreen({ messages, tenants, devices, filters, 
                                     />
                                     <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--as-surface-active)' }} />
                                     <Bar dataKey="value" name="Messages" maxBarSize={64} radius={[8, 8, 2, 2]}>
-                                        {(['pending', 'sent', 'delivered', 'failed'] as const).map((status) => (
+                                        {(['pending', 'sent', 'failed'] as const).map((status) => (
                                             <Cell key={status} fill={STATUS_BAR_COLORS[status]} />
                                         ))}
                                     </Bar>
