@@ -88,6 +88,27 @@ class SmsGatewayFleetCapTest extends TestCase
             ->where('devices.0.cap_status', 'at'));
     }
 
+    public function test_a_single_slot_devices_stray_sim_stat_is_not_shown_as_a_misleading_badge(): void
+    {
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        $device = $this->deviceWithSentToday(187);
+        // Only one tagged send, ever, even though the device sent 187 —
+        // exactly the "default SIM mode" shape: nothing meaningful to split
+        // the 187 by, so the per-SIM badge should not appear at all.
+        SmsGatewayDeviceSimStat::create([
+            'device_id' => $device->id,
+            'sim_slot' => 0,
+            'sent_today' => 1,
+            'stats_date' => Date::now()->toDateString(),
+        ]);
+
+        $response = $this->actingAs($platformAdmin)->get(route('platform.sms-gateway.devices.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('devices.0.sent_today', 187)
+            ->where('devices.0.sim_stats', []));
+    }
+
     public function test_a_device_near_its_daily_cap_is_flagged(): void
     {
         config(['services.sms_gateway.daily_send_cap' => 450]);
@@ -152,16 +173,29 @@ class SmsGatewayFleetCapTest extends TestCase
     {
         $platformAdmin = User::factory()->platformSuperAdmin()->create();
         $device = SmsGatewayDevice::create(['label' => 'Phone 01']);
+        // A second, today-dated slot keeps this a genuine dual-SIM device
+        // (simSlotCount > 1), so the sim_stats list isn't empty simply
+        // because there's nothing meaningful to show (see
+        // SmsGatewayFleetSnapshot::build()'s docblock on that gate) — this
+        // test is specifically about the date filter, not the slot-count one.
         SmsGatewayDeviceSimStat::create([
             'device_id' => $device->id,
             'sim_slot' => 0,
             'sent_today' => 400,
             'stats_date' => Date::now()->subDay()->toDateString(),
         ]);
+        SmsGatewayDeviceSimStat::create([
+            'device_id' => $device->id,
+            'sim_slot' => 1,
+            'sent_today' => 50,
+            'stats_date' => Date::now()->toDateString(),
+        ]);
 
         $response = $this->actingAs($platformAdmin)->get(route('platform.sms-gateway.devices.index'));
 
-        $response->assertInertia(fn ($page) => $page->where('devices.0.sim_stats', []));
+        $response->assertInertia(fn ($page) => $page
+            ->has('devices.0.sim_stats', 1)
+            ->where('devices.0.sim_stats.0.sim_slot', 1));
     }
 
     public function test_yesterdays_device_totals_are_zero_after_midnight_in_the_gateway_timezone(): void

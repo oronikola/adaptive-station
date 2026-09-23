@@ -24,10 +24,19 @@ class AdaptivestationAdminFleetViewTest extends TestCase
     {
         $admin = User::factory()->adaptivestationAdmin()->create();
         $device = SmsGatewayDevice::create(['label' => 'Phone 01']);
+        // A per-SIM breakdown is only shown for a device with more than one
+        // reachable SIM slot (see SmsGatewayFleetSnapshot::build()'s
+        // docblock) — a second slot keeps this a genuine dual-SIM device.
         SmsGatewayDeviceSimStat::create([
             'device_id' => $device->id,
             'sim_slot' => 0,
             'sent_today' => 120,
+            'stats_date' => Date::now()->toDateString(),
+        ]);
+        SmsGatewayDeviceSimStat::create([
+            'device_id' => $device->id,
+            'sim_slot' => 1,
+            'sent_today' => 90,
             'stats_date' => Date::now()->toDateString(),
         ]);
 

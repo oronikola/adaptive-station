@@ -79,20 +79,28 @@ class SmsGatewayFleetSnapshot
                         $device->stats_date?->toDateString() === $today ? $device->sent_today : 0,
                         $deviceCap,
                     ),
-                    // Only present once this device's app build has reported at
-                    // least one sim_slot-tagged send — an older, not-yet-updated
-                    // phone has no rows here yet, so the fleet screen shows
-                    // "not reported" for it rather than a misleading zero.
-                    'sim_stats' => $device->simStats
-                        ->sortBy('sim_slot')
-                        ->values()
-                        ->map(fn (SmsGatewayDeviceSimStat $stat) => [
-                            'sim_slot' => $stat->sim_slot,
-                            'sent_today' => $stat->sent_today,
-                            'delivered_today' => $stat->delivered_today,
-                            'failed_today' => $stat->failed_today,
-                            'cap_status' => $stat->capStatus(),
-                        ]),
+                    // Only shown once this device has reported sends from
+                    // *more than one* distinct SIM slot — a device with only
+                    // one reachable slot (a single physical SIM, or one
+                    // running in the mobile app's "default SIM" mode, where
+                    // individual sends aren't tagged to a slot at all) has
+                    // nothing meaningful to split its total by, and a stray
+                    // one-off tagged row from before that mode was set would
+                    // otherwise show a badge like "SIM 1 · 1/450" next to a
+                    // device total of 187 — technically accurate (it really
+                    // did only tag one send), but reads as broken tracking.
+                    'sim_stats' => $simSlotCount > 1
+                        ? $device->simStats
+                            ->sortBy('sim_slot')
+                            ->values()
+                            ->map(fn (SmsGatewayDeviceSimStat $stat) => [
+                                'sim_slot' => $stat->sim_slot,
+                                'sent_today' => $stat->sent_today,
+                                'delivered_today' => $stat->delivered_today,
+                                'failed_today' => $stat->failed_today,
+                                'cap_status' => $stat->capStatus(),
+                            ])
+                        : collect(),
                     'sim_statuses' => $device->simStatuses
                         ->map(fn (SmsGatewayDeviceSimStatus $status) => [
                             'sim_slot' => $status->sim_slot,
