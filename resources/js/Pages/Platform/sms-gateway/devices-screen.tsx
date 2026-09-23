@@ -15,16 +15,6 @@ import SmsDevicePhone from '@/Components/SmsDevicePhone';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import {
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Cell,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts';
 import { PageProps } from '@/types';
 import '../../../../css/platform-dashboard.css';
 import '../../../../css/platform-overview.css';
@@ -81,49 +71,6 @@ const CAP_STATUS_COLOR: Record<SimStat['cap_status'], string> = {
     near: 'var(--as-warning, #c1791f)',
     at: 'var(--as-danger)',
 };
-
-// This palette is used by both the chart bars and the legend.
-const FLEET_BAR_COLORS: Record<'pending' | 'delivered' | 'failed', string> = {
-    pending: '#f38b22',
-    delivered: '#229a5b',
-    failed: '#d84a3f',
-};
-
-interface ChartTooltipEntry {
-    dataKey: string;
-    name: string;
-    value: number;
-    color: string;
-}
-
-function ChartTooltip({
-    active,
-    payload,
-    label,
-}: {
-    active?: boolean;
-    payload?: ChartTooltipEntry[];
-    label?: string;
-}) {
-    if (!active || !payload || payload.length === 0) {
-        return null;
-    }
-
-    return (
-        <div className="pf-chart-tooltip">
-            <p className="pf-chart-tooltip-label">{label}</p>
-            {payload.map((entry) => (
-                <div key={entry.dataKey} className="pf-chart-tooltip-row">
-                    <span style={{ color: entry.color }}>
-                        <span className="pf-chart-tooltip-swatch" />
-                        {entry.name}
-                    </span>
-                    <span>{entry.value.toLocaleString()}</span>
-                </div>
-            ))}
-        </div>
-    );
-}
 
 interface Backlog {
     pending: number;
@@ -269,8 +216,6 @@ export default function SmsGatewayDevicesScreen({
 
     const backlogIsHigh = backlog.oldest_pending_age_seconds > 30 * 60;
     const onlineCount = devices.filter((d) => d.is_active && !d.is_stale).length;
-    const deliveredToday = devices.reduce((sum, d) => sum + d.delivered_today, 0);
-    const failedToday = devices.reduce((sum, d) => sum + d.failed_today, 0);
 
     return (
         <PlatformLayout>
@@ -361,68 +306,6 @@ export default function SmsGatewayDevicesScreen({
                         </div>
                     </div>
                 )}
-
-                <div className="pf-panel">
-                    <div className="pf-panel-header">
-                        <div>
-                            <h2 className="pf-panel-title">Delivery analytics</h2>
-                            <p className="pf-panel-count">
-                                {onlineCount}/{devices.length} phones online · message volume today
-                                {backlogIsHigh && ` · oldest pending ${formatAge(backlog.oldest_pending_age_seconds)}`}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="pf-chart-legend">
-                        {(['pending', 'delivered', 'failed'] as const).map((status) => (
-                            <span key={status} className="pf-chart-legend-item">
-                                <span
-                                    className="pf-chart-legend-dot"
-                                    style={{ background: FLEET_BAR_COLORS[status] }}
-                                />
-                                {status.charAt(0).toUpperCase() + status.slice(1)}
-                            </span>
-                        ))}
-                    </div>
-                    {backlog.pending === 0 && deliveredToday === 0 && failedToday === 0 ? (
-                        <p className="pf-empty pft-panel-empty">
-                            No SMS activity yet today — bars appear once fleet phones start claiming and sending tap alerts.
-                        </p>
-                    ) : (
-                        <div className="pf-chart-body">
-                            <ResponsiveContainer width="100%" height={260}>
-                                <BarChart
-                                    data={[
-                                        { name: 'Pending', value: backlog.pending, status: 'pending' },
-                                        { name: 'Delivered', value: deliveredToday, status: 'delivered' },
-                                        { name: 'Failed', value: failedToday, status: 'failed' },
-                                    ]}
-                                    margin={{ top: 8, right: 12, left: -12, bottom: 0 }}
-                                    barCategoryGap="28%"
-                                >
-                                    <CartesianGrid stroke="var(--as-border-light)" vertical={false} />
-                                    <XAxis
-                                        dataKey="name"
-                                        tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
-                                        axisLine={false}
-                                        tickLine={false}
-                                    />
-                                    <YAxis
-                                        tick={{ fontSize: 11, fill: 'var(--as-text-muted)' }}
-                                        axisLine={false}
-                                        tickLine={false}
-                                        allowDecimals={false}
-                                    />
-                                    <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--as-surface-active)' }} />
-                                    <Bar dataKey="value" name="Messages" maxBarSize={64} radius={[8, 8, 2, 2]}>
-                                        {(['pending', 'delivered', 'failed'] as const).map((status) => (
-                                            <Cell key={status} fill={FLEET_BAR_COLORS[status]} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    )}
-                </div>
 
                 <div className="pf-panel">
                     <div className="pf-panel-header">
