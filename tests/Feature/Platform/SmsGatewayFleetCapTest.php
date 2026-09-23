@@ -27,6 +27,19 @@ class SmsGatewayFleetCapTest extends TestCase
         return $device;
     }
 
+    /** Marks a device as having actually sent from each of the given SIM slots at some point (all-time, not just today) — see SmsGatewayFleetSnapshot::build()'s $simSlotCounts. */
+    private function markSimSlotsUsed(SmsGatewayDevice $device, array $slots): void
+    {
+        foreach ($slots as $slot) {
+            SmsGatewayDeviceSimStat::create([
+                'device_id' => $device->id,
+                'sim_slot' => $slot,
+                'sent_today' => 1,
+                'stats_date' => Date::now()->subDays(30)->toDateString(),
+            ]);
+        }
+    }
+
     public function test_a_device_well_under_its_daily_cap_shows_as_ok(): void
     {
         config(['services.sms_gateway.daily_send_cap' => 450]);
@@ -39,17 +52,48 @@ class SmsGatewayFleetCapTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->where('devices.0.cap_status', 'ok')
             ->where('devices.0.daily_send_cap', 450)
-            // Every device is dual-SIM, so its own aggregate is measured
-            // against double the per-SIM cap — see
-            // SmsGatewayDevice::aggregateDailySendCap()'s docblock.
-            ->where('devices.0.device_daily_send_cap', 900));
+            // Never having reported a sim_slot at all (a device sending in
+            // "default SIM" mode — see SmsGatewayDevice::
+            // aggregateDailySendCap()'s docblock) falls back to a single
+            // reachable slot, not an assumed dual-SIM figure.
+            ->where('devices.0.device_daily_send_cap', 450));
+    }
+
+    public function test_a_dual_sim_device_is_capped_at_double_the_per_sim_figure(): void
+    {
+        config(['services.sms_gateway.daily_send_cap' => 450]);
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        $device = $this->deviceWithSentToday(10);
+        $this->markSimSlotsUsed($device, [0, 1]);
+
+        $response = $this->actingAs($platformAdmin)->get(route('platform.sms-gateway.devices.index'));
+
+        $response->assertInertia(fn ($page) => $page->where('devices.0.device_daily_send_cap', 900));
+    }
+
+    public function test_a_single_sim_device_is_flagged_at_the_single_sim_figure_not_double(): void
+    {
+        config(['services.sms_gateway.daily_send_cap' => 450]);
+        $platformAdmin = User::factory()->platformSuperAdmin()->create();
+        // A device that has only ever reported sending from slot 0 — e.g. a
+        // phone running in "default SIM" mode, or one with only one SIM
+        // physically installed.
+        $device = $this->deviceWithSentToday(460);
+        $this->markSimSlotsUsed($device, [0]);
+
+        $response = $this->actingAs($platformAdmin)->get(route('platform.sms-gateway.devices.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('devices.0.device_daily_send_cap', 450)
+            ->where('devices.0.cap_status', 'at'));
     }
 
     public function test_a_device_near_its_daily_cap_is_flagged(): void
     {
         config(['services.sms_gateway.daily_send_cap' => 450]);
         $platformAdmin = User::factory()->platformSuperAdmin()->create();
-        $this->deviceWithSentToday(760); // >=80% of the 900 combined (2x450) cap
+        $device = $this->deviceWithSentToday(760); // >=80% of the 900 combined (2x450) cap
+        $this->markSimSlotsUsed($device, [0, 1]);
 
         $response = $this->actingAs($platformAdmin)->get(route('platform.sms-gateway.devices.index'));
 
@@ -60,7 +104,8 @@ class SmsGatewayFleetCapTest extends TestCase
     {
         config(['services.sms_gateway.daily_send_cap' => 450]);
         $platformAdmin = User::factory()->platformSuperAdmin()->create();
-        $this->deviceWithSentToday(900); // the combined (2x450) cap, not the per-SIM figure
+        $device = $this->deviceWithSentToday(900); // the combined (2x450) cap, not the per-SIM figure
+        $this->markSimSlotsUsed($device, [0, 1]);
 
         $response = $this->actingAs($platformAdmin)->get(route('platform.sms-gateway.devices.index'));
 

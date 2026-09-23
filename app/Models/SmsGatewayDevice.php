@@ -106,19 +106,23 @@ class SmsGatewayDevice extends Model
     }
 
     /**
-     * Every phone in this fleet is dual-SIM (see the sms_gateway_device_sim_
-     * stats migration's own docblock: "a phone has exactly 2 SIM slots
-     * today") — config('services.sms_gateway.daily_send_cap') is a per-SIM
-     * figure, so a device's own aggregate sent_today can legitimately reach
-     * twice that before either SIM is actually near its own cap. Comparing
-     * the aggregate against the plain per-SIM cap (as this used to) made a
-     * healthy dual-SIM phone look like it had blown through its limit.
+     * config('services.sms_gateway.daily_send_cap') is a per-SIM figure, so
+     * a device's own aggregate sent_today can legitimately reach that many
+     * times over before any individual SIM is actually near its own cap —
+     * comparing the aggregate against the plain per-SIM cap (as this used
+     * to, unconditionally) made a healthy multi-SIM phone look like it had
+     * blown through its limit. $simSlotCount is how many *distinct* SIM
+     * slots this device has ever actually reported a send from (see
+     * SmsGatewayFleetSnapshot::build(), which counts distinct sim_slot rows
+     * in sms_gateway_device_sim_stats) — a phone sending in "default SIM"
+     * mode (see the mobile app's _SendChannel.defaultSim) never reports a
+     * slot at all, so it counts as 1, not 2, even though it may physically
+     * have two SIMs installed: only one is actually reachable through this
+     * gateway.
      */
-    public const SIM_SLOTS_PER_DEVICE = 2;
-
-    public static function aggregateDailySendCap(): int
+    public static function aggregateDailySendCap(int $simSlotCount): int
     {
-        return (int) config('services.sms_gateway.daily_send_cap') * self::SIM_SLOTS_PER_DEVICE;
+        return (int) config('services.sms_gateway.daily_send_cap') * max(1, $simSlotCount);
     }
 
     /**
@@ -129,9 +133,9 @@ class SmsGatewayDevice extends Model
      * per SIM. Use SmsGatewayDeviceSimStat::capStatus() for the per-SIM
      * version, which compares against the plain per-SIM cap instead.
      */
-    public function dailySendCapStatus(): string
+    public function dailySendCapStatus(int $simSlotCount): string
     {
-        return static::capStatusFor($this->sent_today, static::aggregateDailySendCap());
+        return static::capStatusFor($this->sent_today, static::aggregateDailySendCap($simSlotCount));
     }
 
     public static function capStatusFor(int $sentToday, ?int $cap = null): string
